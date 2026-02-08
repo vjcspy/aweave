@@ -1,0 +1,1186 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "DebateController_healthCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Server is healthy"
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates": {
+      "get": {
+        "operationId": "DebateController_listDebates",
+        "parameters": [
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Filter by debate state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Max results to return",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of debates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDebatesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List debates with optional filtering",
+        "tags": [
+          "Debate"
+        ]
+      },
+      "post": {
+        "operationId": "DebateController_createDebate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDebateBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Debate created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new debate with initial MOTION argument",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}": {
+      "get": {
+        "operationId": "DebateController_getDebate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Max arguments to return",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debate detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDebateResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get debate with motion and arguments",
+        "tags": [
+          "Debate"
+        ]
+      },
+      "delete": {
+        "operationId": "DebateController_deleteDebate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Debate deleted"
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete a debate and all its arguments",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/arguments": {
+      "post": {
+        "operationId": "DebateController_submitArgument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitArgumentBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Argument submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Action not allowed in current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Submit a CLAIM argument",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/appeal": {
+      "post": {
+        "operationId": "DebateController_submitAppeal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAppealBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appeal submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Action not allowed in current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Submit an APPEAL",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/resolution": {
+      "post": {
+        "operationId": "DebateController_submitResolution",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCompletionBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resolution submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Action not allowed in current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request debate completion (RESOLUTION)",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/intervention": {
+      "post": {
+        "operationId": "DebateController_submitIntervention",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitInterventionBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Intervention submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Action not allowed in current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Submit an INTERVENTION (arbitrator only)",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/ruling": {
+      "post": {
+        "operationId": "DebateController_submitRuling",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRulingBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ruling submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WriteResultResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Action not allowed in current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Submit a RULING (arbitrator only)",
+        "tags": [
+          "Debate"
+        ]
+      }
+    },
+    "/debates/{id}/poll": {
+      "get": {
+        "operationId": "DebateController_poll",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Debate UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "argument_id",
+            "required": false,
+            "in": "query",
+            "description": "Last seen argument UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "proposer",
+                "opponent"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Poll result — new argument or timeout",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PollResultNewResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PollResultNoNewResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Long-poll for new arguments",
+        "tags": [
+          "Debate"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Aweave Server API",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "PollArgumentDataDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seq": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "MOTION",
+              "CLAIM",
+              "APPEAL",
+              "RULING",
+              "INTERVENTION",
+              "RESOLUTION"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "proposer",
+              "opponent",
+              "arbitrator"
+            ]
+          },
+          "parent_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "type",
+          "role",
+          "parent_id",
+          "content",
+          "created_at"
+        ]
+      },
+      "PollResultNewDataDto": {
+        "type": "object",
+        "properties": {
+          "has_new_argument": {
+            "type": "boolean",
+            "example": true
+          },
+          "action": {
+            "type": "string"
+          },
+          "debate_state": {
+            "type": "string"
+          },
+          "argument": {
+            "$ref": "#/components/schemas/PollArgumentDataDto"
+          }
+        },
+        "required": [
+          "has_new_argument",
+          "action",
+          "debate_state",
+          "argument"
+        ]
+      },
+      "PollResultNewResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PollResultNewDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "PollResultNoNewDataDto": {
+        "type": "object",
+        "properties": {
+          "has_new_argument": {
+            "type": "boolean",
+            "example": false
+          },
+          "debate_id": {
+            "type": "string"
+          },
+          "last_seen_seq": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "has_new_argument",
+          "debate_id",
+          "last_seen_seq"
+        ]
+      },
+      "PollResultNoNewResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/PollResultNoNewDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "ErrorDetailDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "VALIDATION_ERROR",
+            "description": "Error code (NOT_FOUND, INVALID_INPUT, ACTION_NOT_ALLOWED, etc.)"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid debate_id format"
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "Suggested action to fix the error"
+          },
+          "current_state": {
+            "type": "string",
+            "description": "Current debate state (present in ACTION_NOT_ALLOWED errors)"
+          },
+          "allowed_roles": {
+            "description": "Roles allowed for this action (present in ACTION_NOT_ALLOWED errors)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetailDto"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ]
+      },
+      "DebateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID"
+          },
+          "title": {
+            "type": "string"
+          },
+          "debate_type": {
+            "type": "string",
+            "enum": [
+              "coding_plan_debate",
+              "general_debate"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "AWAITING_OPPONENT",
+              "AWAITING_PROPOSER",
+              "AWAITING_ARBITRATOR",
+              "INTERVENTION_PENDING",
+              "CLOSED"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "debate_type",
+          "state",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "ListDebatesDataDto": {
+        "type": "object",
+        "properties": {
+          "debates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DebateDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "debates",
+          "total"
+        ]
+      },
+      "ListDebatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ListDebatesDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "CreateDebateBodyDto": {
+        "type": "object",
+        "properties": {
+          "debate_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "debate_type": {
+            "type": "string",
+            "enum": [
+              "coding_plan_debate",
+              "general_debate"
+            ]
+          },
+          "motion_content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "debate_id",
+          "title",
+          "debate_type",
+          "motion_content",
+          "client_request_id"
+        ]
+      },
+      "ArgumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "debate_id": {
+            "type": "string"
+          },
+          "parent_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "MOTION",
+              "CLAIM",
+              "APPEAL",
+              "RULING",
+              "INTERVENTION",
+              "RESOLUTION"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "proposer",
+              "opponent",
+              "arbitrator"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "seq": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          }
+        },
+        "required": [
+          "id",
+          "debate_id",
+          "parent_id",
+          "type",
+          "role",
+          "content",
+          "client_request_id",
+          "seq",
+          "created_at"
+        ]
+      },
+      "WriteResultDataDto": {
+        "type": "object",
+        "properties": {
+          "debate": {
+            "$ref": "#/components/schemas/DebateDto"
+          },
+          "argument": {
+            "$ref": "#/components/schemas/ArgumentDto"
+          }
+        },
+        "required": [
+          "debate",
+          "argument"
+        ]
+      },
+      "WriteResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/WriteResultDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "GetDebateDataDto": {
+        "type": "object",
+        "properties": {
+          "debate": {
+            "$ref": "#/components/schemas/DebateDto"
+          },
+          "motion": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArgumentDto"
+              }
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArgumentDto"
+            }
+          }
+        },
+        "required": [
+          "debate",
+          "motion",
+          "arguments"
+        ]
+      },
+      "GetDebateResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/GetDebateDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "SubmitArgumentBodyDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "proposer",
+              "opponent"
+            ]
+          },
+          "target_id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "target_id",
+          "content",
+          "client_request_id"
+        ]
+      },
+      "SubmitAppealBodyDto": {
+        "type": "object",
+        "properties": {
+          "target_id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_id",
+          "content",
+          "client_request_id"
+        ]
+      },
+      "RequestCompletionBodyDto": {
+        "type": "object",
+        "properties": {
+          "target_id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_id",
+          "content",
+          "client_request_id"
+        ]
+      },
+      "SubmitInterventionBodyDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        }
+      },
+      "SubmitRulingBodyDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "close": {
+            "type": "boolean"
+          },
+          "client_request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      }
+    }
+  }
+}

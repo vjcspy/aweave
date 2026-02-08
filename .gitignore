@@ -1,0 +1,55 @@
+# ========================================
+# OS & IDE
+# ========================================
+.DS_Store
+.idea/
+.cursor/
+.trae/
+
+# Symlinks
+AGENTS.md
+
+# ========================================
+# Source Code (fully managed per project branch)
+# ========================================
+projects/**
+!projects/.gitkeep
+
+# ========================================
+# Project-specific: devdocs/agent
+# Only common/ tracked on master
+# ========================================
+devdocs/agent/commands/*
+!devdocs/agent/commands/common/
+
+devdocs/agent/rules/*
+!devdocs/agent/rules/common/
+
+devdocs/agent/skills/*
+!devdocs/agent/skills/common/
+
+devdocs/agent/templates/*
+!devdocs/agent/templates/common/
+
+# ========================================
+# Project-specific: devdocs/projects
+# Excluded from master entirely
+# ========================================
+devdocs/projects/**
+!devdocs/projects/.gitkeep
+
+# ========================================
+# Project-specific: devdocs/misc/devtools
+# Only common/ and plans/ tracked on master
+# ========================================
+devdocs/misc/devtools/*/
+!devdocs/misc/devtools/common/
+!devdocs/misc/devtools/plans/
+
+# ========================================
+# Project-specific: devtools
+# Only common/, scripts/ and root files tracked on master
+# ========================================
+devtools/*/
+!devtools/common/
+!devtools/scripts/
