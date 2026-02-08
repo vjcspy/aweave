@@ -9,9 +9,8 @@ packages:
   - common/cli-plugin-debate
   - common/cli-plugin-docs
   - common/cli-plugin-dashboard
+  - common/cli-plugin-relay
 
 onlyBuiltDependencies:
   - "@nestjs/core"
-  - "@prisma/client"
-  - "@prisma/engines"
   - "better-sqlite3"
