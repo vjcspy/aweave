@@ -1,9 +1,9 @@
 # Debate NestJS Module (`@aweave/nestjs-debate`)
 
 > **Source:** `devtools/common/nestjs-debate/`
-> **Last Updated:** 2026-02-07
+> **Last Updated:** 2026-02-08
 
-NestJS module chứa toàn bộ debate feature: REST API, WebSocket gateway, state machine, Prisma ORM với SQLite database riêng.
+NestJS module chứa toàn bộ debate feature: REST API, WebSocket gateway, state machine, better-sqlite3 với SQLite database riêng.
 
 ## Purpose
 
@@ -56,8 +56,8 @@ Module này là **complete backend** cho hệ thống debate giữa AI agents:
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  DebatePrismaService                                         │
-│  (PrismaClient → ~/.aweave/db/debate.db)                    │
+│  DatabaseService                                             │
+│  (better-sqlite3 → ~/.aweave/db/debate.db)                  │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -68,8 +68,8 @@ Module này là **complete backend** cho hệ thống debate giữa AI agents:
 |---------|------|
 | `@nestjs/common` | NestJS decorators, Injectable, Module |
 | `@nestjs/websockets`, `@nestjs/platform-ws` | WebSocket gateway |
-| `@prisma/client` | Prisma ORM (generated client) |
-| `prisma` (devDep) | CLI for generate/migrate |
+| `better-sqlite3` | Synchronous SQLite3 driver (native C addon) |
+| `@types/better-sqlite3` (devDep) | TypeScript type definitions |
 
 **Peer dependency:** `@nestjs/core` (provided by `@aweave/server`)
 
@@ -93,7 +93,7 @@ export type { WsEvent, ServerToClientEvent, NewArgumentEvent, ... } from './ws-t
 
 ## Swagger DTOs (`src/dto/`)
 
-Swagger DTO classes define the OpenAPI schema for all REST endpoints. They mirror the **serialized** (snake_case) API output, not the Prisma camelCase model.
+Swagger DTO classes define the OpenAPI schema for all REST endpoints. They mirror the **serialized** (snake_case) API output, not the camelCase domain model.
 
 | File | Contents |
 |------|----------|
@@ -130,23 +130,14 @@ type SubmitRulingEvent = WsEvent<'submit_ruling', { debate_id: string; content: 
 |---------|---------|-------------|
 | `DEBATE_DB_DIR` | `~/.aweave/db/` | Directory chứa database file |
 | `DEBATE_DB_NAME` | `debate.db` | Database filename |
-| `DEBATE_DATABASE_URL` | — | Used by Prisma CLI (migrate/generate). Format: `file:/path/to/debate.db` |
 
-> **Note:** Runtime database path được resolve trong `DebatePrismaService` constructor từ `DEBATE_DB_DIR` + `DEBATE_DB_NAME`. `DEBATE_DATABASE_URL` chỉ dùng khi chạy Prisma CLI commands.
+> **Note:** Runtime database path được resolve trong `DatabaseService` constructor từ `DEBATE_DB_DIR` + `DEBATE_DB_NAME`.
 
 ## Database
 
-### Prisma Schema
+### Schema Management
 
-```
-devtools/common/nestjs-debate/
-├── prisma/
-│   ├── schema.prisma           # Schema definition
-│   └── migrations/             # Migration history
-│       └── 20260207_init/
-└── generated/
-    └── prisma/                 # Generated Prisma Client (gitignored)
-```
+Schema is managed via `CREATE TABLE IF NOT EXISTS` in `DatabaseService.initSchema()` — no external migration tool needed. Future schema changes use a startup migration runner with SQLite's `user_version` pragma.
 
 ### Models
 
@@ -177,7 +168,7 @@ devtools/common/nestjs-debate/
 
 ### Response Serialization
 
-Prisma trả về camelCase (`debateType`, `createdAt`), nhưng API contract dùng snake_case (`debate_type`, `created_at`) để backward compatible với CLI. Module có `serializers.ts` xử lý conversion này tại controller layer.
+`DatabaseService` maps snake_case DB columns to camelCase domain types (`debateType`, `createdAt`). API contract dùng snake_case (`debate_type`, `created_at`) để backward compatible với CLI. Module có `serializers.ts` xử lý conversion camelCase → snake_case tại controller layer.
 
 ## State Machine
 
@@ -309,7 +300,7 @@ Old debate-server dùng **long polling** (server giữ connection 60s, in-memory
 - Server respond **ngay lập tức** — query DB, trả kết quả
 - Client (CLI) poll mỗi **2 giây**
 - Không cần in-memory EventEmitter/notifier
-- Đơn giản, stateless, Prisma-friendly
+- Đơn giản, stateless
 
 > Latency tối đa 2s — hoàn toàn chấp nhận cho AI agent debate.
 
@@ -327,17 +318,18 @@ Mọi write endpoint nhận `client_request_id`:
 - Nếu đã tồn tại → return existing result (không tạo duplicate)
 - Safe để CLI retry khi network error
 
-### Prisma Transactions
+### SQLite Transactions
 
-Seq assignment + state update nằm trong cùng 1 `prisma.$transaction()`:
+Seq assignment + state update nằm trong cùng 1 `db.transaction()` (synchronous, better-sqlite3):
 
 ```typescript
-await this.prisma.$transaction(async (tx) => {
+const result = this.db.transaction(() => {
   // 1. Idempotency check
   // 2. Validate state
-  // 3. Get next seq (aggregate MAX + 1)
+  // 3. Get next seq (MAX + 1)
   // 4. Insert argument
   // 5. Update debate state
+  return { debate, argument };
 });
 // 6. Broadcast via WebSocket (after commit)
 ```
@@ -350,16 +342,10 @@ devtools/common/nestjs-debate/
 ├── tsconfig.json
 ├── nest-cli.json
 ├── .gitignore
-├── prisma/
-│   ├── schema.prisma              # Debate + Argument models
-│   └── migrations/
-│       └── 20260207053250_init/
-├── generated/
-│   └── prisma/                    # Generated Prisma Client (gitignored)
 ├── src/
 │   ├── index.ts                   # Barrel export: DebateModule, services, DTOs, WS types
 │   ├── debate.module.ts           # NestJS module definition
-│   ├── debate-prisma.service.ts   # PrismaClient for ~/.aweave/db/debate.db
+│   ├── database.service.ts        # better-sqlite3 connection, schema, prepared statements
 │   ├── debate.controller.ts       # REST endpoints (Swagger-annotated)
 │   ├── debate.service.ts          # Debate CRUD + poll logic
 │   ├── argument.service.ts        # Argument operations (submit, appeal, ...)
@@ -394,18 +380,9 @@ pm2 stop aweave-server
 # Install (from workspace root)
 pnpm install
 
-# Generate Prisma client
+# Build
 cd common/nestjs-debate
-DEBATE_DATABASE_URL="file:$HOME/.aweave/db/debate.db" pnpm prisma:generate
-
-# Run migrations
-DEBATE_DATABASE_URL="file:$HOME/.aweave/db/debate.db" pnpm prisma:migrate
-
-# Build (generates Prisma client + compiles TypeScript)
 pnpm build
-
-# Build only TypeScript (if Prisma already generated)
-npx nest build
 
 # Chạy server dev mode (từ server package, auto-reload khi nestjs-debate thay đổi)
 cd ../server && pnpm start:dev
@@ -415,7 +392,7 @@ cd devtools
 pm2 start ecosystem.config.cjs --only aweave-server
 ```
 
-**Note:** `pnpm build` chạy `prisma generate` trước `nest build` (configured trong `package.json` scripts).
+**Note:** Schema tự động tạo khi server khởi động (`DatabaseService.onModuleInit()` → `initSchema()`). Không cần bước generate hay migrate riêng.
 
 ## Related
 
