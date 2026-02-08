@@ -53,3 +53,14 @@ devdocs/misc/devtools/*/
 devtools/*/
 !devtools/common/
 !devtools/scripts/
+
+# ========================================
+# Branch: projects/meta
+# ========================================
+!devdocs/agent/commands/meta/
+!devdocs/agent/rules/meta/
+!devdocs/agent/skills/meta/
+!devdocs/agent/templates/meta/
+!devdocs/misc/devtools/meta/
+!devdocs/projects/meta/
+!devtools/meta/
