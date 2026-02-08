@@ -43,7 +43,10 @@ export function Sparkline({
   const line = visible
     .map((val) => {
       const normalized = (val - min) / range;
-      const idx = Math.min(Math.round(normalized * (chars.length - 1)), chars.length - 1);
+      const idx = Math.min(
+        Math.round(normalized * (chars.length - 1)),
+        chars.length - 1,
+      );
       return chars[idx];
     })
     .join('');

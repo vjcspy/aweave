@@ -137,6 +137,7 @@ src/commands/<topic>/services/start.ts → aw <topic> services start
 devtools/<domain>/cli-plugin-<name>/
 ├── package.json
 ├── tsconfig.json
+├── eslint.config.mjs
 └── src/
     ├── index.ts
     ├── commands/
@@ -159,7 +160,11 @@ Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": { "build": "tsc" },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
   "oclif": {
     "commands": "./dist/commands",
     "topicSeparator": " "
@@ -201,7 +206,19 @@ Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
 }
 ```
 
-### Step 4: Implement a Command
+### Step 4: eslint.config.mjs
+
+Each package must have its own `eslint.config.mjs` that extends the shared base config from the workspace root. This enables per-package linting via `pnpm lint` / `pnpm lint:fix`.
+
+```javascript
+import { baseConfig } from '../../eslint.config.mjs';
+
+export default [{ ignores: ['dist/**'] }, ...baseConfig];
+```
+
+The base config (`devtools/eslint.config.mjs`) provides: TypeScript-ESLint, Prettier formatting, import sorting (`simple-import-sort`), and unused import removal (`unused-imports`). All auto-fixable with `--fix`.
+
+### Step 5: Implement a Command
 
 ```typescript
 // src/commands/<topic>/list.ts
@@ -261,7 +278,7 @@ export class TopicList extends Command {
 }
 ```
 
-### Step 5: Register Plugin
+### Step 6: Register Plugin
 
 1. Add to `devtools/pnpm-workspace.yaml`:
 
@@ -366,6 +383,9 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 ### CLI Plugin
 
 - [ ] Package created with correct `oclif` config in package.json
+- [ ] `eslint.config.mjs` created extending `baseConfig` from workspace root
+- [ ] `lint` and `lint:fix` scripts added to package.json
+- [ ] `pnpm lint` passes (run `pnpm lint:fix` first to auto-fix formatting/imports)
 - [ ] All commands output `MCPResponse` via `output()` helper
 - [ ] `--format json|markdown` flag on every command (default: `json`)
 - [ ] Error handling: `HTTPClientError` → `handleServerError()`

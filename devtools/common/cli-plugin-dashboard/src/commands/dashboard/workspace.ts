@@ -6,10 +6,11 @@
  * One-shot by default (static data).
  */
 
-import { Command, Flags } from '@oclif/core';
 import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { Command, Flags } from '@oclif/core';
 
 export class DashboardWorkspace extends Command {
   static description = 'Show workspace packages and build status';
@@ -32,9 +33,8 @@ export class DashboardWorkspace extends Command {
     // Interactive Ink rendering
     const { render } = await import('ink');
     const React = await import('react');
-    const { WorkspacePanel } = await import(
-      '../../components/panels/WorkspacePanel.js'
-    );
+    const { WorkspacePanel } =
+      await import('../../components/panels/WorkspacePanel.js');
 
     const instance = render(React.createElement(WorkspacePanel));
 
@@ -52,7 +52,8 @@ export class DashboardWorkspace extends Command {
 
     try {
       const content = await readFile(workspaceYaml, 'utf-8');
-      const packages: Array<{ name: string; path: string; built: boolean }> = [];
+      const packages: Array<{ name: string; path: string; built: boolean }> =
+        [];
       const lines = content.split('\n');
       let inPackages = false;
 
@@ -91,7 +92,11 @@ export class DashboardWorkspace extends Command {
           }
 
           packages.push({ name, path: pkgPath, built });
-        } else if (inPackages && !line.trim().startsWith('-') && line.trim() !== '') {
+        } else if (
+          inPackages &&
+          !line.trim().startsWith('-') &&
+          line.trim() !== ''
+        ) {
           break;
         }
       }

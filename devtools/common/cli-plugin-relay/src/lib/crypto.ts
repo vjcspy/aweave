@@ -17,7 +17,9 @@ export function encrypt(data: Buffer, keyBase64: string): EncryptResult {
   const key = Buffer.from(keyBase64, 'base64');
 
   if (key.length !== 32) {
-    throw new Error(`Invalid encryption key length: expected 32 bytes, got ${key.length}`);
+    throw new Error(
+      `Invalid encryption key length: expected 32 bytes, got ${key.length}`,
+    );
   }
 
   const iv = randomBytes(12); // 96-bit IV for GCM

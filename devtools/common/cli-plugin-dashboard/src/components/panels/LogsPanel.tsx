@@ -9,7 +9,7 @@
 import { Box, Static, Text, Transform } from 'ink';
 import React from 'react';
 
-import { useLogs, type LogsData } from '../../hooks/useLogs.js';
+import { type LogsData, useLogs } from '../../hooks/useLogs.js';
 import { Spinner } from '../shared/Spinner.js';
 
 interface LogsPanelProps {
@@ -41,10 +41,7 @@ function colorize(children: string): string {
   return children;
 }
 
-export function LogsPanel({
-  maxLines = 50,
-  serviceName,
-}: LogsPanelProps) {
+export function LogsPanel({ maxLines = 50, serviceName }: LogsPanelProps) {
   const { lines, streaming, error }: LogsData = useLogs(serviceName, maxLines);
 
   return (

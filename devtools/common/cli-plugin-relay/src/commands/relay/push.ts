@@ -13,7 +13,11 @@ import { Command, Flags } from '@oclif/core';
 import { DEFAULT_CHUNK_SIZE, splitIntoChunks } from '../../lib/chunker';
 import { loadConfig, validateRequiredConfig } from '../../lib/config';
 import { encrypt } from '../../lib/crypto';
-import { pollStatus, signalComplete, uploadChunk } from '../../lib/relay-client';
+import {
+  pollStatus,
+  signalComplete,
+  uploadChunk,
+} from '../../lib/relay-client';
 
 export class RelayPush extends Command {
   static description = 'Push local commits to GitHub via the relay';
@@ -72,7 +76,8 @@ export class RelayPush extends Command {
     }
 
     // 2. Validate chunk size
-    const chunkSize = flags['chunk-size'] || config.chunkSize || DEFAULT_CHUNK_SIZE;
+    const chunkSize =
+      flags['chunk-size'] || config.chunkSize || DEFAULT_CHUNK_SIZE;
     if (chunkSize > 3_400_000) {
       output(
         errorResponse(
@@ -154,7 +159,11 @@ export class RelayPush extends Command {
       });
 
       // 9. Poll status
-      const result = await pollStatus(config.relayUrl!, config.apiKey!, sessionId);
+      const result = await pollStatus(
+        config.relayUrl!,
+        config.apiKey!,
+        sessionId,
+      );
 
       // 10. Output result
       const success = result.status === 'pushed';
@@ -193,7 +202,9 @@ export class RelayPush extends Command {
   /** Get current git branch name */
   private getCurrentBranch(): string {
     try {
-      return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf-8' }).trim();
+      return execSync('git rev-parse --abbrev-ref HEAD', {
+        encoding: 'utf-8',
+      }).trim();
     } catch {
       return 'main';
     }

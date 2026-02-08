@@ -66,12 +66,15 @@ export async function pollStatus(
   const startTime = Date.now();
 
   while (Date.now() - startTime < MAX_POLL_DURATION_MS) {
-    const response = await fetchJson(`${relayUrl}/api/relay/status/${sessionId}`, {
-      method: 'GET',
-      headers: {
-        'X-Relay-Key': apiKey,
+    const response = await fetchJson(
+      `${relayUrl}/api/relay/status/${sessionId}`,
+      {
+        method: 'GET',
+        headers: {
+          'X-Relay-Key': apiKey,
+        },
       },
-    });
+    );
 
     const status = response as StatusResponse;
 
@@ -83,30 +86,39 @@ export async function pollStatus(
     await sleep(POLL_INTERVAL_MS);
   }
 
-  throw new Error(`Status polling timed out after ${MAX_POLL_DURATION_MS / 1000}s for session ${sessionId}`);
+  throw new Error(
+    `Status polling timed out after ${MAX_POLL_DURATION_MS / 1000}s for session ${sessionId}`,
+  );
 }
 
 /**
  * POST JSON with exponential backoff retry on network errors.
  */
-async function fetchWithRetry<T>(url: string, apiKey: string, body: unknown): Promise<T> {
+async function fetchWithRetry<T>(
+  url: string,
+  apiKey: string,
+  body: unknown,
+): Promise<T> {
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      return await fetchJson(url, {
+      return (await fetchJson(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Relay-Key': apiKey,
         },
         body: JSON.stringify(body),
-      }) as T;
+      })) as T;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
 
       // Don't retry on auth errors or client errors
-      if (lastError.message.includes('401') || lastError.message.includes('400')) {
+      if (
+        lastError.message.includes('401') ||
+        lastError.message.includes('400')
+      ) {
         throw lastError;
       }
 
