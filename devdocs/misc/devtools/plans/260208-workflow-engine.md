@@ -6,12 +6,61 @@
 - Debate machine (xstate reference): `devdocs/misc/devtools/common/debate-machine/OVERVIEW.md`
 - Dashboard plugin (Ink reference): `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
 - Dashboard Ink plan: `devdocs/misc/devtools/plans/260207-cli-plugin-dashboard-ink.md`
-- OpenSearch plugin: `devdocs/misc/devtools/nab/cli-plugin-nab-opensearch/OVERVIEW.md`
+- OpenSearch plugin: TBD — not yet documented, will be added when RCA plugin is implemented
 - Cursor CLI Headless docs: https://cursor.com/docs/cli/headless
 - xstate v5 docs: https://stately.ai/docs/xstate-v5
 - Ink v6 docs: https://github.com/vadimdemedes/ink
+- Workflow builder skill: `devdocs/agent/skills/common/workflow-builder/SKILL.md`
 
-> **Status:** Brainstorm / Approach — not a detailed implementation plan yet. Captures context, design decisions, and architecture for continuation by any AI agent.
+> **Status:** Core implemented — engine, dashboard, and demo workflow are built and working. `workflow-shared` deferred until real workflows need it. Persistence/crash recovery designed but not yet implemented.
+
+---
+
+## Implementation Status
+
+### What's implemented (2026-02-09)
+
+| Package | Status | Location |
+|---------|--------|----------|
+| `@aweave/workflow-engine` | ✅ Implemented (CJS) | `devtools/common/workflow-engine/` |
+| `@aweave/workflow-dashboard` | ✅ Implemented (ESM) | `devtools/common/workflow-dashboard/` |
+| `@aweave/cli-plugin-demo-workflow` | ✅ Implemented (ESM) | `devtools/common/cli-plugin-demo-workflow/` |
+| `@aweave/workflow-shared` | ❌ Deferred | Not created — build when first real workflow needs common handlers |
+
+### Key deviations from original design
+
+| # | Change | Why |
+|---|--------|-----|
+| 1 | `selectedTask` is React state, not xstate context | xstate final states (`completed`/`failed`/`aborted`) don't process events. Navigation must work after workflow ends. |
+| 2 | Removed `SELECT_TASK` and `DESELECT` from machine events | Consequence of #1 — selection is purely UI concern |
+| 3 | `humanInput` in xstate context includes `stageId` and `taskId` | Needed to correlate which task is waiting for input |
+| 4 | Added `error?: string` to `WorkflowState` | Store workflow-level error message for display |
+| 5 | Parallel uses `Promise.allSettled` (not `Promise.all`) | Collects all failures rather than failing fast on first error |
+| 6 | Race: cancelled tasks don't emit `task:failed` | Engine skips `task:failed` when `signal.aborted` is true. Only `task:cancelled` is emitted by race handler. Prevents incorrect status display. |
+| 7 | Dashboard uses full terminal width | No width cap — better for wide terminals |
+| 8 | Task detail view shows status + error + output + stream + logs | Richer than original plan's "detail or streamBuffer" — shows everything |
+| 9 | Custom `Spinner.tsx` component (braille chars) | No external `ink-spinner` dependency |
+| 10 | Non-interactive JSON mode auto-resolves human input | Uses `setTimeout` to defer `HUMAN_INPUT` send, avoiding re-entrant xstate updates |
+| 11 | TTY check with graceful fallback | Falls back to JSON mode when stdin doesn't support raw mode |
+
+### Demo workflow coverage
+
+The `aw demo` command covers all engine features:
+
+| Feature | Stage | Details |
+|---------|-------|---------|
+| Parallel execution | Validate Environment | 3 concurrent checks |
+| Race + cancellation | Run Tests | 3 suites racing, losers cancelled |
+| Dynamic tasks (`prepareTasks`) | Code Analysis | 5 modules generated at runtime |
+| Stage `reducer` | Code Analysis | Aggregates issues across modules |
+| Human-in-the-loop | Review & Approve | Option selection with 4 choices |
+| Conditional stage | Deploy, Report | `condition()` checks user decision |
+| Retry + exponential backoff | Deploy | Task fails attempt 1, succeeds on retry |
+| `onFailed` with `skip` | Notify | Notification failure doesn't block workflow |
+| Timeout | Notify | 10s timeout on notification task |
+| Streaming output | Multiple | `ctx.stream()` for live progress |
+| Logging | All | `ctx.log()` at info/warn/error levels |
+| Idempotency keys | Deploy | `ctx.execution.attempt` used in handler |
 
 ---
 
@@ -55,8 +104,8 @@ A **reusable workflow engine** that provides a standard definition, standard app
 
 - Already in stack (`@aweave/cli-plugin-dashboard`)
 - React 19 component model = composable, testable
-- xstate ↔ Ink bridge via `@xstate/react` hooks (`useActor`, `useSelector`)
-- Shared components reusable: `Spinner`, `ProgressBar`, `StatusBadge`, `Table`
+- xstate ↔ Ink bridge via `@xstate/react` hooks (`useSelector`)
+- Custom reusable components: `Spinner`, `ElapsedTime`, `TaskRow`, `StageTree`, `HumanInputPanel`
 
 ### Cursor CLI Headless — Context model
 
@@ -109,6 +158,8 @@ Workflow                          ← Entire pipeline (e.g., Root Cause Analysis
 
 Uses `AbortController` / `AbortSignal` — native JS cancellation pattern. Task handlers receive `signal` and **MUST** respect it (check `signal.aborted`, pass to fetch/child_process).
 
+**Implementation detail:** When a race task is cancelled by the abort signal, the engine does NOT emit `task:failed`. The race handler emits `task:cancelled` after the winner is determined. This prevents incorrect status display in the dashboard.
+
 ---
 
 ## 5. Core Types
@@ -133,11 +184,12 @@ type ExecutionStrategy = 'sequential' | 'parallel' | 'race';
 ### Workflow Definition (Declarative)
 
 ```typescript
-interface WorkflowDefinition<TInput = Record<string, unknown>> {
+interface WorkflowDefinition {
   id: string;
   name: string;
   description?: string;
   stages: StageDefinition[];
+  safeguards?: Partial<WorkflowSafeguards>;
 }
 
 interface StageDefinition {
@@ -159,6 +211,12 @@ interface StageDefinition {
    * Returns a transition action. If not provided, defaults to { action: 'abort' }.
    */
   onFailed?: (ctx: FailureContext) => StageTransition;
+
+  /**
+   * Optional reducer to aggregate per-task outputs into a single stage-level value.
+   * Result is stored in StageResult.aggregated. If not provided, only per-task results are available.
+   */
+  reducer?: (taskOutputs: Record<string, TaskOutput>) => unknown;
 }
 
 interface FailureContext {
@@ -223,8 +281,19 @@ interface TaskContext {
   /**
    * Pause and wait for human input.
    * Dashboard renders the prompt/options and resumes when user responds.
+   * In non-interactive mode: auto-resolved via defaultValue or first option.
    */
   waitForInput: (config: HumanInputConfig) => Promise<HumanInputResult>;
+
+  /** Idempotency context — handlers SHOULD use these to avoid duplicate side effects on retry/resume */
+  execution: {
+    /** Unique run ID for this workflow execution */
+    runId: string;
+    /** Current attempt number (1-based, increments on retry) */
+    attempt: number;
+    /** Stable key: `${runId}:${stageId}:${taskId}:${attempt}` — use as idempotency key for external calls */
+    idempotencyKey: string;
+  };
 }
 
 interface TaskOutput {
@@ -238,8 +307,10 @@ interface TaskOutput {
 
 interface StageResult {
   status: StageStatus;
-  /** Merged outputs from all tasks (parallel/sequential) or winner task (race) */
-  data: Record<string, unknown>;
+  /** Per-task outputs, keyed by task.id — no implicit merging */
+  tasks: Record<string, TaskOutput>;
+  /** Optional stage-level aggregation (via stage reducer, if defined) */
+  aggregated?: unknown;
 }
 ```
 
@@ -267,12 +338,24 @@ interface HumanInputResult {
 ```
 
 When a task calls `ctx.waitForInput(config)`:
-1. Engine emits `task:waiting-for-input` event → xstate updates context
+1. Engine emits `task:waiting-for-input` event → xstate updates context (sets `humanInput` with stageId + taskId)
 2. Ink dashboard renders the prompt and input UI (option list or text input)
-3. User responds → xstate sends `HUMAN_INPUT` event with value
+3. User responds → xstate sends `HUMAN_INPUT` event with value → forwarded to engine via `sendTo`
 4. Engine resolves the `waitForInput` promise → task continues
 
-### Runtime State (What xstate context holds)
+### Non-Interactive Mode Behavior (`--format json`)
+
+In non-interactive mode, human input is auto-resolved:
+
+1. **Default value** — If `HumanInputConfig.defaultValue` is set, use it
+2. **First option** — If options are provided, use `options[0].value`
+3. **Empty string** — Fallback
+
+**Important:** The auto-resolution must use `setTimeout` to defer the `HUMAN_INPUT` event send, avoiding re-entrant xstate updates within a `subscribe` callback.
+
+### Runtime State
+
+xstate context holds workflow data for UI consumption:
 
 ```typescript
 interface WorkflowState {
@@ -281,17 +364,22 @@ interface WorkflowState {
   input: Record<string, unknown>;
   stages: StageState[];
   currentStageIndex: number;
-  selectedTaskId: string | null;    // Which task is selected for detail view
   logs: LogEntry[];
-  humanInput: HumanInputConfig | null; // Non-null when waiting for input
+  humanInput: (HumanInputConfig & { stageId: string; taskId: string }) | null;
   startedAt?: number;
   completedAt?: number;
+  error?: string;
 }
+```
 
+**Note:** `selectedTask` is NOT in xstate context — it's React state in the dashboard component. This is because xstate final states (completed/failed/aborted) don't process events, and task navigation must work after the workflow ends.
+
+```typescript
 interface StageState {
   definition: StageDefinition;
   status: StageStatus;
   tasks: TaskState[];
+  result?: StageResult;
   startedAt?: number;
   completedAt?: number;
 }
@@ -338,15 +426,17 @@ interface LogEntry {
 │  • States: idle → running → completed / failed / aborted             │
 │  • Invokes engine via fromCallback actor                             │
 │  • Engine events → sendBack → xstate context updates                 │
-│  • Holds full WorkflowState for UI consumption                       │
-│  • User actions: abort, select-task, nav-up/down, human-input        │
+│  • Holds WorkflowState (stages, logs, humanInput) for UI             │
+│  • User actions: abort, human-input                                  │
+│  • Navigation (select/deselect) is React state, NOT xstate           │
 ├──────────────────────────────────────────────────────────────────────┤
 │ Layer 3: Ink Dashboard (React 19 Terminal UI)                        │
 │                                                                      │
-│  • Subscribes via @xstate/react hooks (useActor, useSelector)        │
+│  • Subscribes via @xstate/react useSelector                          │
 │  • Left sidebar: stage/task tree with status icons                   │
 │  • Main panel: live logs / task detail / AI streaming / human input  │
 │  • Keyboard navigation (↑↓ Enter Esc — no mouse, Ink limitation)    │
+│  • selectedTask lives in React useState (works after workflow ends)  │
 │  • Reusable: any workflow plugin imports this component              │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -363,7 +453,7 @@ interface LogEntry {
 
 ```typescript
 const runWorkflowActor = fromCallback(({ sendBack, receive, input }) => {
-  const engine = new WorkflowEngine(input.definition, input.input);
+  const engine = new WorkflowEngine(input.definition, input.workflowInput);
 
   // ALL engine events bridged to xstate
   engine.on('event', (event) => sendBack(event));
@@ -397,10 +487,13 @@ for (const task of tasks) {
 
 ### Parallel
 
+Uses `Promise.allSettled` to collect all results/failures (not `Promise.all` which fails fast):
+
 ```typescript
-const outputs = await Promise.all(
-  tasks.map((task) => this.executeTask(stageId, task, {}))
+const settlements = await Promise.allSettled(
+  tasks.map((task) => this.executeTask(stageId, task, {}, signal))
 );
+// Collect successes, aggregate failures
 ```
 
 ### Race
@@ -438,6 +531,8 @@ for (const task of tasks) {
 }
 ```
 
+**Important:** The engine skips `task:failed` emission when `signal.aborted` is true. Only `task:cancelled` is emitted by the race handler. This prevents incorrect status display.
+
 ### Task execution with retry
 
 ```typescript
@@ -447,14 +542,18 @@ for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const output = await (timeout ? withTimeout(handler(ctx), timeout) : handler(ctx));
     return output;
   } catch (err) {
-    if (signal.aborted) break; // don't retry if cancelled
+    if (signal.aborted) throw err; // don't retry or emit task:failed if cancelled
     if (attempt < maxAttempts) {
       const delay = backoff === 'exponential'
-        ? delayMs * 2 ** (attempt - 1)
+        ? Math.min(delayMs * 2 ** (attempt - 1), safeguards.maxRetryDelayMs)
         : delayMs;
       await sleep(delay);
     }
   }
+}
+// Only emit task:failed if not cancelled by signal
+if (!signal.aborted) {
+  this.emit('event', { type: 'task:failed', stageId, taskId, error });
 }
 throw lastError;
 ```
@@ -479,23 +578,53 @@ try {
     : { action: 'abort' as const };
 
   switch (transition.action) {
-    case 'abort':
-      this.emit('event', { type: 'workflow:failed', error: err.message });
-      return;
-    case 'skip':
-      // Continue to next stage
-      break;
-    case 'goto':
-      // Jump to specified stage (adjust loop index)
-      currentIndex = this.findStageIndex(transition.stageId);
-      break;
-    case 'retry':
-      // Re-run same stage (optionally only specific tasks)
-      currentIndex--; // will be incremented by loop
-      break;
+    case 'abort':  // Stop entire workflow
+    case 'skip':   // Continue to next stage
+    case 'goto':   // Jump to specified stage
+    case 'retry':  // Re-run same stage
   }
 }
 ```
+
+### Failure-Control Safeguards
+
+```typescript
+interface WorkflowSafeguards {
+  /** Max total stage transitions (start + goto + retry). Default: 50. */
+  maxTransitions: number;
+  /** Max retries per individual stage. Default: 3. */
+  maxStageRetries: number;
+  /** Backoff ceiling for retries (ms). Default: 30000. */
+  maxRetryDelayMs: number;
+}
+```
+
+**Enforced behaviors:**
+
+1. **Global transition counter** — incremented on every stage start (including goto/retry). Emits `workflow:failed` when exceeded.
+2. **Per-stage retry counter** — tracks retries per `stageId`. Emits `workflow:failed` when exceeded.
+3. **Cycle detection for `goto`** — if the same `goto` transition (from→to pair) fires more than `maxStageRetries` times, abort.
+4. **Exponential backoff with cap** — retry delays use `min(delayMs * 2^(attempt-1), maxRetryDelayMs)`.
+5. **Terminal errors** — safeguard violations emit `workflow:failed` with typed error and cannot be caught by `onFailed`.
+
+Defaults are configurable per-workflow via `WorkflowDefinition.safeguards`.
+
+### Persistence and Idempotency
+
+> **Not yet implemented.** Design is ready for when crash recovery is needed.
+
+When persistence is enabled, the engine tracks per-task completion:
+
+```typescript
+interface TaskCheckpoint {
+  taskId: string;
+  status: 'success' | 'failed';
+  output?: TaskOutput;
+  completedAt: number;
+}
+```
+
+On resume, completed tasks within the interrupted stage are **skipped** (their persisted outputs are restored into `stageResults`). Only incomplete/failed tasks are re-executed.
 
 ---
 
@@ -509,7 +638,7 @@ Some stages don't know their tasks until runtime. Example: "Analyze Source Code"
   name: 'Analyze Source Code',
   execution: 'parallel',
   prepareTasks: (ctx) => {
-    const { grouped } = ctx.stageResults['query-app-logs'].data;
+    const { grouped } = ctx.stageResults['query-app-logs'].tasks['query-and-group'].data as any;
     return Object.entries(grouped).map(([appName, logs]) => ({
       id: `analyze-${appName}`,
       name: `AI: ${appName}`,
@@ -532,9 +661,8 @@ When a stage has `prepareTasks`, the engine calls it at runtime with accumulated
 class WorkflowEngine extends EventEmitter {
   private humanInputResolve: ((value: string) => void) | null = null;
 
-  // Called by task handler via ctx.waitForInput()
-  private async waitForInput(config: HumanInputConfig): Promise<HumanInputResult> {
-    this.emit('event', { type: 'task:waiting-for-input', config });
+  private async waitForInput(stageId, taskId, config): Promise<HumanInputResult> {
+    this.emit('event', { type: 'task:waiting-for-input', stageId, taskId, config });
 
     return new Promise((resolve) => {
       this.humanInputResolve = (value: string) => {
@@ -544,7 +672,6 @@ class WorkflowEngine extends EventEmitter {
     });
   }
 
-  // Called by xstate via fromCallback receive()
   resolveHumanInput(value: string): void {
     this.humanInputResolve?.(value);
   }
@@ -553,32 +680,17 @@ class WorkflowEngine extends EventEmitter {
 
 ### Dashboard side
 
-When `state.context.humanInput` is non-null, the main panel renders an input UI:
+When `state.context.humanInput` is non-null, the main panel renders an `HumanInputPanel` component:
 
-```tsx
-// Option selection mode
-{humanInput.options && (
-  <SelectInput
-    items={humanInput.options}
-    onSelect={(item) => send({ type: 'HUMAN_INPUT', value: item.value })}
-  />
-)}
+- **Option selection:** Renders options with `↑↓` cursor navigation, `Enter` to confirm
+- **Free text:** Renders text input with cursor, `Enter` to submit, `Backspace` to delete
 
-// Free text mode
-{humanInput.freeText && (
-  <TextInput
-    placeholder={humanInput.defaultValue}
-    onSubmit={(value) => send({ type: 'HUMAN_INPUT', value })}
-  />
-)}
-```
+Both modes are built with basic Ink `useInput` — no external dependencies.
 
 ### Usage in task handler
 
 ```typescript
 const analyzeWithConfirmation: TaskHandler = async (ctx) => {
-  // ... do analysis ...
-
   const { value } = await ctx.waitForInput({
     prompt: 'Found 3 potential root causes. Which one to investigate further?',
     options: [
@@ -589,7 +701,6 @@ const analyzeWithConfirmation: TaskHandler = async (ctx) => {
     ],
   });
 
-  // Continue based on user selection
   if (value === 'all') { /* ... */ }
 };
 ```
@@ -598,25 +709,9 @@ const analyzeWithConfirmation: TaskHandler = async (ctx) => {
 
 ## 10. Workflow Persistence (Crash Recovery)
 
+> **Not yet implemented.** Design is ready.
+
 Optional — enabled per workflow. Uses xstate v5 `getPersistedSnapshot()`.
-
-```typescript
-// Save snapshot to file after each stage completion
-actor.subscribe((snapshot) => {
-  if (shouldPersist) {
-    const persisted = actor.getPersistedSnapshot();
-    fs.writeFileSync(
-      `.workflow/${definition.id}/checkpoint.json`,
-      JSON.stringify(persisted),
-    );
-  }
-});
-
-// Resume from checkpoint
-const saved = JSON.parse(fs.readFileSync(checkpointPath, 'utf-8'));
-const actor = createActor(workflowMachine, { snapshot: saved });
-actor.start();
-```
 
 Persistence is stage-level granularity — if workflow crashes mid-stage, it resumes from the beginning of the interrupted stage (not mid-task).
 
@@ -632,7 +727,7 @@ Ink is keyboard-only terminal UI. Navigation uses:
 |-----|--------|
 | `↑` / `↓` | Navigate task tree (sidebar) |
 | `Enter` | Select task → show detail in main panel |
-| `Esc` | Deselect → back to live log/stream view |
+| `Esc` | Deselect → back to live log/summary view |
 | `1-9` | Jump to stage N |
 | `q` | Quit |
 | `a` | Abort workflow |
@@ -640,38 +735,39 @@ Ink is keyboard-only terminal UI. Navigation uses:
 
 ### Visual layout
 
+Dashboard uses full terminal width.
+
 ```
-┌─ Root Cause Analysis ──────── RUNNING ─── 00:01:23 ──────────┐
-│                                                                │
-│ ┌─ Stages ──────────┐ ┌─ Main Panel ─────────────────────────┐│
-│ │                    │ │                                      ││
-│ │ ✅ Find Time Window│ │  (live logs / task detail / stream)  ││
-│ │  ⚡ ✅ 0-10d  1.2s │ │                                      ││
-│ │  ⚡ ⊘ 10-20d       │ │  14:32:01 [INFO] Searching index    ││
-│ │  ⚡ ⊘ 20-30d       │ │  14:32:03 [INFO] Found 847 entries  ││
-│ │  ⚡ ⊘ 30-40d       │ │  14:32:04 [INFO] Grouping by app... ││
-│ │  ⚡ ⊘ 40-50d       │ │                                      ││
-│ │  ⚡ ⊘ 50-60d       │ │                                      ││
-│ │                    │ │                                      ││
-│ │ ⠹ Query App Logs   │ │                                      ││
-│ │  → ⠹ Query & Group │ │                                      ││
-│ │                    │ │                                      ││
-│ │ ⬜ Analyze Source   │ │                                      ││
-│ │ ⬜ Find Root Cause  │ │                                      ││
-│ └────────────────────┘ └──────────────────────────────────────┘│
-│                                                                │
-│ [↑↓] navigate  [Enter] select  [Esc] live  [a] abort  [q] quit│
-└────────────────────────────────────────────────────────────────┘
+┌─ Demo Pipeline ──────────────── RUNNING ─── 00:01:23 ──────────┐
+│                                                                  │
+│ ┌─ Stages ──────────┐ │ ┌─ Main Panel ──────────────────────────┐│
+│ │                    │ │ │                                        ││
+│ │ ✅ Validate Env    │ │ │  (live logs / task detail / stream)    ││
+│ │  ∥ ✅ Check Node   │ │ │                                        ││
+│ │  ∥ ✅ Check Git    │ │ │  14:32:01 [INFO] Checking Node.js...   ││
+│ │  ∥ ✅ Check Disk   │ │ │  14:32:01 [INFO] Node.js v22.20.0     ││
+│ │                    │ │ │  14:32:01 [INFO] Branch: feature/demo  ││
+│ │ ⠹ Run Tests       │ │ │                                        ││
+│ │  ⚡ ⠹ Unit Tests   │ │ │                                        ││
+│ │  ⚡ ⠹ Integration  │ │ │                                        ││
+│ │  ⚡ ⠹ E2E Tests    │ │ │                                        ││
+│ │                    │ │ │                                        ││
+│ │ ⬜ Code Analysis   │ │ │                                        ││
+│ │ ⬜ Review & Approve│ │ │                                        ││
+│ │ ⬜ Deploy          │ │ │                                        ││
+│ └────────────────────┘ │ └────────────────────────────────────────┘│
+│                                                                  │
+│ [↑↓] navigate [Enter] select [Esc] back [1-9] jump [a] abort [q]│
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### Status icons
 
 ```
 ⬜  pending       (dimmed)
-⠹   running       (animated Spinner, cyan)
+⠹   running       (animated Spinner, cyan — custom braille component)
 ✅  success       (green)
 ❌  failed        (red)
-💥  error         (red)
 ⊘   cancelled     (dimmed)
 ⏭   skipped       (dimmed)
 ```
@@ -689,106 +785,78 @@ Ink is keyboard-only terminal UI. Navigation uses:
 | Mode | When | Content |
 |------|------|---------|
 | `live` | Default, no task selected | Rolling log entries + streaming AI output from active task |
-| `task-detail` | User selected a completed task | `task.output.detail` or `task.streamBuffer` |
+| `task-detail` | User selected a task | Status, error, output.detail, streamBuffer, task logs |
 | `human-input` | Task called `waitForInput()` | Prompt + option list or text input |
-| `summary` | Workflow completed | Final summary from last stage |
+| `summary` | Workflow completed | Stage list with status and duration |
 
 ### Dual output mode
 
 Each workflow command supports:
-- **Default (interactive):** Ink dashboard with live updates
-- **`--format json`:** Non-interactive JSON output for CI/scripting (no Ink loaded)
+- **Default (interactive):** Ink dashboard with live updates (requires TTY with raw mode)
+- **`--format json`:** Non-interactive JSON output for CI/scripting (no Ink loaded, auto-resolves human input)
+- **Auto-fallback:** If stdin doesn't support raw mode, automatically falls back to JSON mode
 
 ---
 
 ## 12. Package Structure
 
-### Reusable packages (3)
+### Reusable packages (2 implemented + 1 deferred)
 
 ```
 devtools/common/
-├── workflow-engine/                     # @aweave/workflow-engine (CJS)
+├── workflow-engine/                     # @aweave/workflow-engine (CJS) ✅
 │   ├── src/
 │   │   ├── index.ts                    # Barrel exports
-│   │   ├── types.ts                    # All type definitions from section 5
+│   │   ├── types.ts                    # All type definitions
 │   │   ├── engine.ts                   # WorkflowEngine class (EventEmitter-based)
 │   │   ├── machine.ts                  # xstate workflowMachine + fromCallback bridge
-│   │   └── helpers.ts                  # withTimeout, sleep
+│   │   └── helpers.ts                  # withTimeout, sleep, formatDuration
 │   └── package.json                    # deps: xstate ^5
 │
-├── workflow-dashboard/                  # @aweave/workflow-dashboard (ESM)
+├── workflow-dashboard/                  # @aweave/workflow-dashboard (ESM) ✅
 │   ├── src/
-│   │   ├── index.ts                    # Export: WorkflowDashboard component
+│   │   ├── index.ts                    # Export: WorkflowDashboard + all components
 │   │   ├── components/
 │   │   │   ├── WorkflowDashboard.tsx   # Root: header + sidebar + main panel + footer
-│   │   │   ├── StageTree.tsx           # Left sidebar: stage/task tree
+│   │   │   ├── StageTree.tsx           # Left sidebar: stage/task tree + buildNavItems()
 │   │   │   ├── MainPanel.tsx           # Right panel: logs / detail / summary / input
 │   │   │   ├── TaskRow.tsx             # Single task row with status icon + duration
 │   │   │   ├── HumanInputPanel.tsx     # Option selection or text input UI
-│   │   │   └── ElapsedTime.tsx         # Live elapsed timer
+│   │   │   ├── ElapsedTime.tsx         # Live elapsed timer
+│   │   │   └── Spinner.tsx             # Animated braille spinner
 │   │   └── hooks/
 │   │       └── useNavigation.ts        # ↑↓ keyboard navigation state
-│   └── package.json                    # deps: ink ^6, react ^19, @xstate/react
+│   └── package.json                    # deps: ink ^6, react ^19, @xstate/react ^4
 │
-├── workflow-shared/                     # @aweave/workflow-shared (CJS)
+├── workflow-shared/                     # @aweave/workflow-shared (CJS) ❌ DEFERRED
+│   └── (not yet created — build when first real workflow needs common handlers)
+```
+
+### Demo workflow (case study)
+
+```
+devtools/common/
+├── cli-plugin-demo-workflow/            # @aweave/cli-plugin-demo-workflow (ESM) ✅
 │   ├── src/
-│   │   ├── index.ts                    # Barrel exports
-│   │   ├── handlers/
-│   │   │   ├── cursor-agent.ts         # callCursorAgent() — exec `agent -p`, parse output
-│   │   │   ├── cli-tool.ts             # callCLI() — exec any `aw <command>`, parse MCPResponse
-│   │   │   └── file-ops.ts             # readFile, writeFile, ensureDir — common file operations
-│   │   └── utils/
-│   │       ├── prompt-builder.ts       # Build AI prompts from accumulated context
-│   │       └── output-parser.ts        # Parse AI text/JSON/stream-json output
-│   └── package.json                    # deps: @aweave/workflow-engine (types only)
+│   │   ├── index.ts                    # Empty (oclif auto-discovers commands)
+│   │   ├── commands/
+│   │   │   └── demo.ts                # aw demo [--format interactive|json]
+│   │   └── workflow.ts                 # WorkflowDefinition with all features
+│   └── package.json
 ```
 
 ### Per-workflow packages (1 per workflow)
 
 Each workflow is a **separate oclif plugin** with a **single command**. No `run/list` subcommands.
 
-```
-devtools/nab/
-├── cli-plugin-rca/                      # @aweave/cli-plugin-nab-rca (ESM)
-│   ├── src/
-│   │   ├── index.ts                    # Empty (oclif auto-discovers commands)
-│   │   ├── commands/
-│   │   │   └── rca.ts                  # aw rca --correlationId <id> --env sit
-│   │   ├── workflow.ts                 # WorkflowDefinition for Root Cause Analysis
-│   │   └── handlers/                   # Domain-specific task handlers
-│   │       ├── search-kong.ts          # searchKongIndex() handler
-│   │       ├── query-app-logs.ts       # queryApplicationLogs() handler
-│   │       ├── analyze-repo.ts         # analyzeRepo() handler (AI)
-│   │       └── find-root-cause.ts      # findRootCause() handler (AI)
-│   └── package.json
-│       # deps: @aweave/workflow-engine, @aweave/workflow-dashboard,
-│       #       @aweave/workflow-shared, @oclif/core
-```
-
-### Command structure
-
-```bash
-# Each workflow = one top-level command
-aw rca --correlationId abc123 --env sit            # Root Cause Analysis
-aw rca --correlationId abc123 --env sit --format json  # Non-interactive mode
-
-# Future workflows (each a separate cli-plugin-* package):
-aw sync-confluence --folder path/to/confluence/     # Confluence sync workflow
-aw code-review --branch feature/x                   # Code review workflow
-aw migrate-api --source v1 --target v2              # API migration workflow
-```
-
 ### Dependency flow
 
 ```
 @aweave/workflow-engine        ← Pure logic, types, xstate machine (CJS)
        ↑
-@aweave/workflow-shared        ← Common handlers: callCursorAgent, callCLI (CJS)
-       ↑
 @aweave/workflow-dashboard     ← Ink UI, reusable by all workflows (ESM)
        ↑
-@aweave/cli-plugin-nab-rca    ← oclif plugin: aw rca (ESM)
-@aweave/cli-plugin-*          ← other workflow plugins
+@aweave/cli-plugin-*          ← oclif plugins: one per workflow (ESM)
 ```
 
 ### CJS vs ESM
@@ -796,7 +864,6 @@ aw migrate-api --source v1 --target v2              # API migration workflow
 | Package | Module | Why |
 |---------|--------|-----|
 | workflow-engine | CJS | Importable by both CJS and ESM consumers |
-| workflow-shared | CJS | Same reason — leaf dependency |
 | workflow-dashboard | ESM | Ink v6 is ESM-only |
 | cli-plugin-* | ESM | Uses Ink (ESM) |
 
@@ -804,60 +871,7 @@ Same pattern as `@aweave/debate-machine` (CJS) consumed by `cli-plugin-debate`.
 
 ---
 
-## 13. Concrete Example: Root Cause Analysis
-
-### Input
-
-```bash
-aw rca --correlationId "abc-123-def-456" --env sit
-```
-
-### Stage flow
-
-```
-Stage 1: Find Time Window          [race ⚡]
-  ├── Search kong_index  0-10 days   → first hit wins, cancel rest
-  ├── Search kong_index 10-20 days
-  ├── Search kong_index 20-30 days
-  ├── Search kong_index 30-40 days
-  ├── Search kong_index 40-50 days
-  └── Search kong_index 50-60 days
-  Output: { apis[], timestamp, rawResults[] }
-
-  onFailed: ({ error }) => {
-    log('Could not find correlationId in any time range');
-    return { action: 'abort' };  // or { action: 'goto', stageId: 'not-found' }
-  }
-
-Stage 2: Query Application Logs    [sequential →]
-  └── Query & Group by application
-  Output: { grouped: { [appName]: logEntries[] }, applicationNames[] }
-
-Stage 3: Analyze Source Code        [parallel ∥]
-  ├── AI: app-1 (dynamic)           → reads logs + source code → writes analysis.md
-  ├── AI: app-2 (dynamic)
-  └── AI: app-N (dynamic)
-  Output: { [taskId]: { appName, repoUrl, analysis } }
-
-  Tasks generated dynamically via prepareTasks() from Stage 2 output.
-
-Stage 4: Find Root Cause            [sequential →]
-  └── AI: Synthesize root cause     → reads all analysis.md → writes root-cause.md
-  Output: { rootCause: string }
-```
-
-### AI agent context strategy (per stage)
-
-| Stage | AI interaction | Context method |
-|-------|---------------|----------------|
-| 1 | None (CLI tool only) | — |
-| 2 | None (CLI tool only) | — |
-| 3 | Cursor CLI per repo | File-based: `.workflow/rca/<app>/logs.json` → AI reads + writes `analysis.md` |
-| 4 | Cursor CLI synthesize | File-based: `.workflow/rca/all-analyses.md` → AI reads + writes `root-cause.md` |
-
----
-
-## 14. Key Design Decisions Summary
+## 13. Key Design Decisions Summary
 
 | # | Decision | Rationale |
 |---|----------|-----------|
@@ -870,9 +884,17 @@ Stage 4: Find Root Cause            [sequential →]
 | 7 | `ctx.waitForInput()` for human-in-the-loop | Pauses task, dashboard renders input UI, resumes on response |
 | 8 | `onFailed` is a function returning transition | Full control: abort, skip, goto, retry — with access to error context |
 | 9 | Keyboard navigation (not mouse) | Ink does not support mouse clicks. Arrow keys + Enter = standard TUI |
-| 10 | 3 reusable packages + per-workflow plugins | Engine + Dashboard + Shared handlers reused. Each workflow = 1 oclif command |
+| 10 | 2 reusable packages + per-workflow plugins | Engine + Dashboard reused. Each workflow = 1 oclif command |
 | 11 | File-based AI context | Write to `.workflow/` dir, AI reads via tool calling. Scales beyond prompt limits |
 | 12 | xstate for lifecycle, not execution | xstate manages state + holds data for UI. Engine handles actual task execution |
 | 13 | Optional persistence via `getPersistedSnapshot()` | Stage-level checkpointing for crash recovery when needed |
 | 14 | Config-based workflow registry | Workflows discovered via oclif plugin system (declared in CLI config) |
 | 15 | Dual output: Ink dashboard + `--format json` | Interactive for humans, JSON for CI/scripting/AI agents |
+| 16 | `selectedTask` in React state, not xstate | xstate final states don't process events. Navigation must work after workflow ends. |
+| 17 | Per-task outputs keyed by taskId (no implicit merge) | Explicit data lineage; optional `reducer` for aggregation |
+| 18 | Failure-control safeguards (maxTransitions, cycle detection) | Prevents infinite loops and cost runaway from goto/retry |
+| 19 | Idempotency key in TaskContext (`runId:stageId:taskId:attempt`) | Handlers can deduplicate side effects on retry/resume |
+| 20 | Race losers: skip `task:failed`, only emit `task:cancelled` | Prevents incorrect status display. Engine checks `signal.aborted` before emitting failure. |
+| 21 | Non-interactive auto-resolve via `setTimeout` | Avoids re-entrant xstate updates within `subscribe` callback |
+| 22 | TTY check with JSON fallback | Graceful degradation when raw mode unavailable (IDE terminals, CI) |
+| 23 | `Promise.allSettled` for parallel (not `Promise.all`) | Collects all task results/failures rather than failing fast on first error |

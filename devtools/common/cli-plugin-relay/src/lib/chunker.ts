@@ -15,18 +15,21 @@ export const DEFAULT_CHUNK_SIZE = 3 * 1024 * 1024;
  * @returns Array of buffer chunks
  * @throws If chunkSize exceeds hard cap or is below minimum
  */
-export function splitIntoChunks(data: Buffer, chunkSize: number = DEFAULT_CHUNK_SIZE): Buffer[] {
+export function splitIntoChunks(
+  data: Buffer,
+  chunkSize: number = DEFAULT_CHUNK_SIZE,
+): Buffer[] {
   if (chunkSize > CHUNK_HARD_CAP) {
     throw new Error(
       `Chunk size ${chunkSize} exceeds hard cap of ${CHUNK_HARD_CAP} bytes. ` +
-      'Base64 + JSON envelope must fit within Vercel 4.5MB body limit.',
+        'Base64 + JSON envelope must fit within Vercel 4.5MB body limit.',
     );
   }
 
   if (chunkSize < CHUNK_MIN_SIZE) {
     throw new Error(
       `Chunk size ${chunkSize} is below minimum of ${CHUNK_MIN_SIZE} bytes. ` +
-      'Small chunks create excessive HTTP requests.',
+        'Small chunks create excessive HTTP requests.',
     );
   }
 

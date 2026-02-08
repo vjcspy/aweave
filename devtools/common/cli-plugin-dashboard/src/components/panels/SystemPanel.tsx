@@ -53,7 +53,13 @@ export function SystemPanel() {
               label="MEM"
               value={memory.percentage}
               width={20}
-              color={memory.percentage > 85 ? 'red' : memory.percentage > 70 ? 'yellow' : 'green'}
+              color={
+                memory.percentage > 85
+                  ? 'red'
+                  : memory.percentage > 70
+                    ? 'yellow'
+                    : 'green'
+              }
             />
           </Box>
           <Box marginLeft={2}>
@@ -72,7 +78,13 @@ export function SystemPanel() {
                   label="DISK"
                   value={disk.percentage}
                   width={20}
-                  color={disk.percentage > 90 ? 'red' : disk.percentage > 75 ? 'yellow' : 'green'}
+                  color={
+                    disk.percentage > 90
+                      ? 'red'
+                      : disk.percentage > 75
+                        ? 'yellow'
+                        : 'green'
+                  }
                 />
               </Box>
               <Box marginLeft={2}>
@@ -82,7 +94,7 @@ export function SystemPanel() {
               </Box>
             </>
           ) : (
-            <Text dimColor>DISK   unavailable</Text>
+            <Text dimColor>DISK unavailable</Text>
           )}
         </Box>
       </Box>

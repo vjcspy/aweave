@@ -46,7 +46,11 @@ export class RelayStatus extends Command {
     }
 
     try {
-      const result = await pollStatus(config.relayUrl!, config.apiKey!, args.sessionId);
+      const result = await pollStatus(
+        config.relayUrl!,
+        config.apiKey!,
+        args.sessionId,
+      );
 
       output(
         new MCPResponse({
@@ -66,10 +70,7 @@ export class RelayStatus extends Command {
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      output(
-        errorResponse('NETWORK_ERROR', message),
-        flags.format,
-      );
+      output(errorResponse('NETWORK_ERROR', message), flags.format);
       this.exit(3);
     }
   }

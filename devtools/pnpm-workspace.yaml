@@ -10,6 +10,9 @@ packages:
   - common/cli-plugin-docs
   - common/cli-plugin-dashboard
   - common/cli-plugin-relay
+  - common/workflow-engine
+  - common/workflow-dashboard
+  - common/cli-plugin-demo-workflow
 
 onlyBuiltDependencies:
   - "@nestjs/core"
