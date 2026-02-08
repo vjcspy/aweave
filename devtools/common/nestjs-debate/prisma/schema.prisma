@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DEBATE_DATABASE_URL")
+}
+
+model Debate {
+  id         String     @id
+  title      String
+  debateType String     @map("debate_type")
+  state      String     @default("AWAITING_OPPONENT")
+  createdAt  String     @default(dbgenerated("(datetime('now'))")) @map("created_at")
+  updatedAt  String     @default(dbgenerated("(datetime('now'))")) @map("updated_at")
+  arguments  Argument[]
+
+  @@map("debates")
+}
+
+model Argument {
+  id              String     @id
+  debateId        String     @map("debate_id")
+  parentId        String?    @map("parent_id")
+  type            String
+  role            String
+  content         String
+  clientRequestId String?    @map("client_request_id")
+  seq             Int
+  createdAt       String     @default(dbgenerated("(datetime('now'))")) @map("created_at")
+
+  debate          Debate     @relation(fields: [debateId], references: [id])
+  parent          Argument?  @relation("ArgumentParent", fields: [parentId], references: [id])
+  children        Argument[] @relation("ArgumentParent")
+
+  @@unique([debateId, clientRequestId])
+  @@unique([debateId, seq])
+  @@index([debateId])
+  @@index([parentId])
+  @@map("arguments")
+}

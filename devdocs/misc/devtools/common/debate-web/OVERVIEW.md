@@ -1,0 +1,194 @@
+# Debate Web
+
+Next.js web application for Arbitrator to monitor debates and submit RULING/INTERVENTION.
+
+## Purpose
+
+Web interface cho Arbitrator (human) để:
+- Monitor debates real-time qua WebSocket
+- Submit INTERVENTION để pause debate
+- Submit RULING để phán xử APPEAL/RESOLUTION
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Styling | Tailwind CSS v4 + shadcn/ui |
+| API Client | openapi-fetch (typed from OpenAPI spec) |
+| Type Generation | openapi-typescript (from server's openapi.json) |
+| WebSocket | Native WebSocket API |
+| State | React hooks (useReducer) |
+| Icons | Lucide React |
+| Theme | next-themes (light/dark) |
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         debate-web                           │
+├──────────────┬──────────────────────────────────────────────┤
+│              │                                              │
+│   SIDEBAR    │              CONTENT AREA                    │
+│   (240px)    │                                              │
+│              │  ┌────────────────────────────────────────┐  │
+│   Search     │  │  Header (title + state + connection)   │  │
+│   ──────     │  ├────────────────────────────────────────┤  │
+│   Debate 1   │  │  Argument List (scroll)                │  │
+│   Debate 2   │  │  - ArgumentCard                        │  │
+│   ...        │  │  - ArgumentCard                        │  │
+│              │  │  - ...                                 │  │
+│              │  ├────────────────────────────────────────┤  │
+│              │  │  Action Area                           │  │
+│              │  │  (INTERVENTION / RULING UI)            │  │
+│              │  └────────────────────────────────────────┘  │
+└──────────────┴──────────────────────────────────────────────┘
+```
+
+## Configuration
+
+| Env Var | Default | Description |
+|---------|---------|-------------|
+| `NEXT_PUBLIC_DEBATE_SERVER_URL` | `http://127.0.0.1:3456` | debate-server URL |
+
+## Project Structure
+
+```
+debate-web/
+├── app/
+│   ├── layout.tsx           # Root layout + ThemeProvider
+│   ├── page.tsx             # Redirect to /debates
+│   ├── globals.css          # Tailwind + CSS variables
+│   └── debates/
+│       ├── layout.tsx       # Debates layout with Sidebar
+│       ├── page.tsx         # Empty state (no debate selected)
+│       └── [id]/
+│           └── page.tsx     # Debate detail view
+├── components/
+│   ├── ui/                  # shadcn components
+│   ├── layout/
+│   │   ├── sidebar.tsx      # Debate list sidebar
+│   │   └── theme-toggle.tsx # Dark/Light mode toggle
+│   ├── debate/
+│   │   ├── debate-list.tsx  # Filterable debate list
+│   │   ├── debate-item.tsx  # Single debate item
+│   │   ├── argument-list.tsx# Scrollable argument list
+│   │   ├── argument-card.tsx# Argument display card
+│   │   └── action-area.tsx  # INTERVENTION/RULING UI
+│   └── providers/
+│       └── theme-provider.tsx
+├── hooks/
+│   ├── use-debate.ts        # WebSocket + debate state
+│   └── use-debates-list.ts  # Debates list polling
+└── lib/
+    ├── api-types.ts         # Generated from openapi.json (do not edit)
+    ├── api.ts               # openapi-fetch typed client + wrapper functions
+    ├── types.ts             # WS event types + re-exported entity types
+    └── utils.ts             # cn() helper
+```
+
+## Action Area Logic
+
+| State | UI | Action |
+|-------|----|--------|
+| `AWAITING_OPPONENT` | Stop Button | INTERVENTION |
+| `AWAITING_PROPOSER` | Stop Button | INTERVENTION |
+| `AWAITING_ARBITRATOR` | Chat box | RULING |
+| `INTERVENTION_PENDING` | Chat box | RULING |
+| `CLOSED` | Read-only | - |
+
+### INTERVENTION (Stop Button)
+
+- Full-width destructive button
+- Hold for 1 second to confirm (prevent accidental clicks)
+- Progress indicator during hold
+- Sends `submit_intervention` via WebSocket
+
+### RULING (Chat Box)
+
+- Textarea for ruling content
+- "Close debate" checkbox
+- Submit button
+- Sends `submit_ruling` via WebSocket
+
+## WebSocket Integration
+
+### Connection
+
+```typescript
+// URL format
+ws://127.0.0.1:3456/ws?debate_id=xxx
+
+// Auto-reconnect with exponential backoff
+// Max reconnect delay: 30 seconds
+```
+
+### Server → Client Events
+
+| Event | Data | Description |
+|-------|------|-------------|
+| `initial_state` | `{ debate, arguments[] }` | On connect |
+| `new_argument` | `{ debate, argument }` | New argument added |
+
+### Client → Server Events
+
+| Event | Data | Description |
+|-------|------|-------------|
+| `submit_intervention` | `{ debate_id, content? }` | Pause debate |
+| `submit_ruling` | `{ debate_id, content, close? }` | Submit ruling |
+
+## OpenAPI Types Generation
+
+Entity types (`Debate`, `Argument`) and API response types are auto-generated from the server's OpenAPI spec:
+
+1. **Source:** `devtools/common/server/openapi.json` (generated by `pnpm generate:openapi` in server)
+2. **Generated file:** `lib/api-types.ts` (do not edit manually)
+3. **Generation command:** `pnpm generate:types` (also runs as `prebuild` hook)
+4. **API client:** `lib/api.ts` uses `openapi-fetch` with generated `paths` type for full type safety
+5. **WS types:** `lib/types.ts` defines WebSocket event types referencing generated entity types
+
+**Type flow:**
+```
+server/openapi.json → openapi-typescript → lib/api-types.ts → lib/api.ts (Debate, Argument) → lib/types.ts (WS events)
+                                                              → components (via @/lib/types re-exports)
+```
+
+## Development
+
+> **Package manager:** Workspace dùng **pnpm** (không phải npm). Không dùng `npm install` trong project này.
+
+> **PM2:** Production app được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Trước khi chạy dev mode, **phải stop PM2** để tránh port conflict.
+
+```bash
+# Stop PM2 process trước khi dev
+cd devtools
+pm2 stop debate-web
+
+# Install dependencies (từ workspace root)
+pnpm install
+
+# Regenerate types (if server API changed)
+cd common/debate-web
+pnpm generate:types
+
+# Run development server
+pnpm dev
+
+# Build for production (auto-runs generate:types via prebuild)
+pnpm build
+
+# Start lại PM2 khi dev xong
+cd devtools
+pm2 start ecosystem.config.cjs --only debate-web
+```
+
+**Prerequisites:**
+- aweave-server running on port 3456 (PM2 hoặc dev mode)
+
+## Related
+
+- **Spec:** `devdocs/misc/devtools/plans/debate.md`
+- **Server:** `devtools/common/debate-server/`
+- **Server Overview:** `devdocs/misc/devtools/common/debate-server/OVERVIEW.md`
+- **CLI:** `devtools/common/cli/devtool/aweave/debate/`
+- **CLI Overview:** `devdocs/misc/devtools/common/cli/devtool/aweave/debate/OVERVIEW.md`

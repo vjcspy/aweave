@@ -1,0 +1,31 @@
+{
+  "name": "@aweave/nestjs-debate",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "prisma generate --schema=prisma/schema.prisma && nest build",
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=prisma/schema.prisma",
+    "prisma:migrate:deploy": "prisma migrate deploy --schema=prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@aweave/debate-machine": "workspace:*",
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/platform-ws": "^11.0.1",
+    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/websockets": "^11.0.1",
+    "@prisma/client": "^6.4.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@types/node": "^22.10.7",
+    "@types/ws": "^8.5.12",
+    "prisma": "^6.4.1",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@nestjs/core": "^11.0.0"
+  }
+}

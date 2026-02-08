@@ -1,0 +1,42 @@
+# Specific
+**/TODO
+logs/
+cached_file/
+temporary_data/
+uploads/
+chroma_db/
+vector_cache/
+deps/
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+build
+dist
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env.development.local
+.env.test.local
+.env.production.local
+
+# turbo
+.turbo
