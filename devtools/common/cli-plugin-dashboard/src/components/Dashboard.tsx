@@ -19,7 +19,7 @@ import { LogsPanel } from './panels/LogsPanel.js';
 import { ServicesPanel } from './panels/ServicesPanel.js';
 import { SystemPanel } from './panels/SystemPanel.js';
 import { WorkspacePanel } from './panels/WorkspacePanel.js';
-import { TabBar, TABS, type TabId } from './TabBar.js';
+import { TabBar, type TabId, TABS } from './TabBar.js';
 
 interface DashboardProps {
   /** Refresh interval in seconds (default: 5) */
@@ -99,9 +99,7 @@ export function Dashboard({
 
       {/* Footer: keyboard hints */}
       <Box paddingX={1}>
-        <Text dimColor>
-          [Tab] switch  [1-4] jump  [r] refresh  [q] quit
-        </Text>
+        <Text dimColor>[Tab] switch [1-4] jump [r] refresh [q] quit</Text>
       </Box>
     </Box>
   );

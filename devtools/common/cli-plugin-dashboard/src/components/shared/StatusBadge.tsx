@@ -16,14 +16,21 @@ interface StatusBadgeProps {
   ascii?: boolean;
 }
 
-const BADGE_CONFIG: Record<Status, { icon: string; asciiIcon: string; color: string }> = {
+const BADGE_CONFIG: Record<
+  Status,
+  { icon: string; asciiIcon: string; color: string }
+> = {
   online: { icon: '●', asciiIcon: '[OK]', color: 'green' },
   offline: { icon: '✗', asciiIcon: '[FAIL]', color: 'red' },
   loading: { icon: '◌', asciiIcon: '[...]', color: 'yellow' },
   unknown: { icon: '?', asciiIcon: '[?]', color: 'gray' },
 };
 
-export function StatusBadge({ status, label, ascii = false }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  label,
+  ascii = false,
+}: StatusBadgeProps) {
   const config = BADGE_CONFIG[status];
   const icon = ascii ? config.asciiIcon : config.icon;
   const text = label ?? status;

@@ -7,8 +7,8 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
+import { DatabaseService } from './database.service';
 import { DebateGateway } from './debate.gateway';
-import { DebatePrismaService } from './debate-prisma.service';
 import {
   ActionNotAllowedError,
   ContentTooLargeError,
@@ -57,7 +57,7 @@ export class ArgumentService {
   private readonly logger = new Logger(ArgumentService.name);
 
   constructor(
-    private readonly prisma: DebatePrismaService,
+    private readonly db: DatabaseService,
     private readonly locks: LockService,
     private readonly gateway: DebateGateway,
   ) {}
@@ -79,21 +79,17 @@ export class ArgumentService {
     validateContentSize(input.content);
 
     const result = await this.locks.withLock(input.debate_id, async () => {
-      return this.prisma.$transaction(async (tx) => {
+      return this.db.transaction(() => {
         // 1. Check debate exists
-        const debate = await tx.debate.findUnique({
-          where: { id: input.debate_id },
-        });
+        const debate = this.db.findDebateById(input.debate_id);
         if (!debate) throw new DebateNotFoundError(input.debate_id);
 
         // 2. Idempotency check
         if (input.client_request_id) {
-          const existing = await tx.argument.findFirst({
-            where: {
-              debateId: input.debate_id,
-              clientRequestId: input.client_request_id,
-            },
-          });
+          const existing = this.db.findArgumentByDebateAndRequestId(
+            input.debate_id,
+            input.client_request_id,
+          );
           if (existing) {
             return { debate, argument: existing, isExisting: true };
           }
@@ -101,9 +97,7 @@ export class ArgumentService {
 
         // 3. Validate parent exists and belongs to debate
         if (input.parent_id) {
-          const parent = await tx.argument.findUnique({
-            where: { id: input.parent_id },
-          });
+          const parent = this.db.findArgumentById(input.parent_id);
           if (!parent || parent.debateId !== input.debate_id) {
             throw new InvalidInputError(
               'target_id does not belong to this debate',
@@ -125,24 +119,18 @@ export class ArgumentService {
         }
 
         // 5. Get next seq (atomic within transaction)
-        const maxSeq = await tx.argument.aggregate({
-          where: { debateId: input.debate_id },
-          _max: { seq: true },
-        });
-        const nextSeq = (maxSeq._max.seq ?? 0) + 1;
+        const nextSeq = this.db.getMaxSeq(input.debate_id) + 1;
 
         // 6. Insert argument
-        const argument = await tx.argument.create({
-          data: {
-            id: randomUUID(),
-            debateId: input.debate_id,
-            parentId: input.parent_id,
-            type: input.type,
-            role: input.role,
-            content: input.content,
-            clientRequestId: input.client_request_id,
-            seq: nextSeq,
-          },
+        const argument = this.db.insertArgument({
+          id: randomUUID(),
+          debateId: input.debate_id,
+          parentId: input.parent_id,
+          type: input.type,
+          role: input.role,
+          content: input.content,
+          clientRequestId: input.client_request_id,
+          seq: nextSeq,
         });
 
         // 7. Update debate state (via shared xstate machine)
@@ -150,16 +138,10 @@ export class ArgumentService {
         const nextState =
           transition(debate.state as DebateState, event!) ??
           (debate.state as DebateState);
-        const updatedDebate = await tx.debate.update({
-          where: { id: input.debate_id },
-          data: {
-            state: nextState,
-            updatedAt: new Date()
-              .toISOString()
-              .replace('T', ' ')
-              .replace(/\.\d+Z$/, ''),
-          },
-        });
+        const updatedDebate = this.db.updateDebateState(
+          input.debate_id,
+          nextState,
+        );
 
         return { debate: updatedDebate, argument, isExisting: false };
       });
@@ -169,11 +151,8 @@ export class ArgumentService {
     if (!result.isExisting) {
       this.gateway.broadcastNewArgument(
         input.debate_id,
-        serializeDebate(result.debate as any) as unknown as Record<
-          string,
-          unknown
-        >,
-        serializeArgument(result.argument as any) as unknown as Record<
+        serializeDebate(result.debate) as unknown as Record<string, unknown>,
+        serializeArgument(result.argument) as unknown as Record<
           string,
           unknown
         >,

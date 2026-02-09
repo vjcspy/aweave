@@ -8,11 +8,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
+  type DiskInfo,
   getCpuUsage,
   getDiskUsage,
   getMemoryUsage,
   getVersionInfo,
-  type DiskInfo,
   type MemoryInfo,
   type VersionInfo,
 } from '../lib/system.js';
@@ -68,7 +68,9 @@ export function useSystemInfo(): SystemInfoData {
   }, [pollFast, pollDisk]);
 
   useInterval(pollFast, FAST_POLL);
-  useInterval(() => { void pollDisk(); }, SLOW_POLL);
+  useInterval(() => {
+    void pollDisk();
+  }, SLOW_POLL);
 
   return { cpu, cpuHistory, memory, disk, versions, loading };
 }

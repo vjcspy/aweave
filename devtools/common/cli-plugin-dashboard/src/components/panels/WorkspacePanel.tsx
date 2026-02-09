@@ -9,7 +9,7 @@ import React from 'react';
 
 import { useWorkspace } from '../../hooks/useWorkspace.js';
 import { Spinner } from '../shared/Spinner.js';
-import { Table, type Column } from '../shared/Table.js';
+import { type Column, Table } from '../shared/Table.js';
 
 const COLUMNS: Column[] = [
   { label: 'Package', key: 'name', width: 32 },
@@ -51,9 +51,7 @@ export function WorkspacePanel() {
   return (
     <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
-        <Text bold>
-          {' '}Packages ({packages.length}){' '}
-        </Text>
+        <Text bold> Packages ({packages.length}) </Text>
       </Box>
 
       <Table columns={COLUMNS} rows={rows} />

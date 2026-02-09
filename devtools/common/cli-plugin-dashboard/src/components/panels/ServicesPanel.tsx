@@ -12,7 +12,7 @@ import { useServices } from '../../hooks/useServices.js';
 import { formatBytes, formatUptime } from '../../lib/pm2.js';
 import { Spinner } from '../shared/Spinner.js';
 import { StatusBadge } from '../shared/StatusBadge.js';
-import { Table, type Column } from '../shared/Table.js';
+import { type Column, Table } from '../shared/Table.js';
 
 interface ServicesPanelProps {
   refreshInterval?: number;
@@ -76,11 +76,12 @@ export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
       {/* PM2 Processes */}
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text bold>
-            {' '}PM2 Processes{' '}
-          </Text>
+          <Text bold> PM2 Processes </Text>
           {processesStale && (
-            <Text dimColor> (stale{processesError ? `: ${processesError}` : ''})</Text>
+            <Text dimColor>
+              {' '}
+              (stale{processesError ? `: ${processesError}` : ''})
+            </Text>
           )}
           {processesLoading && <Spinner label="Loading..." />}
         </Box>
@@ -94,9 +95,7 @@ export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
       {/* Health Checks */}
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text bold>
-            {' '}Health Checks{' '}
-          </Text>
+          <Text bold> Health Checks </Text>
           {healthLoading && <Spinner label="Checking..." />}
         </Box>
         <Table columns={HEALTH_COLUMNS} rows={healthRows} />
@@ -105,9 +104,7 @@ export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
       {/* Refresh indicator */}
       {lastUpdated && (
         <Box marginTop={1}>
-          <Text dimColor>
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </Text>
+          <Text dimColor>Last updated: {lastUpdated.toLocaleTimeString()}</Text>
         </Box>
       )}
     </Box>

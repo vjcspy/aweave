@@ -1,31 +1,12 @@
 /**
- * Serialize Prisma models to snake_case JSON for backward compatibility
+ * Serialize domain models to snake_case JSON for backward compatibility
  * with the CLI and existing API contract.
  *
- * Prisma returns camelCase (debateType, createdAt) but the API uses
+ * Domain types use camelCase (debateType, createdAt) but the API uses
  * snake_case (debate_type, created_at) to match the database column names.
  */
 
-type PrismaDebate = {
-  id: string;
-  title: string;
-  debateType: string;
-  state: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type PrismaArgument = {
-  id: string;
-  debateId: string;
-  parentId: string | null;
-  type: string;
-  role: string;
-  content: string;
-  clientRequestId: string | null;
-  seq: number;
-  createdAt: string;
-};
+import type { Argument, Debate } from './database.service';
 
 export interface SerializedDebate {
   id: string;
@@ -48,7 +29,7 @@ export interface SerializedArgument {
   created_at: string;
 }
 
-export function serializeDebate(debate: PrismaDebate): SerializedDebate {
+export function serializeDebate(debate: Debate): SerializedDebate {
   return {
     id: debate.id,
     title: debate.title,
@@ -59,7 +40,7 @@ export function serializeDebate(debate: PrismaDebate): SerializedDebate {
   };
 }
 
-export function serializeArgument(arg: PrismaArgument): SerializedArgument {
+export function serializeArgument(arg: Argument): SerializedArgument {
   return {
     id: arg.id,
     debate_id: arg.debateId,
