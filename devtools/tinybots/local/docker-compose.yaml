@@ -41,8 +41,10 @@ services:
       DB_RW_PASSWORD: ICgVcbpYW731vY3UjexgAnuQ69Wv2DdN
     volumes:
       - wonkers-db-maven-cache:/root/.m2
+      - ../../../projects/tinybots/backend/wonkers-db/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql:/usr/src/app/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql
     depends_on:
       - mysql-wonkers-db
+
 
   mysql-atlas-intelligence-db:
     image: mysql:8.0
