@@ -237,11 +237,13 @@ docker-compose up -d                          # Finally test runner
 
 Check if the test runner service already exists in `devtools/tinybots/local/docker-compose.yaml`:
 
+**Important**: Trong `docker-compose.yaml`, **chỉ dùng relative paths** cho `volumes:` (ví dụ `../../../projects/...`). Không dùng absolute paths để đảm bảo portable giữa các máy.
+
 ```yaml
   <repo-name>:
     image: node:22-alpine
     volumes:
-      - <PROJECT_ROOT>/projects/tinybots/backend/<repo-name>:/usr/src/app
+      - ../../../projects/tinybots/backend/<repo-name>:/usr/src/app
     labels:
       - <repo-name>
     environment:
@@ -455,7 +457,7 @@ docker attach $(docker ps -q --filter=label=micro-manager)
   micro-manager:
     image: node:22-alpine
     volumes:
-      - <PROJECT_ROOT>/projects/tinybots/backend/micro-manager:/usr/src/app
+      - ../../../projects/tinybots/backend/micro-manager:/usr/src/app
     labels:
       - micro-manager
     environment:
@@ -644,7 +646,7 @@ dev-<repo>:
   <repo-name>:
     image: node:22-alpine
     volumes:
-      - <PROJECT_ROOT>/projects/tinybots/backend/<repo-name>:/usr/src/app
+      - ../../../projects/tinybots/backend/<repo-name>:/usr/src/app
     labels:
       - <repo-name>
     environment:

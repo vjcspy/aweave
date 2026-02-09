@@ -19,7 +19,7 @@ services:
       DB_RW_PASSWORD: ICgVcbpYW731vY3UjexgAnuQ69Wv2DdN
     volumes:
       - typ-e-maven-cache:/root/.m2
-      # - /Users/kai/work/tinybots/tinybots/backend/typ-e/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql:/usr/src/app/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql
+      # - ../../../projects/tinybots/backend/typ-e/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql:/usr/src/app/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql
     depends_on:
       - mysql-typ-e-db
 
@@ -208,11 +208,25 @@ services:
       OAUTH_CLIENT_SECRET: mysecret
       DB_RW_HOST: mysql-wonkers-db
 
+  wonkers-taas:
+    image: 693338167548.dkr.ecr.eu-central-1.amazonaws.com/wonkers-taas:${WONKERS_TAAS_VERSION:-latest}
+    ports:
+      - 8080
+    environment:
+      WONKERS_INTERNAL_ADDRESS: http://wonkers:8080
+      WONKERS_ROBOTS_INTERNAL_ADDRESS: http://wonkers-robots:8080
+      DB_RW_HOST: mysql-wonkers-db
+    depends_on:
+      wonkers-db:
+        condition: service_completed_successfully
+      wonkers:
+        condition: service_started
+
 # === NodeJS Development Services ===
   megazord-events:
     image: node:22-alpine
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/megazord-events:/usr/src/app
+      - ../../../projects/tinybots/backend/megazord-events:/usr/src/app
     ports:
       - 8881:8080
     labels:
@@ -247,7 +261,7 @@ services:
     ports:
       - 8882:8080
     volumes:
-      - /Users/kai/work/aweave/projects/tinybots/backend/wonkers-graphql:/usr/src/app
+      - ../../../projects/tinybots/backend/wonkers-graphql:/usr/src/app
     labels:
       - wonkers-graphql
     environment:
@@ -283,7 +297,7 @@ services:
       - 8883:8080
       - 9229:9229
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/azi-3-status-check-jobs:/usr/src/app
+      - ../../../projects/tinybots/backend/azi-3-status-check-jobs:/usr/src/app
     labels:
       - azi-3-status-check-jobs
     environment:
@@ -301,7 +315,7 @@ services:
   m-o-triggers:
     image: node:22-alpine
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/m-o-triggers:/usr/src/app
+      - ../../../projects/tinybots/backend/m-o-triggers:/usr/src/app
     labels:
       - m-o-triggers
     environment:
@@ -323,7 +337,7 @@ services:
   wonkers-ecd:
     image: node:22-alpine
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/wonkers-ecd:/usr/src/app
+      - ../../../projects/tinybots/backend/wonkers-ecd:/usr/src/app
     labels:
       - "wonkers-ecd"
     environment:
@@ -349,6 +363,38 @@ services:
       wonkers-db:
         condition: service_completed_successfully
     
+  wonkers-nedap:
+    image: node:22-alpine
+    volumes:
+      - ../../../projects/tinybots/backend/wonkers-nedap:/usr/src/app
+      - ../../../projects/tinybots/backend/wonkers-nedap/ci/ssh.config:/root/.ssh/config
+      - ${DEPLOYMENT_KEY}:/root/.ssh/id_rsa
+    labels:
+      - wonkers-nedap
+    environment:
+      DB_RW_HOST: mysql-wonkers-db
+      NEDAP_ONS_API_ADDRESS: https://test-ons.tinybots.nl
+      RELATION_ID: 1
+      INTEGRATION_ID: 1
+      SLACK_HOOK: https://test-slack.tinybots.nl/test
+      CONFIG_ENVIRONMENT: dev
+      SMTP_HOST: mailcatcher
+      SMTP_PORT: 1025
+      SMTP_USE_SSL: "false"
+      SMTP_USERNAME: "test"
+      SMTP_PASSWORD: "dummy"
+      SOCKET_TIMEOUT: 5000
+      WONKERS_INTERNAL_ADDRESS: http://wonkers:8080
+    working_dir: /usr/src/app
+    entrypoint: ["sh", "-c", "yarn run test:only"]
+    depends_on:
+      wonkers-db:
+        condition: service_completed_successfully
+      wonkers:
+        condition: service_started
+      mailcatcher:
+        condition: service_started
+
   eve:
     image: maven:3-jdk-12
     platform: linux/amd64
@@ -408,7 +454,7 @@ services:
   atlas:
     image: node:22-alpine
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/atlas:/usr/src/app
+      - ../../../projects/tinybots/backend/atlas:/usr/src/app
     labels:
       - atlas-service
     environment:
@@ -427,7 +473,7 @@ services:
   sensara-adaptor:
     image: node:22-alpine
     volumes:
-      - /Users/kai/work/tinybots/tinybots/backend/sensara-adaptor:/usr/src/app
+      - ../../../projects/tinybots/backend/sensara-adaptor:/usr/src/app
     labels:
       - sensara-adaptor
     environment:
@@ -462,6 +508,41 @@ services:
       wonkers-db:
         condition: service_completed_successfully
       intelligence:
+        condition: service_completed_successfully
+
+  wonkers-taas-orders:
+    image: node:22-alpine
+    volumes:
+      - ../../../projects/tinybots/backend/wonkers-taas-orders:/usr/src/app
+      - ../../../projects/tinybots/backend/wonkers-taas-orders/ci/ssh.config:/root/.ssh/config
+      - ${DEPLOYMENT_KEY}:/root/.ssh/id_rsa
+    labels:
+      - wonkers-taas-orders
+    environment:
+      DB_RW_HOST: mysql-wonkers-db
+      KRYTEN_USERS_ADDRESS: http://kryten:8080
+      WONKERS_INTERNAL_ADDRESS: http://wonkers:8080
+      TAAS_SERVICE_ADDRESS: http://wonkers-taas:8080
+      WONKERS_NEDAP_ADDRESS: http://wonkers-nedap:8080
+      DEVICE_STATUS_SIGNALS_ADDRESS: http://wonkers-signals:8080
+      WONKERS_USER_ACCOUNT_ADDRESS: http://wonkers-account:8080
+      SLACK_HOOK: https://test-slack.tinybots.nl/test
+      POST_NL_KEY: MYAPIKEY
+      POST_NL_CRON: "30 */6 * * *"
+      SMTP_HOST: mailcatcher
+      SMTP_PORT: 1025
+      SMTP_USE_SSL: "false"
+      SMTP_USERNAME: "test"
+      SMTP_PASSWORD: "dummy"
+      SOCKET_TIMEOUT: 5000
+      ORDER_ENVIRONMENT: dev
+      TINYBOTS_INTEGRATION_ID: 1
+      MONDAY_API_TOKEN: MONDAY_API_TOKEN
+      MONDAY_TESSAEXPERT_BOARD: 1456393138
+    working_dir: /usr/src/app
+    entrypoint: ["sh", "-c", "yarn test:only"]
+    depends_on:
+      wonkers-db:
         condition: service_completed_successfully
 
 volumes:
