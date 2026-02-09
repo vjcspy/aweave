@@ -15,6 +15,7 @@ Build CLI tools and backend modules in the `devtools/` TypeScript monorepo. The 
 2. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@aweave/cli-plugin-<name>`), auto-discovered at startup.
 3. **Shared Foundation** — `@aweave/cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
 4. **No Cyclic Dependencies** — cli-shared is a leaf dependency. Plugins never import each other or the main CLI package.
+5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`, even in pm2. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
 
 ---
 
@@ -334,6 +335,42 @@ devtools/common/nestjs-<feature>/
 3. Import in `devtools/common/server/src/app.module.ts`
 4. CLI plugin calls server endpoints via `HTTPClient` from `@aweave/cli-shared`
 
+### pm2 Configuration (ecosystem.config.cjs)
+
+When adding a new server process to `devtools/ecosystem.config.cjs`, **always use `NODE_ENV: 'development'`** so full error details are shown:
+
+**NestJS server:**
+
+```javascript
+{
+  name: 'aweave-server',
+  cwd: path.join(__dirname, 'common/server'),
+  script: 'dist/main.js',
+  env: {
+    NODE_ENV: 'development',  // Always development — show full errors
+    SERVER_PORT: 3456,
+    SERVER_HOST: '127.0.0.1',
+  },
+}
+```
+
+**Next.js web app:**
+
+```javascript
+{
+  name: '<app-name>',
+  cwd: path.join(__dirname, '<domain>/<app-name>'),
+  script: 'node_modules/next/dist/bin/next',
+  args: 'start',
+  env: {
+    NODE_ENV: 'development',  // Always development — show full errors
+    PORT: <port>,
+  },
+}
+```
+
+> **Why development?** We are the only users of these devtools. Production mode hides error details behind generic messages — useless for debugging. Development mode shows full stack traces and verbose error info so we can fix issues immediately.
+
 **Full NestJS patterns:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
 
 ---
@@ -400,6 +437,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] Added as dependency of `@aweave/server`
 - [ ] Imported in `app.module.ts`
 - [ ] CLI plugin calls endpoints via `HTTPClient`
+- [ ] pm2 config uses `NODE_ENV: 'development'` (full error visibility)
 
 ### Verification
 
@@ -407,6 +445,32 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] `aw <topic> --help` — shows commands
 - [ ] JSON output is valid MCPResponse format
 - [ ] Error cases return `{ success: false, error: { code, message, suggestion } }`
+
+### Runtime Verification (NestJS / Next.js)
+
+> **Mandatory** when implementation involves NestJS server or Next.js app. Do NOT report completion to the user until this passes.
+
+After build succeeds, restart the affected pm2 process and verify it runs without errors:
+
+```bash
+# 1. Build
+cd devtools && pnpm -r build
+
+# 2. Restart affected service(s)
+pm2 restart aweave-server    # NestJS
+pm2 restart <app-name>       # Next.js (e.g. debate-web, tracing-log-web)
+
+# 3. Wait a moment, then check logs for errors
+pm2 logs aweave-server --lines 30 --nostream
+pm2 logs <app-name> --lines 30 --nostream
+```
+
+- [ ] pm2 process status is `online` (not `errored` or `stopping`)
+- [ ] No crash loops — check `pm2 ls` for restart count not climbing
+- [ ] No errors in pm2 logs (stack traces, unhandled rejections, module not found, etc.)
+- [ ] Health check passes (NestJS): `curl http://127.0.0.1:3456/health`
+
+**If errors found:** Fix the code, rebuild, restart pm2, and re-check. Repeat until clean. Only then notify the user that implementation is complete.
 
 ---
 
