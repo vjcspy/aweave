@@ -23,7 +23,12 @@ function takeCpuSnapshot(): CpuSnapshot {
   let total = 0;
   for (const cpu of cpus) {
     idle += cpu.times.idle;
-    total += cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.irq + cpu.times.idle;
+    total +=
+      cpu.times.user +
+      cpu.times.nice +
+      cpu.times.sys +
+      cpu.times.irq +
+      cpu.times.idle;
   }
   return { idle, total };
 }
@@ -62,7 +67,7 @@ export interface MemoryInfo {
 }
 
 function formatGb(bytes: number): string {
-  return `${(bytes / (1024 ** 3)).toFixed(1)} GB`;
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
 export function getMemoryUsage(): MemoryInfo {
@@ -152,13 +157,18 @@ const VERSION_TIMEOUT = 5000;
 
 async function getPnpmVersion(): Promise<string> {
   return new Promise((resolve) => {
-    execFile('pnpm', ['--version'], { timeout: VERSION_TIMEOUT }, (err, stdout) => {
-      if (err) {
-        resolve('unknown');
-        return;
-      }
-      resolve(stdout.trim());
-    });
+    execFile(
+      'pnpm',
+      ['--version'],
+      { timeout: VERSION_TIMEOUT },
+      (err, stdout) => {
+        if (err) {
+          resolve('unknown');
+          return;
+        }
+        resolve(stdout.trim());
+      },
+    );
   });
 }
 

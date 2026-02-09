@@ -1,16 +1,16 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 
 import { ArgumentService } from './argument.service';
+import { DatabaseService } from './database.service';
 import { DebateController } from './debate.controller';
 import { DebateGateway } from './debate.gateway';
 import { DebateService } from './debate.service';
-import { DebatePrismaService } from './debate-prisma.service';
 import { LockService } from './lock.service';
 import { serializeArgument, serializeDebate } from './serializers';
 
 @Module({
   providers: [
-    DebatePrismaService,
+    DatabaseService,
     LockService,
     DebateService,
     ArgumentService,
@@ -44,12 +44,12 @@ export class DebateModule implements OnModuleInit {
         }
 
         return {
-          debate: serializeDebate(result.debate as any) as unknown as Record<
+          debate: serializeDebate(result.debate) as unknown as Record<
             string,
             unknown
           >,
           arguments: args.map((arg) =>
-            serializeArgument(arg as any),
+            serializeArgument(arg),
           ) as unknown as Record<string, unknown>[],
         };
       },

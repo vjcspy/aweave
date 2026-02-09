@@ -45,7 +45,8 @@ export function Table({ columns, rows }: TableProps) {
         <Box key={idx}>
           {columns.map((col) => (
             <Box key={col.key} width={col.width ?? 16}>
-              {typeof row[col.key] === 'string' || typeof row[col.key] === 'number' ? (
+              {typeof row[col.key] === 'string' ||
+              typeof row[col.key] === 'number' ? (
                 <Text>{String(row[col.key])}</Text>
               ) : (
                 (row[col.key] as React.ReactElement)
@@ -58,7 +59,7 @@ export function Table({ columns, rows }: TableProps) {
       {/* Empty state */}
       {rows.length === 0 && (
         <Box>
-          <Text dimColor>  No data available</Text>
+          <Text dimColor> No data available</Text>
         </Box>
       )}
     </Box>

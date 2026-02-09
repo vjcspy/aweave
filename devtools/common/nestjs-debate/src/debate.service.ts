@@ -2,8 +2,9 @@ import type { DebateState } from '@aweave/debate-machine';
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
+import type { Argument } from './database.service';
+import { DatabaseService } from './database.service';
 import { DebateGateway } from './debate.gateway';
-import { DebatePrismaService } from './debate-prisma.service';
 import {
   ContentTooLargeError,
   DebateNotFoundError,
@@ -48,7 +49,7 @@ function buildWaitAction(
 @Injectable()
 export class DebateService {
   constructor(
-    private readonly prisma: DebatePrismaService,
+    private readonly db: DatabaseService,
     private readonly locks: LockService,
     private readonly gateway: DebateGateway,
   ) {}
@@ -63,19 +64,15 @@ export class DebateService {
     validateContentSize(input.motion_content);
 
     const result = await this.locks.withLock(input.debate_id, async () => {
-      return this.prisma.$transaction(async (tx) => {
+      return this.db.transaction(() => {
         // Idempotency: check if debate already exists
-        const existingDebate = await tx.debate.findUnique({
-          where: { id: input.debate_id },
-        });
+        const existingDebate = this.db.findDebateById(input.debate_id);
 
         if (existingDebate) {
-          const existingMotion = await tx.argument.findFirst({
-            where: {
-              debateId: input.debate_id,
-              clientRequestId: input.client_request_id,
-            },
-          });
+          const existingMotion = this.db.findArgumentByDebateAndRequestId(
+            input.debate_id,
+            input.client_request_id,
+          );
           if (!existingMotion) {
             throw new InvalidInputError(
               'Debate already exists with a different request',
@@ -89,26 +86,22 @@ export class DebateService {
           };
         }
 
-        const debate = await tx.debate.create({
-          data: {
-            id: input.debate_id,
-            title: input.title,
-            debateType: input.debate_type,
-            state: 'AWAITING_OPPONENT',
-          },
+        const debate = this.db.insertDebate({
+          id: input.debate_id,
+          title: input.title,
+          debateType: input.debate_type,
+          state: 'AWAITING_OPPONENT',
         });
 
-        const argument = await tx.argument.create({
-          data: {
-            id: randomUUID(),
-            debateId: input.debate_id,
-            parentId: null,
-            type: 'MOTION',
-            role: 'proposer',
-            content: input.motion_content,
-            clientRequestId: input.client_request_id,
-            seq: 1,
-          },
+        const argument = this.db.insertArgument({
+          id: randomUUID(),
+          debateId: input.debate_id,
+          parentId: null,
+          type: 'MOTION',
+          role: 'proposer',
+          content: input.motion_content,
+          clientRequestId: input.client_request_id,
+          seq: 1,
         });
 
         return { debate, argument, isExisting: false };
@@ -118,11 +111,8 @@ export class DebateService {
     if (!result.isExisting) {
       this.gateway.broadcastNewArgument(
         input.debate_id,
-        serializeDebate(result.debate as any) as unknown as Record<
-          string,
-          unknown
-        >,
-        serializeArgument(result.argument as any) as unknown as Record<
+        serializeDebate(result.debate) as unknown as Record<string, unknown>,
+        serializeArgument(result.argument) as unknown as Record<
           string,
           unknown
         >,
@@ -133,9 +123,7 @@ export class DebateService {
   }
 
   async getDebate(debateId: string) {
-    const debate = await this.prisma.debate.findUnique({
-      where: { id: debateId },
-    });
+    const debate = this.db.findDebateById(debateId);
     if (!debate) throw new DebateNotFoundError(debateId);
     return debate;
   }
@@ -143,27 +131,17 @@ export class DebateService {
   async getDebateWithArgs(debateId: string, argumentLimit?: number) {
     const debate = await this.getDebate(debateId);
 
-    const motion = await this.prisma.argument.findFirst({
-      where: { debateId, type: 'MOTION' },
-    });
+    const motion = this.db.findMotionByDebateId(debateId);
 
-    let args: Awaited<ReturnType<typeof this.prisma.argument.findMany>>;
+    let args: Argument[];
     if (argumentLimit === undefined) {
-      args = await this.prisma.argument.findMany({
-        where: { debateId, type: { not: 'MOTION' } },
-        orderBy: { seq: 'asc' },
-        take: 10000,
-      });
+      args = this.db.findArgumentsExcludeMotionAsc(debateId, 10000);
     } else if (argumentLimit <= 0) {
       args = [];
     } else {
       const limit = Math.min(500, argumentLimit);
       // Get last N arguments (excluding motion), return in asc order
-      const recent = await this.prisma.argument.findMany({
-        where: { debateId, type: { not: 'MOTION' } },
-        orderBy: { seq: 'desc' },
-        take: limit,
-      });
+      const recent = this.db.findArgumentsExcludeMotionDesc(debateId, limit);
       args = recent.reverse();
     }
 
@@ -175,33 +153,23 @@ export class DebateService {
     limit?: number;
     offset?: number;
   }) {
-    const where = opts?.state ? { state: opts.state } : {};
     const take = opts?.limit ?? 50;
     const skip = opts?.offset ?? 0;
 
-    const [debates, total] = await Promise.all([
-      this.prisma.debate.findMany({
-        where,
-        orderBy: { updatedAt: 'desc' },
-        take,
-        skip,
-      }),
-      this.prisma.debate.count({ where }),
-    ]);
+    const debates = this.db.findDebates(opts?.state, take, skip);
+    const total = this.db.countDebates(opts?.state);
 
     return { debates, total };
   }
 
   async deleteDebate(debateId: string) {
     await this.locks.withLock(debateId, async () => {
-      const debate = await this.prisma.debate.findUnique({
-        where: { id: debateId },
-      });
+      const debate = this.db.findDebateById(debateId);
       if (!debate) throw new DebateNotFoundError(debateId);
 
-      await this.prisma.$transaction(async (tx) => {
-        await tx.argument.deleteMany({ where: { debateId } });
-        await tx.debate.delete({ where: { id: debateId } });
+      this.db.transaction(() => {
+        this.db.deleteArgumentsByDebateId(debateId);
+        this.db.deleteDebateById(debateId);
       });
     });
   }
@@ -215,16 +183,12 @@ export class DebateService {
     argument_id?: string | null;
     role: WaiterRole;
   }) {
-    const debate = await this.prisma.debate.findUnique({
-      where: { id: input.debate_id },
-    });
+    const debate = this.db.findDebateById(input.debate_id);
     if (!debate) throw new DebateNotFoundError(input.debate_id);
 
     let lastSeenSeq = 0;
     if (input.argument_id) {
-      const lastSeenArg = await this.prisma.argument.findUnique({
-        where: { id: input.argument_id },
-      });
+      const lastSeenArg = this.db.findArgumentById(input.argument_id);
       if (!lastSeenArg || lastSeenArg.debateId !== input.debate_id) {
         throw new InvalidInputError(
           'argument_id does not belong to this debate',
@@ -235,16 +199,14 @@ export class DebateService {
     }
 
     // Find the latest argument with seq > lastSeenSeq
-    const latest = await this.prisma.argument.findFirst({
-      where: { debateId: input.debate_id, seq: { gt: lastSeenSeq } },
-      orderBy: { seq: 'desc' },
-    });
+    const latest = this.db.findLatestArgumentAfterSeq(
+      input.debate_id,
+      lastSeenSeq,
+    );
 
     if (latest) {
       // Re-fetch debate to get current state (may have changed)
-      const currentDebate = await this.prisma.debate.findUnique({
-        where: { id: input.debate_id },
-      });
+      const currentDebate = this.db.findDebateById(input.debate_id);
       const state = (currentDebate?.state ?? debate.state) as DebateState;
 
       return {

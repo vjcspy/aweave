@@ -1,0 +1,30 @@
+{
+  "name": "@aweave/cli-plugin-demo-workflow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "oclif": {
+    "commands": "./dist/commands",
+    "topicSeparator": " "
+  },
+  "dependencies": {
+    "@aweave/workflow-engine": "workspace:*",
+    "@aweave/workflow-dashboard": "workspace:*",
+    "@oclif/core": "^4.2.8",
+    "ink": "^6.6.0",
+    "react": "^19.0.0",
+    "xstate": "^5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/node": "^22.10.7",
+    "typescript": "^5.7.3"
+  }
+}
