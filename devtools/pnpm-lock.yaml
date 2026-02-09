@@ -336,6 +336,19 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  common/playwright:
+    dependencies:
+      playwright-core:
+        specifier: ^1.50.0
+        version: 1.58.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.9
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   common/server:
     dependencies:
       '@aweave/nestjs-debate':
@@ -12167,8 +12180,7 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  playwright-core@1.58.1:
-    optional: true
+  playwright-core@1.58.1: {}
 
   playwright@1.58.1:
     dependencies:
