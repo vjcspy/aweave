@@ -42,6 +42,7 @@ packages:
   - common/workflow-engine
   - common/workflow-dashboard
   - common/config-core
+  - common/config
   - common/cli-plugin-config
   - common/cli-plugin-demo-workflow
 

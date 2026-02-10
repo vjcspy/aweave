@@ -61,7 +61,7 @@ devtools/common/config-core/                 # ✅ DONE - shared config loader
 │   └── types.ts                             # Shared types + error types
 └── README.md                                # Usage notes
 
-devtools/common/config/                      # 🚧 TODO - default configs for common domain
+devtools/common/config/                      # ✅ DONE - default configs for common domain
 ├── package.json                             # @aweave/config-common
 ├── tsconfig.json
 ├── defaults/
@@ -295,9 +295,19 @@ Thin oclif plugin wrapping `config-core` API.
 
 **Domain discovery:** The sync command automatically scans `devtools/*/config/defaults/` directories — no hardcoded domain list needed. When domain config packages (e.g. `@aweave/config-common`) are created with a `defaults/` folder, they will be auto-discovered.
 
+#### 3. `@aweave/config-common` — `devtools/common/config/`
+
+Domain config package for "common" with default YAML files and env override maps.
+
+**Default config files:**
+- `defaults/server.yaml` — NestJS server: port (3456), host, database paths
+- `defaults/debate-web.yaml` — Next.js: port (3457), clientPublic.apiBaseUrl (projection contract)
+- `defaults/cli.yaml` — CLI plugins: debate settings (serverUrl, waitDeadline, pollInterval, autoStartServices), service definitions (names, ports, health URLs)
+
+**Exports:** `DEFAULT_CONFIG_DIR`, `DOMAIN`, `DEFAULT_CONFIG_FILES`, `CONFIG_SCHEMAS`, `SERVER_ENV_OVERRIDES`, `DEBATE_WEB_ENV_OVERRIDES`, `CLI_ENV_OVERRIDES`
+
 ### Not Implemented (Deferred)
 
-- `@aweave/config-common` (`devtools/common/config/`) — domain config package with default YAML files
 - `@aweave/config-nab` (`devtools/nab/config/`) — domain config package for nab
 - `devdocs/misc/devtools/common/config-core/OVERVIEW.md` — documentation
 - Integration with `server`, `debate-web`, and existing CLI plugins
