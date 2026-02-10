@@ -9,6 +9,7 @@ import {
   WriteResultResponseDto,
 } from '@aweave/nestjs-debate';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -17,7 +18,7 @@ import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 import { AuthGuard } from './shared/guards/auth.guard';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // WebSocket adapter (ws library)
   app.useWebSocketAdapter(new WsAdapter(app));
