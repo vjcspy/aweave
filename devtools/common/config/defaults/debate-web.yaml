@@ -1,0 +1,11 @@
+# Default config for debate-web (Next.js)
+# User override: ~/.aweave/config/common/debate-web.yaml
+# Uses server/clientPublic projection contract for Next.js safety.
+
+configVersion: 1
+
+server:
+  port: 3457
+
+clientPublic:
+  apiBaseUrl: "http://127.0.0.1:3456"
