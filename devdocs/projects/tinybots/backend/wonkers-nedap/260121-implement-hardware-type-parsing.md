@@ -68,8 +68,8 @@
 | **Database Values** | `ROBOT` (id=1), `VOICE_ASSISTANT` (id=2) |
 | **My Assumption** | Form will send exact strings: `ROBOT` or `VOICE_ASSISTANT` |
 | **Alternative Options** | Could be lowercase (`robot`/`voice_assistant`) or Dutch labels |
-| **Status** | ⬜ PENDING CONFIRMATION |
-| **Stakeholder Response** | _[To be filled by Evan]_ |
+| **Status** | ✅ CONFIRMED |
+| **Stakeholder Response** | **PO:** Form question: "Welk type Tessa wil je ontvangen?" with options: `Tessa (met visuele ondersteuning)` → VOICE_ASSISTANT, `Tessa (zonder visuele ondersteuning)` → ROBOT. Variable: `hardwareType` |
 
 ---
 
@@ -134,7 +134,7 @@ Implement parsing of the new `hardwareType` survey question in `wonkers-nedap` a
 ### Phase 1: Analysis & Preparation
 
 - [x] ~~Confirm survey question key from Evan (Assumption 1)~~ → ✅ Confirmed: `hardwareType`
-- [ ] Confirm form values from Evan (Assumption 2)
+- [x] ~~Confirm form values from Evan (Assumption 2)~~ → ✅ Confirmed: Dutch labels with partial match
 - [x] ~~Confirm default behavior (Assumption 3)~~ → ✅ Confirmed: `null`
 - [ ] Confirm scope (Assumption 4)
 - [ ] **Obtain sample Survey Result JSON** from Evan containing `hardwareType` question
@@ -254,15 +254,19 @@ hardwareType?: 'ROBOT' | 'VOICE_ASSISTANT' | null
 dto.hardwareType = this.getHardwareType(resultProperties, 'hardwareType') // Key TBD from Evan
 ```
 
-**Mapping Configuration (explicit map table):**
+**Mapping Configuration (confirmed by PO):**
 ```typescript
-// Explicit mapping table - values TBD from Evan
-const HARDWARE_TYPE_MAP: Record<string, 'ROBOT' | 'VOICE_ASSISTANT'> = {
+// Exact match for simple values
+const hardwareTypeMap: Record<string, 'ROBOT' | 'VOICE_ASSISTANT'> = {
    'robot': 'ROBOT',
    'voice_assistant': 'VOICE_ASSISTANT',
-   // Add Dutch labels if needed:
-   // 'spraakassistent': 'VOICE_ASSISTANT',
 }
+
+// Partial match for Dutch form labels (includes-based, consistent with getTessaExpertNeeded)
+// "Tessa (zonder visuele ondersteuning)" → ROBOT
+// "Tessa (met visuele ondersteuning)" → VOICE_ASSISTANT
+if (lowerValue.includes('zonder visuele')) return 'ROBOT'
+if (lowerValue.includes('met visuele')) return 'VOICE_ASSISTANT'
 ```
 
 **New Method:**
@@ -399,7 +403,7 @@ public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDt
 | **2.2** | **wonkers-taas-orders** | ConceptOrderRepository.ts | Handle null in createConceptV6 | 2.1 | ⬜ TODO |
 | **2.3** | **wonkers-db** | schema | Verify `hardware_type_id` nullable | - | 🔍 VERIFY |
 | 3.1 | wonkers-nedap | ConceptOrderDto.ts | Add `hardwareType` field (nullable) | - | ⬜ TODO |
-| 3.2 | wonkers-nedap | ConceptOrderMapper.ts | Add `getHardwareType()` with explicit map | Sample JSON | ⬜ BLOCKED |
+| 3.2 | wonkers-nedap | ConceptOrderMapper.ts | Add `getHardwareType()` with explicit map + Dutch partial match | - | ✅ DONE |
 | 4.0 | wonkers-nedap | Tests | Add/update test cases | 3.1, 3.2 | ⬜ TODO |
 | 3.3 | wonkers-nedap | WonkersTaasOrderService.ts | Change to V6 endpoint | **2.1, 2.2, 3.2, 4.0** | ⬜ BLOCKED |
 | 5.0 | - | - | Integration testing | 3.3 | ⬜ TODO |
@@ -440,12 +444,9 @@ After implementation, verify:
 ## 🚧 Blockers
 
 1. ~~**Survey Question Key**~~ - ✅ Confirmed: `hardwareType` (Arno)
-2. **Form Values** - Need exact values from Evan (Assumption 2)
+2. ~~**Form Values**~~ - ✅ Confirmed: `Tessa (met visuele ondersteuning)` → VOICE_ASSISTANT, `Tessa (zonder visuele ondersteuning)` → ROBOT (PO)
 3. ~~**Default Behavior Confirmation**~~ - ✅ Confirmed: `null` when missing (Arno)
-4. **Sample Survey Result JSON** - Need 1 sample payload from Evan to:
-   - Verify `additionalInfo` key pattern
-   - Create test fixture
-   - Confirm mapping table values
+4. ~~**Sample Survey Result JSON**~~ - No longer blocked: mapping implemented based on confirmed form values
 
 ---
 
