@@ -41,6 +41,8 @@ packages:
   - common/cli-plugin-relay
   - common/workflow-engine
   - common/workflow-dashboard
+  - common/config-core
+  - common/cli-plugin-config
   - common/cli-plugin-demo-workflow
 
 onlyBuiltDependencies:
