@@ -146,7 +146,6 @@ devtools/<domain>/cli-plugin-<name>/
     │       ├── list.ts
     │       └── create.ts
     └── lib/
-        ├── config.ts
         └── helpers.ts
 ```
 
@@ -375,6 +374,93 @@ When adding a new server process to `devtools/ecosystem.config.cjs`, **always us
 
 ---
 
+## Centralized Configuration
+
+All non-sensitive config values (URLs, ports, timeouts, feature flags, service definitions) **MUST** be stored in the centralized config package for the domain — **never** scattered inside individual plugin/module packages.
+
+### Architecture
+
+```
+@aweave/config-core (shared loader — Node-only, zero oclif deps)
+     ↑
+     |
+@aweave/config-<domain> (default YAML files + schemas + env override maps)
+     ↑
+     |
+@aweave/cli-plugin-*, @aweave/server, debate-web, etc. (consumers)
+```
+
+### Packages
+
+| Package | npm name | Location | Role |
+|---------|----------|----------|------|
+| Config Core | `@aweave/config-core` | `devtools/common/config-core/` | Shared loader: YAML parse, deep-merge, env override, sync, migration, projection |
+| Config Common | `@aweave/config-common` | `devtools/common/config/` | Default configs + schemas for the `common` domain |
+| Config CLI Plugin | `@aweave/cli-plugin-config` | `devtools/common/cli-plugin-config/` | `aw config sync`, `aw config migrate` commands |
+
+### Rules (MANDATORY)
+
+1. **No hardcoded config in plugins/modules** — Do NOT create `src/lib/config.ts` with hardcoded URLs, ports, or defaults inside plugins or backend modules. All such values belong in the domain's config package (`devtools/<domain>/config/defaults/*.yaml`).
+2. **Sensitive values stay as env vars** — Tokens, API keys, secrets are NEVER stored in config files. Only reference them via `process.env` directly in the consuming code.
+3. **Config precedence** — `env vars > user config (~/.aweave/config/) > defaults (in-source)`. This is enforced by `@aweave/config-core`'s `loadConfig()`.
+4. **One config package per domain** — Each domain (`common`, `nab`, etc.) has exactly one config package at `devtools/<domain>/config/` containing all default YAML files for that domain.
+5. **Next.js projection contract** — Config files used by Next.js apps must split values into `server` (private) and `clientPublic` (safe for browser) sections. Use `projectClientConfig()` from `@aweave/config-core` to enforce this.
+
+### Where to Put Config Values
+
+| Value type | Where | Example |
+|------------|-------|---------|
+| URLs, ports, hosts | Domain config YAML (`defaults/*.yaml`) | `server.port: 3456` |
+| Timeouts, intervals, limits | Domain config YAML | `debate.waitDeadline: 120` |
+| Feature flags | Domain config YAML | `features.enableNewUI: false` |
+| Service definitions (pm2 names, health URLs) | Domain config YAML | `services.server.healthUrl` |
+| Tokens, API keys, secrets | Environment variables ONLY | `process.env.AUTH_TOKEN` |
+| Database paths | Domain config YAML | `database.debate.dir: "~/.aweave/db"` |
+
+### How to Consume Config (in a plugin or module)
+
+```typescript
+import { loadConfig } from '@aweave/config-core';
+import { DEFAULT_CONFIG_DIR, CLI_ENV_OVERRIDES } from '@aweave/config-common';
+
+// Load config with full precedence: defaults → user override → env vars
+const config = loadConfig({
+  domain: 'common',
+  name: 'cli',             // loads defaults/cli.yaml
+  defaultsDir: DEFAULT_CONFIG_DIR,
+  envOverrides: CLI_ENV_OVERRIDES,
+});
+
+// Use typed values
+const serverUrl = config.debate.serverUrl as string;
+const timeout = config.debate.waitDeadline as number;
+
+// Sensitive values — always direct env var
+const authToken = process.env.DEBATE_AUTH_TOKEN;
+```
+
+### Adding New Config Values
+
+When a package needs a new config value:
+
+1. **Add the default** to the appropriate YAML file in `devtools/<domain>/config/defaults/<name>.yaml`
+2. **Add env override mapping** (if applicable) in `devtools/<domain>/config/src/index.ts` → env overrides map
+3. **Add schema field** (if applicable) in `devtools/<domain>/config/src/index.ts` → `CONFIG_SCHEMAS`
+4. **Consume via `loadConfig()`** in the plugin/module — never hardcode the default
+5. **Run `aw config sync --force`** to update user config files
+
+### Adding Config for a New Domain
+
+If creating tools for a new domain (e.g. `devtools/newdomain/`):
+
+1. Create `devtools/<domain>/config/` package following the same structure as `devtools/common/config/`
+2. Add default YAML files in `defaults/`
+3. Export `DEFAULT_CONFIG_DIR`, `DOMAIN`, `DEFAULT_CONFIG_FILES`, `CONFIG_SCHEMAS`, env override maps from `src/index.ts`
+4. Register in `devtools/pnpm-workspace.yaml`
+5. The `aw config sync` command auto-discovers domains with `config/defaults/` — no additional registration needed
+
+---
+
 ## Shared Code Organization
 
 ### Decision Matrix
@@ -386,7 +472,7 @@ When adding a new server process to `devtools/ecosystem.config.cjs`, **always us
 | Output/content helpers | `cli-shared/src/helpers/` | `output()`, `readContent()` |
 | pm2 utilities | `cli-shared/src/services/` | `startPm2()`, `checkHealth()` |
 | Cross-plugin domain logic | New `@aweave/<name>` package | `@aweave/debate-machine` |
-| Plugin config | Plugin `src/lib/config.ts` | Env vars, defaults |
+| Non-sensitive config (URLs, ports, timeouts) | Domain config package `defaults/*.yaml` | `@aweave/config-common` — see [Centralized Configuration](#centralized-configuration) |
 | Plugin helpers | Plugin `src/lib/helpers.ts` | `getClient()`, `filterResponse()` |
 | Plugin models | Plugin `src/lib/models.ts` | Domain interfaces/types |
 
@@ -427,6 +513,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] `--format json|markdown` flag on every command (default: `json`)
 - [ ] Error handling: `HTTPClientError` → `handleServerError()`
 - [ ] Credentials via environment variables (never CLI flags — shell history risk)
+- [ ] Config values loaded via `@aweave/config-core` from domain config package — NO hardcoded defaults in plugin code (see [Centralized Configuration](#centralized-configuration))
 - [ ] List commands auto-fetch all pages (`has_more: false`)
 - [ ] Write commands return minimal data — IDs, state only (token optimization)
 - [ ] Plugin registered in `pnpm-workspace.yaml` + `cli/package.json` oclif.plugins
@@ -482,4 +569,6 @@ pm2 logs <app-name> --lines 30 --nostream
 - **CLI shared library:** `devdocs/misc/devtools/common/cli-shared/OVERVIEW.md`
 - **Server patterns:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
 - **Ink/Dashboard patterns:** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
+- **Config core API:** `devtools/common/config-core/src/index.ts` (public API exports)
+- **Common domain config:** `devtools/common/config/` (default YAML files + schemas)
 - **MCP server guide (if converting):** `devdocs/agent/skills/common/mcp-builder/SKILL.md`
