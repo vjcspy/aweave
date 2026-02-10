@@ -13,13 +13,13 @@
   "dependencies": {
     "@aweave/workflow-engine": "workspace:*",
     "@xstate/react": "^4",
-    "ink": "^6.6.0",
-    "react": "^19.0.0",
-    "xstate": "^5"
+    "ink": "catalog:",
+    "react": "catalog:",
+    "xstate": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/node": "^22.10.7",
-    "typescript": "^5.7.3"
+    "@types/react": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }
