@@ -90,6 +90,23 @@ Each layer is loaded **only when needed**, keeping the context window efficient.
 
 ## DevTools
 
+### Auth
+
+Browser-based SSO authentication for NAB internal services.
+
+```bash
+# Login to OpenSearch (opens browser for SSO)
+aw auth login -s opensearch -e sit
+
+# Check credential status
+aw auth status
+
+# Clear browser session data (SSO cookies, cached profiles)
+aw auth clear-session
+```
+
+First login requires full SSO (email + password + MFA). Subsequent logins reuse the browser session — auto-select account or skip password entirely.
+
 ### Debate
 
 Let two AI agents debate a topic (e.g. review an implementation plan) while you monitor and arbitrate via a web dashboard.

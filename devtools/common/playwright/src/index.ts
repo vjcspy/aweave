@@ -9,4 +9,10 @@ export type {
 } from 'playwright-core';
 
 // Helpers
-export { launchBrowser, type LaunchBrowserOptions } from './browser';
+export {
+  launchBrowser,
+  launchPersistentBrowser,
+  type LaunchBrowserOptions,
+  type LaunchPersistentBrowserOptions,
+  type PersistentBrowserSession,
+} from './browser';
