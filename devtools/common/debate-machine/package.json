@@ -10,10 +10,10 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "xstate": "^5"
+    "xstate": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
-    "typescript": "^5.7.3"
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }

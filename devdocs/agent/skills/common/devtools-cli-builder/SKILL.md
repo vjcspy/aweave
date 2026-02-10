@@ -15,6 +15,7 @@ Build CLI tools and backend modules in the `devtools/` TypeScript monorepo. The 
 2. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@aweave/cli-plugin-<name>`), auto-discovered at startup.
 3. **Shared Foundation** — `@aweave/cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
 4. **No Cyclic Dependencies** — cli-shared is a leaf dependency. Plugins never import each other or the main CLI package.
+5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`, even in pm2. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
 
 ---
 
@@ -145,7 +146,6 @@ devtools/<domain>/cli-plugin-<name>/
     │       ├── list.ts
     │       └── create.ts
     └── lib/
-        ├── config.ts
         └── helpers.ts
 ```
 
@@ -334,7 +334,130 @@ devtools/common/nestjs-<feature>/
 3. Import in `devtools/common/server/src/app.module.ts`
 4. CLI plugin calls server endpoints via `HTTPClient` from `@aweave/cli-shared`
 
+### pm2 Configuration (ecosystem.config.cjs)
+
+When adding a new server process to `devtools/ecosystem.config.cjs`, **always use `NODE_ENV: 'development'`** so full error details are shown:
+
+**NestJS server:**
+
+```javascript
+{
+  name: 'aweave-server',
+  cwd: path.join(__dirname, 'common/server'),
+  script: 'dist/main.js',
+  env: {
+    NODE_ENV: 'development',  // Always development — show full errors
+    SERVER_PORT: 3456,
+    SERVER_HOST: '127.0.0.1',
+  },
+}
+```
+
+**Next.js web app:**
+
+```javascript
+{
+  name: '<app-name>',
+  cwd: path.join(__dirname, '<domain>/<app-name>'),
+  script: 'node_modules/next/dist/bin/next',
+  args: 'start',
+  env: {
+    NODE_ENV: 'development',  // Always development — show full errors
+    PORT: <port>,
+  },
+}
+```
+
+> **Why development?** We are the only users of these devtools. Production mode hides error details behind generic messages — useless for debugging. Development mode shows full stack traces and verbose error info so we can fix issues immediately.
+
 **Full NestJS patterns:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
+
+---
+
+## Centralized Configuration
+
+All non-sensitive config values (URLs, ports, timeouts, feature flags, service definitions) **MUST** be stored in the centralized config package for the domain — **never** scattered inside individual plugin/module packages.
+
+### Architecture
+
+```
+@aweave/config-core (shared loader — Node-only, zero oclif deps)
+     ↑
+     |
+@aweave/config-<domain> (default YAML files + schemas + env override maps)
+     ↑
+     |
+@aweave/cli-plugin-*, @aweave/server, debate-web, etc. (consumers)
+```
+
+### Packages
+
+| Package | npm name | Location | Role |
+|---------|----------|----------|------|
+| Config Core | `@aweave/config-core` | `devtools/common/config-core/` | Shared loader: YAML parse, deep-merge, env override, sync, migration, projection |
+| Config Common | `@aweave/config-common` | `devtools/common/config/` | Default configs + schemas for the `common` domain |
+| Config CLI Plugin | `@aweave/cli-plugin-config` | `devtools/common/cli-plugin-config/` | `aw config sync`, `aw config migrate` commands |
+
+### Rules (MANDATORY)
+
+1. **No hardcoded config in plugins/modules** — Do NOT create `src/lib/config.ts` with hardcoded URLs, ports, or defaults inside plugins or backend modules. All such values belong in the domain's config package (`devtools/<domain>/config/defaults/*.yaml`).
+2. **Sensitive values stay as env vars** — Tokens, API keys, secrets are NEVER stored in config files. Only reference them via `process.env` directly in the consuming code.
+3. **Config precedence** — `env vars > user config (~/.aweave/config/) > defaults (in-source)`. This is enforced by `@aweave/config-core`'s `loadConfig()`.
+4. **One config package per domain** — Each domain (`common`, `nab`, etc.) has exactly one config package at `devtools/<domain>/config/` containing all default YAML files for that domain.
+5. **Next.js projection contract** — Config files used by Next.js apps must split values into `server` (private) and `clientPublic` (safe for browser) sections. Use `projectClientConfig()` from `@aweave/config-core` to enforce this.
+
+### Where to Put Config Values
+
+| Value type | Where | Example |
+|------------|-------|---------|
+| URLs, ports, hosts | Domain config YAML (`defaults/*.yaml`) | `server.port: 3456` |
+| Timeouts, intervals, limits | Domain config YAML | `debate.waitDeadline: 120` |
+| Feature flags | Domain config YAML | `features.enableNewUI: false` |
+| Service definitions (pm2 names, health URLs) | Domain config YAML | `services.server.healthUrl` |
+| Tokens, API keys, secrets | Environment variables ONLY | `process.env.AUTH_TOKEN` |
+| Database paths | Domain config YAML | `database.debate.dir: "~/.aweave/db"` |
+
+### How to Consume Config (in a plugin or module)
+
+```typescript
+import { loadConfig } from '@aweave/config-core';
+import { DEFAULT_CONFIG_DIR, CLI_ENV_OVERRIDES } from '@aweave/config-common';
+
+// Load config with full precedence: defaults → user override → env vars
+const config = loadConfig({
+  domain: 'common',
+  name: 'cli',             // loads defaults/cli.yaml
+  defaultsDir: DEFAULT_CONFIG_DIR,
+  envOverrides: CLI_ENV_OVERRIDES,
+});
+
+// Use typed values
+const serverUrl = config.debate.serverUrl as string;
+const timeout = config.debate.waitDeadline as number;
+
+// Sensitive values — always direct env var
+const authToken = process.env.DEBATE_AUTH_TOKEN;
+```
+
+### Adding New Config Values
+
+When a package needs a new config value:
+
+1. **Add the default** to the appropriate YAML file in `devtools/<domain>/config/defaults/<name>.yaml`
+2. **Add env override mapping** (if applicable) in `devtools/<domain>/config/src/index.ts` → env overrides map
+3. **Add schema field** (if applicable) in `devtools/<domain>/config/src/index.ts` → `CONFIG_SCHEMAS`
+4. **Consume via `loadConfig()`** in the plugin/module — never hardcode the default
+5. **Run `aw config sync --force`** to update user config files
+
+### Adding Config for a New Domain
+
+If creating tools for a new domain (e.g. `devtools/newdomain/`):
+
+1. Create `devtools/<domain>/config/` package following the same structure as `devtools/common/config/`
+2. Add default YAML files in `defaults/`
+3. Export `DEFAULT_CONFIG_DIR`, `DOMAIN`, `DEFAULT_CONFIG_FILES`, `CONFIG_SCHEMAS`, env override maps from `src/index.ts`
+4. Register in `devtools/pnpm-workspace.yaml`
+5. The `aw config sync` command auto-discovers domains with `config/defaults/` — no additional registration needed
 
 ---
 
@@ -349,7 +472,7 @@ devtools/common/nestjs-<feature>/
 | Output/content helpers | `cli-shared/src/helpers/` | `output()`, `readContent()` |
 | pm2 utilities | `cli-shared/src/services/` | `startPm2()`, `checkHealth()` |
 | Cross-plugin domain logic | New `@aweave/<name>` package | `@aweave/debate-machine` |
-| Plugin config | Plugin `src/lib/config.ts` | Env vars, defaults |
+| Non-sensitive config (URLs, ports, timeouts) | Domain config package `defaults/*.yaml` | `@aweave/config-common` — see [Centralized Configuration](#centralized-configuration) |
 | Plugin helpers | Plugin `src/lib/helpers.ts` | `getClient()`, `filterResponse()` |
 | Plugin models | Plugin `src/lib/models.ts` | Domain interfaces/types |
 
@@ -390,6 +513,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] `--format json|markdown` flag on every command (default: `json`)
 - [ ] Error handling: `HTTPClientError` → `handleServerError()`
 - [ ] Credentials via environment variables (never CLI flags — shell history risk)
+- [ ] Config values loaded via `@aweave/config-core` from domain config package — NO hardcoded defaults in plugin code (see [Centralized Configuration](#centralized-configuration))
 - [ ] List commands auto-fetch all pages (`has_more: false`)
 - [ ] Write commands return minimal data — IDs, state only (token optimization)
 - [ ] Plugin registered in `pnpm-workspace.yaml` + `cli/package.json` oclif.plugins
@@ -400,6 +524,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] Added as dependency of `@aweave/server`
 - [ ] Imported in `app.module.ts`
 - [ ] CLI plugin calls endpoints via `HTTPClient`
+- [ ] pm2 config uses `NODE_ENV: 'development'` (full error visibility)
 
 ### Verification
 
@@ -407,6 +532,32 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] `aw <topic> --help` — shows commands
 - [ ] JSON output is valid MCPResponse format
 - [ ] Error cases return `{ success: false, error: { code, message, suggestion } }`
+
+### Runtime Verification (NestJS / Next.js)
+
+> **Mandatory** when implementation involves NestJS server or Next.js app. Do NOT report completion to the user until this passes.
+
+After build succeeds, restart the affected pm2 process and verify it runs without errors:
+
+```bash
+# 1. Build
+cd devtools && pnpm -r build
+
+# 2. Restart affected service(s)
+pm2 restart aweave-server    # NestJS
+pm2 restart <app-name>       # Next.js (e.g. debate-web, tracing-log-web)
+
+# 3. Wait a moment, then check logs for errors
+pm2 logs aweave-server --lines 30 --nostream
+pm2 logs <app-name> --lines 30 --nostream
+```
+
+- [ ] pm2 process status is `online` (not `errored` or `stopping`)
+- [ ] No crash loops — check `pm2 ls` for restart count not climbing
+- [ ] No errors in pm2 logs (stack traces, unhandled rejections, module not found, etc.)
+- [ ] Health check passes (NestJS): `curl http://127.0.0.1:3456/health`
+
+**If errors found:** Fix the code, rebuild, restart pm2, and re-check. Repeat until clean. Only then notify the user that implementation is complete.
 
 ---
 
@@ -418,4 +569,6 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - **CLI shared library:** `devdocs/misc/devtools/common/cli-shared/OVERVIEW.md`
 - **Server patterns:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
 - **Ink/Dashboard patterns:** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
+- **Config core API:** `devtools/common/config-core/src/index.ts` (public API exports)
+- **Common domain config:** `devtools/common/config/` (default YAML files + schemas)
 - **MCP server guide (if converting):** `devdocs/agent/skills/common/mcp-builder/SKILL.md`

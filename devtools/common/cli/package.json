@@ -28,7 +28,8 @@
       "@aweave/cli-plugin-docs",
       "@aweave/cli-plugin-dashboard",
       "@aweave/cli-plugin-relay",
-      "@aweave/cli-plugin-demo-workflow"
+      "@aweave/cli-plugin-demo-workflow",
+      "@aweave/cli-plugin-config"
     ]
   },
   "dependencies": {
@@ -36,15 +37,16 @@
     "@aweave/cli-plugin-debate": "workspace:*",
     "@aweave/cli-plugin-demo-workflow": "workspace:*",
     "@aweave/cli-plugin-docs": "workspace:*",
+    "@aweave/cli-plugin-config": "workspace:*",
     "@aweave/cli-plugin-relay": "workspace:*",
     "@aweave/cli-shared": "workspace:*",
-    "@oclif/core": "^4.2.8",
+    "@oclif/core": "catalog:",
     "@oclif/plugin-help": "^6.2.27"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
+    "@types/node": "catalog:",
     "oclif": "^4.17.41",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   }
 }

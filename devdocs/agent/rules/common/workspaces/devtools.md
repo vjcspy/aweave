@@ -77,6 +77,14 @@ devdocs/misc/devtools/              # Documentation
 
 > **CRITICAL:** If Global Overview does not exist or is empty, **STOP** and ask user to provide context before proceeding.
 
+## Skill Loading
+
+Load skill when task matches trigger. Read **after** context loading above.
+
+| Skill | Trigger | Path |
+|-------|---------|------|
+| `devtools-cli-builder` | Create/modify CLI plugins, oclif commands, NestJS modules, API integration | `devdocs/agent/skills/common/devtools-cli-builder/SKILL.md` |
+
 ## Path Detection Examples
 
 | User Input | Package Type | Package Overview Path |
