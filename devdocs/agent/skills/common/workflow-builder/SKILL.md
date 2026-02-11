@@ -8,7 +8,7 @@ description: Build multi-step workflow CLI plugins using the workflow engine, xs
 Build workflow CLI plugins on `@aweave/workflow-engine` + `@aweave/workflow-dashboard`.
 
 **Reference implementation:** `devtools/common/cli-plugin-demo-workflow/` (run with `aw demo`)
-**Design document:** `devdocs/misc/devtools/common/plans/260208-workflow-engine.md`
+**Design document:** `devdocs/misc/devtools/common/_plans/260208-workflow-engine.md`
 
 ---
 

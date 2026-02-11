@@ -181,5 +181,5 @@ pnpm dev   # tsc --watch
 - **Debate Plugin:** `devtools/common/cli-plugin-debate/`
 - **Docs Plugin:** `devtools/common/cli-plugin-docs/`
 - **Bitbucket Plugin:** `devtools/tinybots/cli-plugin-bitbucket/`
-- **Architecture Plan:** `devdocs/misc/devtools/common/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

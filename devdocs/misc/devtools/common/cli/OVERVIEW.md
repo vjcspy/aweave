@@ -166,5 +166,5 @@ cd devtools/common/cli && bin/dev.js debate generate-id
 - **Debate Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
 - **Docs Plugin:** `devtools/common/cli-plugin-docs/`
 - **Docs Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-docs/OVERVIEW.md`
-- **Architecture Plan:** `devdocs/misc/devtools/common/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

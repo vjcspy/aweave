@@ -5,7 +5,7 @@
 - DevTools overview: `devdocs/misc/devtools/OVERVIEW.md`
 - Debate machine (xstate reference): `devdocs/misc/devtools/common/debate-machine/OVERVIEW.md`
 - Dashboard plugin (Ink reference): `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
-- Dashboard Ink plan: `devdocs/misc/devtools/common/plans/260207-cli-plugin-dashboard-ink.md`
+- Dashboard Ink plan: `devdocs/misc/devtools/common/_plans/260207-cli-plugin-dashboard-ink.md`
 - OpenSearch plugin: TBD — not yet documented, will be added when RCA plugin is implemented
 - Cursor CLI Headless docs: https://cursor.com/docs/cli/headless
 - xstate v5 docs: https://stately.ai/docs/xstate-v5

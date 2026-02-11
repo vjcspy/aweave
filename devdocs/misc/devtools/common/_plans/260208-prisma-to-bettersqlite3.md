@@ -4,7 +4,7 @@
 
 - NestJS Debate module: `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md`
 - Unified server: `devdocs/misc/devtools/common/server/OVERVIEW.md`
-- Debate spec: `devdocs/misc/devtools/common/plans/debate.md`
+- Debate spec: `devdocs/misc/devtools/common/_plans/debate.md`
 
 ## Background & Decision Context
 

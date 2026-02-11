@@ -4,8 +4,8 @@
 
 - **Source of Truth:** Use `devdocs/agent/templates/common/create-plan.md` as the canonical structure.
 - **Output:** Generate the full plan content matching the template.
-- **Output Location:** Plans must be stored in the `plans/` subfolder within the repo documentation.
-- **Naming Convention:** Propose a filename strictly following: `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/plans/[YYMMDD-Ticket-Name].md`.
+- **Output Location:** Plans must be stored in the `_plans/` subfolder within the repo documentation.
+- **Naming Convention:** Propose a filename strictly following: `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_plans/[YYMMDD-Ticket-Name].md`.
 
 ## Workflow
 
