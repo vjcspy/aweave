@@ -1,18 +1,18 @@
 # 📋 [CLI-TS-MIGRATION: 2026-02-07] - Migrate CLI Toolset from Python to TypeScript
 
 > **SUPERSEDED**: The Commander.js approach in this plan has been replaced by oclif.
-> See `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md` for the current architecture.
+> See `devdocs/misc/devtools/common/plans/260207-cli-oclif-refactor.md` for the current architecture.
 > This file is kept as historical record of the initial Python→TypeScript migration.
 
 ## References
 
 - DevTools overview: `devdocs/misc/devtools/OVERVIEW.md`
-- Debate ecosystem spec: `devdocs/misc/devtools/plans/debate.md`
-- Unified NestJS server plan: `devdocs/misc/devtools/plans/260207-unified-nestjs-server.md`
-- Debate server plan: `devdocs/misc/devtools/plans/260131-debate-server.md`
-- Docs CLI plan: `devdocs/misc/devtools/plans/260131-docs-cli-tool.md`
+- Debate ecosystem spec: `devdocs/misc/devtools/common/plans/debate.md`
+- Unified NestJS server plan: `devdocs/misc/devtools/common/plans/260207-unified-nestjs-server.md`
+- Debate server plan: `devdocs/misc/devtools/common/plans/260131-debate-server.md`
+- Docs CLI plan: `devdocs/misc/devtools/common/plans/260131-docs-cli-tool.md`
 - Bitbucket CLI implementation: `devdocs/misc/devtools/tinybots/260130-bitbucket-cli-implementation.md`
-- Auto-start services plan: `devdocs/misc/devtools/plans/260204-debate-auto-start-services.md`
+- Auto-start services plan: `devdocs/misc/devtools/common/plans/260204-debate-auto-start-services.md`
 - Python MCP response: `devtools/common/cli/devtool/aweave/mcp/response.py`
 - Python HTTP client: `devtools/common/cli/devtool/aweave/http/client.py`
 - Python debate CLI: `devtools/common/cli/devtool/aweave/debate/cli.py`
@@ -821,7 +821,7 @@ Port all commands from Python `debate/cli.py`:
   - Plugin system: Commander.js `.addCommand()` pattern
   - Quick reference: Updated commands
 - [ ] Update `devtools/CLI_TOOLS.md` if it exists
-- [ ] Update `devdocs/misc/devtools/plans/debate.md` section 2.3:
+- [ ] Update `devdocs/misc/devtools/common/plans/debate.md` section 2.3:
   - CLI language: TypeScript (was Python)
   - Same command interface
   - Interval polling (was long polling)

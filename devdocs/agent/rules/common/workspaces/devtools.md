@@ -9,7 +9,7 @@ Workspace for development tools, CLI applications, and backend services — all 
 | **Source Code Root** | `devtools/` |
 | **Documentation Root** | `devdocs/misc/devtools/` |
 | **Global Overview** | `devdocs/misc/devtools/OVERVIEW.md` |
-| **Plans** | `devdocs/misc/devtools/plans/` |
+| **Plans** | `devdocs/misc/devtools/common/plans/` |
 
 ## Folder Structure
 
@@ -94,7 +94,7 @@ Load skill when task matches trigger. Read **after** context loading above.
 | `devtools/common/server/` | NestJS Server | `devdocs/misc/devtools/common/server/OVERVIEW.md` |
 | `devtools/common/nestjs-debate/` | NestJS Module | `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` |
 | `devtools/tinybots/cli-bitbucket/` | Domain CLI | `devdocs/misc/devtools/tinybots/cli-bitbucket/OVERVIEW.md` |
-| `devdocs/misc/devtools/plans/260207-*.md` | Plan file | Load Global OVERVIEW + related package OVERVIEW |
+| `devdocs/misc/devtools/common/plans/260207-*.md` | Plan file | Load Global OVERVIEW + related package OVERVIEW |
 
 ## CLI Development
 
@@ -133,7 +133,7 @@ Load skill when task matches trigger. Read **after** context loading above.
 
 ## Working with Plans
 
-Plans are stored at: `devdocs/misc/devtools/plans/`
+Plans are stored at: `devdocs/misc/devtools/common/plans/`
 
 Naming convention: `[YYMMDD-name].md`
 

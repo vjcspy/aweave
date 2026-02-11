@@ -41,7 +41,7 @@ Analyze user input to detect workspace type before any task execution.
 | "Update `projects/tinybots/backend/wonkers-api/src/app.ts`" | business-project |
 | "Read plan at `devdocs/projects/tinybots/backend/wonkers-graphql/plans/251223-PROD.md`" | business-project |
 | "Implement feature in `devtools/common/cli/devtool/aweave/debate/`" | devtools |
-| "Check `devdocs/misc/devtools/plans/260131-debate-cli.md`" | devtools |
+| "Check `devdocs/misc/devtools/common/plans/260131-debate-cli.md`" | devtools |
 | "How do I use git rebase?" | general (no workspace) |
 | "Update the config file" | **STOP & ASK** — which config? |
 

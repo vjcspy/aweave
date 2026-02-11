@@ -2,7 +2,7 @@
 
 ## References
 
-- `devdocs/misc/devtools/plans/debate.md` — Debate spec (nghiệp vụ + hệ thống)
+- `devdocs/misc/devtools/common/plans/debate.md` — Debate spec (nghiệp vụ + hệ thống)
 - `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` — NestJS debate module overview
 - `devtools/common/nestjs-debate/src/argument.service.ts` — ArgumentService (core logic)
 - `devtools/common/nestjs-debate/src/debate.controller.ts` — REST controller
@@ -159,7 +159,7 @@ Các caller khác (`submitClaim`, `submitAppeal`, etc.) không sử dụng field
 
 #### Step 3: Cập nhật documentation
 
-Cập nhật `devdocs/misc/devtools/plans/debate.md` section **1.1.5** (Step5) để phản ánh behavior mới:
+Cập nhật `devdocs/misc/devtools/common/plans/debate.md` section **1.1.5** (Step5) để phản ánh behavior mới:
 
 > **1.1.5** Step5 2 bên đều nhất trí hết các điểm:
 > Lúc đó `Proposer` sẽ gọi `aw debate request-completion` để tạo bản ghi `RESOLUTION`. **Server sẽ tự động tạo bản ghi `RULING` với close=true**, chuyển state sang `CLOSED`. Cả 2 `Proposer` và `Opponent` sẽ nhận `debate_closed` khi poll.

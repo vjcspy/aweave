@@ -187,7 +187,7 @@ pnpm lint:fix       # eslint auto-fix
 
 - **Dashboard:** `devtools/common/workflow-dashboard/` — `devdocs/misc/devtools/common/workflow-dashboard/OVERVIEW.md`
 - **Demo Workflow:** `devtools/common/cli-plugin-demo-workflow/` — `devdocs/misc/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md`
-- **Design Plan:** `devdocs/misc/devtools/plans/260208-workflow-engine.md`
+- **Design Plan:** `devdocs/misc/devtools/common/plans/260208-workflow-engine.md`
 - **Builder Skill:** `devdocs/agent/skills/common/workflow-builder/SKILL.md`
 - **Debate Machine (similar pattern):** `devdocs/misc/devtools/common/debate-machine/OVERVIEW.md`
 - **Global Overview:** `devdocs/misc/devtools/OVERVIEW.md`

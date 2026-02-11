@@ -22,8 +22,7 @@ Contains **only** shared/common content:
 | `devdocs/agent/rules/common/` | Shared agent rules | `rules/*` + `!rules/common/` |
 | `devdocs/agent/skills/common/` | Shared agent skills | `skills/*` + `!skills/common/` |
 | `devdocs/agent/templates/common/` | Shared templates | `templates/*` + `!templates/common/` |
-| `devdocs/misc/devtools/common/` | Shared devtools docs | `*/` + `!common/` |
-| `devdocs/misc/devtools/plans/` | Common devtools plans | `*/` + `!plans/` |
+| `devdocs/misc/devtools/common/` | Shared devtools docs (includes plans/) | `*/` + `!common/` |
 | `devtools/common/` | Shared dev tools (CLI, libs) | `*/` + `!common/` |
 | `devtools/scripts/` | Shared scripts | `*/` + `!scripts/` |
 | `devtools/` root files | Monorepo config (package.json, turbo.json, etc.) | Root files not matched by `*/` |
@@ -173,10 +172,9 @@ devdocs/agent/templates/*
 devdocs/projects/*
 !devdocs/projects/.gitkeep
 
-# devdocs/misc/devtools — only common/ and plans/
+# devdocs/misc/devtools — only common/
 devdocs/misc/devtools/*/
 !devdocs/misc/devtools/common/
-!devdocs/misc/devtools/plans/
 
 # devtools — only common/, scripts/ and root files
 devtools/*/

@@ -2,9 +2,9 @@
 
 ## References
 
-- Debate spec: `devdocs/misc/devtools/plans/debate.md`
-- Unified NestJS server plan: `devdocs/misc/devtools/plans/260207-unified-nestjs-server.md`
-- CLI oclif refactor plan: `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md`
+- Debate spec: `devdocs/misc/devtools/common/plans/debate.md`
+- Unified NestJS server plan: `devdocs/misc/devtools/common/plans/260207-unified-nestjs-server.md`
+- CLI oclif refactor plan: `devdocs/misc/devtools/common/plans/260207-cli-oclif-refactor.md`
 - CLI plugin debate OVERVIEW: `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
 - Current state machine: `devtools/common/nestjs-debate/src/state-machine.ts`
 - Current types: `devtools/common/nestjs-debate/src/types.ts`
@@ -389,7 +389,7 @@ If future requirements demand CLI-side validation (e.g., offline mode), the infr
   - 5 states: `AWAITING_OPPONENT`, `AWAITING_PROPOSER`, `AWAITING_ARBITRATOR`, `INTERVENTION_PENDING`, `CLOSED`
   - 5 event types: `SUBMIT_CLAIM`, `SUBMIT_APPEAL`, `SUBMIT_RESOLUTION`, `SUBMIT_INTERVENTION`, `SUBMIT_RULING`
   - 3 guards: `isOpponent`, `isProposer`, `isCloseRuling`
-  - **Outcome**: Declarative state machine matching current transition table from `devdocs/misc/devtools/plans/debate.md` section 2.1.2
+  - **Outcome**: Declarative state machine matching current transition table from `devdocs/misc/devtools/common/plans/debate.md` section 2.1.2
 - [x] Create `devtools/common/debate-machine/src/utils.ts` — utility functions (see Spec section 3)
   - `canTransition()` — check if event is valid from state
   - `transition()` — calculate next state (returns null if invalid)
@@ -434,7 +434,7 @@ If future requirements demand CLI-side validation (e.g., offline mode), the infr
 ### Phase 5: Update Documentation ✅ DONE
 
 - [x] Update `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md` — added debate-machine dep, updated approach section
-- [x] Update `devdocs/misc/devtools/plans/debate.md` — updated data flow and components sections
+- [x] Update `devdocs/misc/devtools/common/plans/debate.md` — updated data flow and components sections
 - [x] Create `devdocs/misc/devtools/common/debate-machine/OVERVIEW.md` — full package documentation
 
 ## 📊 Summary of Results

@@ -291,7 +291,7 @@ Khi Proposer submit RESOLUTION (`request-completion`), server **tự động** t
 
 > **Note:** Chỉ áp dụng cho RESOLUTION. APPEAL vẫn cần Arbitrator phán xử thủ công.
 
-Xem plan: `devdocs/misc/devtools/plans/260207-auto-ruling-on-resolution.md`
+Xem plan: `devdocs/misc/devtools/common/plans/260207-auto-ruling-on-resolution.md`
 
 ### Interval Polling (thay vì Long Polling)
 
@@ -400,6 +400,6 @@ pm2 start ecosystem.config.cjs --only aweave-server
 - **Server Overview:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
 - **Debate CLI Plugin:** `devtools/common/cli-plugin-debate/`
 - **Debate CLI Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
-- **Debate Spec:** `devdocs/misc/devtools/plans/debate.md`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-unified-nestjs-server.md`
+- **Debate Spec:** `devdocs/misc/devtools/common/plans/debate.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/plans/260207-unified-nestjs-server.md`
 - **Debate Web:** `devtools/common/debate-web/`

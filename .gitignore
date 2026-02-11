@@ -40,11 +40,10 @@ devdocs/projects/*
 
 # ========================================
 # Project-specific: devdocs/misc/devtools
-# Only common/ and plans/ tracked on master
+# Only common/ tracked on master
 # ========================================
 devdocs/misc/devtools/*/
 !devdocs/misc/devtools/common/
-!devdocs/misc/devtools/plans/
 
 # ========================================
 # Project-specific: devtools
