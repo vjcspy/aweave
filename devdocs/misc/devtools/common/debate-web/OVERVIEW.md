@@ -187,7 +187,7 @@ pm2 start ecosystem.config.cjs --only debate-web
 
 ## Related
 
-- **Spec:** `devdocs/misc/devtools/plans/debate.md`
+- **Spec:** `devdocs/misc/devtools/common/plans/debate.md`
 - **Server:** `devtools/common/debate-server/`
 - **Server Overview:** `devdocs/misc/devtools/common/debate-server/OVERVIEW.md`
 - **CLI:** `devtools/common/cli/devtool/aweave/debate/`

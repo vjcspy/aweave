@@ -80,7 +80,7 @@ devtools/common/debate-machine/
 
 ## Related
 
-- **Debate Spec:** `devdocs/misc/devtools/plans/debate.md` (section 2.1 — states & transitions)
+- **Debate Spec:** `devdocs/misc/devtools/common/plans/debate.md` (section 2.1 — states & transitions)
 - **CLI Plugin:** `devtools/common/cli-plugin-debate/`
 - **NestJS Module:** `devtools/common/nestjs-debate/`
-- **Migration Plan:** `devdocs/misc/devtools/plans/260207-xstate-debate-machine.md`
+- **Migration Plan:** `devdocs/misc/devtools/common/plans/260207-xstate-debate-machine.md`
