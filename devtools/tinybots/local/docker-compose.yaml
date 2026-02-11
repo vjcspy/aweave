@@ -449,7 +449,7 @@ services:
       PUBLIC_BOT_ID: 999999
     working_dir: /usr/src/app
 #    entrypoint: ["sh", "-c", "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack enable && corepack prepare yarn@4.12.0 --activate && yarn install --silent && yarn test:only"]
-    entrypoint: ["sh", "-c", "yarn run test:only"]
+    entrypoint: ["sh", "-c", "yarn run test"]
     depends_on:
       typ-e:
         condition: service_completed_successfully
