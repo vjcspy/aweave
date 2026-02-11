@@ -1,10 +1,13 @@
 {
-  "name": "server",
-  "version": "0.0.1",
+  "name": "@aweave/server",
+  "version": "0.0.7",
   "description": "",
   "author": "",
-  "private": true,
   "license": "UNLICENSED",
+  "files": [
+    "dist",
+    "public"
+  ],
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -22,11 +25,15 @@
     "generate:openapi": "ts-node -r tsconfig-paths/register src/scripts/generate-openapi.ts"
   },
   "dependencies": {
+    "@aweave/config-common": "workspace:*",
+    "@aweave/config-core": "workspace:*",
+    "@aweave/debate-web": "workspace:*",
     "@aweave/nestjs-debate": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-ws": "catalog:",
+    "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "catalog:",
     "@nestjs/websockets": "catalog:",
     "reflect-metadata": "^0.2.2",

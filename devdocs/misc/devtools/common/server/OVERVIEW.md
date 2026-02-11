@@ -51,6 +51,7 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 | `@nestjs/core`, `@nestjs/common` | NestJS framework |
 | `@nestjs/platform-express` | HTTP adapter |
 | `@nestjs/platform-ws`, `@nestjs/websockets` | WebSocket adapter (ws library) |
+| `@nestjs/serve-static` | Static file serving (debate-web SPA) |
 | `@nestjs/swagger` | OpenAPI spec generation + Swagger UI |
 | `@aweave/nestjs-debate` | Debate feature module (workspace dependency) |
 
@@ -99,7 +100,9 @@ devtools/common/server/
 ├── openapi.json                         # Generated OpenAPI spec (committed)
 ├── src/
 │   ├── main.ts                          # Bootstrap: NestFactory, WsAdapter, Swagger, guards, filters
-│   ├── app.module.ts                    # Root module: imports feature modules
+│   ├── app.module.ts                    # Root module: imports feature modules, ServeStaticModule
+│   ├── debate-spa.controller.ts         # Serves debate-web SPA at /debate
+│   ├── root-redirect.controller.ts      # Redirects / to /debate
 │   ├── scripts/
 │   │   └── generate-openapi.ts          # Standalone OpenAPI spec generator
 │   └── shared/
@@ -141,6 +144,15 @@ Supports:
 - NestJS `HttpException`
 - Unknown errors → 500 `INTERNAL_ERROR`
 
+## Static File Serving
+
+The debate-web SPA (React + Rsbuild, static HTML/JS/CSS) is served by the server under the `/debate` prefix via `@nestjs/serve-static`:
+
+- **ServeStaticModule** in `app.module.ts` mounts the built SPA from `public/` (copied from `debate-web` build output)
+- **DebateSpaController** handles `/debate/*` routes with `index.html` fallback for client-side routing
+- **RootRedirectController** redirects `/` to `/debate`
+- **CORS:** In production, CORS is disabled — the SPA is same-origin with the API (both served from the same server)
+
 ## Adding a New Feature Module
 
 Pattern để thêm feature mới vào server:
@@ -163,12 +175,11 @@ Pattern để thêm feature mới vào server:
 
 > **Package manager:** Workspace dùng **pnpm** (không phải npm). Tất cả commands dùng `pnpm`.
 
-> **PM2:** Production server được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Trước khi chạy dev mode, **phải stop PM2** để tránh port conflict.
+> **Process management:** Server được quản lý bởi CLI (`aw server start`). Trước khi chạy dev mode, **phải stop server** để tránh port conflict.
 
 ```bash
-# Stop PM2 process trước khi dev
-cd devtools
-pm2 stop aweave-server
+# Stop server nếu đang chạy (nếu dùng aw server start)
+aw server stop
 
 # Install dependencies (from workspace root)
 pnpm install
@@ -182,9 +193,8 @@ cd common/server && pnpm build
 # Dev mode (watch)
 cd common/server && pnpm start:dev
 
-# Start lại PM2 khi dev xong
-cd devtools
-pm2 start ecosystem.config.cjs --only aweave-server
+# Hoặc dùng CLI để chạy server
+aw server start
 ```
 
 **Health check:**
