@@ -2,9 +2,9 @@
 
 ## References
 
-- Debate spec: `devdocs/misc/devtools/common/plans/debate.md`
-- Current debate-server plan: `devdocs/misc/devtools/common/plans/260131-debate-server.md`
-- Auto-start services plan: `devdocs/misc/devtools/common/plans/260204-debate-auto-start-services.md`
+- Debate spec: `devdocs/misc/devtools/common/_plans/debate.md`
+- Current debate-server plan: `devdocs/misc/devtools/common/_plans/260131-debate-server.md`
+- Auto-start services plan: `devdocs/misc/devtools/common/_plans/260204-debate-auto-start-services.md`
 - DevTools overview: `devdocs/misc/devtools/OVERVIEW.md`
 - Current NestJS server (init): `devtools/common/server/`
 - Current debate-server (to be replaced): `devtools/common/debate-server/`
@@ -717,7 +717,7 @@ These files have no framework dependencies and can be copied with minimal change
 - [ ] Update `devtools/pnpm-workspace.yaml` — remove `common/debate-server` if no longer needed
 - [ ] Add deprecation notice to `devtools/common/debate-server/README.md`
 - [ ] Update `devdocs/misc/devtools/OVERVIEW.md` — reflect new server architecture
-- [ ] Update `devdocs/misc/devtools/common/plans/debate.md` section 2.8 — reflect new server location and architecture
+- [ ] Update `devdocs/misc/devtools/common/_plans/debate.md` section 2.8 — reflect new server location and architecture
   - **Outcome**: Documentation reflects new architecture
 
 ## 📊 Summary of Results

@@ -2,10 +2,10 @@
 
 ## References
 
-- Previous migration plan (superseded): `devdocs/misc/devtools/common/plans/260207-cli-typescript-migration.md`
+- Previous migration plan (superseded): `devdocs/misc/devtools/common/_plans/260207-cli-typescript-migration.md`
 - DevTools overview: `devdocs/misc/devtools/OVERVIEW.md`
-- Debate ecosystem spec: `devdocs/misc/devtools/common/plans/debate.md`
-- Unified NestJS server plan: `devdocs/misc/devtools/common/plans/260207-unified-nestjs-server.md`
+- Debate ecosystem spec: `devdocs/misc/devtools/common/_plans/debate.md`
+- Unified NestJS server plan: `devdocs/misc/devtools/common/_plans/260207-unified-nestjs-server.md`
 
 ## Background & Decision Context
 

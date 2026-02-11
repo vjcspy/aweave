@@ -200,5 +200,5 @@ curl http://127.0.0.1:3456/health
 - **Debate CLI Plugin:** `devtools/common/cli-plugin-debate/`
 - **Debate CLI Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
 - **Debate Web (frontend):** `devtools/common/debate-web/`
-- **Architecture Plan:** `devdocs/misc/devtools/common/plans/260207-unified-nestjs-server.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-unified-nestjs-server.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

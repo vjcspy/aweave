@@ -19,7 +19,7 @@ Extracted from user input:
 | **Source Code** | `projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
 | **Global Overview** | `devdocs/projects/<PROJECT_NAME>/OVERVIEW.md` |
 | **Repo Overview** | `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` |
-| **Plans** | `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/plans/` |
+| **Plans** | `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_plans/` |
 | **Local DevTools** | `devtools/<PROJECT_NAME>/local/` |
 
 ## Required Context Loading
@@ -48,12 +48,12 @@ Extracted from user input:
 | User Input | Extracted Variables |
 |------------|---------------------|
 | `projects/tinybots/backend/wonkers-api/src/app.ts` | PROJECT=tinybots, DOMAIN=backend, REPO=wonkers-api |
-| `devdocs/projects/tinybots/backend/wonkers-graphql/plans/251223-PROD.md` | PROJECT=tinybots, DOMAIN=backend, REPO=wonkers-graphql |
+| `devdocs/projects/tinybots/backend/wonkers-graphql/_plans/251223-PROD.md` | PROJECT=tinybots, DOMAIN=backend, REPO=wonkers-graphql |
 | `devdocs/projects/nab/OVERVIEW.md` | PROJECT=nab (no specific repo) |
 
 ## Working with Plans
 
-Plans are stored at: `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/plans/`
+Plans are stored at: `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_plans/`
 
 Naming convention: `[YYMMDD-Ticket-Name].md`
 

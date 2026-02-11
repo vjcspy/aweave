@@ -156,7 +156,7 @@ rm -f /tmp/test-docs.db
 
 ## Related
 
-- **Docs CLI Plan:** `devdocs/misc/devtools/common/plans/260131-docs-cli-tool.md`
+- **Docs CLI Plan:** `devdocs/misc/devtools/common/_plans/260131-docs-cli-tool.md`
 - **Shared Utilities:** `devtools/common/cli-shared/`
 - **Main CLI:** `devtools/common/cli/`
-- **Architecture Plan:** `devdocs/misc/devtools/common/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`

@@ -22,7 +22,7 @@ Contains **only** shared/common content:
 | `devdocs/agent/rules/common/` | Shared agent rules | `rules/*` + `!rules/common/` |
 | `devdocs/agent/skills/common/` | Shared agent skills | `skills/*` + `!skills/common/` |
 | `devdocs/agent/templates/common/` | Shared templates | `templates/*` + `!templates/common/` |
-| `devdocs/misc/devtools/common/` | Shared devtools docs (includes plans/) | `*/` + `!common/` |
+| `devdocs/misc/devtools/common/` | Shared devtools docs (includes _plans/) | `*/` + `!common/` |
 | `devtools/common/` | Shared dev tools (CLI, libs) | `*/` + `!common/` |
 | `devtools/scripts/` | Shared scripts | `*/` + `!scripts/` |
 | `devtools/` root files | Monorepo config (package.json, turbo.json, etc.) | Root files not matched by `*/` |

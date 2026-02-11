@@ -182,7 +182,7 @@ pnpm dev   # tsc --watch
 
 ## Related
 
-- **Implementation Plan:** `devdocs/misc/devtools/common/plans/260209-shared-playwright-package.md`
+- **Implementation Plan:** `devdocs/misc/devtools/common/_plans/260209-shared-playwright-package.md`
 - **CLI Shared (same pattern):** `devtools/common/cli-shared/`
 - **CLI Shared Overview:** `devdocs/misc/devtools/common/cli-shared/OVERVIEW.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

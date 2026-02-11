@@ -4,7 +4,7 @@
 
 - `devdocs/misc/devtools/OVERVIEW.md` — DevTools global overview
 - `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` — Current debate module overview
-- `devdocs/misc/devtools/common/plans/Server-side Action-driven Architecture.md` — Original action-driven architecture proposal (superseded by this plan)
+- `devdocs/misc/devtools/common/_plans/Server-side Action-driven Architecture.md` — Original action-driven architecture proposal (superseded by this plan)
 - `devtools/common/nestjs-debate/src/debate.module.ts` — Current module definition
 - `devtools/common/nestjs-debate/src/debate.controller.ts` — Current controller
 - `devtools/common/nestjs-debate/src/debate.service.ts` — Current debate service (reads + writes)

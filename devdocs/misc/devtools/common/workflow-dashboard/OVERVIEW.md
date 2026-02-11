@@ -194,6 +194,6 @@ pnpm build
 - **Engine:** `devtools/common/workflow-engine/` — `devdocs/misc/devtools/common/workflow-engine/OVERVIEW.md`
 - **Demo Workflow:** `devtools/common/cli-plugin-demo-workflow/` — `devdocs/misc/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md`
 - **Dashboard Plugin (existing, similar):** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
-- **Design Plan:** `devdocs/misc/devtools/common/plans/260208-workflow-engine.md`
+- **Design Plan:** `devdocs/misc/devtools/common/_plans/260208-workflow-engine.md`
 - **Builder Skill:** `devdocs/agent/skills/common/workflow-builder/SKILL.md`
 - **Global Overview:** `devdocs/misc/devtools/OVERVIEW.md`

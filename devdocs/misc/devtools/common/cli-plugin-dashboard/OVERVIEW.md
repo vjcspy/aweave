@@ -415,5 +415,5 @@ Khi tạo một ESM oclif plugin mới sử dụng Ink, follow checklist này:
 - **Root CLI:** `devtools/common/cli/` — `devdocs/misc/devtools/common/cli/OVERVIEW.md`
 - **CLI Shared:** `devtools/common/cli-shared/` — provides `checkHealth()` reused via `createRequire`
 - **Debate Plugin:** `devtools/common/cli-plugin-debate/` — CJS plugin pattern reference
-- **Implementation Plan:** `devdocs/misc/devtools/common/plans/260207-cli-plugin-dashboard-ink.md`
+- **Implementation Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-plugin-dashboard-ink.md`
 - **Global Overview:** `devdocs/misc/devtools/OVERVIEW.md`
