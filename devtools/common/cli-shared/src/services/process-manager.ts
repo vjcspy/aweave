@@ -6,15 +6,23 @@
  * Log file: ~/.aweave/logs/server.log
  */
 
+import { createRequire } from 'node:module';
+
+import {
+  DEFAULT_CONFIG_DIR,
+  DOMAIN,
+  SERVER_ENV_OVERRIDES,
+} from '@aweave/config-common';
+import { loadConfig } from '@aweave/config-core';
 import { spawn } from 'child_process';
 import {
+  createReadStream,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   unlinkSync,
   writeFileSync,
-  openSync,
-  createReadStream,
 } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
@@ -27,35 +35,33 @@ const LOGS_DIR = join(AWEAVE_DIR, 'logs');
 const STATE_FILE = join(AWEAVE_DIR, 'server.json');
 const LOG_FILE = join(LOGS_DIR, 'server.log');
 
-/**
- * Load server port/host from config system.
- * Falls back to hardcoded defaults if config packages are not available.
- */
+type ServerConfig = {
+  server?: {
+    port?: number;
+    host?: string;
+  };
+};
+
 function loadServerDefaults(): { port: number; host: string } {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { DEFAULT_CONFIG_DIR, DOMAIN, SERVER_ENV_OVERRIDES } = require('@aweave/config-common');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { loadConfig } = require('@aweave/config-core');
     const config = loadConfig({
       domain: DOMAIN,
       name: 'server',
       defaultsDir: DEFAULT_CONFIG_DIR,
       envOverrides: SERVER_ENV_OVERRIDES,
-    });
+    }) as ServerConfig;
+
     return {
-      port: (config as any).server?.port ?? 3456,
-      host: (config as any).server?.host ?? '127.0.0.1',
+      port: config.server?.port ?? 3456,
+      host: config.server?.host ?? '127.0.0.1',
     };
   } catch {
-    // Config packages not available — use hardcoded defaults
     return { port: 3456, host: '127.0.0.1' };
   }
 }
 
-const SERVER_DEFAULTS = loadServerDefaults();
-const DEFAULT_PORT = SERVER_DEFAULTS.port;
-const DEFAULT_HOST = SERVER_DEFAULTS.host;
+const DEFAULT_PORT = 3456;
+const DEFAULT_HOST = '127.0.0.1';
 const HEALTH_TIMEOUT_MS = 10_000;
 const HEALTH_POLL_MS = 500;
 const STOP_TIMEOUT_MS = 5_000;
@@ -134,7 +140,10 @@ async function checkHealthEndpoint(
   }
 }
 
-async function isPortInUse(port: number, host: string = DEFAULT_HOST): Promise<boolean> {
+async function isPortInUse(
+  port: number,
+  host: string = DEFAULT_HOST,
+): Promise<boolean> {
   return checkHealthEndpoint(port, host, 1000);
 }
 
@@ -145,11 +154,20 @@ async function isPortInUse(port: number, host: string = DEFAULT_HOST): Promise<b
  * Works both in dev (workspace) and published (node_modules) contexts.
  */
 export function resolveServerEntry(): string {
+  const localRequire = createRequire(__filename);
   try {
-    return require.resolve('@aweave/server/dist/main.js');
+    return localRequire.resolve('@aweave/server/dist/main.js');
   } catch {
     // Fallback: try relative path from this package
-    const fallback = join(__dirname, '..', '..', '..', 'server', 'dist', 'main.js');
+    const fallback = join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'server',
+      'dist',
+      'main.js',
+    );
     if (existsSync(fallback)) return fallback;
     throw new Error(
       'Cannot find @aweave/server entry point. ' +
@@ -173,8 +191,9 @@ export async function startServer(options?: {
   host?: string;
   version?: string;
 }): Promise<{ success: boolean; message: string; state?: ServerState }> {
-  const port = options?.port ?? DEFAULT_PORT;
-  const host = options?.host ?? DEFAULT_HOST;
+  const defaults = await loadServerDefaults();
+  const port = options?.port ?? defaults.port ?? DEFAULT_PORT;
+  const host = options?.host ?? defaults.host ?? DEFAULT_HOST;
   const version = options?.version ?? '0.1.0';
 
   ensureDirs();
@@ -217,7 +236,8 @@ export async function startServer(options?: {
   } catch (err) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : 'Cannot find server entry point',
+      message:
+        err instanceof Error ? err.message : 'Cannot find server entry point',
     };
   }
 
@@ -289,7 +309,10 @@ export async function startServer(options?: {
  * - Send SIGTERM → wait up to 5s → SIGKILL if needed
  * - Verify process gone → clear state file
  */
-export async function stopServer(): Promise<{ success: boolean; message: string }> {
+export async function stopServer(): Promise<{
+  success: boolean;
+  message: string;
+}> {
   const state = readState();
 
   if (!state) {
@@ -298,7 +321,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
 
   if (!isProcessAlive(state.pid)) {
     clearState();
-    return { success: true, message: 'Server was not running (stale state cleaned up)' };
+    return {
+      success: true,
+      message: 'Server was not running (stale state cleaned up)',
+    };
   }
 
   // Send SIGTERM
@@ -306,7 +332,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
     process.kill(state.pid, 'SIGTERM');
   } catch {
     clearState();
-    return { success: true, message: 'Server process not found (state cleaned up)' };
+    return {
+      success: true,
+      message: 'Server process not found (state cleaned up)',
+    };
   }
 
   // Wait for process to exit
@@ -315,7 +344,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
     await new Promise((resolve) => setTimeout(resolve, 200));
     if (!isProcessAlive(state.pid)) {
       clearState();
-      return { success: true, message: `Server stopped (was PID ${state.pid})` };
+      return {
+        success: true,
+        message: `Server stopped (was PID ${state.pid})`,
+      };
     }
   }
 
@@ -330,10 +362,16 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
   clearState();
 
   if (isProcessAlive(state.pid)) {
-    return { success: false, message: `Failed to stop server (PID ${state.pid})` };
+    return {
+      success: false,
+      message: `Failed to stop server (PID ${state.pid})`,
+    };
   }
 
-  return { success: true, message: `Server force-stopped (was PID ${state.pid})` };
+  return {
+    success: true,
+    message: `Server force-stopped (was PID ${state.pid})`,
+  };
 }
 
 /**

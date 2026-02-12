@@ -8,7 +8,7 @@
     "defaults"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "tsc-alias": "catalog:",
     "typescript": "catalog:"
   }
 }

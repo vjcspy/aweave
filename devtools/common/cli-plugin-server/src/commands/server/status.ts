@@ -1,9 +1,9 @@
 import {
   ContentType,
+  getServerStatus,
   MCPContent,
   MCPResponse,
   output,
-  getServerStatus,
 } from '@aweave/cli-shared';
 import { Command, Flags } from '@oclif/core';
 
@@ -24,7 +24,11 @@ export class ServerStatus extends Command {
     const status = await getServerStatus();
 
     const data: Record<string, unknown> = {
-      status: status.running ? (status.healthy ? 'running' : 'unhealthy') : 'stopped',
+      status: status.running
+        ? status.healthy
+          ? 'running'
+          : 'unhealthy'
+        : 'stopped',
     };
 
     if (status.state) {

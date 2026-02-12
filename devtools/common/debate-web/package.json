@@ -5,9 +5,9 @@
     "dev": "rsbuild dev",
     "build": "rsbuild build",
     "preview": "rsbuild preview",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "generate:types": "openapi-typescript ../server/openapi.json -o src/lib/api-types.ts",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "generate:types": "openapi-typescript ../server/openapi.json -o src/lib/api-types.ts && prettier --write src/lib/api-types.ts",
     "prebuild": "pnpm generate:types"
   },
   "dependencies": {
