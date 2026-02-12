@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 import { baseConfig } from '../../eslint.config.mjs';
 
 export default tseslint.config(
-  { ignores: ['dist/**'] },
+  { ignores: ['dist/**', 'eslint.config.mjs', 'openapi.json', 'public/**'] },
   ...baseConfig,
   // NestJS-specific: enable stricter type-checked rules
   ...tseslint.configs.recommendedTypeCheckedOnly,

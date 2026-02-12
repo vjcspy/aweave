@@ -10,7 +10,7 @@
     "oclif.manifest.json"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "bin/dev.js",
@@ -48,6 +48,7 @@
     "@types/node": "catalog:",
     "oclif": "^4.17.41",
     "ts-node": "catalog:",
+    "tsc-alias": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -21,7 +21,7 @@ export class DebateServicesStatus extends Command {
 
   async run() {
     const { flags } = await this.parse(DebateServicesStatus);
-    const status = getServicesStatus();
+    const status = await getServicesStatus();
     output(
       new MCPResponse({
         success: true,
