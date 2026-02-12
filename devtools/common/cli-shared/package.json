@@ -4,13 +4,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "tsc --watch"
   },
+  "dependencies": {
+    "@aweave/config-common": "workspace:*",
+    "@aweave/config-core": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
+    "tsc-alias": "catalog:",
     "typescript": "catalog:"
   },
   "files": [

@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module';
+
 import {
   DEFAULT_CONFIG_DIR,
   DOMAIN,
@@ -18,19 +20,26 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
 import { dirname, join } from 'path';
 
 import { AppModule } from './app.module';
 import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 import { AuthGuard } from './shared/guards/auth.guard';
 
+type ServerConfig = {
+  server?: {
+    port?: number;
+    host?: string;
+  };
+};
+
 /**
  * Resolve debate-web SPA static files directory.
  */
 function resolveDebateWebRoot(): string {
+  const localRequire = createRequire(__filename);
   try {
-    const pkgPath = require.resolve('@aweave/debate-web/package.json');
+    const pkgPath = localRequire.resolve('@aweave/debate-web/package.json');
     return join(dirname(pkgPath), 'dist');
   } catch {
     return join(__dirname, '..', 'public', 'debate');
@@ -88,18 +97,21 @@ async function bootstrap() {
   app.useGlobalGuards(new AuthGuard());
 
   // Load config: defaults → user override (~/.aweave/config/common/server.yaml) → env vars
-  const config = loadConfig({
+  const config: ServerConfig = loadConfig({
     domain: DOMAIN,
     name: 'server',
     defaultsDir: DEFAULT_CONFIG_DIR,
     envOverrides: SERVER_ENV_OVERRIDES,
   });
 
-  const port = (config as any).server?.port ?? 3456;
-  const host = (config as any).server?.host ?? '127.0.0.1';
+  const port = config.server?.port ?? 3456;
+  const host = config.server?.host ?? '127.0.0.1';
 
   await app.listen(port, host);
   console.log(`Server listening on http://${host}:${port}`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

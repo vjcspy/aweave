@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import type { Debate } from '@/lib/api';
 import { fetchDebates } from '@/lib/api';
 
@@ -21,7 +22,7 @@ export function useDebatesList(pollInterval = 5000) {
 
   useEffect(() => {
     refresh();
-    
+
     const interval = setInterval(refresh, pollInterval);
     return () => clearInterval(interval);
   }, [refresh, pollInterval]);

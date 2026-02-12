@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && tsc-alias -p tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -24,6 +24,7 @@
     "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
     "@types/ws": "^8.5.12",
+    "tsc-alias": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

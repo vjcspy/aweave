@@ -6,8 +6,7 @@
   "packageManager": "pnpm@10.29.2",
   "scripts": {
     "build": "turbo build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint:workspaces": "pnpm -r --if-present lint",
     "release": "bash scripts/build-release.sh",
     "release:dry-run": "bash scripts/build-release.sh --dry-run",
     "release:minor": "bash scripts/build-release.sh minor",
