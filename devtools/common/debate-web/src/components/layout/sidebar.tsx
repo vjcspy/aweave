@@ -1,8 +1,10 @@
-import { useParams } from 'react-router';
 import { MessageSquare } from 'lucide-react';
-import { ThemeToggle } from './theme-toggle';
+import { useParams } from 'react-router';
+
 import { DebateList } from '@/components/debate/debate-list';
 import { Separator } from '@/components/ui/separator';
+
+import { ThemeToggle } from './theme-toggle';
 
 export function Sidebar() {
   const params = useParams();

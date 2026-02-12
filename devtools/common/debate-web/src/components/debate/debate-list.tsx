@@ -1,9 +1,11 @@
-import { useDebatesList } from '@/hooks/use-debates-list';
-import { DebateItem } from './debate-item';
+import { Loader2, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState, useMemo } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { useDebatesList } from '@/hooks/use-debates-list';
+
+import { DebateItem } from './debate-item';
 
 type DebateListProps = {
   activeDebateId?: string;
@@ -19,7 +21,7 @@ export function DebateList({ activeDebateId }: DebateListProps) {
     return debates.filter(
       (d) =>
         d.title.toLowerCase().includes(lower) ||
-        d.debate_type.toLowerCase().includes(lower)
+        d.debate_type.toLowerCase().includes(lower),
     );
   }, [debates, search]);
 

@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react';
-import { useThemeInternal, type Theme } from '@/hooks/use-theme';
+import { createContext, type ReactNode, useContext } from 'react';
+
+import { type Theme, useThemeInternal } from '@/hooks/use-theme';
 
 type ThemeContextValue = {
   theme: Theme;
@@ -15,9 +16,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const themeValue = useThemeInternal();
   return (
-    <ThemeContext.Provider value={themeValue}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={themeValue}>{children}</ThemeContext.Provider>
   );
 }
 

@@ -16,6 +16,7 @@ Build CLI tools and backend modules in the `devtools/` TypeScript monorepo. The 
 3. **Shared Foundation** — `@aweave/cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
 4. **No Cyclic Dependencies** — cli-shared is a leaf dependency. Plugins never import each other or the main CLI package.
 5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`, even in pm2. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
+6. **Use Alias Imports** — For internal package code, use `@/…` imports instead of deep relative paths.
 
 ---
 
@@ -199,6 +200,10 @@ Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "removeComments": true
   },
   "include": ["src/**/*"],
