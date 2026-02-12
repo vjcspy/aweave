@@ -1,7 +1,6 @@
 {
   "name": "@aweave/debate-machine",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -15,5 +14,8 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

@@ -1,22 +1,20 @@
 {
   "name": "@aweave/cli",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.7",
   "bin": {
     "aw": "./bin/run.js"
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "oclif.manifest.json"
   ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "bin/dev.js",
-    "link-global": "pnpm link --global",
-    "postpack": "rm -f oclif.manifest.json",
-    "prepack": "oclif manifest"
+    "link-global": "pnpm link --global"
   },
   "oclif": {
     "bin": "aw",
@@ -29,19 +27,22 @@
       "@aweave/cli-plugin-dashboard",
       "@aweave/cli-plugin-relay",
       "@aweave/cli-plugin-demo-workflow",
-      "@aweave/cli-plugin-config"
+      "@aweave/cli-plugin-config",
+      "@aweave/cli-plugin-server"
     ]
   },
   "dependencies": {
+    "@aweave/cli-plugin-config": "workspace:*",
     "@aweave/cli-plugin-dashboard": "workspace:*",
     "@aweave/cli-plugin-debate": "workspace:*",
     "@aweave/cli-plugin-demo-workflow": "workspace:*",
     "@aweave/cli-plugin-docs": "workspace:*",
-    "@aweave/cli-plugin-config": "workspace:*",
     "@aweave/cli-plugin-relay": "workspace:*",
+    "@aweave/cli-plugin-server": "workspace:*",
     "@aweave/cli-shared": "workspace:*",
     "@oclif/core": "catalog:",
-    "@oclif/plugin-help": "^6.2.27"
+    "@oclif/plugin-help": "^6.2.27",
+    "@aweave/server": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

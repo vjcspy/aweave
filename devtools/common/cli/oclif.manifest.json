@@ -1,0 +1,25 @@
+{
+  "commands": {
+    "version": {
+      "aliases": [],
+      "args": {},
+      "description": "Show aw CLI version",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "version",
+      "pluginAlias": "@aweave/cli",
+      "pluginName": "@aweave/cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": false,
+      "relativePath": [
+        "dist",
+        "commands",
+        "version.js"
+      ]
+    }
+  },
+  "version": "0.1.6"
+}

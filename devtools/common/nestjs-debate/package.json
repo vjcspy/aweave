@@ -1,7 +1,9 @@
 {
   "name": "@aweave/nestjs-debate",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.1",
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -19,9 +21,9 @@
   },
   "devDependencies": {
     "@nestjs/cli": "catalog:",
+    "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
     "@types/ws": "^8.5.12",
-    "@types/better-sqlite3": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {

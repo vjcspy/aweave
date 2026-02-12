@@ -19,7 +19,7 @@ All projects follow this standard directory structure:
 │           └── <DOMAIN>/       # Domain-specific documentation
 │               └── <REPO_NAME>/# Per-repo context & documentation
 │                   ├── OVERVIEW.md # Repository-specific overview & business context
-│                   └── plans/  # Implementation plans for the repo
+│                   └── _plans/ # Implementation plans for the repo
 │                       └── *.md# Plan files: [YYMMDD-Ticket-Name].md
 │
 ├── devtools/                   # Development tools & utilities (multi-domain)

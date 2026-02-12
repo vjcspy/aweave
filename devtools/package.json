@@ -8,9 +8,10 @@
     "build": "turbo build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "start": "pm2 start ecosystem.config.cjs",
-    "stop": "pm2 stop all",
-    "logs": "pm2 logs"
+    "release": "bash scripts/build-release.sh",
+    "release:dry-run": "bash scripts/build-release.sh --dry-run",
+    "release:minor": "bash scripts/build-release.sh minor",
+    "release:major": "bash scripts/build-release.sh major"
   },
   "engines": {
     "node": ">=20.0.0"

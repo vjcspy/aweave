@@ -1,7 +1,6 @@
 {
   "name": "@aweave/cli-plugin-docs",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -22,5 +21,8 @@
     "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

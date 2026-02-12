@@ -30,7 +30,7 @@ export { HTTPClient, HTTPClientError, type HTTPClientOptions } from './http';
 export { errorResponse, handleServerError, output } from './helpers';
 export { type ContentInput, type ContentResult, readContent } from './helpers';
 
-// pm2 service management
+// pm2 service management (legacy — will be removed)
 export {
   checkHealth,
   checkPm2Process,
@@ -38,4 +38,17 @@ export {
   startPm2,
   stopPm2,
   waitForHealthy,
+} from './services';
+
+// Server process manager (replaces PM2)
+export {
+  getLogFilePath,
+  getServerStatus,
+  readLogTail,
+  resolveServerEntry,
+  restartServer,
+  type ServerState,
+  type ServerStatus,
+  startServer,
+  stopServer,
 } from './services';

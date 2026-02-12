@@ -141,7 +141,7 @@ Detailed guide: `devdocs/agent/skills/common/workflow-builder/SKILL.md`
 
 - **Engine:** `devtools/common/workflow-engine/` — `devdocs/misc/devtools/common/workflow-engine/OVERVIEW.md`
 - **Dashboard:** `devtools/common/workflow-dashboard/` — `devdocs/misc/devtools/common/workflow-dashboard/OVERVIEW.md`
-- **Design Plan:** `devdocs/misc/devtools/plans/260208-workflow-engine.md`
+- **Design Plan:** `devdocs/misc/devtools/common/_plans/260208-workflow-engine.md`
 - **Builder Skill:** `devdocs/agent/skills/common/workflow-builder/SKILL.md`
 - **CLI Builder Skill:** `devdocs/agent/skills/common/devtools-cli-builder/SKILL.md`
 - **Global Overview:** `devdocs/misc/devtools/OVERVIEW.md`
