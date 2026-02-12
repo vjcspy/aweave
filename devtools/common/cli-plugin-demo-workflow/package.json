@@ -1,7 +1,6 @@
 {
   "name": "@aweave/cli-plugin-demo-workflow",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.3",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,16 +14,19 @@
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/workflow-engine": "workspace:*",
     "@aweave/workflow-dashboard": "workspace:*",
+    "@aweave/workflow-engine": "workspace:*",
     "@oclif/core": "catalog:",
     "ink": "catalog:",
     "react": "catalog:",
     "xstate": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "catalog:",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

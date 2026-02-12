@@ -44,6 +44,7 @@ packages:
   - common/config-core
   - common/config
   - common/cli-plugin-config
+  - common/cli-plugin-server
   - common/cli-plugin-demo-workflow
 
 onlyBuiltDependencies:

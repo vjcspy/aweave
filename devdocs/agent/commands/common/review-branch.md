@@ -125,7 +125,8 @@ This skill contains:
 1. **LOAD the skill first** - `devdocs/agent/skills/common/code-review/SKILL.md`
 2. **Run Phase 0 first** - Pre-flight check is non-negotiable
 3. **Use `--ff-only`** for pull to avoid accidental merges
-4. **Read full file context** when reviewing, not just diff lines
+4. **Review only what changed between branches** - focus on files in `git diff $MERGE_BASE..HEAD`
+5. **Read full file context for changed files** when reviewing, not just diff lines
 
 ### ❌ DO NOT:
 
@@ -133,6 +134,8 @@ This skill contains:
 - ❌ Skip Phase 0 pre-flight checks
 - ❌ Run `git checkout` before checking for uncommitted changes
 - ❌ Auto-fix or auto-commit anything during review
+- ❌ Run tests/build/lint/typecheck unless the user explicitly asks
+- ❌ Review unrelated files that are not part of the branch diff (vs base)
 - ❌ Proceed silently when errors occur
 
 ---
@@ -333,7 +336,8 @@ git diff $MERGE_BASE..HEAD -- path/to/file.ts
    - Core business logic (`services/`, `core/`)
    - Tests last (`tests/`, `*.test.*`)
 4. **Read full file** for context, not just diff lines
-5. **Group similar issues** - don't repeat same feedback
+5. **Only open related files when necessary** to understand changed code paths (e.g., direct imports/exports)
+6. **Group similar issues** - don't repeat same feedback
 
 ---
 

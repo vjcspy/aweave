@@ -198,8 +198,8 @@ DEBATE_AUTO_START=false aw debate create --debate-id test --title test --type ge
 - **State Machine:** `devtools/common/debate-machine/` — shared xstate definition
 - **NestJS Backend:** `devtools/common/nestjs-debate/`
 - **Backend Overview:** `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md`
-- **Debate Spec:** `devdocs/misc/devtools/plans/debate.md`
+- **Debate Spec:** `devdocs/misc/devtools/common/_plans/debate.md`
 - **Shared Utilities:** `devtools/common/cli-shared/`
 - **Main CLI:** `devtools/common/cli/`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md`
-- **xstate Migration Plan:** `devdocs/misc/devtools/plans/260207-xstate-debate-machine.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`
+- **xstate Migration Plan:** `devdocs/misc/devtools/common/_plans/260207-xstate-debate-machine.md`

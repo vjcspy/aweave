@@ -1,6 +1,6 @@
 # Debate Web
 
-Next.js web application for Arbitrator to monitor debates and submit RULING/INTERVENTION.
+React SPA for Arbitrator to monitor debates and submit RULING/INTERVENTION.
 
 ## Purpose
 
@@ -13,14 +13,17 @@ Web interface cho Arbitrator (human) để:
 
 | Component | Technology |
 |-----------|------------|
-| Framework | Next.js 16 (App Router) |
-| Styling | Tailwind CSS v4 + shadcn/ui |
+| Bundler | Rsbuild (Rspack-based) |
+| Framework | React 19 (pure SPA, no SSR) |
+| Styling | Tailwind CSS v4 + shadcn/ui (new-york) |
+| Routing | react-router v7 |
 | API Client | openapi-fetch (typed from OpenAPI spec) |
 | Type Generation | openapi-typescript (from server's openapi.json) |
 | WebSocket | Native WebSocket API |
 | State | React hooks (useReducer) |
 | Icons | Lucide React |
-| Theme | next-themes (light/dark) |
+| Theme | Custom hook (dark class on html, localStorage) |
+| Fonts | @fontsource/geist-sans + @fontsource/geist-mono |
 
 ## Architecture
 
@@ -45,47 +48,71 @@ Web interface cho Arbitrator (human) để:
 └──────────────┴──────────────────────────────────────────────┘
 ```
 
+**Production deployment:** Served as static files by NestJS `@nestjs/serve-static` under `/debate` prefix. Same origin as API (port 3456).
+
 ## Configuration
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `NEXT_PUBLIC_DEBATE_SERVER_URL` | `http://127.0.0.1:3456` | debate-server URL |
+| `PUBLIC_API_URL` | `window.location.origin` | REST API base URL (Rsbuild `PUBLIC_` prefix) |
+| `PUBLIC_WS_URL` | auto-detect from location | WebSocket base URL |
+
+**Production:** No env vars needed — uses `window.location.origin` (same origin).
+**Dev mode:** Rsbuild proxy forwards `/debates` and `/ws` to `http://127.0.0.1:3456`.
 
 ## Project Structure
 
 ```
 debate-web/
-├── app/
-│   ├── layout.tsx           # Root layout + ThemeProvider
-│   ├── page.tsx             # Redirect to /debates
-│   ├── globals.css          # Tailwind + CSS variables
-│   └── debates/
-│       ├── layout.tsx       # Debates layout with Sidebar
-│       ├── page.tsx         # Empty state (no debate selected)
-│       └── [id]/
-│           └── page.tsx     # Debate detail view
-├── components/
-│   ├── ui/                  # shadcn components
-│   ├── layout/
-│   │   ├── sidebar.tsx      # Debate list sidebar
-│   │   └── theme-toggle.tsx # Dark/Light mode toggle
-│   ├── debate/
-│   │   ├── debate-list.tsx  # Filterable debate list
-│   │   ├── debate-item.tsx  # Single debate item
-│   │   ├── argument-list.tsx# Scrollable argument list
-│   │   ├── argument-card.tsx# Argument display card
-│   │   └── action-area.tsx  # INTERVENTION/RULING UI
-│   └── providers/
-│       └── theme-provider.tsx
-├── hooks/
-│   ├── use-debate.ts        # WebSocket + debate state
-│   └── use-debates-list.ts  # Debates list polling
-└── lib/
-    ├── api-types.ts         # Generated from openapi.json (do not edit)
-    ├── api.ts               # openapi-fetch typed client + wrapper functions
-    ├── types.ts             # WS event types + re-exported entity types
-    └── utils.ts             # cn() helper
+├── rsbuild.config.ts        # Rsbuild config (React, alias, proxy, assetPrefix)
+├── postcss.config.cjs       # PostCSS with @tailwindcss/postcss
+├── components.json          # shadcn/ui config
+├── package.json             # @aweave/debate-web
+├── tsconfig.json
+└── src/
+    ├── index.html           # HTML template (theme flash prevention script)
+    ├── main.tsx             # React root mount + BrowserRouter (basename=/debate)
+    ├── globals.css          # Tailwind CSS v4 + oklch theme tokens
+    ├── env.d.ts             # Rsbuild env type declarations
+    ├── routes/              # Route components
+    │   ├── root-layout.tsx  # App wrapper with <Outlet />
+    │   ├── debates-layout.tsx # Sidebar + <Outlet />
+    │   ├── debates-index.tsx  # Empty state (no debate selected)
+    │   └── debate-detail.tsx  # Debate view (header, arguments, action area)
+    ├── components/
+    │   ├── ui/              # shadcn components (badge, button, card, etc.)
+    │   ├── debate/          # Debate-specific components
+    │   │   ├── debate-list.tsx    # Filterable debate list
+    │   │   ├── debate-item.tsx    # Single debate link
+    │   │   ├── argument-list.tsx  # Scrollable argument list
+    │   │   ├── argument-card.tsx  # Argument display (Markdown)
+    │   │   └── action-area.tsx    # INTERVENTION/RULING UI
+    │   ├── layout/
+    │   │   ├── sidebar.tsx        # Sidebar with logo + theme toggle
+    │   │   └── theme-toggle.tsx   # Light/Dark/System dropdown
+    │   └── providers/
+    │       └── theme-provider.tsx # Custom theme context (replaces next-themes)
+    ├── hooks/
+    │   ├── use-debate.ts          # WebSocket + debate state (useReducer)
+    │   ├── use-debates-list.ts    # Debates list polling
+    │   └── use-theme.ts           # Theme persistence + system detection
+    └── lib/
+        ├── api-types.ts           # Generated from openapi.json (do not edit)
+        ├── api.ts                 # openapi-fetch client + wrappers
+        ├── config.ts              # Runtime config (API/WS URLs)
+        ├── types.ts               # WS event types + entity type unions
+        └── utils.ts               # cn() helper (clsx + twMerge)
 ```
+
+## Routes
+
+| URL | Component | Description |
+|-----|-----------|-------------|
+| `/debate` | → redirect to `/debate/debates` | Root redirect |
+| `/debate/debates` | `DebatesIndex` | Empty state |
+| `/debate/debates/:id` | `DebateDetail` | Debate view |
+
+> **Note:** All routes are prefixed with `/debate` (react-router basename). Server API routes (`/debates`, `/ws`) are at root — no conflict.
 
 ## Action Area Logic
 
@@ -97,98 +124,56 @@ debate-web/
 | `INTERVENTION_PENDING` | Chat box | RULING |
 | `CLOSED` | Read-only | - |
 
-### INTERVENTION (Stop Button)
-
-- Full-width destructive button
-- Hold for 1 second to confirm (prevent accidental clicks)
-- Progress indicator during hold
-- Sends `submit_intervention` via WebSocket
-
-### RULING (Chat Box)
-
-- Textarea for ruling content
-- "Close debate" checkbox
-- Submit button
-- Sends `submit_ruling` via WebSocket
-
 ## WebSocket Integration
 
 ### Connection
 
 ```typescript
-// URL format
-ws://127.0.0.1:3456/ws?debate_id=xxx
-
-// Auto-reconnect with exponential backoff
-// Max reconnect delay: 30 seconds
+// URL: ws://<host>/ws?debate_id=<id>
+// Auto-reconnect with exponential backoff (1s to 30s)
 ```
 
-### Server → Client Events
+### Events
 
-| Event | Data | Description |
-|-------|------|-------------|
-| `initial_state` | `{ debate, arguments[] }` | On connect |
-| `new_argument` | `{ debate, argument }` | New argument added |
-
-### Client → Server Events
-
-| Event | Data | Description |
-|-------|------|-------------|
-| `submit_intervention` | `{ debate_id, content? }` | Pause debate |
-| `submit_ruling` | `{ debate_id, content, close? }` | Submit ruling |
+| Direction | Event | Data |
+|-----------|-------|------|
+| Server → Client | `initial_state` | `{ debate, arguments[] }` |
+| Server → Client | `new_argument` | `{ debate, argument }` |
+| Client → Server | `submit_intervention` | `{ debate_id, content? }` |
+| Client → Server | `submit_ruling` | `{ debate_id, content, close? }` |
 
 ## OpenAPI Types Generation
 
-Entity types (`Debate`, `Argument`) and API response types are auto-generated from the server's OpenAPI spec:
-
-1. **Source:** `devtools/common/server/openapi.json` (generated by `pnpm generate:openapi` in server)
-2. **Generated file:** `lib/api-types.ts` (do not edit manually)
-3. **Generation command:** `pnpm generate:types` (also runs as `prebuild` hook)
-4. **API client:** `lib/api.ts` uses `openapi-fetch` with generated `paths` type for full type safety
-5. **WS types:** `lib/types.ts` defines WebSocket event types referencing generated entity types
-
-**Type flow:**
+```bash
+pnpm generate:types  # Generates src/lib/api-types.ts from ../server/openapi.json
 ```
-server/openapi.json → openapi-typescript → lib/api-types.ts → lib/api.ts (Debate, Argument) → lib/types.ts (WS events)
-                                                              → components (via @/lib/types re-exports)
+
+Type flow:
+```
+server/openapi.json → openapi-typescript → src/lib/api-types.ts → src/lib/api.ts → src/lib/types.ts → components
 ```
 
 ## Development
 
-> **Package manager:** Workspace dùng **pnpm** (không phải npm). Không dùng `npm install` trong project này.
-
-> **PM2:** Production app được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Trước khi chạy dev mode, **phải stop PM2** để tránh port conflict.
-
 ```bash
-# Stop PM2 process trước khi dev
-cd devtools
-pm2 stop debate-web
-
-# Install dependencies (từ workspace root)
-pnpm install
+# Install dependencies (from workspace root)
+cd devtools && pnpm install
 
 # Regenerate types (if server API changed)
-cd common/debate-web
-pnpm generate:types
+cd common/debate-web && pnpm generate:types
 
-# Run development server
+# Run dev server (HMR, proxy to NestJS)
 pnpm dev
 
 # Build for production (auto-runs generate:types via prebuild)
 pnpm build
-
-# Start lại PM2 khi dev xong
-cd devtools
-pm2 start ecosystem.config.cjs --only debate-web
 ```
 
-**Prerequisites:**
-- aweave-server running on port 3456 (PM2 hoặc dev mode)
+**Prerequisites:** NestJS server running on port 3456.
 
 ## Related
 
-- **Spec:** `devdocs/misc/devtools/plans/debate.md`
-- **Server:** `devtools/common/debate-server/`
-- **Server Overview:** `devdocs/misc/devtools/common/debate-server/OVERVIEW.md`
-- **CLI:** `devtools/common/cli/devtool/aweave/debate/`
-- **CLI Overview:** `devdocs/misc/devtools/common/cli/devtool/aweave/debate/OVERVIEW.md`
+- **Server:** `devtools/common/server/`
+- **Server Overview:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
+- **NestJS Debate Module:** `devtools/common/nestjs-debate/`
+- **CLI Plugin:** `devtools/common/cli-plugin-debate/`

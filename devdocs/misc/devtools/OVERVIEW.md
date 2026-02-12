@@ -1,11 +1,11 @@
 # DevTools Overview
 
 > **Branch:** master
-> **Last Updated:** 2026-02-07
+> **Last Updated:** 2026-02-11
 
 ## TL;DR
 
-Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All tools built with Node.js: CLI (oclif), server (NestJS), frontend (Next.js). Organized with domain-first folder structure, pnpm workspaces for package management, pm2 for process management.
+Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All tools built with Node.js: CLI (oclif), server (NestJS), frontend (React SPA via Rsbuild). Organized with domain-first folder structure, pnpm workspaces for package management, CLI for process management. All packages published to npm under `@aweave/` scope — users run via `npx @aweave/cli` without pulling the repo.
 
 ## Purpose & Bounded Context
 
@@ -21,6 +21,8 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 3. **TypeScript Everywhere** — CLI, server, frontend — all TypeScript
 4. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@aweave/cli-plugin-<name>`), auto-discovered at startup
 5. **Modular Backend** — Each feature is a NestJS module in its own pnpm package, imported by a single unified server
+6. **Single Process, Single Port** — NestJS server serves API + WebSocket + static SPA on port 3456
+7. **npm Publishable** — All packages published to `@aweave/` npm scope, installable via `npx` or `npm install -g`
 
 ### Architecture Overview
 
@@ -28,7 +30,7 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 ┌─────────────────────────────────────────────────────────────┐
 │                    User Terminal / AI Agent                   │
 │                         │                                    │
-│                    aw <command>                               │
+│           npx @aweave/cli server start --open                │
 │                         │                                    │
 │  ┌──────────────────────┴──────────────────────┐             │
 │  │              @aweave/cli (oclif)             │             │
@@ -37,8 +39,10 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 │  │          │                                  │             │
 │  │          ├── cli-plugin-debate               │             │
 │  │          │   └── aw debate *                 │             │
-│  │          ├── cli-plugin-docs                 │             │
-│  │          │   └── aw docs *                   │             │
+│  │          ├── cli-plugin-docs                 │
+│  │          │   └── aw docs *                   │
+│  │          ├── cli-plugin-server               │
+│  │          │   └── aw server *                 │             │
 │  │          └── cli-plugin-<name>               │             │
 │  │              └── aw <name> *                 │             │
 │  └───────┬──────────────┬──────────────────────┘             │
@@ -52,10 +56,10 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 │  │ │  Debate   │  │                                          │
 │  │ │  Module   │  │                                          │
 │  │ └───────────┘  │                                          │
-│  └───────────────┘                                           │
-│                                                              │
-│  ┌───────────────┐                                           │
-│  │  debate-web   │  (Next.js — WebSocket to server)          │
+│  │ ┌───────────┐  │  debate-web SPA served at /debate        │
+│  │ │ debate-web │  │  (static HTML/JS/CSS, same-origin)      │
+│  │ │  (static)  │  │                                          │
+│  │ └───────────┘  │                                          │
 │  └───────────────┘                                           │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -65,24 +69,30 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 ```
 devtools/
 ├── common/                          # Shared tools & core infrastructure
-│   ├── cli/                         # @aweave/cli — oclif app, plugin declarations
-│   ├── cli-shared/                  # @aweave/cli-shared — shared utilities (MCP, HTTP, helpers)
+│   ├── cli/                         # @aweave/cli — oclif app, plugin declarations, `aw` binary
+│   ├── cli-shared/                  # @aweave/cli-shared — MCP format, HTTP client, process manager
 │   ├── cli-plugin-debate/           # @aweave/cli-plugin-debate — aw debate *
 │   ├── cli-plugin-docs/             # @aweave/cli-plugin-docs — aw docs *
-│   ├── cli-plugin-dashboard/       # @aweave/cli-plugin-dashboard — aw dashboard * (Ink v6, ESM)
-│   ├── server/                      # @aweave/server — unified NestJS server
+│   ├── cli-plugin-dashboard/        # @aweave/cli-plugin-dashboard — aw dashboard * (Ink v6, ESM)
+│   ├── cli-plugin-server/           # @aweave/cli-plugin-server — aw server * (start/stop/status)
+│   ├── cli-plugin-config/           # @aweave/cli-plugin-config — aw config *
+│   ├── cli-plugin-relay/            # @aweave/cli-plugin-relay — aw relay *
+│   ├── server/                      # @aweave/server — unified NestJS server (API + WS + static SPA)
 │   ├── nestjs-debate/               # @aweave/nestjs-debate — debate backend module
-│   └── debate-web/                  # Next.js debate monitoring UI
+│   ├── debate-web/                  # @aweave/debate-web — React SPA (Rsbuild, served at /debate)
+│   ├── debate-machine/              # @aweave/debate-machine — debate state machine (xstate)
+│   ├── workflow-engine/             # @aweave/workflow-engine — workflow state machine
+│   ├── workflow-dashboard/          # @aweave/workflow-dashboard — Ink terminal UI for workflows
+│   ├── config-core/                 # @aweave/config-core — config file loader
+│   └── config/                      # @aweave/config-common — shared config defaults
 ├── <domain>/                        # Domain-specific tools (e.g. nab/)
 │   ├── cli-plugin-<name>/           # oclif plugin for this domain
 │   └── local/                       # Local dev infrastructure
-│       ├── docker-compose.yaml
-│       ├── Justfile
-│       └── .env.example
-├── ecosystem.config.cjs             # pm2 config (server + debate-web)
-├── pnpm-workspace.yaml              # Workspace package declarations
+├── pnpm-workspace.yaml              # Workspace package declarations + version catalog
 ├── package.json                     # Root workspace scripts
-└── .npmrc                           # Build permissions
+├── scripts/
+│   └── build-release.sh             # Build + generate oclif manifest
+└── .npmrc                           # pnpm config
 ```
 
 ## Core Components
@@ -90,11 +100,11 @@ devtools/
 ### CLI (`@aweave/cli` — oclif)
 
 - **oclif application** (`common/cli/`): Bootstraps oclif, declares plugins, provides `aw` binary
-- **Shared library** (`common/cli-shared/`): MCP response format, HTTP client, output helpers — used by all plugins
+- **Shared library** (`common/cli-shared/`): MCP response format, HTTP client, output helpers, process manager — used by all plugins
 - **Domain plugins** (`cli-plugin-*`): Each plugin registers commands under its own topic (e.g. `aw debate *`)
 - **Plugin loading:** oclif reads `oclif.plugins` from `package.json`, auto-discovers command classes from each plugin's `dist/commands/`
 - **Global install:** `pnpm link --global` in `common/cli/` → `aw` command available system-wide
-- **Interactive UI plugins:** `cli-plugin-dashboard` uses Ink v6 (ESM-only, React 19) for terminal UI. This is a reference implementation for Ink + oclif integration — see its OVERVIEW for ESM interop patterns, non-blocking data collection rules, and custom component guide.
+- **npx:** `npx @aweave/cli <command>` works without install (npm resolves all `@aweave/*` deps from registry)
 
 See: `devdocs/misc/devtools/common/cli/OVERVIEW.md`
 
@@ -102,27 +112,31 @@ See: `devdocs/misc/devtools/common/cli/OVERVIEW.md`
 
 - Single unified server at port `3456`, bind to `127.0.0.1` (localhost only)
 - Feature modules imported as separate pnpm packages (`@aweave/nestjs-<feature>`)
-- Shared infrastructure: bearer token auth guard, exception filter, CORS
+- Shared infrastructure: bearer token auth guard, exception filter
 - REST API + WebSocket support (ws library, path `/ws`)
-- The server itself **contains no business logic** — all logic lives in feature modules
+- **Static SPA serving:** debate-web files served at `/debate/*` via `express.static()` in `main.ts`
+- **SPA fallback:** `DebateSpaController` returns `index.html` for non-file routes under `/debate/*`
+- **Root redirect:** `RootRedirectController` redirects `/` → `/debate`
+- CORS disabled in production (same-origin), enabled in dev mode
+- Static files resolved from `@aweave/debate-web/dist/` via `require.resolve()` — works both in dev (workspace) and published (node_modules)
 
 See: `devdocs/misc/devtools/common/server/OVERVIEW.md`
 
-### Process Management (pm2)
+### Process Management (CLI)
 
-Services are managed via pm2 using `ecosystem.config.cjs`:
-
-| Service | Package | Port |
-|---------|---------|------|
-| `aweave-server` | `@aweave/server` | 3456 |
-| `debate-web` | Next.js debate UI | 3457 |
+Server is managed via CLI commands (`@aweave/cli-plugin-server`). Replaces PM2 — uses native `child_process.spawn` with detached mode.
 
 ```bash
-cd devtools
-pm2 start ecosystem.config.cjs    # Start all services
-pm2 logs                           # View logs
-pm2 stop all                       # Stop all
+aw server start [--open] [--port 3456]   # Start daemon, poll health, optionally open browser
+aw server stop                            # SIGTERM → SIGKILL fallback
+aw server status                          # PID, port, uptime
+aw server restart                         # stop + start
+aw server logs [-n 50]                    # Tail ~/.aweave/logs/server.log
 ```
+
+State file: `~/.aweave/server.json` | Log file: `~/.aweave/logs/server.log`
+
+See: `devdocs/misc/devtools/common/cli-plugin-server/OVERVIEW.md`
 
 ### MCP Response Format
 
@@ -138,6 +152,26 @@ All CLI commands output responses in a structured format designed for AI agent c
 }
 ```
 
+## Publishing to npm
+
+All packages are published to npm under `@aweave/` scope. pnpm automatically rewrites `workspace:*` → actual versions and publishes in dependency order.
+
+```bash
+# Build → generate manifest → bump all → publish
+pnpm turbo build
+cd common/cli && pnpm exec oclif manifest && cd ../..
+pnpm -r exec -- npm version patch --no-git-tag-version
+pnpm -r publish --access public --no-git-checks
+```
+
+**Version bump chain:** When a leaf package changes (e.g. `@aweave/cli-shared`), all dependents must also bump (e.g. `cli-plugin-debate` → `cli`). pnpm pins exact versions at publish time.
+
+**End user install:**
+```bash
+npx @aweave/cli server start --open     # No install needed
+npm install -g @aweave/cli               # Or install globally
+```
+
 ## Development Approach
 
 ### Adding a New CLI Plugin
@@ -150,19 +184,13 @@ All CLI commands output responses in a structured format designed for AI agent c
    "@aweave/cli-plugin-<name>": "workspace:*"
    ```
 5. Add to `oclif.plugins` array in `devtools/common/cli/package.json`
-6. `pnpm install && pnpm -r build`
+6. `pnpm install && pnpm turbo build`
 
 ### Adding an Ink-based (Interactive UI) Plugin
 
-For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **must be ESM** (`"type": "module"`) and follows a different pattern from standard CJS plugins. Key differences:
+For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **must be ESM** (`"type": "module"`) and follows a different pattern from standard CJS plugins.
 
-- ESM package config: `"type": "module"`, `tsconfig: { module: "Node16", jsx: "react-jsx" }`
-- CJS dependencies imported via `createRequire(import.meta.url)` instead of `import`
-- Ink/React loaded via dynamic `import()` inside command `run()` — not top-level
-- No dev mode (ts-node): must `pnpm build` before every test
-- All data fetching must be async — `execSync` blocks Ink rendering
-
-**Full guide with code examples, interop patterns, and component reference:** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
+**Full guide:** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
 
 ### Adding a New Backend Feature
 
@@ -175,21 +203,25 @@ For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **m
 ## Package Management
 
 - **pnpm workspaces** — All packages managed from `devtools/` root
-- **`pnpm-workspace.yaml`** — Declares all workspace packages
+- **`pnpm-workspace.yaml`** — Declares all workspace packages + version catalog
 - **`workspace:*`** — Internal dependency protocol (always resolves to local package)
+- **`catalog:`** — Shared version definitions in `pnpm-workspace.yaml` (e.g. TypeScript, React, NestJS versions)
 
 ### Dependency Graph (no cycles)
 
 ```
 @aweave/cli
   ├── @aweave/cli-shared
-  ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared
+  ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared + @aweave/debate-machine
   ├── @aweave/cli-plugin-docs ──► @aweave/cli-shared
-  ├── @aweave/cli-plugin-dashboard ──► @aweave/cli-shared + ink + react  (ESM)
+  ├── @aweave/cli-plugin-dashboard ──► @aweave/cli-shared + ink + react (ESM)
+  ├── @aweave/cli-plugin-server ──► @aweave/cli-shared + @aweave/server
+  ├── @aweave/cli-plugin-config ──► @aweave/cli-shared + @aweave/config-core
   └── @aweave/cli-plugin-<name> ──► @aweave/cli-shared
 
 @aweave/server
-  └── @aweave/nestjs-debate
+  ├── @aweave/nestjs-debate ──► @aweave/debate-machine
+  └── @aweave/debate-web (static SPA files resolved via require.resolve)
 ```
 
 ## Quick Reference
@@ -197,14 +229,19 @@ For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **m
 | Task | Command |
 |------|---------|
 | Install all | `cd devtools && pnpm install` |
-| Build all | `cd devtools && pnpm -r build` |
+| Build all | `cd devtools && pnpm turbo build` |
 | Build specific | `cd devtools/common/<pkg> && pnpm build` |
 | Run CLI (dev) | `cd devtools/common/cli && bin/dev.js <command>` |
 | Run CLI (global) | `aw <command>` |
+| Run CLI (npx) | `npx @aweave/cli <command>` |
 | Link CLI globally | `cd devtools/common/cli && pnpm link --global` |
-| Start all services | `cd devtools && pm2 start ecosystem.config.cjs` |
-| Start server only | `cd devtools/common/server && node dist/main.js` |
+| Start server | `aw server start [--open]` |
+| Stop server | `aw server stop` |
+| Server status | `aw server status` |
+| Server logs | `aw server logs` |
 | Health check | `curl http://127.0.0.1:3456/health` |
+| Debate Web UI | `http://127.0.0.1:3456/debate/` |
+| Publish all | `pnpm -r publish --access public --no-git-checks` |
 
 ## Package Documentation
 
@@ -212,7 +249,9 @@ Each package has its own OVERVIEW at:
 - **CLI entrypoint:** `devdocs/misc/devtools/common/cli/OVERVIEW.md`
 - **CLI shared library:** `devdocs/misc/devtools/common/cli-shared/OVERVIEW.md`
 - **CLI plugins:** `devdocs/misc/devtools/common/cli-plugin-<name>/OVERVIEW.md`
-- **Dashboard plugin (Ink v6):** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md` — ESM + Ink integration guide
+- **Server plugin:** `devdocs/misc/devtools/common/cli-plugin-server/OVERVIEW.md`
+- **Dashboard plugin (Ink v6):** `devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
 - **Server:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
+- **Debate Web:** `devdocs/misc/devtools/common/debate-web/OVERVIEW.md`
 - **NestJS modules:** `devdocs/misc/devtools/common/nestjs-<name>/OVERVIEW.md`
 - **Domain-specific:** `devdocs/misc/devtools/<domain>/<package>/OVERVIEW.md`
