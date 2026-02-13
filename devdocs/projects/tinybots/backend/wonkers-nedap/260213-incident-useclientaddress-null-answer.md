@@ -1,3 +1,49 @@
+---
+confluence_sync:
+  page:
+    id: "4563369987"
+    url: "https://tinybots.atlassian.net/wiki/spaces/~712020e960f9fdcdbd471a860cb5e759b69588/pages/4563369987/useClientAddress+Null+Answer+Crash"
+    space_key: "~712020e960f9fdcdbd471a860cb5e759b69588"
+    title: "useClientAddress Null Answer Crash"
+  sync:
+    direction_default: "both"
+    include_only_listed_sections: true
+    preserve_unmanaged_remote_content: true
+  approval:
+    require_for_down: true
+    source: "confluence_labels"
+    any_of_labels:
+      - "approved"
+      - "po-approved"
+      - "qe-approved"
+  sections:
+    - key: "flow_context"
+      local_heading: "## 4. End-to-End Flow Context"
+      remote_heading: "## Flows"
+      direction: "both"
+      status: "approved"
+      transform: "po_qe_readable"
+      last_sync:
+        page_version: 6
+        synced_at: ""
+        local_hash: ""
+        remote_hash: ""
+    - key: "fix_plan_option_a"
+      local_heading: "## Option A - Immediate robustness hotfix (recommended)"
+      remote_heading: "## Fix Plan"
+      direction: "both"
+      status: "approved"
+      transform: "po_qe_readable"
+      last_sync:
+        page_version: 6
+        synced_at: ""
+        local_hash: ""
+        remote_hash: ""
+  context_files:
+    - "devdocs/projects/tinybots/backend/wonkers-nedap/Nedap-retrieve-concepts-flow.md"
+    - "devdocs/projects/tinybots/backend/wonkers-nedap/_plans/260213-fix-use-client-address-null-answer.md"
+---
+
 # Incident Analysis - `useClientAddress` Null Answer Crash (wonkers-nedap)
 
 ## 1. Audience & Purpose
