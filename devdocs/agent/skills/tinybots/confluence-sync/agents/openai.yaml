@@ -1,0 +1,4 @@
+interface:
+  display_name: "Confluence Sync"
+  short_description: "Bidirectional Confluence section sync"
+  default_prompt: "Use $confluence-sync to sync scoped sections between a local markdown file and a Confluence page."
