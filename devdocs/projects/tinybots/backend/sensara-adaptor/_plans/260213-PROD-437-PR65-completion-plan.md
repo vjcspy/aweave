@@ -17,12 +17,14 @@ Address all PR review comments, fix code quality issues, resolve build failures,
 
 ### ⚠️ Key Considerations
 
-1. **Build is broken** — 8 TypeScript errors must be resolved before any other work
+1. **Build is clean** — verified `tsc --noEmit` and `yarn run build` pass (2026-02-13); previous 8 TS errors already resolved on branch
 2. **6 unresolved PR review comments** from Kai (2026-02-03) — none have been addressed
 3. **2 missing endpoints** from the spec (`GET` and `PATCH` by residentId)
 4. **Route migration** — all paths migrate to `/v1/ext/sensara/*` (PR not yet merged, no backward compat needed)
 5. **Authentication enforced** on all endpoints (confirmed: "ignore auth" no longer applies)
 6. **Trigger endpoints** exposed externally at `/v1/ext/sensara/...` but internally call `tiny-internal-services` (EventService)
+7. **Soft-delete gap** — `getResidentByResidentId` and `getResidentByRobotId` queries do NOT filter `is_active=1`, meaning soft-deleted residents can be resolved by read/trigger flows
+8. **Error handling dependency** — `EventService.getTriggerSubscription` in `tiny-internal-services` wraps upstream failures into generic errors, losing HTTP status distinctions; controller error-handling fix (2.4) requires coordinated SDK change
 
 ### Resolved Decisions
 
@@ -31,9 +33,11 @@ Address all PR review comments, fix code quality issues, resolve build failures,
 | Q1 | Path naming | Migrate to `/v1/ext/sensara/*` — PR not merged, no consumers on old path |
 | Q2 | Trigger endpoints | Expose externally under `/v1/ext/sensara/...`; internally call `tiny-internal-services` |
 | Q3 | Authentication | Enforce auth on ALL endpoints (no longer ignored) |
-| Q4 | Soft/hard delete | Current behavior (soft delete + `AND is_active=1`) is correct — no change needed |
+| Q4 | Soft/hard delete | Soft delete is the correct strategy; however `is_active=1` filtering is NOT yet applied to all read/resolve queries — must be enforced (see Phase 1) |
 | Q5 | `x-relation-id` header | Keep as required for GET-all (organization scoping) |
 | Q6 | DB-direct | Keep using internal services; handle errors properly (best-effort with proper error handling) |
+| Q7 | Soft-deleted residents | Treat as "not found" for all read/resolve/trigger routes — enforce `is_active=1` on read queries only; upsert query (`GET_REGISTER_USER_BY_ROBOT_OR_RESIDENT`) stays unfiltered for reactivation |
+| Q8 | Error semantics dependency | Update `tiny-internal-services` in this same delivery as a dependency pre-step (Step A of Phase 2.4) |
 
 ---
 
@@ -52,18 +56,11 @@ Address all PR review comments, fix code quality issues, resolve build failures,
 
 ### Build Status
 
-Build fails with **8 TypeScript errors**:
+**Build is CLEAN** — verified 2026-02-13 on branch `feature/PROD-437-sensara-endpoints`:
+- `yarn run build` — passes (exit 0)
+- `npx tsc --noEmit` — passes (0 errors)
 
-```
-1. tiny-internal-services → 'ErrorType' not exported from tiny-backend-tools
-2. tiny-internal-services → 'ErrorType' not exported (hardwareV2)
-3. tiny-internal-services → Cannot find module 'tiny-specs' (DashboardRobotService)
-4. tiny-internal-services → Cannot find module 'tiny-specs' (TaasService)
-5. src/App.ts:417        → eventJob.run() missing ctx argument
-6. src/App.ts:424        → pollerJob.run() missing ctx argument
-7. src/controller/LocationController.ts:67 → Expected 2 args, got 3
-8. src/service/LocationService.ts:59       → Missing 'eventMapper' property
-```
+Previous 8 TS errors (documented in earlier analysis) have already been resolved on the branch. Phase 1 (Fix Build) is no longer needed.
 
 ### Implemented vs Required Endpoints
 
@@ -82,20 +79,26 @@ Build fails with **8 TypeScript errors**:
 
 ## 🔄 Implementation Plan
 
-### Phase 1: Fix Build (Mandatory — blocks everything)
+### Phase 1: Enforce Soft-Delete Semantics (Data Integrity — blocks Phase 4)
 
-- [ ] **1.1** Resolve `tiny-internal-services` / `tiny-backend-tools` type mismatch
-  - Check compatible version pairs; update `package.json` dependencies
-  - Add `tiny-specs` as dependency if needed by `tiny-internal-services`
-  - **Outcome:** `ErrorType` and `tiny-specs` imports resolve
-- [ ] **1.2** Fix `App.ts` — pass `ctx` to `eventJob.run()` and `pollerJob.run()`
-  - **Outcome:** Both job `.run()` calls compile
-- [ ] **1.3** Fix `LocationController.ts` — align argument count with method signature
-  - **Outcome:** No TS2554 error
-- [ ] **1.4** Fix `LocationService.ts` — add missing `eventMapper` property to `LocationPoller` constructor
-  - **Outcome:** No TS2345 error
-- [ ] **1.5** Verify `yarn run build` passes cleanly
-  - **Outcome:** 0 TypeScript errors
+> Soft-deleted residents (`is_active=0`) must not be resolvable by any read or trigger flow.
+
+- [ ] **1.1** Add `AND is_active=1` filter to read/resolve queries (NOT upsert queries)
+  - **File:** `src/repository/ResidentRepository.ts`
+  - **Queries to filter (add `AND is_active=1`):**
+    - `GET_REGISTER_USER_BY_RESIDENT` (line 41) — used by `getResidentByResidentId`
+    - `GET_REGISTER_USER_BY_ROBOT` (line 45) — used by `getResidentByRobotId`
+    - `GET_RESIDENTS_WITH_ROBOTS_AND_LOCATIONS` (line 69) — used by `getResidentsWithRobots` (list endpoint)
+  - **Query to leave UNFILTERED:**
+    - `GET_REGISTER_USER_BY_ROBOT_OR_RESIDENT` (line 49) — used by `registerResident` upsert logic (must find soft-deleted rows to reactivate, not create duplicates)
+  - **Outcome:** All read/resolve API paths return only active residents; upsert/reactivation path preserved
+- [ ] **1.2** Add soft-delete test coverage
+  - **File:** `test/controller/ResidentControllerIT.ts`
+  - **Tests:**
+    - Deleted resident excluded from `GET /v1/ext/sensara/residents` list
+    - Trigger flows on deleted resident return 404
+    - **Deferred to Phase 4.1:** Deleted resident returns 404 on `GET /v1/ext/sensara/residents/:residentId` (endpoint not yet implemented in Phase 1)
+  - **Outcome:** Soft-delete semantics verified for existing resident read/trigger paths; GET-by-id test added alongside endpoint implementation
 
 ### Phase 2: PR Review Comments (Code Quality Fixes)
 
@@ -136,10 +139,16 @@ Build fails with **8 TypeScript errors**:
   - **Change:** `import { SubscriptionDomain } from 'tiny-internal-services/dist'` → `import { SubscriptionDomain } from 'tiny-internal-services'`
   - **Outcome:** Clean import from package root
 
-- [ ] **2.4** Fix error handling in `getTriggerSubscription`
-  - **File:** `src/controller/ResidentController.ts:125-132`
-  - **Change:** Don't swallow all upstream errors as "not found". Re-throw non-404 errors; only map actual "not found" responses to `NotFoundError`
-  - **Outcome:** Upstream 500s propagate correctly; only actual 404s become `NotFoundError`
+- [ ] **2.4** Fix error handling in `getTriggerSubscription` (coordinated with `tiny-internal-services`)
+  - **Step A — Dependency change in `tiny-internal-services`:**
+    - **File:** `projects/tinybots/backend/tiny-internal-services` — `EventService.getTriggerSubscription`
+    - **Change:** Preserve upstream HTTP status in thrown errors (e.g., typed `NotFoundError` vs `InternalServerError`) instead of wrapping all failures into a generic error
+    - **Outcome:** Callers can distinguish "not found" from "server error"
+  - **Step B — Controller change in `sensara-adaptor`:**
+    - **File:** `src/controller/ResidentController.ts:125-132` and `:170-177`
+    - **Change:** Check error type from EventService — only map `NotFoundError` to 404; re-throw all other errors
+    - **Outcome:** Upstream 500s propagate correctly; only actual 404s become `NotFoundError`
+  - **Note:** Step A must be completed and published before Step B can be implemented
 
 - [ ] **2.5** Fix status code 500 → 400 for invalid subscriptionId
   - **File:** `src/controller/ResidentController.ts:195`
@@ -213,11 +222,13 @@ Build fails with **8 TypeScript errors**:
   - **Flow:**
     ```
     residentId (path param)
-      → ResidentRepository.getResidentByResidentId(residentId)
+      → ResidentRepository.getResidentByResidentId(residentId) (is_active=1 enforced)
+      → RobotAccountService.getRobotAccountById(robotId) → robotSerial
       → ResidentRepository.getHearableLocations(robotId)
       → Response: { id, residentId, robotId, hearableLocations, robotSerial }
     ```
-  - **Tests:** IT for: 200 success, 404 not found, 403 no permission
+  - **Note:** `robotSerial` is fetched from `RobotAccountService` (same service used by list endpoint), not from repository
+  - **Tests:** IT for: 200 success, 404 not found, 404 deleted resident (soft-delete from Phase 1.2), 403 no permission
 
 - [ ] **4.2** Implement `PATCH /v1/ext/sensara/residents/{residentId}`
   - **Files:** `ResidentController.ts`, `ResidentService.ts`, `ResidentRepository.ts`, `App.ts`
@@ -248,10 +259,10 @@ Build fails with **8 TypeScript errors**:
 
 ```
 src/
-├── App.ts                                    # 🔄 Fix build + migrate routes + add auth
+├── App.ts                                    # 🔄 Migrate routes + add auth
 ├── constants/Container.ts                    # ✅ Already updated
 ├── controller/
-│   ├── LocationController.ts                 # 🔄 Fix TS2554 (arg count)
+│   ├── LocationController.ts                 # ✅ Build already clean
 │   └── ResidentController.ts                 # 🔄 Fix review issues + add GET/PATCH by id
 ├── model/
 │   ├── ResidentRobot.ts                      # ✅ Already has ResidentRobotWithSerial
@@ -263,13 +274,16 @@ src/
 │   └── mapper/
 │       ├── ResidentRobotMapper.ts            # ✅ Already implemented
 │       └── TriggerSubscriptionMapper.ts      # 🔄 Fix import path
-├── repository/ResidentRepository.ts          # 🔄 Add update hearable locations method
+├── repository/ResidentRepository.ts          # 🔄 Add is_active=1 to lookups + update hearable locations
 ├── service/
-│   ├── LocationService.ts                    # 🔄 Fix TS2345 (missing eventMapper)
+│   ├── LocationService.ts                    # ✅ Build already clean
 │   └── ResidentService.ts                    # 🔄 Fix N+1 + console.log + add ctx
 
+projects/tinybots/backend/tiny-internal-services/
+└── (EventService)                            # 🔄 Preserve upstream error types for getTriggerSubscription
+
 test/
-├── controller/ResidentControllerIT.ts        # 🔄 Migrate paths + add auth tests + new endpoint tests
+├── controller/ResidentControllerIT.ts        # 🔄 Migrate paths + auth tests + soft-delete tests + new endpoint tests
 ├── model/Mapper/
 │   ├── ResidentRobotMapperTest.ts            # ✅ Already implemented
 │   └── TriggerSubscriptionMapperTest.ts      # ✅ Already implemented
@@ -299,16 +313,16 @@ _Pending implementation_
 
 | Priority | Phase | Description | Can Start Now? |
 |----------|-------|-------------|----------------|
-| 🔴 P0 | Phase 1 | Fix Build | ✅ Yes |
-| 🔴 P0 | Phase 2 | PR Review Fixes | ✅ After Phase 1 |
-| 🟡 P1 | Phase 3 | Route Migration & Auth | ✅ After Phase 1 |
-| 🟡 P1 | Phase 4 | Missing Endpoints | ✅ After Phase 3 |
+| 🔴 P0 | Phase 1 | Enforce Soft-Delete Semantics | ✅ Yes |
+| 🔴 P0 | Phase 2 | PR Review Fixes | ✅ Yes (parallel with Phase 1) |
+| 🟡 P1 | Phase 3 | Route Migration & Auth | ✅ Yes (parallel with Phase 1-2) |
+| 🟡 P1 | Phase 4 | Missing Endpoints | ✅ After Phase 1 (needs active-only queries) |
 | 🟢 P2 | Phase 5 | Testing & Verification | After all above |
 
 ### 📝 Notes
 
 - All stakeholder decisions resolved — no blockers remaining
-- Phase 1 and Phase 2 can proceed immediately
+- Build is already clean — Phase 1 (old: Fix Build) removed; replaced with Soft-Delete Semantics enforcement
+- Phase 2.4 (error handling) now includes coordinated `tiny-internal-services` change as a dependency step
 - Phase 3 (route migration) and Phase 4 (new endpoints) are unblocked since all paths confirmed as `/v1/ext/sensara/*`
-- The PROD-983 merge already resolved `describe.only` and updated yarn — but build errors remain
-- Soft delete behavior confirmed correct — no changes needed
+- The PROD-983 merge already resolved `describe.only`, updated yarn, and fixed build errors
