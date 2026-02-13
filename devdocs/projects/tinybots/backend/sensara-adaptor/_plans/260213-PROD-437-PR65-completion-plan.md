@@ -83,7 +83,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 
 > Soft-deleted residents (`is_active=0`) must not be resolvable by any read or trigger flow.
 
-- [ ] **1.1** Add `AND is_active=1` filter to read/resolve queries (NOT upsert queries)
+- [x] **1.1** Add `AND is_active=1` filter to read/resolve queries (NOT upsert queries)
   - **File:** `src/repository/ResidentRepository.ts`
   - **Queries to filter (add `AND is_active=1`):**
     - `GET_REGISTER_USER_BY_RESIDENT` (line 41) — used by `getResidentByResidentId`
@@ -92,7 +92,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **Query to leave UNFILTERED:**
     - `GET_REGISTER_USER_BY_ROBOT_OR_RESIDENT` (line 49) — used by `registerResident` upsert logic (must find soft-deleted rows to reactivate, not create duplicates)
   - **Outcome:** All read/resolve API paths return only active residents; upsert/reactivation path preserved
-- [ ] **1.2** Add soft-delete test coverage
+- [x] **1.2** Add soft-delete test coverage
   - **File:** `test/controller/ResidentControllerIT.ts`
   - **Tests:**
     - Deleted resident excluded from `GET /v1/ext/sensara/residents` list
@@ -102,7 +102,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 
 ### Phase 2: PR Review Comments (Code Quality Fixes)
 
-- [ ] **2.1** Fix N+1 query in `ResidentService.getResidentsWithRobots`
+- [x] **2.1** Fix N+1 query in `ResidentService.getResidentsWithRobots`
   - **File:** `src/service/ResidentService.ts:64-71`
   - **Change:** Replace per-resident `getRobotAccountById` loop with batch `getRobotAndUserAccountDetailsBySerials` + Map lookup
   - **Before:**
@@ -128,18 +128,18 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **Outcome:** Single batch call instead of N calls; eliminates N+1 query
   - **Tests:** Update `test/service/ResidentServiceTest.ts` — remove `getRobotAccountById` mocks
 
-- [ ] **2.2** Fix subscription logic — per-event instead of per-robot
+- [x] **2.2** Fix subscription logic — per-event instead of per-robot
   - **File:** `src/controller/ResidentController.ts:110-151`
   - **Change:** `createTriggerSubscription` should check for existing subscription by event name (`req.body.eventName`), not by robot
   - **Outcome:** Multiple subscriptions per robot allowed (one per event type)
   - **Tests:** Update `test/controller/ResidentControllerIT.ts` POST trigger tests
 
-- [ ] **2.3** Fix import path in TriggerSubscriptionMapper
+- [x] **2.3** Fix import path in TriggerSubscriptionMapper
   - **File:** `src/model/mapper/TriggerSubscriptionMapper.ts:1`
   - **Change:** `import { SubscriptionDomain } from 'tiny-internal-services/dist'` → `import { SubscriptionDomain } from 'tiny-internal-services'`
   - **Outcome:** Clean import from package root
 
-- [ ] **2.4** Fix error handling in `getTriggerSubscription` (coordinated with `tiny-internal-services`)
+- [x] **2.4** Fix error handling in `getTriggerSubscription` (coordinated with `tiny-internal-services`)
   - **Step A — Dependency change in `tiny-internal-services`:**
     - **File:** `projects/tinybots/backend/tiny-internal-services` — `EventService.getTriggerSubscription`
     - **Change:** Preserve upstream HTTP status in thrown errors (e.g., typed `NotFoundError` vs `InternalServerError`) instead of wrapping all failures into a generic error
@@ -150,12 +150,12 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
     - **Outcome:** Upstream 500s propagate correctly; only actual 404s become `NotFoundError`
   - **Note:** Step A must be completed and published before Step B can be implemented
 
-- [ ] **2.5** Fix status code 500 → 400 for invalid subscriptionId
+- [x] **2.5** Fix status code 500 → 400 for invalid subscriptionId
   - **File:** `src/controller/ResidentController.ts:195`
   - **Change:** `res.status(500)` → `res.status(400)`
   - **Outcome:** Correct HTTP semantics for client validation error
 
-- [ ] **2.6** Replace `console.log` with Logger
+- [x] **2.6** Replace `console.log` with Logger
   - **File:** `src/service/ResidentService.ts:60`
   - **Change:** Add `ctx: IRequestContext` parameter to `getResidentsWithRobots`, replace:
     ```typescript
@@ -167,7 +167,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
     ```
   - **Outcome:** Structured logging with request context
 
-- [ ] **2.7** Add missing validation decorator
+- [x] **2.7** Add missing validation decorator
   - **File:** `src/model/ServiceConfig.ts:11`
   - **Change:** Add `@IsString()` `@MinLength(1)` above `robotAccountServiceAddress: string`
   - **Outcome:** Config validation consistent across all service addresses
@@ -176,7 +176,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 
 > PR not merged, no consumers on old paths → migrate directly, no aliases needed.
 
-- [ ] **3.1** Migrate all resident routes to `/v1/ext/sensara/*`
+- [x] **3.1** Migrate all resident routes to `/v1/ext/sensara/*`
   - **File:** `src/App.ts`
   - **Changes:**
     | Old Path | New Path |
@@ -186,7 +186,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
     | `GET /v1/sensara/residents` | `GET /v1/ext/sensara/residents` |
   - **Outcome:** All resident routes under `/v1/ext/sensara/*`
 
-- [ ] **3.2** Migrate trigger routes from internal to external path
+- [x] **3.2** Migrate trigger routes from internal to external path
   - **File:** `src/App.ts`
   - **Changes:**
     | Old Path | New Path |
@@ -196,7 +196,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
     | `DELETE /internal/v1/events/residents/:residentId/subscriptions/triggers/:subscriptionId` | `DELETE /v1/ext/sensara/residents/:residentId/events/subscriptions/triggers/:subscriptionId` |
   - **Outcome:** All trigger routes under `/v1/ext/sensara/*`, exposed externally
 
-- [ ] **3.3** Add authentication to all endpoints
+- [x] **3.3** Add authentication to all endpoints
   - **Currently unauthenticated:**
     - `GET /v1/ext/sensara/residents`
     - `POST /v1/ext/sensara/residents/:residentId/events/subscriptions/triggers`
@@ -209,14 +209,14 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **Permission:** Reuse `SENSARA_RESIDENT_WRITE_ALL` for all endpoints (including GET) temporarily
   - **Tests:** Add 403 tests for unauthenticated requests on all endpoints
 
-- [ ] **3.4** Update all test paths to `/v1/ext/sensara/*`
+- [x] **3.4** Update all test paths to `/v1/ext/sensara/*`
   - **File:** `test/controller/ResidentControllerIT.ts`
   - **Change:** Replace all `/v1/sensara/` and `/internal/v1/events/` with `/v1/ext/sensara/`
   - **Outcome:** Tests match new route paths
 
 ### Phase 4: Missing Endpoints
 
-- [ ] **4.1** Implement `GET /v1/ext/sensara/residents/{residentId}`
+- [x] **4.1** Implement `GET /v1/ext/sensara/residents/{residentId}`
   - **Files:** `ResidentController.ts`, `ResidentService.ts`, `App.ts`
   - **Auth:** `SENSARA_RESIDENT_WRITE_ALL`
   - **Flow:**
@@ -230,7 +230,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **Note:** `robotSerial` is fetched from `RobotAccountService` (same service used by list endpoint), not from repository
   - **Tests:** IT for: 200 success, 404 not found, 404 deleted resident (soft-delete from Phase 1.2), 403 no permission
 
-- [ ] **4.2** Implement `PATCH /v1/ext/sensara/residents/{residentId}`
+- [x] **4.2** Implement `PATCH /v1/ext/sensara/residents/{residentId}`
   - **Files:** `ResidentController.ts`, `ResidentService.ts`, `ResidentRepository.ts`, `App.ts`
   - **New DTO:** `src/model/dto/ResidentPatchDto.ts` with `hearableLocations: string[]`
   - **Auth:** `SENSARA_RESIDENT_WRITE_ALL`
@@ -248,10 +248,10 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 
 - [ ] **5.1** Run full test suite: `just -f devtools/tinybots/local/Justfile test-sensara-adaptor`
   - **Outcome:** All tests pass
-- [ ] **5.2** Verify build: `yarn run build`
+- [x] **5.2** Verify build: `yarn run build`
   - **Outcome:** 0 errors
-- [ ] **5.3** Verify lint/typecheck passes
-- [ ] **5.4** Review all changes end-to-end before marking PR ready
+- [x] **5.3** Verify lint/typecheck passes
+- [x] **5.4** Review all changes end-to-end before marking PR ready
 
 ---
 
@@ -326,3 +326,38 @@ _Pending implementation_
 - Phase 2.4 (error handling) now includes coordinated `tiny-internal-services` change as a dependency step
 - Phase 3 (route migration) and Phase 4 (new endpoints) are unblocked since all paths confirmed as `/v1/ext/sensara/*`
 - The PROD-983 merge already resolved `describe.only`, updated yarn, and fixed build errors
+
+## Implementation Notes / As Implemented
+
+- Implemented soft-delete filtering in resident read/resolve queries (`GET_REGISTER_USER_BY_RESIDENT`, `GET_REGISTER_USER_BY_ROBOT`, `GET_RESIDENTS_WITH_ROBOTS_AND_LOCATIONS`) while leaving upsert lookup (`GET_REGISTER_USER_BY_ROBOT_OR_RESIDENT`) unchanged.
+- Added resident location patch support:
+  - New DTO: `src/model/dto/ResidentPatchDto.ts`
+  - New service/repository flow to update hearable locations by resident ID
+  - New endpoint: `PATCH /v1/ext/sensara/residents/:residentId`
+- Added resident lookup endpoint:
+  - New endpoint: `GET /v1/ext/sensara/residents/:residentId`
+  - Returns resident + hearable locations + robot serial (`RobotAccountService.getRobotAccountById`).
+- Fixed PR review items in resident/trigger flows:
+  - Removed N+1 in `ResidentService.getResidentsWithRobots` by reusing batch details (`getRobotAndUserAccountDetailsBySerials`) and `Map` lookup.
+  - Replaced `console.log` with contextual logger (`Logger.loggerFromCtx(ctx).info(...)`).
+  - Updated create-trigger conflict logic to be event-specific (per `eventName`) instead of robot-wide.
+  - Updated trigger error handling to map only `NotFoundError` to 404 and rethrow non-404 errors.
+  - Updated invalid subscriptionId response from 500 to 400.
+  - Updated trigger mapper import path to `tiny-internal-services` package root.
+- Migrated and secured resident/trigger external routes under `/v1/ext/sensara/*`:
+  - Resident: PUT/DELETE/GET list/GET by id/PATCH by id
+  - Trigger: POST/GET/DELETE
+  - Applied Kong header + admin + permission middleware consistently across all resident/trigger endpoints.
+- Updated test suites:
+  - `test/controller/ResidentControllerIT.ts` rewritten for new route paths, auth enforcement (403 checks), soft-delete coverage, trigger per-event behavior, and new GET/PATCH resident endpoints.
+  - `test/service/ResidentServiceTest.ts` updated to remove `getRobotAccountById` mocking assumptions from list flow.
+- Coordinated dependency change implemented in `projects/tinybots/backend/tiny-internal-services`:
+  - `lib/services/EventService.ts#getTriggerSubscription` now throws typed `NotFoundError` for upstream 404 and preserves non-404 as internal error.
+  - Note: this SDK change must be published/adopted by `sensara-adaptor` runtime dependency for full cross-repo runtime semantics.
+
+### Verification Run
+
+- ✅ `yarn run build` in `projects/tinybots/backend/sensara-adaptor`
+- ✅ `yarn eslint src test --ext .ts` in `projects/tinybots/backend/sensara-adaptor`
+- ✅ `yarn run build` in `projects/tinybots/backend/tiny-internal-services` (source change compiles)
+- ⚠️ Full suite command from plan (`just -f devtools/tinybots/local/Justfile test-sensara-adaptor`) not run in this implementation pass.
