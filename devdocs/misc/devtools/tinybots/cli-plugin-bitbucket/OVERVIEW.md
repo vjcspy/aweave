@@ -1,7 +1,7 @@
-# Bitbucket CLI Plugin (`@aweave/cli-plugin-bitbucket`)
+# Bitbucket CLI Plugin (`@aweave/cli-plugin-tinybots-bitbucket`)
 
 > **Source:** `devtools/tinybots/cli-plugin-bitbucket/`
-> **Last Updated:** 2026-02-07
+> **Last Updated:** 2026-02-13
 
 oclif plugin cung cấp topic `aw tinybots-bitbucket` — Bitbucket PR tools cho TinyBots domain. Plugin gọi trực tiếp Bitbucket REST API, auto-fetches all pages cho paginated endpoints.
 
@@ -24,7 +24,7 @@ Thay thế curl commands bằng structured CLI tool cho Bitbucket PR operations:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│               @aweave/cli-plugin-bitbucket                     │
+│          @aweave/cli-plugin-tinybots-bitbucket                  │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  commands/tinybots-bitbucket/                                │
@@ -141,7 +141,7 @@ All items aggregated into single MCPResponse with `total_count`.
 
 ```
 devtools/tinybots/cli-plugin-bitbucket/
-├── package.json                    # @aweave/cli-plugin-bitbucket
+├── package.json                    # @aweave/cli-plugin-tinybots-bitbucket
 ├── tsconfig.json
 └── src/
     ├── index.ts                    # (empty — oclif auto-discovers commands)
@@ -158,21 +158,21 @@ devtools/tinybots/cli-plugin-bitbucket/
 ## Development
 
 ```bash
-cd devtools/tinybots/cli-plugin-bitbucket
+cd devtools
 
-# Build (requires cli-shared built first)
-pnpm build
+# Build
+pnpm turbo build --filter=@aweave/cli...
 
 # Test (requires Bitbucket credentials)
 export BITBUCKET_USER=user@example.com
 export BITBUCKET_APP_PASSWORD=ATATTxxxxx
+
 aw tinybots-bitbucket pr my-repo 123
 aw tinybots-bitbucket comments my-repo 123 --max 50
 ```
 
 ## Related
 
-- **Original Implementation Plan:** `devdocs/misc/devtools/tinybots/260130-bitbucket-cli-implementation.md`
 - **Shared Utilities:** `devtools/common/cli-shared/`
 - **Main CLI:** `devtools/common/cli/`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`

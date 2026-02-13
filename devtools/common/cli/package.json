@@ -28,7 +28,8 @@
       "@aweave/cli-plugin-relay",
       "@aweave/cli-plugin-demo-workflow",
       "@aweave/cli-plugin-config",
-      "@aweave/cli-plugin-server"
+      "@aweave/cli-plugin-server",
+      "@aweave/cli-plugin-tinybots-bitbucket"
     ]
   },
   "dependencies": {
@@ -39,6 +40,7 @@
     "@aweave/cli-plugin-docs": "workspace:*",
     "@aweave/cli-plugin-relay": "workspace:*",
     "@aweave/cli-plugin-server": "workspace:*",
+    "@aweave/cli-plugin-tinybots-bitbucket": "workspace:*",
     "@aweave/cli-shared": "workspace:*",
     "@oclif/core": "catalog:",
     "@oclif/plugin-help": "^6.2.27",
