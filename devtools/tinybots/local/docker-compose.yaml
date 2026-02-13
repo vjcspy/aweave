@@ -504,6 +504,7 @@ services:
       ROBOT_ACCOUNT_SERVICE_ADDRESS: http://checkpoint:8080
       DASHBOARD_ROBOT_SERVICE_ADDRESS: http://wonkers-robots:8080
     working_dir: /usr/src/app
+#    entrypoint: ["sh", "-c", "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack enable && corepack prepare yarn@4.12.0 --activate && yarn install --silent && yarn test:only"]
     entrypoint: ["sh", "-c", "yarn test:only"]
     depends_on:
       typ-e:
