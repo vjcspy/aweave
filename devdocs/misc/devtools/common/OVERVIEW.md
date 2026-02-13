@@ -32,6 +32,10 @@ Use the coverage table to spot missing package overviews quickly.
 - **cli-plugin-config:** oclif plugin providing `aw config` topic — config inspection and management (overview missing)
 - **cli-plugin-relay:** oclif plugin providing `aw relay` topic — push data with chunking and encryption. Commands: `push`, `status`, `config set`, `config show`, `config generate-key`
 
+### Domain Plugins
+
+- **cli-plugin-tinybots-bitbucket:** TinyBots domain plugin providing `aw tinybots-bitbucket` topic — Bitbucket PR details, comments, tasks (direct Bitbucket REST API v2.0; auto-pagination) ([devdocs/misc/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md](devdocs/misc/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md))
+
 ### Shared Libraries
 
 - **debate-machine:** Shared xstate v5 state machine for the debate system — single source of truth for debate states (5 states, 5 event types), transitions, and role-based action validation. Consumed by both CLI and NestJS server ([devdocs/misc/devtools/common/debate-machine/OVERVIEW.md](devdocs/misc/devtools/common/debate-machine/OVERVIEW.md))

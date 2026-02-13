@@ -1,11 +1,11 @@
 # DevTools Overview
 
 > **Branch:** master
-> **Last Updated:** 2026-02-11
+> **Last Updated:** 2026-02-13
 
 ## TL;DR
 
-Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All tools built with Node.js: CLI (oclif), server (NestJS), frontend (React SPA via Rsbuild). Organized with domain-first folder structure, pnpm workspaces for package management, CLI for process management. All packages published to npm under `@aweave/` scope — users run via `npx @aweave/cli` without pulling the repo.
+Unified TypeScript monorepo with a single CLI entrypoint `aw <command>` (linked globally from this repo). All tools built with Node.js: CLI (oclif), server (NestJS), frontend (React SPA via Rsbuild). Organized with domain-first folder structure, pnpm workspaces for package management, CLI for process management. All packages published to npm under `@aweave/` scope — end users can run via `npx @aweave/cli` without pulling the repo.
 
 ## Purpose & Bounded Context
 
@@ -30,7 +30,7 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 ┌─────────────────────────────────────────────────────────────┐
 │                    User Terminal / AI Agent                   │
 │                         │                                    │
-│           npx @aweave/cli server start --open                │
+│                 aw server start --open                        │
 │                         │                                    │
 │  ┌──────────────────────┴──────────────────────┐             │
 │  │              @aweave/cli (oclif)             │             │
@@ -88,6 +88,10 @@ devtools/
 ├── <domain>/                        # Domain-specific tools (e.g. nab/)
 │   ├── cli-plugin-<name>/           # oclif plugin for this domain
 │   └── local/                       # Local dev infrastructure
+├── tinybots/                        # Domain: TinyBots
+│   ├── cli-plugin-bitbucket/         # @aweave/cli-plugin-tinybots-bitbucket — aw tinybots-bitbucket *
+│   ├── local/                       # TinyBots local DB tools (seed, prisma)
+│   └── playwright/                  # TinyBots playwright tests/scripts
 ├── pnpm-workspace.yaml              # Workspace package declarations + version catalog
 ├── package.json                     # Root workspace scripts
 ├── scripts/
@@ -217,6 +221,7 @@ For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **m
   ├── @aweave/cli-plugin-dashboard ──► @aweave/cli-shared + ink + react (ESM)
   ├── @aweave/cli-plugin-server ──► @aweave/cli-shared + @aweave/server
   ├── @aweave/cli-plugin-config ──► @aweave/cli-shared + @aweave/config-core
+  ├── @aweave/cli-plugin-tinybots-bitbucket ──► @aweave/cli-shared
   └── @aweave/cli-plugin-<name> ──► @aweave/cli-shared
 
 @aweave/server

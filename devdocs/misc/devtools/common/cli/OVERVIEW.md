@@ -1,7 +1,7 @@
 # Unified CLI Entrypoint (`@aweave/cli`)
 
 > **Source:** `devtools/common/cli/`
-> **Last Updated:** 2026-02-07
+> **Last Updated:** 2026-02-13
 
 oclif-based main CLI application — provides the global `aw` command. This package **contains no business logic** — it only bootstraps oclif, declares plugins, and provides shared infrastructure (help). All domain commands come from plugins.
 
@@ -67,6 +67,7 @@ oclif-based main CLI application — provides the global `aw` command. This pack
   ├── @aweave/cli-shared
   ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared
   ├── @aweave/cli-plugin-docs ──► @aweave/cli-shared
+  ├── @aweave/cli-plugin-tinybots-bitbucket ──► @aweave/cli-shared
   └── @aweave/cli-plugin-<name> ──► @aweave/cli-shared
 ```
 
@@ -84,6 +85,7 @@ oclif-based main CLI application — provides the global `aw` command. This pack
     "plugins": [
       "@aweave/cli-plugin-debate",
       "@aweave/cli-plugin-docs",
+      "@aweave/cli-plugin-tinybots-bitbucket",
       "@aweave/cli-plugin-<name>"
     ]
   }
@@ -154,8 +156,8 @@ cd devtools/common/cli && pnpm build                # 3. Main CLI (last)
 # Or from workspace root:
 cd devtools && pnpm -r build   # Builds all packages (respects dependency order)
 
-# Dev mode (run without building):
-cd devtools/common/cli && bin/dev.js debate generate-id
+# Run (preferred when aw is linked globally):
+aw debate generate-id
 ```
 
 ## Related
