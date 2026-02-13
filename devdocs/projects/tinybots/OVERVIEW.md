@@ -126,6 +126,7 @@ Load skills **on-demand** when working on related tasks. Do not load proactively
 | Skill | Load When | Path |
 |-------|-----------|------|
 | database-access | Schema changes, migrations, DB queries | `devdocs/agent/skills/tinybots/database-access/SKILL.md` |
+| confluence-sync | Sync markdown docs between local and Confluence with frontmatter-scoped sections | `devdocs/agent/skills/tinybots/confluence-sync/SKILL.md` |
 | testing-guidelines | Writing or fixing tests | `devdocs/agent/skills/tinybots/testing-guidelines/SKILL.md` |
 
 ## Repository Coverage Table
