@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/config-common",
+  "name": "@hod/aweave-config-common",
   "version": "0.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aweave/config-core": "workspace:*"
+    "@hod/aweave-config-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

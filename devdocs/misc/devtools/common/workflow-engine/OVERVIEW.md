@@ -1,4 +1,4 @@
-# Workflow Engine (`@aweave/workflow-engine`)
+# Workflow Engine (`@hod/aweave-workflow-engine`)
 
 > **Source:** `devtools/common/workflow-engine/`
 > **Last Updated:** 2026-02-09
@@ -14,15 +14,15 @@ Core workflow execution engine — pure TypeScript, zero framework dependencies.
 
 | Consumer | How it uses |
 |----------|------------|
-| `@aweave/workflow-dashboard` | Import types (`WorkflowActor`, `WorkflowState`) + machine (`workflowMachine`) |
-| `@aweave/cli-plugin-demo-workflow` | Import machine + types để create actor và define workflow |
+| `@hod/aweave-workflow-dashboard` | Import types (`WorkflowActor`, `WorkflowState`) + machine (`workflowMachine`) |
+| `@hod/aweave-plugin-demo-workflow` | Import machine + types để create actor và define workflow |
 | Future workflow plugins | Same pattern — import machine, define `WorkflowDefinition`, create actor |
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                   @aweave/workflow-engine                      │
+│                   @hod/aweave-workflow-engine                      │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  types.ts                        engine.ts                   │
@@ -162,7 +162,7 @@ export { HumanInputRequiredError } from './types';
 
 ```
 devtools/common/workflow-engine/
-├── package.json                    # @aweave/workflow-engine (CJS, no "type": "module")
+├── package.json                    # @hod/aweave-workflow-engine (CJS, no "type": "module")
 ├── tsconfig.json                   # module: commonjs, target: ES2023
 ├── eslint.config.mjs
 └── src/

@@ -1,18 +1,18 @@
 // Re-export playwright-core API
+export { chromium, firefox, webkit, devices } from 'playwright-core';
 export type {
   Browser,
   BrowserContext,
   BrowserType,
-  LaunchOptions,
   Page,
+  LaunchOptions,
 } from 'playwright-core';
-export { chromium, devices, firefox, webkit } from 'playwright-core';
 
 // Helpers
 export {
   launchBrowser,
-  type LaunchBrowserOptions,
   launchPersistentBrowser,
+  type LaunchBrowserOptions,
   type LaunchPersistentBrowserOptions,
   type PersistentBrowserSession,
 } from './browser';

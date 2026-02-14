@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
-
-import type { Argument, Debate } from '@/lib/api';
+import { useEffect, useRef, useReducer, useCallback } from 'react';
+import type { Debate, Argument } from '@/lib/api';
+import type { ServerToClientMessage, ClientToServerMessage } from '@/lib/types';
 import { getWsUrl } from '@/lib/api';
-import type { ClientToServerMessage, ServerToClientMessage } from '@/lib/types';
 
 type DebateState = {
   debate: Debate | null;
@@ -71,7 +70,7 @@ export function useDebate(debateId: string) {
     ws.onmessage = (event) => {
       try {
         const msg: ServerToClientMessage = JSON.parse(event.data);
-
+        
         if (msg.event === 'initial_state') {
           dispatch({
             type: 'INITIAL_STATE',
@@ -92,18 +91,12 @@ export function useDebate(debateId: string) {
 
     ws.onclose = () => {
       dispatch({ type: 'DISCONNECTED' });
-
+      
       // Exponential backoff reconnection
-      const delay = Math.min(
-        1000 * Math.pow(2, reconnectAttempts.current),
-        30000,
-      );
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
       reconnectAttempts.current++;
-
-      reconnectTimeoutRef.current = setTimeout(
-        () => connectRef.current?.(),
-        delay,
-      );
+      
+      reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), delay);
     };
 
     ws.onerror = () => {
@@ -135,25 +128,19 @@ export function useDebate(debateId: string) {
     }
   }, []);
 
-  const submitIntervention = useCallback(
-    (content?: string) => {
-      send({
-        event: 'submit_intervention',
-        data: { debate_id: debateId, content },
-      });
-    },
-    [debateId, send],
-  );
+  const submitIntervention = useCallback((content?: string) => {
+    send({
+      event: 'submit_intervention',
+      data: { debate_id: debateId, content },
+    });
+  }, [debateId, send]);
 
-  const submitRuling = useCallback(
-    (content: string, close?: boolean) => {
-      send({
-        event: 'submit_ruling',
-        data: { debate_id: debateId, content, close },
-      });
-    },
-    [debateId, send],
-  );
+  const submitRuling = useCallback((content: string, close?: boolean) => {
+    send({
+      event: 'submit_ruling',
+      data: { debate_id: debateId, content, close },
+    });
+  }, [debateId, send]);
 
   useEffect(() => {
     connect();

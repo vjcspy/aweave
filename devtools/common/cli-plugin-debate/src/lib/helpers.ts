@@ -2,7 +2,7 @@
  * Shared helpers for debate CLI commands.
  */
 
-import { HTTPClient } from '@aweave/cli-shared';
+import { HTTPClient } from '@hod/aweave-cli-shared';
 
 import { DEBATE_AUTH_TOKEN, DEBATE_SERVER_URL } from './config';
 

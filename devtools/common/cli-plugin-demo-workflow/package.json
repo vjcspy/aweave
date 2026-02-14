@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/cli-plugin-demo-workflow",
+  "name": "@hod/aweave-plugin-demo-workflow",
   "version": "0.1.3",
   "type": "module",
   "main": "dist/index.js",
@@ -14,8 +14,8 @@
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/workflow-dashboard": "workspace:*",
-    "@aweave/workflow-engine": "workspace:*",
+    "@hod/aweave-workflow-dashboard": "workspace:*",
+    "@hod/aweave-workflow-engine": "workspace:*",
     "@oclif/core": "catalog:",
     "ink": "catalog:",
     "react": "catalog:",

@@ -255,5 +255,5 @@ Check permissions:
 ## Workspace Reference
 
 | Project | Workspace | Common Repos |
-|---------|-----------|--------------|
-| Tinybots | `tinybots` | `micro-manager`, `sensara-adaptor`, `tiny-specs` |
+|--------|-----------|--------------|
+| NAB | `HOD` | `ho-omh-customer-loan-mods-web`, `ho-omh-loanmodifications-api`, `ho-omh-portfolio-management-api` |

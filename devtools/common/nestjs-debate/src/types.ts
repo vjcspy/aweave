@@ -1,5 +1,5 @@
 // Re-export core types from shared package
-export type { ArgumentType, DebateState, Role } from '@aweave/debate-machine';
+export type { ArgumentType, DebateState, Role } from '@hod/aweave-debate-machine';
 
 export type WaiterRole = 'proposer' | 'opponent';
 

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// @aweave/config-core — Centralized config management
+// @hod/aweave-config-core — Centralized config management
 // ---------------------------------------------------------------------------
 
 // Path resolution

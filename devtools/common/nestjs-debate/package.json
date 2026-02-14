@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/nestjs-debate",
+  "name": "@hod/aweave-nestjs-debate",
   "version": "0.1.1",
   "files": [
     "dist"
@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aweave/debate-machine": "workspace:*",
+    "@hod/aweave-debate-machine": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/platform-ws": "catalog:",
     "@nestjs/swagger": "catalog:",

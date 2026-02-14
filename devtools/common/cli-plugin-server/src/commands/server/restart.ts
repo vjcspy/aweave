@@ -4,7 +4,7 @@ import {
   MCPResponse,
   output,
   restartServer,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerRestart extends Command {

@@ -1,4 +1,4 @@
-# Unified NestJS Server (`@aweave/server`)
+# Unified NestJS Server (`@hod/aweave-server`)
 
 > **Source:** `devtools/common/server/`
 > **Last Updated:** 2026-02-07
@@ -10,13 +10,13 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 - **Single Process:** Chỉ cần start 1 server cho tất cả features (debate, docs, future features)
 - **Shared Infrastructure:** Auth guard, exception filter, CORS — viết 1 lần, dùng chung
 - **REST + WebSocket:** Phục vụ cả RESTful API cho CLI và WebSocket cho web UI
-- **Module Composition:** Mỗi feature là 1 pnpm package riêng (`@aweave/nestjs-<feature>`), server chỉ import modules
+- **Module Composition:** Mỗi feature là 1 pnpm package riêng (`@hod/aweave-nestjs-<feature>`), server chỉ import modules
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    @aweave/server                              │
+│                    @hod/aweave-server                              │
 │                   (NestJS Application)                         │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -29,7 +29,7 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 │                                                              │
 │  ┌──────────────────────┐  ┌────────────────────────────┐   │
 │  │   DebateModule        │  │   Future: DocsModule       │   │
-│  │ (@aweave/nestjs-debate)│  │ (@aweave/nestjs-docs)      │   │
+│  │ (@hod/aweave-nestjs-debate)│  │ (@hod/aweave-nestjs-docs)      │   │
 │  └──────────────────────┘  └────────────────────────────┘   │
 │           Feature Modules (separate pnpm packages)           │
 │                                                              │
@@ -53,14 +53,14 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 | `@nestjs/platform-ws`, `@nestjs/websockets` | WebSocket adapter (ws library) |
 | `@nestjs/serve-static` | Static file serving (debate-web SPA) |
 | `@nestjs/swagger` | OpenAPI spec generation + Swagger UI |
-| `@aweave/nestjs-debate` | Debate feature module (workspace dependency) |
+| `@hod/aweave-nestjs-debate` | Debate feature module (workspace dependency) |
 
 **Dependency graph:**
 
 ```
-@aweave/server
-  └── @aweave/nestjs-debate (workspace:*)
-  └── @aweave/nestjs-<future> (workspace:*)
+@hod/aweave-server
+  └── @hod/aweave-nestjs-debate (workspace:*)
+  └── @hod/aweave-nestjs-<future> (workspace:*)
 ```
 
 ## Configuration
@@ -93,7 +93,7 @@ pnpm generate:types     # regenerates lib/api-types.ts from openapi.json
 
 ```
 devtools/common/server/
-├── package.json                         # @aweave/server
+├── package.json                         # @hod/aweave-server
 ├── nest-cli.json
 ├── tsconfig.json
 ├── tsconfig.build.json
@@ -161,11 +161,11 @@ Pattern để thêm feature mới vào server:
 2. **Export** NestJS module từ package: `export { MyFeatureModule } from './my-feature.module'`
 3. **Add dependency** trong `devtools/common/server/package.json`:
    ```json
-   "@aweave/nestjs-<feature>": "workspace:*"
+   "@hod/aweave-nestjs-<feature>": "workspace:*"
    ```
 4. **Import** trong `app.module.ts`:
    ```typescript
-   import { MyFeatureModule } from '@aweave/nestjs-<feature>';
+   import { MyFeatureModule } from '@hod/aweave-nestjs-<feature>';
    @Module({ imports: [DebateModule, MyFeatureModule] })
    export class AppModule {}
    ```

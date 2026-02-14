@@ -8,7 +8,7 @@ import { dirname, extname, join } from 'path';
  */
 function resolveDebateIndexHtml(): string {
   try {
-    const pkgPath = require.resolve('@aweave/debate-web/package.json');
+    const pkgPath = require.resolve('@hod/aweave-debate-web/package.json');
     return join(dirname(pkgPath), 'dist', 'index.html');
   } catch {
     return join(__dirname, '..', 'public', 'debate', 'index.html');
