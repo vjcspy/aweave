@@ -64,7 +64,7 @@ new MCPResponse({
   content: [new MCPContent({ type: ContentType.JSON, data: result })],
   metadata: {
     resource_type: 'debate',         // What kind of data
-    workspace: 'tinybots',           // Context
+    workspace: 'nab',                // Context
     message: 'Created successfully', // Human-readable status
   },
 });
@@ -101,7 +101,7 @@ Every error must tell the AI agent what to do next. The `suggestion` field is th
 For domain-specific errors, always include a suggestion:
 
 ```typescript
-import { errorResponse, output } from '@aweave/cli-shared';
+import { errorResponse, output } from '@hod/aweave-cli-shared';
 
 if (!flags['debate-id']) {
   output(
@@ -390,7 +390,7 @@ export const AUTO_START_SERVICES = process.env.AUTO_START_SERVICES !== 'false';
 export const SERVER_URL = process.env.SERVER_URL ?? 'http://127.0.0.1:3456';
 
 // src/lib/services.ts
-import { checkPm2Process, startPm2, waitForHealthy, MCPResponse } from '@aweave/cli-shared';
+import { checkPm2Process, startPm2, waitForHealthy, MCPResponse } from '@hod/aweave-cli-shared';
 
 export async function ensureServices(): Promise<MCPResponse> {
   const isRunning = await checkPm2Process('aweave-server');

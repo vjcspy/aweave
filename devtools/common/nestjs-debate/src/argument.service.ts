@@ -1,9 +1,9 @@
-import type { ArgumentType, Role } from '@aweave/debate-machine';
+import type { ArgumentType, Role } from '@hod/aweave-debate-machine';
 import {
   canTransition,
   toDebateEvent,
   transition,
-} from '@aweave/debate-machine';
+} from '@hod/aweave-debate-machine';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 

@@ -1,4 +1,4 @@
-# Workflow Dashboard (`@aweave/workflow-dashboard`)
+# Workflow Dashboard (`@hod/aweave-workflow-dashboard`)
 
 > **Source:** `devtools/common/workflow-dashboard/`
 > **Last Updated:** 2026-02-09
@@ -16,7 +16,7 @@ Ink v6 + React 19 terminal dashboard cho workflow engine. Reusable component —
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                  @aweave/workflow-dashboard                    │
+│                  @hod/aweave-workflow-dashboard                    │
 │                     (ESM oclif-ready)                         │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -108,7 +108,7 @@ Dashboard uses full terminal width:
 
 | Package | Role |
 |---------|------|
-| `@aweave/workflow-engine` (workspace:*) | Types (`WorkflowActor`, `WorkflowState`, etc.) |
+| `@hod/aweave-workflow-engine` (workspace:*) | Types (`WorkflowActor`, `WorkflowState`, etc.) |
 | `@xstate/react` (^4) | `useSelector` hook to subscribe to xstate actor |
 | `ink` (^6.6.0) | Terminal UI rendering framework (ESM-only) |
 | `react` (^19.0.0) | Component model for Ink |
@@ -136,8 +136,8 @@ export { useNavigation } from './hooks/useNavigation.js';
 import { render } from 'ink';
 import React from 'react';
 import { createActor } from 'xstate';
-import { workflowMachine } from '@aweave/workflow-engine';
-import { WorkflowDashboard } from '@aweave/workflow-dashboard';
+import { workflowMachine } from '@hod/aweave-workflow-engine';
+import { WorkflowDashboard } from '@hod/aweave-workflow-dashboard';
 
 const actor = createActor(workflowMachine, {
   input: { definition: myWorkflow, workflowInput: { ...flags } },

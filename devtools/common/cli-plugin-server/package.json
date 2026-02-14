@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/cli-plugin-server",
+  "name": "@hod/aweave-plugin-server",
   "version": "0.1.5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,8 +13,8 @@
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/cli-shared": "workspace:*",
-    "@aweave/server": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
+    "@hod/aweave-server": "workspace:*",
     "@oclif/core": "catalog:"
   },
   "devDependencies": {

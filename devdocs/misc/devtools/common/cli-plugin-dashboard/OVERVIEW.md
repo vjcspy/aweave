@@ -1,4 +1,4 @@
-# Dashboard CLI Plugin (`@aweave/cli-plugin-dashboard`)
+# Dashboard CLI Plugin (`@hod/aweave-plugin-dashboard`)
 
 > **Source:** `devtools/common/cli-plugin-dashboard/`
 > **Last Updated:** 2026-02-07
@@ -16,7 +16,7 @@ oclif plugin sử dụng **Ink v6** (ESM-only, React 19) để render interactiv
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                @aweave/cli-plugin-dashboard                      │
+│                @hod/aweave-plugin-dashboard                      │
 │                   (ESM oclif plugin)                             │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -71,7 +71,7 @@ oclif plugin sử dụng **Ink v6** (ESM-only, React 19) để render interactiv
 | `@oclif/core` | oclif Command class, Flags |
 | `ink` (^6.6.0) | Terminal UI rendering framework (ESM-only) |
 | `react` (^19.0.0) | Component model for Ink |
-| `@aweave/cli-shared` | `checkHealth()` reuse (imported via `createRequire`) |
+| `@hod/aweave-cli-shared` | `checkHealth()` reuse (imported via `createRequire`) |
 
 **No community Ink packages.** `ink-spinner`, `ink-table`, `ink-big-text` đều có `peerDependencies: ink ^4 hoặc ^5` — conflict với Ink v6/React 19. Tất cả UI components tự build từ Ink primitives (`Box`, `Text`, `Spacer`, `Static`, `Transform`).
 
@@ -129,7 +129,7 @@ devtools/common/cli-plugin-dashboard/
     └── lib/
         ├── pm2.ts                   # execFile('pm2', ['jlist']) + spawn logs
         ├── system.ts                # os module + execFile('df') + execFile('pnpm')
-        └── health.ts                # createRequire bridge to @aweave/cli-shared
+        └── health.ts                # createRequire bridge to @hod/aweave-cli-shared
 ```
 
 ## ESM + oclif Integration Guide
@@ -143,18 +143,18 @@ Ink v6 và React 19 chỉ ship ESM (`"type": "module"`). Không có CJS build. D
 ### 3 lớp interop cần xử lý
 
 ```
-CJS root CLI (@aweave/cli)
+CJS root CLI (@hod/aweave)
   │
   ├── [1] oclif v4 load ESM plugin ──── OK, built-in support
   │        (phải build trước, không có dev mode)
   │
-  └── ESM plugin (@aweave/cli-plugin-dashboard)
+  └── ESM plugin (@hod/aweave-plugin-dashboard)
         │
         ├── [2] dynamic import('ink') ──── ESM-only packages
         │        (lazy load, chỉ khi render interactive UI)
         │
         └── [3] createRequire() ──── import CJS packages
-                 (cho @aweave/cli-shared và bất kỳ CJS dep nào)
+                 (cho @hod/aweave-cli-shared và bất kỳ CJS dep nào)
 ```
 
 ### [1] CJS Root CLI Load ESM Plugin
@@ -220,7 +220,7 @@ async run() {
 
 ### [3] createRequire() cho CJS Dependencies
 
-`@aweave/cli-shared` là CJS (`module: "commonjs"`, không có `"type": "module"`). ESM code không thể dùng `import { checkHealth } from '@aweave/cli-shared'` trực tiếp vì:
+`@hod/aweave-cli-shared` là CJS (`module: "commonjs"`, không có `"type": "module"`). ESM code không thể dùng `import { checkHealth } from '@hod/aweave-cli-shared'` trực tiếp vì:
 - Node.js ESM loader yêu cầu CJS packages export qua `module.exports` default
 - Named imports từ CJS vào ESM có thể fail tùy cách package export
 
@@ -233,7 +233,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 // Load CJS module bình thường qua require()
-const cliShared = require('@aweave/cli-shared') as {
+const cliShared = require('@hod/aweave-cli-shared') as {
   checkHealth: (url: string, timeout?: number) => Promise<boolean>;
 };
 

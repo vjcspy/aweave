@@ -5,9 +5,9 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
-import type { DebateState, Role } from '@aweave/debate-machine';
-import { getAvailableActions } from '@aweave/debate-machine';
+} from '@hod/aweave-cli-shared';
+import type { DebateState, Role } from '@hod/aweave-debate-machine';
+import { getAvailableActions } from '@hod/aweave-debate-machine';
 import { Command, Flags } from '@oclif/core';
 
 import { DEBATE_WAIT_DEADLINE, POLL_INTERVAL } from '../../lib/config';

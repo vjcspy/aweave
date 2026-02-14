@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/cli",
+  "name": "@hod/aweave",
   "version": "0.1.7",
   "bin": {
     "aw": "./bin/run.js"
@@ -22,27 +22,27 @@
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "plugins": [
-      "@aweave/cli-plugin-debate",
-      "@aweave/cli-plugin-docs",
-      "@aweave/cli-plugin-dashboard",
-      "@aweave/cli-plugin-relay",
-      "@aweave/cli-plugin-demo-workflow",
-      "@aweave/cli-plugin-config",
-      "@aweave/cli-plugin-server"
+      "@hod/aweave-plugin-debate",
+      "@hod/aweave-plugin-docs",
+      "@hod/aweave-plugin-dashboard",
+      "@hod/aweave-plugin-relay",
+      "@hod/aweave-plugin-demo-workflow",
+      "@hod/aweave-plugin-config",
+      "@hod/aweave-plugin-server"
     ]
   },
   "dependencies": {
-    "@aweave/cli-plugin-config": "workspace:*",
-    "@aweave/cli-plugin-dashboard": "workspace:*",
-    "@aweave/cli-plugin-debate": "workspace:*",
-    "@aweave/cli-plugin-demo-workflow": "workspace:*",
-    "@aweave/cli-plugin-docs": "workspace:*",
-    "@aweave/cli-plugin-relay": "workspace:*",
-    "@aweave/cli-plugin-server": "workspace:*",
-    "@aweave/cli-shared": "workspace:*",
+    "@hod/aweave-plugin-config": "workspace:*",
+    "@hod/aweave-plugin-dashboard": "workspace:*",
+    "@hod/aweave-plugin-debate": "workspace:*",
+    "@hod/aweave-plugin-demo-workflow": "workspace:*",
+    "@hod/aweave-plugin-docs": "workspace:*",
+    "@hod/aweave-plugin-relay": "workspace:*",
+    "@hod/aweave-plugin-server": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
     "@oclif/core": "catalog:",
     "@oclif/plugin-help": "^6.2.27",
-    "@aweave/server": "workspace:*"
+    "@hod/aweave-server": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

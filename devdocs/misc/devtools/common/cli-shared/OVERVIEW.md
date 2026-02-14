@@ -1,9 +1,9 @@
-# CLI Shared Utilities (`@aweave/cli-shared`)
+# CLI Shared Utilities (`@hod/aweave-cli-shared`)
 
 > **Source:** `devtools/common/cli-shared/`
 > **Last Updated:** 2026-02-07
 
-Pure utility library cho toàn bộ `aw` CLI ecosystem. Package này **không chứa CLI framework nào** (không oclif, không commander) — chỉ chứa các utility functions và models mà cả main CLI (`@aweave/cli`) và tất cả plugins (`@aweave/cli-plugin-*`) đều sử dụng.
+Pure utility library cho toàn bộ `aw` CLI ecosystem. Package này **không chứa CLI framework nào** (không oclif, không commander) — chỉ chứa các utility functions và models mà cả main CLI (`@hod/aweave`) và tất cả plugins (`@hod/aweave-plugin-*`) đều sử dụng.
 
 ## Purpose
 
@@ -13,13 +13,13 @@ Pure utility library cho toàn bộ `aw` CLI ecosystem. Package này **không ch
 - **Content Reading** — Pattern `--file` / `--content` / `--stdin` dùng chung cho mọi command nhận input.
 - **pm2 Service Management** — Utilities cho health check, process management qua pm2.
 
-**Tại sao tách thành package riêng?** Để tránh cyclic dependencies. Nếu utilities nằm trong main CLI (`@aweave/cli`), thì plugins phải depend on main CLI, mà main CLI cũng depend on plugins → cycle. Với `@aweave/cli-shared` là leaf dependency, không có cycle:
+**Tại sao tách thành package riêng?** Để tránh cyclic dependencies. Nếu utilities nằm trong main CLI (`@hod/aweave`), thì plugins phải depend on main CLI, mà main CLI cũng depend on plugins → cycle. Với `@hod/aweave-cli-shared` là leaf dependency, không có cycle:
 
 ```
-@aweave/cli-shared (leaf — no CLI framework dependency)
+@hod/aweave-cli-shared (leaf — no CLI framework dependency)
      ↑                    ↑
      |                    |
-@aweave/cli          @aweave/cli-plugin-*
+@hod/aweave          @hod/aweave-plugin-*
 (depends on shared)  (depends on shared only)
 ```
 
@@ -27,7 +27,7 @@ Pure utility library cho toàn bộ `aw` CLI ecosystem. Package này **không ch
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    @aweave/cli-shared                          │
+│                    @hod/aweave-cli-shared                          │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  mcp/                          http/                         │
@@ -140,7 +140,7 @@ Content types: `json` (structured data) hoặc `text` (plain text message).
 
 ```
 devtools/common/cli-shared/
-├── package.json                    # @aweave/cli-shared (no bin, no CLI framework)
+├── package.json                    # @hod/aweave-cli-shared (no bin, no CLI framework)
 ├── tsconfig.json
 └── src/
     ├── index.ts                    # Barrel exports
@@ -180,6 +180,6 @@ pnpm dev   # tsc --watch
 - **Main CLI Overview:** `devdocs/misc/devtools/common/cli/OVERVIEW.md`
 - **Debate Plugin:** `devtools/common/cli-plugin-debate/`
 - **Docs Plugin:** `devtools/common/cli-plugin-docs/`
-- **Bitbucket Plugin:** `devtools/tinybots/cli-plugin-bitbucket/`
+- **Confluence Plugin:** `devtools/nab/plugin-nab-confluence/`
 - **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

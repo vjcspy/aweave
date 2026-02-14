@@ -19,10 +19,10 @@ The `aw` CLI was initially migrated from Python to TypeScript using Commander.js
 
 ### Why oclif?
 
-`aw` is a **platform CLI** that serves multiple domains (`common/`, `tinybots/`, `nab/`, future domains). oclif provides:
+`aw` is a **platform CLI** that serves multiple domains (`common/`, `nab/`, future domains). oclif provides:
 
 - **Standard plugin system** — Plugins declared in `oclif.plugins` config, auto-discovered at runtime
-- **No cyclic dependencies** — Shared utilities in `@aweave/cli-shared`, both main CLI and plugins depend on it independently
+- **No cyclic dependencies** — Shared utilities in `@hod/aweave-cli-shared`, both main CLI and plugins depend on it independently
 - **File-based command routing** — `src/commands/debate/create.ts` → `aw debate create`
 - **Built-in flag validation** — Type-safe flags with required/optional, options validation
 - **Manifest caching** — `oclif.manifest.json` for fast command lookup
@@ -30,14 +30,14 @@ The `aw` CLI was initially migrated from Python to TypeScript using Commander.js
 ### Architecture
 
 ```
-@aweave/cli-shared (pure utilities — MCPResponse, HTTPClient, helpers)
+@hod/aweave-cli-shared (pure utilities — MCPResponse, HTTPClient, helpers)
      ↑                    ↑
      |                    |
-@aweave/cli          @aweave/cli-plugin-*
+@hod/aweave          @hod/aweave-plugin-*
 (oclif main)         (oclif plugins)
 ```
 
-No cycles. `@aweave/cli-shared` is a leaf dependency that both the main CLI and all plugins depend on.
+No cycles. `@hod/aweave-cli-shared` is a leaf dependency that both the main CLI and all plugins depend on.
 
 ## Current State (Post-Refactor Audit)
 
@@ -47,11 +47,11 @@ No cycles. `@aweave/cli-shared` is a leaf dependency that both the main CLI and 
 
 | Package | npm name | Folder | Status |
 |---------|----------|--------|--------|
-| CLI Shared | `@aweave/cli-shared` | `devtools/common/cli-shared/` | ✅ Complete — pure utility library, no framework deps |
-| CLI Main | `@aweave/cli` | `devtools/common/cli/` | ✅ Complete — oclif app with `bin/run.js`, plugins declared |
-| Debate Plugin | `@aweave/cli-plugin-debate` | `devtools/common/cli-plugin-debate/` | ✅ Complete — 11 commands under `aw debate *` |
-| Docs Plugin | `@aweave/cli-plugin-docs` | `devtools/common/cli-plugin-docs/` | ✅ Complete — 7 commands under `aw docs *` |
-| Bitbucket Plugin | `@aweave/cli-plugin-tinybots-bitbucket` | `devtools/tinybots/cli-plugin-bitbucket/` | ✅ Complete — domain plugin |
+| CLI Shared | `@hod/aweave-cli-shared` | `devtools/common/cli-shared/` | ✅ Complete — pure utility library, no framework deps |
+| CLI Main | `@hod/aweave` | `devtools/common/cli/` | ✅ Complete — oclif app with `bin/run.js`, plugins declared |
+| Debate Plugin | `@hod/aweave-plugin-debate` | `devtools/common/cli-plugin-debate/` | ✅ Complete — 11 commands under `aw debate *` |
+| Docs Plugin | `@hod/aweave-plugin-docs` | `devtools/common/cli-plugin-docs/` | ✅ Complete — 7 commands under `aw docs *` |
+| Bitbucket Plugin | `@hod/aweave-plugin-nab-confluence` | `devtools/nab/plugin-nab-confluence/` | ✅ Complete — domain plugin |
 
 ### Commander.js Removal
 
@@ -62,11 +62,11 @@ No cycles. `@aweave/cli-shared` is a leaf dependency that both the main CLI and 
 ### Dependency Graph (verified, no cycles)
 
 ```
-@aweave/cli (oclif main)
-  ├── @aweave/cli-shared
-  ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared
-  ├── @aweave/cli-plugin-docs ──► @aweave/cli-shared, better-sqlite3
-  └── @aweave/cli-plugin-tinybots-bitbucket ──► @aweave/cli-shared
+@hod/aweave (oclif main)
+  ├── @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-debate ──► @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-docs ──► @hod/aweave-cli-shared, better-sqlite3
+  └── @hod/aweave-plugin-nab-confluence ──► @hod/aweave-cli-shared
 ```
 
 ### oclif Config (in `devtools/common/cli/package.json`)
@@ -79,9 +79,9 @@ No cycles. `@aweave/cli-shared` is a leaf dependency that both the main CLI and 
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "plugins": [
-      "@aweave/cli-plugin-debate",
-      "@aweave/cli-plugin-docs",
-      "@aweave/cli-plugin-tinybots-bitbucket"
+      "@hod/aweave-plugin-debate",
+      "@hod/aweave-plugin-docs",
+      "@hod/aweave-plugin-nab-confluence"
     ]
   }
 }
@@ -160,22 +160,22 @@ If `aw` becomes unusable after a build or link change:
 
 | Package | npm name | Folder | Dependencies |
 |---------|----------|--------|--------------|
-| CLI Shared | `@aweave/cli-shared` | `devtools/common/cli-shared/` | (none) |
-| CLI Main | `@aweave/cli` | `devtools/common/cli/` | `@oclif/core`, `cli-shared`, all plugins |
-| Debate Plugin | `@aweave/cli-plugin-debate` | `devtools/common/cli-plugin-debate/` | `@oclif/core`, `cli-shared` |
-| Docs Plugin | `@aweave/cli-plugin-docs` | `devtools/common/cli-plugin-docs/` | `@oclif/core`, `cli-shared`, `better-sqlite3` |
-| Bitbucket Plugin | `@aweave/cli-plugin-tinybots-bitbucket` | `devtools/tinybots/cli-plugin-bitbucket/` | `@oclif/core`, `cli-shared` |
+| CLI Shared | `@hod/aweave-cli-shared` | `devtools/common/cli-shared/` | (none) |
+| CLI Main | `@hod/aweave` | `devtools/common/cli/` | `@oclif/core`, `cli-shared`, all plugins |
+| Debate Plugin | `@hod/aweave-plugin-debate` | `devtools/common/cli-plugin-debate/` | `@oclif/core`, `cli-shared` |
+| Docs Plugin | `@hod/aweave-plugin-docs` | `devtools/common/cli-plugin-docs/` | `@oclif/core`, `cli-shared`, `better-sqlite3` |
+| Bitbucket Plugin | `@hod/aweave-plugin-nab-confluence` | `devtools/nab/plugin-nab-confluence/` | `@oclif/core`, `cli-shared` |
 
 ## 🔄 Implementation Plan
 
-### Phase 1: Create @aweave/cli-shared ✅ DONE
+### Phase 1: Create @hod/aweave-cli-shared ✅ DONE
 
 - Moved mcp/, http/, helpers/, services/ from old cli-core
 - Removed Commander.js, bin/, program.ts dependencies
 - Pure utilities package, no CLI framework dependency
 - Package: `devtools/common/cli-shared/`, no external deps
 
-### Phase 2: Create @aweave/cli (oclif main) ✅ DONE
+### Phase 2: Create @hod/aweave (oclif main) ✅ DONE
 
 - New oclif CLI with `bin/run.js`, `bin/dev.js`
 - oclif config declaring all plugins in `package.json`
@@ -186,7 +186,7 @@ If `aw` becomes unusable after a build or link change:
 
 - Each command → one file in `src/commands/<topic>/<command>.ts`
 - Commander chains → oclif Command classes with static flags
-- Import `@aweave/cli-shared` instead of `@aweave/cli`
+- Import `@hod/aweave-cli-shared` instead of `@hod/aweave`
 - Plugins: debate (11 commands), docs (7 commands), bitbucket
 
 ### Phase 4: Cleanup & Verification ⬜ REMAINING
@@ -251,7 +251,7 @@ aw debate generate-id # should work from any directory
 
 - [x] Commander.js → oclif migration complete
 - [x] Cyclic dependency between cli-core ↔ plugins eliminated
-- [x] `@aweave/cli-shared` as clean leaf dependency (no framework deps)
+- [x] `@hod/aweave-cli-shared` as clean leaf dependency (no framework deps)
 - [x] 3 plugins operational: debate, docs, bitbucket
 - [x] Space-separated topic routing (`aw debate create`, not `aw debate:create`)
 - [x] `pnpm-workspace.yaml` updated with new package paths

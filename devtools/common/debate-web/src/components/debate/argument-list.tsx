@@ -1,10 +1,8 @@
-import { ArrowDown } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Argument } from '@/lib/types';
-
 import { ArgumentCard } from './argument-card';
+import type { Argument } from '@/lib/types';
+import { ArrowDown } from 'lucide-react';
 
 type ArgumentListProps = {
   arguments: Argument[];

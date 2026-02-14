@@ -61,7 +61,7 @@ Không package nào khác trong `devtools/` dùng Prisma — migration khoanh v�
 |------|-------|
 | `src/debate.controller.ts` | Không dùng Prisma trực tiếp — delegate to services |
 | `src/debate.gateway.ts` | Không dùng Prisma trực tiếp — delegate to services |
-| `@aweave/debate-machine` (external package) | Pure state machine logic, no DB |
+| `@hod/aweave-debate-machine` (external package) | Pure state machine logic, no DB |
 | `src/errors.ts` | Pure types, no DB |
 | `src/types.ts` | Pure types, no DB |
 | `src/ws-types.ts` | Pure types, no DB |

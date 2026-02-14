@@ -1,9 +1,9 @@
 import path from 'node:path';
 
-import type { ConfigSchema } from '@aweave/config-core';
+import type { ConfigSchema } from '@hod/aweave-config-core';
 
 // ---------------------------------------------------------------------------
-// @aweave/config-common — Default configs for the "common" domain
+// @hod/aweave-config-common — Default configs for the "common" domain
 // ---------------------------------------------------------------------------
 
 /** Absolute path to the defaults/ directory (works from both src/ and dist/) */

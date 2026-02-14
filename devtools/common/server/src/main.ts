@@ -1,11 +1,9 @@
-import { createRequire } from 'node:module';
-
 import {
   DEFAULT_CONFIG_DIR,
   DOMAIN,
   SERVER_ENV_OVERRIDES,
-} from '@aweave/config-common';
-import { loadConfig } from '@aweave/config-core';
+} from '@hod/aweave-config-common';
+import { loadConfig } from '@hod/aweave-config-core';
 import {
   ArgumentDto,
   DebateDto,
@@ -15,34 +13,44 @@ import {
   PollResultNewResponseDto,
   PollResultNoNewResponseDto,
   WriteResultResponseDto,
-} from '@aweave/nestjs-debate';
+} from '@hod/aweave-nestjs-debate';
+import {
+  CorrelationIdListDto,
+  ImportResultDto,
+  LogRecordsDto,
+} from '@hod/aweave-nab-nestjs-tracing-log';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { dirname, join } from 'path';
 
 import { AppModule } from './app.module';
 import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 import { AuthGuard } from './shared/guards/auth.guard';
 
-type ServerConfig = {
-  server?: {
-    port?: number;
-    host?: string;
-  };
-};
-
 /**
  * Resolve debate-web SPA static files directory.
  */
 function resolveDebateWebRoot(): string {
-  const localRequire = createRequire(__filename);
   try {
-    const pkgPath = localRequire.resolve('@aweave/debate-web/package.json');
+    const pkgPath = require.resolve('@hod/aweave-debate-web/package.json');
     return join(dirname(pkgPath), 'dist');
   } catch {
     return join(__dirname, '..', 'public', 'debate');
+  }
+}
+
+/**
+ * Resolve tracing-log-web SPA static files directory.
+ */
+function resolveTracingLogWebRoot(): string {
+  try {
+    const pkgPath = require.resolve('@hod/aweave-nab-tracing-log-web/package.json');
+    return join(dirname(pkgPath), 'dist');
+  } catch {
+    return join(__dirname, '..', 'public', 'tracing-log');
   }
 }
 
@@ -56,6 +64,10 @@ async function bootstrap() {
   const debateWebRoot = resolveDebateWebRoot();
   app.useStaticAssets(debateWebRoot, { prefix: '/debate' });
 
+  // Serve tracing-log-web SPA static files under /tracing-log
+  const tracingLogWebRoot = resolveTracingLogWebRoot();
+  app.useStaticAssets(tracingLogWebRoot, { prefix: '/tracing-log' });
+
   // CORS config — disabled in production (frontend is same-origin via ServeStaticModule).
   // In dev mode, Rsbuild proxy handles cross-origin requests, so CORS is optional.
   if (process.env.NODE_ENV !== 'production') {
@@ -65,6 +77,9 @@ async function bootstrap() {
       allowedHeaders: 'Content-Type,Authorization',
     });
   }
+
+  // Increase JSON body limit for log import (default ~100KB is too small)
+  app.useBodyParser('json', { limit: '50mb' });
 
   // Swagger setup (registers schemas for spec generation)
   const swaggerConfig = new DocumentBuilder()
@@ -81,6 +96,9 @@ async function bootstrap() {
       WriteResultResponseDto,
       PollResultNewResponseDto,
       PollResultNoNewResponseDto,
+      ImportResultDto,
+      CorrelationIdListDto,
+      LogRecordsDto,
       ErrorResponseDto,
     ],
   });
@@ -97,21 +115,18 @@ async function bootstrap() {
   app.useGlobalGuards(new AuthGuard());
 
   // Load config: defaults → user override (~/.aweave/config/common/server.yaml) → env vars
-  const config: ServerConfig = loadConfig({
+  const config = loadConfig({
     domain: DOMAIN,
     name: 'server',
     defaultsDir: DEFAULT_CONFIG_DIR,
     envOverrides: SERVER_ENV_OVERRIDES,
   });
 
-  const port = config.server?.port ?? 3456;
-  const host = config.server?.host ?? '127.0.0.1';
+  const port = (config as any).server?.port ?? 3456;
+  const host = (config as any).server?.host ?? '127.0.0.1';
 
   await app.listen(port, host);
   console.log(`Server listening on http://${host}:${port}`);
 }
 
-bootstrap().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+bootstrap();

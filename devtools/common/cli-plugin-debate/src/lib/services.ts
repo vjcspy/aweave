@@ -1,99 +1,74 @@
 /**
- * Service management for aweave-server and debate-web.
+ * Service management for debate commands.
  *
- * Handles build, start via pm2, and health checks.
- * Port of Python debate/services.py updated for unified NestJS server.
+ * Delegates to the process-manager in @hod/aweave-cli-shared.
+ * The server (NestJS) serves API + WebSocket + static debate-web SPA
+ * on a single port — no separate debate-web service needed.
  */
 
 import {
   ContentType,
+  ensureServerRunning,
   getServerStatus,
   MCPContent,
   MCPError,
   MCPResponse,
-  startServer,
   stopServer,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 
-import { DEBATE_SERVER_URL } from './config';
-
-function parseServerUrl(): { host: string; port: number; baseUrl: string } {
-  try {
-    const url = new URL(DEBATE_SERVER_URL);
-    const port = url.port ? Number(url.port) : 3456;
-    return { host: url.hostname || '127.0.0.1', port, baseUrl: url.origin };
-  } catch {
-    return { host: '127.0.0.1', port: 3456, baseUrl: 'http://127.0.0.1:3456' };
-  }
-}
-
-export async function getServicesStatus(): Promise<Record<string, unknown>> {
-  const { host, port, baseUrl } = parseServerUrl();
-  const status = await getServerStatus();
-
-  return {
-    'aweave-server': {
-      host,
-      port,
-      running: status.running,
-      healthy: status.healthy,
-      ...(status.state && {
-        pid: status.state.pid,
-        started_at: status.state.startedAt,
-        version: status.state.version,
-      }),
-    },
-    'debate-web': {
-      integrated: true,
-      url: `${baseUrl}/debate`,
-      served_by: 'aweave-server',
-    },
-  };
-}
-
+/**
+ * Ensure the server is running. Auto-starts if needed.
+ * Returns MCPResponse for consistent CLI output.
+ */
 export async function ensureServices(): Promise<MCPResponse> {
-  const { host, port } = parseServerUrl();
+  try {
+    const statusBefore = await getServerStatus();
 
-  const status = await getServerStatus();
-  if (status.running && status.healthy) {
-    const services = await getServicesStatus();
+    await ensureServerRunning();
+
+    const status = await getServerStatus();
+
     return new MCPResponse({
       success: true,
       content: [
         new MCPContent({
           type: ContentType.JSON,
-          data: { status: 'already_running', services },
+          data: {
+            status: statusBefore.running ? 'already_running' : 'started',
+            server: {
+              pid: status.state?.pid,
+              port: status.state?.port ?? 3456,
+              healthy: status.healthy,
+            },
+          },
         }),
       ],
     });
-  }
+  } catch (err: unknown) {
+    const error =
+      err && typeof err === 'object' && 'message' in err
+        ? (err as { code?: string; message: string; suggestion?: string })
+        : { code: 'SERVICE_SETUP_FAILED', message: String(err) };
 
-  const result = await startServer({ host, port });
-  if (!result.success) {
     return new MCPResponse({
       success: false,
       error: new MCPError({
-        code: 'SERVICE_START_FAILED',
-        message: result.message,
-        suggestion: "Run 'aw server start --open' to diagnose, then retry",
+        code: error.code ?? 'SERVICE_SETUP_FAILED',
+        message: error.message,
+        suggestion:
+          error.suggestion ?? 'Try starting manually with: aw server start',
       }),
     });
   }
-
-  const services = await getServicesStatus();
-  return new MCPResponse({
-    success: true,
-    content: [
-      new MCPContent({
-        type: ContentType.JSON,
-        data: { status: 'started', services },
-      }),
-    ],
-  });
 }
 
+/**
+ * Stop the server.
+ * Returns MCPResponse for consistent CLI output.
+ */
 export async function stopServices(): Promise<MCPResponse> {
   const result = await stopServer();
+
   if (!result.success) {
     return new MCPResponse({
       success: false,
@@ -103,6 +78,7 @@ export async function stopServices(): Promise<MCPResponse> {
       }),
     });
   }
+
   return new MCPResponse({
     success: true,
     content: [
@@ -112,4 +88,22 @@ export async function stopServices(): Promise<MCPResponse> {
       }),
     ],
   });
+}
+
+/**
+ * Get server status.
+ * Returns a plain object for embedding in MCPResponse by callers.
+ */
+export async function getServicesStatus(): Promise<Record<string, unknown>> {
+  const status = await getServerStatus();
+
+  return {
+    server: {
+      running: status.running,
+      healthy: status.healthy,
+      pid: status.state?.pid ?? null,
+      port: status.state?.port ?? 3456,
+      started_at: status.state?.startedAt ?? null,
+    },
+  };
 }

@@ -1,8 +1,7 @@
 import { Link } from 'react-router';
-
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { Debate, DebateState } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 const stateColors: Record<DebateState, string> = {
   AWAITING_OPPONENT: 'bg-blue-500/20 text-blue-700 dark:text-blue-300',
@@ -31,7 +30,7 @@ export function DebateItem({ debate, isActive }: DebateItemProps) {
       to={`/debates/${debate.id}`}
       className={cn(
         'block rounded-lg p-3 transition-colors hover:bg-accent',
-        isActive && 'bg-accent',
+        isActive && 'bg-accent'
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -43,7 +42,9 @@ export function DebateItem({ debate, isActive }: DebateItemProps) {
           {stateLabels[debate.state]}
         </Badge>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">{debate.debate_type}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {debate.debate_type}
+      </p>
     </Link>
   );
 }

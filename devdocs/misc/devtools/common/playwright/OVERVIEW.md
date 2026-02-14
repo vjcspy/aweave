@@ -1,9 +1,9 @@
-# Shared Playwright (`@aweave/playwright`)
+# Shared Playwright (`@hod/aweave-playwright`)
 
 > **Source:** `devtools/common/playwright/`
 > **Last Updated:** 2026-02-10
 
-Shared browser automation library cho toàn bộ DevTools monorepo. Package này wrap `playwright-core` và cung cấp helper functions với sensible defaults. Các package khác depend vào `@aweave/playwright` thay vì `playwright-core` trực tiếp.
+Shared browser automation library cho toàn bộ DevTools monorepo. Package này wrap `playwright-core` và cung cấp helper functions với sensible defaults. Các package khác depend vào `@hod/aweave-playwright` thay vì `playwright-core` trực tiếp.
 
 ## Purpose
 
@@ -13,13 +13,13 @@ Shared browser automation library cho toàn bộ DevTools monorepo. Package này
 - **Persistent browser sessions** — `launchPersistentBrowser()` lưu cookies, localStorage, SSO sessions vào disk — cho phép reuse SSO session giữa các lần CLI invocation.
 - **Consistent config** — Tất cả packages dùng cùng Chrome args, context options, launch pattern.
 
-**Tại sao shared package thay vì hoist lên root?** Để giữ explicit dependency graph. Mỗi consumer khai báo `"@aweave/playwright": "workspace:*"` — rõ ràng hơn implicit hoisting. Nhất quán với pattern `@aweave/cli-shared`.
+**Tại sao shared package thay vì hoist lên root?** Để giữ explicit dependency graph. Mỗi consumer khai báo `"@hod/aweave-playwright": "workspace:*"` — rõ ràng hơn implicit hoisting. Nhất quán với pattern `@hod/aweave-cli-shared`.
 
 ```
-@aweave/playwright (wraps playwright-core)
+@hod/aweave-playwright (wraps playwright-core)
      ↑
      |
-@aweave/cli-plugin-auth
+@hod/aweave-plugin-nab-auth
 (and any future package needing browser automation)
 ```
 
@@ -27,7 +27,7 @@ Shared browser automation library cho toàn bộ DevTools monorepo. Package này
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                   @aweave/playwright                     │
+│                   @hod/aweave-playwright                     │
 ├──────────────────────────────────────────────────────────┤
 │                                                          │
 │  index.ts (barrel export)                                │
@@ -114,11 +114,11 @@ bypassCSP: true
 
 ```typescript
 // Option A: Use playwright-core API directly (re-exported)
-import { chromium } from '@aweave/playwright';
+import { chromium } from '@hod/aweave-playwright';
 const browser = await chromium.launch({ channel: 'msedge', headless: false });
 
 // Option B: Use helper with sensible defaults
-import { launchBrowser } from '@aweave/playwright';
+import { launchBrowser } from '@hod/aweave-playwright';
 const session = await launchBrowser({ channel: 'msedge', disableCors: true });
 await session.page.goto('https://example.com');
 await session.close();
@@ -143,7 +143,7 @@ Khác với `launchBrowser()`, function này dùng `chromium.launchPersistentCon
 **Usage:**
 
 ```typescript
-import { launchPersistentBrowser } from '@aweave/playwright';
+import { launchPersistentBrowser } from '@hod/aweave-playwright';
 
 const session = await launchPersistentBrowser({
   userDataDir: '/home/user/.aweave/browser-data',
@@ -160,7 +160,7 @@ await session.close();
 
 ```
 devtools/common/playwright/
-├── package.json                    # @aweave/playwright
+├── package.json                    # @hod/aweave-playwright
 ├── tsconfig.json                   # commonjs, ES2023, strict, declaration
 ├── eslint.config.mjs
 └── src/

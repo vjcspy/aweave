@@ -7,7 +7,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { DEFAULT_CHUNK_SIZE, splitIntoChunks } from '../../lib/chunker';

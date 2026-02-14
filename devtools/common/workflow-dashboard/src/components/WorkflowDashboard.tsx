@@ -16,7 +16,7 @@
  * Navigation must work even after the workflow finishes.
  */
 
-import type { WorkflowActor, WorkflowState } from '@aweave/workflow-engine';
+import type { WorkflowActor, WorkflowState } from '@hod/aweave-workflow-engine';
 import { useSelector } from '@xstate/react';
 import { Box, Text, useApp, useStdout } from 'ink';
 import { useCallback, useMemo, useState } from 'react';

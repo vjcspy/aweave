@@ -1,6 +1,6 @@
 # Complete Example: Debate CLI Plugin
 
-This document shows a complete oclif plugin implementation based on `@aweave/cli-plugin-debate` — the most complex plugin with 11 commands, service management, and server interaction.
+This document shows a complete oclif plugin implementation based on `@hod/aweave-plugin-debate` — the most complex plugin with 11 commands, service management, and server interaction.
 
 ---
 
@@ -42,7 +42,7 @@ devtools/common/cli-plugin-debate/
 
 ```json
 {
-  "name": "@aweave/cli-plugin-debate",
+  "name": "@hod/aweave-plugin-debate",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",
@@ -53,7 +53,7 @@ devtools/common/cli-plugin-debate/
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/cli-shared": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
     "@oclif/core": "^4.2.8"
   },
   "devDependencies": {
@@ -67,7 +67,7 @@ devtools/common/cli-plugin-debate/
 - `"commands": "./dist/commands"` — oclif scans this directory for Command classes
 - `"topicSeparator": " "` — space-separated topics (`aw debate create`, not `aw debate:create`)
 - `"private": true` — workspace-only, not published to npm
-- `@aweave/cli-shared` via `workspace:*` — local dependency
+- `@hod/aweave-cli-shared` via `workspace:*` — local dependency
 
 ---
 
@@ -96,7 +96,7 @@ export const AUTO_START_SERVICES =
 ### lib/helpers.ts — Shared Helpers
 
 ```typescript
-import { HTTPClient } from '@aweave/cli-shared';
+import { HTTPClient } from '@hod/aweave-cli-shared';
 import { DEBATE_AUTH_TOKEN, DEBATE_SERVER_URL } from './config';
 
 export function getClient(): HTTPClient {
@@ -141,7 +141,7 @@ import {
   runCommand,
   startPm2,
   waitForHealthy,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import path from 'path';
 
 const SERVER_NAME = 'aweave-server';
@@ -195,7 +195,7 @@ export async function ensureServices(): Promise<MCPResponse> {
 No server interaction, no flags. Simplest possible command.
 
 ```typescript
-import { ContentType, MCPContent, MCPResponse, output } from '@aweave/cli-shared';
+import { ContentType, MCPContent, MCPResponse, output } from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 import { randomUUID } from 'crypto';
 
@@ -238,7 +238,7 @@ import {
   MCPResponse,
   output,
   readContent,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 import { randomUUID } from 'crypto';
 
@@ -337,7 +337,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { DEBATE_WAIT_DEADLINE, POLL_INTERVAL } from '../../lib/config';
@@ -436,7 +436,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { getClient } from '../../lib/helpers';
@@ -492,7 +492,7 @@ export class DebateGetContext extends Command {
 ### Service Management — services/start.ts
 
 ```typescript
-import { output } from '@aweave/cli-shared';
+import { output } from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { ensureServices } from '../../../lib/services';
@@ -526,7 +526,7 @@ export class DebateServicesStart extends Command {
 ```json
 {
   "dependencies": {
-    "@aweave/cli-plugin-debate": "workspace:*"
+    "@hod/aweave-plugin-debate": "workspace:*"
   },
   "oclif": {
     "bin": "aw",
@@ -534,7 +534,7 @@ export class DebateServicesStart extends Command {
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "plugins": [
-      "@aweave/cli-plugin-debate"
+      "@hod/aweave-plugin-debate"
     ]
   }
 }

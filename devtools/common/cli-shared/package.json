@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/cli-shared",
+  "name": "@hod/aweave-cli-shared",
   "version": "0.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,8 +10,9 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@aweave/config-common": "workspace:*",
-    "@aweave/config-core": "workspace:*"
+    "kill-port": "^2.0.1",
+    "@hod/aweave-config-common": "workspace:*",
+    "@hod/aweave-config-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

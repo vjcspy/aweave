@@ -1,16 +1,15 @@
-import { Loader2, Trash2, Wifi, WifiOff } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-
-import { ActionArea } from '@/components/debate/action-area';
+import { useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router';
+import { Loader2, WifiOff, Wifi, Trash2 } from 'lucide-react';
+import { useDebate } from '@/hooks/use-debate';
+import { deleteDebate } from '@/lib/api';
 import { ArgumentList } from '@/components/debate/argument-list';
+import { ActionArea } from '@/components/debate/action-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useDebate } from '@/hooks/use-debate';
-import { deleteDebate } from '@/lib/api';
-import type { DebateState } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import type { DebateState } from '@/lib/types';
 
 const stateLabels: Record<DebateState, string> = {
   AWAITING_OPPONENT: 'Waiting for Opponent',
@@ -34,11 +33,7 @@ export function DebateDetail() {
   } = useDebate(id!);
 
   const handleDelete = useCallback(async () => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this debate? This action cannot be undone.',
-      )
-    ) {
+    if (!confirm('Are you sure you want to delete this debate? This action cannot be undone.')) {
       return;
     }
 

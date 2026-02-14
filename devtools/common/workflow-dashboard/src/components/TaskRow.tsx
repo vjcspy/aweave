@@ -3,7 +3,7 @@
  * Shows strategy icon, status icon, task name, and optional duration.
  */
 
-import type { ExecutionStrategy, TaskState } from '@aweave/workflow-engine';
+import type { ExecutionStrategy, TaskState } from '@hod/aweave-workflow-engine';
 import { Text } from 'ink';
 
 import { Spinner } from './Spinner.js';

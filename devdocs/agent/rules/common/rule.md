@@ -38,8 +38,8 @@ Analyze user input to detect workspace type before any task execution.
 
 | User Input | Detected Workspace |
 |------------|--------------------|
-| "Update `projects/tinybots/backend/wonkers-api/src/app.ts`" | business-project |
-| "Read plan at `devdocs/projects/tinybots/backend/wonkers-graphql/_plans/251223-PROD.md`" | business-project |
+| "Update `projects/nab/hod/ho-omh-customer-loan-mods-web/app/server/src/main.ts`" | business-project |
+| "Read plan at `devdocs/projects/nab/hod/ho-omh-customer-loan-mods-web/_plans/260209-Add-Trace-Decorator.md`" | business-project |
 | "Implement feature in `devtools/common/cli/devtool/aweave/debate/`" | devtools |
 | "Check `devdocs/misc/devtools/common/_plans/260131-debate-cli.md`" | devtools |
 | "How do I use git rebase?" | general (no workspace) |
@@ -100,4 +100,4 @@ After workspace detection, identify task type:
 - **Format:** Clean Markdown
 - **Paths:** Always relative to `<PROJECT_ROOT>`
 - **Style:** Precise, explicit, implementation-oriented
-- **Language:** Code/tech terms in English; explanations follow user's language preference
+- **Language:** All content written to files MUST be in English; explanations in conversation follow user's language preference

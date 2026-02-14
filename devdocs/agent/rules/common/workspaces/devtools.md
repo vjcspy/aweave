@@ -16,11 +16,11 @@ Workspace for development tools, CLI applications, and backend services — all 
 ```
 devtools/                           # Source code (100% TypeScript)
 ├── common/                         # Shared tools across all domains
-│   ├── cli-core/                   # @aweave/cli — root CLI + shared utilities
-│   ├── cli-debate/                 # @aweave/cli-debate — aw debate commands
-│   ├── cli-docs/                   # @aweave/cli-docs — aw docs commands
-│   ├── server/                     # @aweave/server — unified NestJS server
-│   ├── nestjs-debate/              # @aweave/nestjs-debate — debate backend module
+│   ├── cli-core/                   # @hod/aweave — root CLI + shared utilities
+│   ├── cli-debate/                 # @hod/aweave-debate — aw debate commands
+│   ├── cli-docs/                   # @hod/aweave-docs — aw docs commands
+│   ├── server/                     # @hod/aweave-server — unified NestJS server
+│   ├── nestjs-debate/              # @hod/aweave-nestjs-debate — debate backend module
 │   └── debate-web/                 # Next.js debate monitoring UI
 ├── <domain>/                       # Domain-specific tools
 │   ├── cli-<tool>/                 # CLI packages for this domain
@@ -93,7 +93,7 @@ Load skill when task matches trigger. Read **after** context loading above.
 | `devtools/common/cli-debate/` | CLI (debate) | `devdocs/misc/devtools/common/cli-debate/OVERVIEW.md` |
 | `devtools/common/server/` | NestJS Server | `devdocs/misc/devtools/common/server/OVERVIEW.md` |
 | `devtools/common/nestjs-debate/` | NestJS Module | `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` |
-| `devtools/tinybots/cli-bitbucket/` | Domain CLI | `devdocs/misc/devtools/tinybots/cli-bitbucket/OVERVIEW.md` |
+| `devtools/nab/cli-confluence/` | Domain CLI | `devdocs/misc/devtools/nab/cli-confluence/OVERVIEW.md` |
 | `devdocs/misc/devtools/common/_plans/260207-*.md` | Plan file | Load Global OVERVIEW + related package OVERVIEW |
 
 ## CLI Development
@@ -103,7 +103,7 @@ Load skill when task matches trigger. Read **after** context loading above.
 - Root program: `devtools/common/cli-core/src/program.ts`
 - Each domain exports a Commander `Command` object
 - Root composes via `.addCommand()`
-- Global install: `pnpm add -g @aweave/cli` → `aw` available globally
+- Global install: `pnpm add -g @hod/aweave` → `aw` available globally
 - Run dev mode: `cd devtools/common/cli-core && node dist/bin/aw.js <cmd>`
 
 ### Adding New CLI Tools

@@ -5,7 +5,7 @@ description: Build multi-step workflow CLI plugins using the workflow engine, xs
 
 # Workflow Builder
 
-Build workflow CLI plugins on `@aweave/workflow-engine` + `@aweave/workflow-dashboard`.
+Build workflow CLI plugins on `@hod/aweave-workflow-engine` + `@hod/aweave-workflow-dashboard`.
 
 **Reference implementation:** `devtools/common/cli-plugin-demo-workflow/` (run with `aw demo`)
 **Design document:** `devdocs/misc/devtools/common/_plans/260208-workflow-engine.md`
@@ -34,7 +34,7 @@ devtools/common/cli-plugin-<name>/
 
 ```json
 {
-  "name": "@aweave/cli-plugin-<name>",
+  "name": "@hod/aweave-plugin-<name>",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -43,8 +43,8 @@ devtools/common/cli-plugin-<name>/
   "scripts": { "build": "tsc", "lint": "eslint .", "lint:fix": "eslint . --fix" },
   "oclif": { "commands": "./dist/commands", "topicSeparator": " " },
   "dependencies": {
-    "@aweave/workflow-engine": "workspace:*",
-    "@aweave/workflow-dashboard": "workspace:*",
+    "@hod/aweave-workflow-engine": "workspace:*",
+    "@hod/aweave-workflow-dashboard": "workspace:*",
     "@oclif/core": "^4.2.8",
     "ink": "^6.6.0",
     "react": "^19.0.0",
@@ -79,9 +79,9 @@ import { Command, Flags } from '@oclif/core';
 import { render } from 'ink';
 import React from 'react';
 import { createActor } from 'xstate';
-import type { WorkflowActor } from '@aweave/workflow-engine';
-import { workflowMachine } from '@aweave/workflow-engine';
-import { WorkflowDashboard } from '@aweave/workflow-dashboard';
+import type { WorkflowActor } from '@hod/aweave-workflow-engine';
+import { workflowMachine } from '@hod/aweave-workflow-engine';
+import { WorkflowDashboard } from '@hod/aweave-workflow-dashboard';
 import { myWorkflow } from '../workflow.js';
 
 export default class MyCommand extends Command {

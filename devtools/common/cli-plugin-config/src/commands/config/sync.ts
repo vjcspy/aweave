@@ -4,13 +4,13 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import {
   ConfigDefaultsMissingError,
   getConfigRoot,
   syncDefaultConfigs,
   type SyncResult,
-} from '@aweave/config-core';
+} from '@hod/aweave-config-core';
 import { Command, Flags } from '@oclif/core';
 
 import { discoverDomainDefaults } from '../../lib/discovery';

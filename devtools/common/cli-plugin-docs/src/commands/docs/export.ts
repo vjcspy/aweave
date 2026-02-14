@@ -4,7 +4,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Args, Command, Flags } from '@oclif/core';
 import { writeFileSync } from 'fs';
 

@@ -6,9 +6,8 @@ This workspace manages multiple independent projects in a single repository. Git
 
 ```
 master                    ← Common/shared content only
-├── projects/tinybots     ← master + tinybots-specific content
-├── projects/vocalmeet    ← master + vocalmeet-specific content
 ├── projects/nab          ← master + nab-specific content
+├── projects/<OTHER>      ← master + other project content
 └── projects/<NEW>        ← master + new project content
 ```
 
@@ -53,8 +52,8 @@ The `.gitignore` uses an **exclude-all + negate** strategy:
 
 For directories where project branches need to negate entries, **always use single star** (`*` or `*/`):
 
-- `devdocs/projects/*` — allows simple negation: `!devdocs/projects/tinybots/`
-- `devdocs/projects/**` — negation requires **two lines** (`!.../tinybots/` + `!.../tinybots/**`) because `**` matches at all depths and blocks re-inclusion of nested content
+- `devdocs/projects/*` — allows simple negation: `!devdocs/projects/nab/`
+- `devdocs/projects/**` — negation requires **two lines** (`!.../nab/` + `!.../nab/**`) because `**` matches at all depths and blocks re-inclusion of nested content
 
 **Exception:** `projects/**` uses double star because source code is **never tracked** on any branch.
 
