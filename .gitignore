@@ -5,6 +5,7 @@
 .idea/
 .cursor/
 .trae/
+personal/
 
 # Symlinks
 AGENTS.md
