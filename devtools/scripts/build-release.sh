@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Build & Publish all @aweave/* packages to npm.
+# Build & Publish all @hod/aweave-* packages to Artifactory.
 #
 # Usage:
 #   bash scripts/build-release.sh              # Build + bump patch + publish
@@ -11,16 +11,16 @@ set -euo pipefail
 #   bash scripts/build-release.sh --dry-run    # Build + bump + dry-run (no publish)
 #
 # What it does:
-#   1. Build all packages (turbo)
+#   1. Build all packages (pnpm -r build, respects workspace topology)
 #   2. Generate oclif manifest
 #   3. Bump version in all workspace packages
-#   4. Publish to npm (pnpm -r publish)
+#   4. Publish to Artifactory (pnpm -r publish)
 #
 # pnpm -r publish handles:
 #   - Dependency order (publishes deps before dependents)
 #   - Rewriting workspace:* → actual versions
 #   - Rewriting catalog: → actual versions
-#   - Skipping packages whose version already exists on npm
+#   - Skipping packages whose version already exists on registry
 # =============================================================================
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -38,7 +38,7 @@ for arg in "$@"; do
 done
 
 echo "=== Build ==="
-pnpm turbo build
+pnpm -r build
 
 echo ""
 echo "=== Generate oclif manifest ==="
@@ -56,13 +56,13 @@ pnpm -r exec -- node -e "const p=require('./package.json'); process.stdout.write
 echo ""
 if [ -n "$DRY_RUN" ]; then
   echo "=== Dry run (no publish) ==="
-  pnpm -r publish --access public --no-git-checks --dry-run 2>&1 | grep -E "^\+ |npm notice name|npm notice version"
+  pnpm -r publish --no-git-checks --dry-run 2>&1 | grep -E "^\+ |npm notice name|npm notice version"
   echo ""
   echo "Done (dry-run). To publish for real: bash scripts/build-release.sh $BUMP"
 else
-  echo "=== Publishing to npm ==="
-  pnpm -r publish --access public --no-git-checks 2>&1 | grep -E "^\+ " | sort
+  echo "=== Publishing to Artifactory ==="
+  pnpm -r publish --no-git-checks 2>&1 | grep -E "^\+ " | sort
   echo ""
   echo "=== Published ==="
-  echo "Test: npx @aweave/cli server start --open"
+  echo "Test: npx @hod/aweave server start --open"
 fi

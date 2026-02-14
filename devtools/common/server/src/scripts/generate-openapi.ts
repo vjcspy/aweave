@@ -8,11 +8,6 @@ import {
   PollResultNoNewResponseDto,
   WriteResultResponseDto,
 } from '@hod/aweave-nestjs-debate';
-import {
-  CorrelationIdListDto,
-  ImportResultDto,
-  LogRecordsDto,
-} from '@hod/aweave-nab-nestjs-tracing-log';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
@@ -38,9 +33,6 @@ async function generate() {
       WriteResultResponseDto,
       PollResultNewResponseDto,
       PollResultNoNewResponseDto,
-      ImportResultDto,
-      CorrelationIdListDto,
-      LogRecordsDto,
       ErrorResponseDto,
     ],
   });
