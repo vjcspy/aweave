@@ -56,10 +56,6 @@ Unified TypeScript monorepo with a single CLI entrypoint `aw <command>`. All too
 │  │ │  Debate   │  │                                          │
 │  │ │  Module   │  │                                          │
 │  │ └───────────┘  │                                          │
-│  │ ┌───────────┐  │                                          │
-│  │ │  Log      │  │  nestjs-log: tracing log storage         │
-│  │ │  Module   │  │  (SQLite, /tracing-logs API)             │
-│  │ └───────────┘  │                                          │
 │  │ ┌───────────┐  │  debate-web SPA served at /debate        │
 │  │ │ debate-web │  │  (static HTML/JS/CSS, same-origin)      │
 │  │ │  (static)  │  │                                          │
@@ -225,7 +221,6 @@ For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **m
 
 @hod/aweave-server
   ├── @hod/aweave-nestjs-debate ──► @hod/aweave-debate-machine
-  ├── @hod/aweave-nab-nestjs-tracing-log ──► better-sqlite3 (tracing log storage)
   └── @hod/aweave-debate-web (static SPA files resolved via require.resolve)
 
 @hod/aweave (nab domain plugins)
@@ -278,5 +273,3 @@ Each package has its own OVERVIEW at:
 - **OpenSearch trace plugin:** `devdocs/misc/devtools/nab/plugin-nab-opensearch-trace/OVERVIEW.md`
 - **OpenSearch client:** `devdocs/misc/devtools/nab/nab-opensearch-client/OVERVIEW.md`
 - **Config (NAB defaults):** `devdocs/misc/devtools/nab/nab-config/OVERVIEW.md`
-- **NestJS Log module:** `devdocs/misc/devtools/nab/nab-nestjs-tracing-log/OVERVIEW.md`
-- **Tracing Log Web:** `devdocs/misc/devtools/nab/nab-tracing-log-web/OVERVIEW.md`

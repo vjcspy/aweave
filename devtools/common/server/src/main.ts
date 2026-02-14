@@ -14,11 +14,6 @@ import {
   PollResultNoNewResponseDto,
   WriteResultResponseDto,
 } from '@hod/aweave-nestjs-debate';
-import {
-  CorrelationIdListDto,
-  ImportResultDto,
-  LogRecordsDto,
-} from '@hod/aweave-nab-nestjs-tracing-log';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -42,18 +37,6 @@ function resolveDebateWebRoot(): string {
   }
 }
 
-/**
- * Resolve tracing-log-web SPA static files directory.
- */
-function resolveTracingLogWebRoot(): string {
-  try {
-    const pkgPath = require.resolve('@hod/aweave-nab-tracing-log-web/package.json');
-    return join(dirname(pkgPath), 'dist');
-  } catch {
-    return join(__dirname, '..', 'public', 'tracing-log');
-  }
-}
-
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -63,10 +46,6 @@ async function bootstrap() {
   // Serve debate-web SPA static files under /debate
   const debateWebRoot = resolveDebateWebRoot();
   app.useStaticAssets(debateWebRoot, { prefix: '/debate' });
-
-  // Serve tracing-log-web SPA static files under /tracing-log
-  const tracingLogWebRoot = resolveTracingLogWebRoot();
-  app.useStaticAssets(tracingLogWebRoot, { prefix: '/tracing-log' });
 
   // CORS config — disabled in production (frontend is same-origin via ServeStaticModule).
   // In dev mode, Rsbuild proxy handles cross-origin requests, so CORS is optional.
@@ -96,9 +75,6 @@ async function bootstrap() {
       WriteResultResponseDto,
       PollResultNewResponseDto,
       PollResultNoNewResponseDto,
-      ImportResultDto,
-      CorrelationIdListDto,
-      LogRecordsDto,
       ErrorResponseDto,
     ],
   });
