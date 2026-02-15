@@ -1,4 +1,4 @@
-# Demo Workflow Plugin (`@aweave/cli-plugin-demo-workflow`)
+# Demo Workflow Plugin (`@hod/aweave-plugin-demo-workflow`)
 
 > **Source:** `devtools/common/cli-plugin-demo-workflow/`
 > **Last Updated:** 2026-02-09
@@ -81,8 +81,8 @@ Khi stdin không có raw mode (IDE terminals, CI) hoặc `--format json`:
 
 | Package | Role |
 |---------|------|
-| `@aweave/workflow-engine` (workspace:*) | `workflowMachine`, types |
-| `@aweave/workflow-dashboard` (workspace:*) | `WorkflowDashboard` component |
+| `@hod/aweave-workflow-engine` (workspace:*) | `workflowMachine`, types |
+| `@hod/aweave-workflow-dashboard` (workspace:*) | `WorkflowDashboard` component |
 | `@oclif/core` | Command class, Flags |
 | `ink` (^6.6.0) | `render()` |
 | `react` (^19.0.0) | `React.createElement()` |

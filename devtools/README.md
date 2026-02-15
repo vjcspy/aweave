@@ -8,10 +8,10 @@ Unified TypeScript CLI + server + web UI for development workflow automation.
 
 ```bash
 # Start server + open debate web UI
-npx @aweave/cli server start --open
+npx @hod/aweave server start --open
 
 # Or install globally
-npm install -g @aweave/cli
+npm install -g @hod/aweave
 aw server start --open
 ```
 
@@ -59,7 +59,7 @@ aw version                                # Show version
 ```bash
 cd devtools
 pnpm install          # Install all workspace dependencies
-pnpm turbo build      # Build all packages
+pnpm -r build         # Build all packages
 ```
 
 ### Development Workflow
@@ -79,7 +79,7 @@ cd common/debate-web && pnpm dev     # http://localhost:3457
 cd common/<package> && pnpm build
 
 # Build all
-cd devtools && pnpm turbo build
+cd devtools && pnpm -r build
 ```
 
 ### Project Structure
@@ -87,35 +87,35 @@ cd devtools && pnpm turbo build
 ```
 devtools/
 ├── common/                          # Shared packages
-│   ├── cli/                         # @aweave/cli — oclif entrypoint, `aw` binary
-│   ├── cli-shared/                  # @aweave/cli-shared — HTTP client, output helpers
+│   ├── cli/                         # @hod/aweave — oclif entrypoint, `aw` binary
+│   ├── cli-shared/                  # @hod/aweave-cli-shared — HTTP client, output helpers
 │   ├── cli-plugin-debate/           # aw debate *
 │   ├── cli-plugin-docs/             # aw docs *
 │   ├── cli-plugin-server/           # aw server * (start/stop/status/restart/logs)
 │   ├── cli-plugin-dashboard/        # aw dashboard (Ink terminal UI)
 │   ├── cli-plugin-config/           # aw config *
 │   ├── cli-plugin-relay/            # aw relay *
-│   ├── server/                      # @aweave/server — NestJS (API + WebSocket + static SPA)
-│   ├── nestjs-debate/               # @aweave/nestjs-debate — debate backend module
-│   ├── debate-web/                  # @aweave/debate-web — React SPA (Rsbuild)
-│   ├── debate-machine/              # @aweave/debate-machine — debate state machine
-│   ├── workflow-engine/             # @aweave/workflow-engine — xstate workflow engine
-│   ├── workflow-dashboard/          # @aweave/workflow-dashboard — Ink workflow UI
-│   ├── config-core/                 # @aweave/config-core — config loader
-│   └── config/                      # @aweave/config-common — shared config
+│   ├── server/                      # @hod/aweave-server — NestJS (API + WebSocket + static SPA)
+│   ├── nestjs-debate/               # @hod/aweave-nestjs-debate — debate backend module
+│   ├── debate-web/                  # @hod/aweave-debate-web — React SPA (Rsbuild)
+│   ├── debate-machine/              # @hod/aweave-debate-machine — debate state machine
+│   ├── workflow-engine/             # @hod/aweave-workflow-engine — xstate workflow engine
+│   ├── workflow-dashboard/          # @hod/aweave-workflow-dashboard — Ink workflow UI
+│   ├── config-core/                 # @hod/aweave-config-core — config loader
+│   └── config/                      # @hod/aweave-config-common — shared config
 ├── pnpm-workspace.yaml              # Workspace package list + version catalog
 ├── package.json                     # Root scripts (build, lint, publish)
 └── scripts/
     └── build-release.sh             # Build + generate oclif manifest
 ```
 
-### Publishing to npm
+### Publishing to Artifactory
 
-All workspace packages are published to npm under `@aweave/` scope. pnpm handles dependency order and rewrites `workspace:*` to actual versions automatically.
+All workspace packages are published to Artifactory under `@hod/` scope. pnpm handles dependency order and rewrites `workspace:*` to actual versions automatically.
 
 ```bash
 # 1. Build all packages
-pnpm turbo build
+pnpm -r build
 
 # 2. Generate oclif manifest
 cd common/cli && pnpm exec oclif manifest && cd ../..
@@ -124,13 +124,10 @@ cd common/cli && pnpm exec oclif manifest && cd ../..
 pnpm -r exec -- npm version patch --no-git-tag-version
 
 # 4. Publish (pnpm resolves dependency order)
-pnpm -r publish --access public --no-git-checks
+pnpm -r publish --no-git-checks
 
-# Or if only specific packages changed:
-cd common/<changed-package>
-npm version patch --no-git-tag-version
-pnpm publish --access public --no-git-checks
-# Then bump + publish dependents up the chain
+# Or use the release script:
+bash scripts/build-release.sh
 ```
 
 **Version bump chain:** If you change a leaf package (e.g. `cli-shared`), you must also bump all packages that depend on it (e.g. `cli-plugin-debate`, `cli`). pnpm rewrites `workspace:*` to the exact version at publish time.
@@ -138,14 +135,14 @@ pnpm publish --access public --no-git-checks
 ### Architecture
 
 ```
-User: npx @aweave/cli server start --open
+User: npx @hod/aweave server start --open
   │
-  ├─ npm installs @aweave/cli + all @aweave/* dependencies
-  ├─ CLI resolves @aweave/server/dist/main.js via require.resolve()
+  ├─ npm installs @hod/aweave + all @hod/* dependencies
+  ├─ CLI resolves @hod/aweave-server/dist/main.js via require.resolve()
   ├─ Spawns detached Node.js process (daemon)
   ├─ NestJS server starts on port 3456:
-  │   ├─ /debates, /ws         → REST API + WebSocket (from @aweave/nestjs-debate)
-  │   ├─ /debate/*             → Static SPA files (from @aweave/debate-web/dist/)
+  │   ├─ /debates, /ws         → REST API + WebSocket (from @hod/aweave-nestjs-debate)
+  │   ├─ /debate/*             → Static SPA files (from @hod/aweave-debate-web/dist/)
   │   ├─ /health               → Health check
   │   └─ /                     → Redirect to /debate
   └─ Opens browser at http://127.0.0.1:3456/debate/

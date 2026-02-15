@@ -20,7 +20,7 @@ import type {
   TaskHandler,
   TaskOutput,
   WorkflowDefinition,
-} from '@aweave/workflow-engine';
+} from '@hod/aweave-workflow-engine';
 
 // ---------------------------------------------------------------------------
 // Helper

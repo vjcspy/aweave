@@ -11,7 +11,7 @@
 - Unified NestJS server plan: `devdocs/misc/devtools/common/_plans/260207-unified-nestjs-server.md`
 - Debate server plan: `devdocs/misc/devtools/common/_plans/260131-debate-server.md`
 - Docs CLI plan: `devdocs/misc/devtools/common/_plans/260131-docs-cli-tool.md`
-- Bitbucket CLI implementation: `devdocs/misc/devtools/tinybots/260130-bitbucket-cli-implementation.md`
+- Bitbucket CLI implementation: `devdocs/misc/devtools/nab/plugin-nab-confluence/OVERVIEW.md`
 - Auto-start services plan: `devdocs/misc/devtools/common/_plans/260204-debate-auto-start-services.md`
 - Python MCP response: `devtools/common/cli/devtool/aweave/mcp/response.py`
 - Python HTTP client: `devtools/common/cli/devtool/aweave/http/client.py`
@@ -19,9 +19,9 @@
 - Python debate config: `devtools/common/cli/devtool/aweave/debate/config.py`
 - Python debate services: `devtools/common/cli/devtool/aweave/debate/services.py`
 - Python core entrypoint: `devtools/common/cli/devtool/aweave/core/main.py`
-- Python bitbucket CLI: `devtools/tinybots/cli/bitbucket/tinybots/bitbucket/cli.py`
-- Python bitbucket client: `devtools/tinybots/cli/bitbucket/tinybots/bitbucket/client.py`
-- Python bitbucket models: `devtools/tinybots/cli/bitbucket/tinybots/bitbucket/models.py`
+- Python bitbucket CLI: `devtools/nab/plugin-nab-confluence/src/commands/`
+- Python bitbucket client: `devtools/nab/plugin-nab-confluence/src/lib/`
+- Python bitbucket models: `devtools/nab/plugin-nab-confluence/src/types/`
 
 ## Background & Decision Context
 
@@ -122,7 +122,7 @@ devtools/
 │   ├── nestjs-debate/                     # NestJS debate module (existing/in-progress)
 │   ├── debate-web/                        # Next.js debate web (existing)
 │   │
-│   ├── cli-core/                          # 🚧 @aweave/cli — global entrypoint + shared utils
+│   ├── cli-core/                          # 🚧 @hod/aweave — global entrypoint + shared utils
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── src/
@@ -139,7 +139,7 @@ devtools/
 │   │       │   └── pm2.ts                 # pm2 service management utilities
 │   │       └── index.ts                   # Package barrel exports
 │   │
-│   ├── cli-debate/                        # 🚧 @aweave/cli-debate — debate CLI commands
+│   ├── cli-debate/                        # 🚧 @hod/aweave-debate — debate CLI commands
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   └── src/
@@ -149,7 +149,7 @@ devtools/
 │   │       ├── helpers.ts                 # Shared CLI helpers (content reading, error handling)
 │   │       └── index.ts                   # Export: debateCommand
 │   │
-│   └── cli-docs/                          # 🚧 @aweave/cli-docs — docs CLI commands
+│   └── cli-docs/                          # 🚧 @hod/aweave-docs — docs CLI commands
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── src/
@@ -157,15 +157,15 @@ devtools/
 │           ├── db.ts                      # SQLite database operations (better-sqlite3)
 │           └── index.ts                   # Export: docsCommand
 │
-├── tinybots/
-│   └── cli-bitbucket/                     # 🚧 @aweave/cli-bitbucket — bitbucket CLI commands
+├── nab/
+│   └── plugin-nab-confluence/             # @hod/aweave-plugin-nab-confluence — Confluence CLI commands
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── src/
-│           ├── commands.ts                # Commander program: aw tinybots-bitbucket <subcommand>
-│           ├── client.ts                  # Bitbucket API client
-│           ├── models.ts                  # Data models (PR, Comment, Task)
-│           └── index.ts                   # Export: bitbucketCommand
+│           ├── commands/                  # oclif commands: aw nab-confluence <subcommand>
+│           ├── lib/                       # Confluence API client
+│           ├── types/                     # Data models
+│           └── index.ts                   # Export
 │
 └── common/cli/devtool/                    # ⚠️ OLD Python CLI — DELETE after full migration
 ```
@@ -174,21 +174,21 @@ devtools/
 
 | Package | npm name | Folder | Dependencies |
 |---------|----------|--------|--------------|
-| CLI Core | `@aweave/cli` | `devtools/common/cli-core/` | `commander` |
-| Debate CLI | `@aweave/cli-debate` | `devtools/common/cli-debate/` | `@aweave/cli` |
-| Docs CLI | `@aweave/cli-docs` | `devtools/common/cli-docs/` | `@aweave/cli`, `better-sqlite3` |
-| Bitbucket CLI | `@aweave/cli-bitbucket` | `devtools/tinybots/cli-bitbucket/` | `@aweave/cli` |
+| CLI Core | `@hod/aweave` | `devtools/common/cli-core/` | `commander` |
+| Debate CLI | `@hod/aweave-debate` | `devtools/common/cli-debate/` | `@hod/aweave` |
+| Docs CLI | `@hod/aweave-docs` | `devtools/common/cli-docs/` | `@hod/aweave`, `better-sqlite3` |
+| Bitbucket CLI | `@hod/aweave-plugin-nab-confluence` | `devtools/nab/plugin-nab-confluence/` | `@hod/aweave` |
 
-**Why `@aweave/cli` not `@aweave/cli-core`?** The main package IS the `aw` CLI itself. It's what gets installed globally. The name `@aweave/cli` is cleaner and matches the `bin: { "aw": ... }` field.
+**Why `@hod/aweave` not `@hod/aweave-core`?** The main package IS the `aw` CLI itself. It's what gets installed globally. The name `@hod/aweave` is cleaner and matches the `bin: { "aw": ... }` field.
 
 ### 3. Commander.js Composition Pattern
 
 ```typescript
-// === @aweave/cli — devtools/common/cli-core/src/program.ts ===
+// === @hod/aweave — devtools/common/cli-core/src/program.ts ===
 import { Command } from 'commander';
-import { debateCommand } from '@aweave/cli-debate';
-import { docsCommand } from '@aweave/cli-docs';
-import { bitbucketCommand } from '@aweave/cli-bitbucket';
+import { debateCommand } from '@hod/aweave-debate';
+import { docsCommand } from '@hod/aweave-docs';
+import { bitbucketCommand } from '@hod/aweave-plugin-nab-confluence';
 
 export const program = new Command()
   .name('aw')
@@ -200,14 +200,14 @@ program.addCommand(debateCommand);
 program.addCommand(docsCommand);
 program.addCommand(bitbucketCommand);
 
-// === @aweave/cli — devtools/common/cli-core/src/bin/aw.ts ===
+// === @hod/aweave — devtools/common/cli-core/src/bin/aw.ts ===
 #!/usr/bin/env node
 import { program } from '../program.js';
 program.parse();
 
-// === @aweave/cli-debate — devtools/common/cli-debate/src/commands.ts ===
+// === @hod/aweave-debate — devtools/common/cli-debate/src/commands.ts ===
 import { Command } from 'commander';
-import { MCPResponse, MCPContent, ContentType, HTTPClient } from '@aweave/cli';
+import { MCPResponse, MCPContent, ContentType, HTTPClient } from '@hod/aweave';
 
 export const debateCommand = new Command('debate')
   .description('Debate CLI - AI Agent debate management');
@@ -470,7 +470,7 @@ export class HTTPClient {
 ```jsonc
 // devtools/common/cli-core/package.json
 {
-  "name": "@aweave/cli",
+  "name": "@hod/aweave",
   "version": "0.1.0",
   "bin": {
     "aw": "./dist/bin/aw.js"
@@ -494,7 +494,7 @@ pnpm link --global    # Creates global "aw" symlink to local build
 # After build, aw is available globally:
 aw --help
 aw debate list
-aw tinybots-bitbucket pr my-repo 123
+aw nab-confluence pr my-repo 123
 ```
 
 **pnpm global bin path:** `~/Library/pnpm` (macOS). Must be in `$PATH`.
@@ -564,7 +564,7 @@ export async function readContent(opts: {
 
 ## 🔄 Implementation Plan
 
-### Phase 1: Foundation — `@aweave/cli` Core Package
+### Phase 1: Foundation — `@hod/aweave` Core Package
 
 > Create the minimal shared infrastructure. All subsequent tools depend on this.
 
@@ -574,11 +574,11 @@ export async function readContent(opts: {
 - [ ] Verify `which aw` returns nothing or the new TypeScript version
   - **Outcome**: No conflicting `aw` binary in PATH
 
-#### Step 1: Create `@aweave/cli` Package
+#### Step 1: Create `@hod/aweave` Package
 
 - [ ] Create `devtools/common/cli-core/` directory
 - [ ] Create `package.json`:
-  - name: `@aweave/cli`
+  - name: `@hod/aweave`
   - bin: `{ "aw": "./dist/bin/aw.js" }`
   - dependencies: `commander`
   - devDependencies: `typescript`, `@types/node`
@@ -625,17 +625,17 @@ export async function readContent(opts: {
 - [ ] Test: `aw --help` should show help text
   - **Outcome**: Global `aw` command works
 
-### Phase 2: Migrate Debate CLI — `@aweave/cli-debate`
+### Phase 2: Migrate Debate CLI — `@hod/aweave-debate`
 
 > **Dependency**: NestJS server must be running (plan `260207-unified-nestjs-server.md`).
 > The debate CLI is an HTTP client to the NestJS debate server. All data operations go through REST API.
 
-#### Step 6: Create `@aweave/cli-debate` Package
+#### Step 6: Create `@hod/aweave-debate` Package
 
 - [ ] Create `devtools/common/cli-debate/` directory
 - [ ] Create `package.json`:
-  - name: `@aweave/cli-debate`
-  - dependencies: `@aweave/cli` (workspace:*), `commander`
+  - name: `@hod/aweave-debate`
+  - dependencies: `@hod/aweave` (workspace:*), `commander`
   - **Outcome**: Package initialized
 - [ ] Create `tsconfig.json` (same pattern as cli-core)
 - [ ] Update `devtools/pnpm-workspace.yaml`: add `common/cli-debate`
@@ -694,26 +694,26 @@ Port all commands from Python `debate/cli.py`:
 
 - [ ] Update `devtools/common/cli-core/src/program.ts`:
   ```typescript
-  import { debateCommand } from '@aweave/cli-debate';
+  import { debateCommand } from '@hod/aweave-debate';
   program.addCommand(debateCommand);
   ```
 - [ ] Rebuild cli-core: `pnpm build`
 - [ ] Test all debate commands against running NestJS server
   - **Outcome**: `aw debate <command>` works end-to-end
 
-### Phase 3: Migrate Bitbucket CLI — `@aweave/cli-bitbucket`
+### Phase 3: Migrate Bitbucket CLI — `@hod/aweave-plugin-nab-confluence`
 
 > **No server dependency** — Bitbucket CLI calls Bitbucket API directly.
 
-#### Step 11: Create `@aweave/cli-bitbucket` Package
+#### Step 11: Create `@hod/aweave-plugin-nab-confluence` Package
 
-- [ ] Create `devtools/tinybots/cli-bitbucket/` directory
+- [ ] Create `devtools/nab/plugin-nab-confluence/` directory
 - [ ] Create `package.json`:
-  - name: `@aweave/cli-bitbucket`
-  - dependencies: `@aweave/cli` (workspace:*), `commander`
+  - name: `@hod/aweave-plugin-nab-confluence`
+  - dependencies: `@hod/aweave` (workspace:*), `commander`
   - **Outcome**: Package initialized
 - [ ] Create `tsconfig.json`
-- [ ] Update `devtools/pnpm-workspace.yaml`: add `tinybots/cli-bitbucket`
+- [ ] Update `devtools/pnpm-workspace.yaml`: add `nab/plugin-nab-confluence`
 
 #### Step 12: Implement Bitbucket Client & Models
 
@@ -724,7 +724,7 @@ Port all commands from Python `debate/cli.py`:
   - **Outcome**: Same data models in TypeScript
 
 - [ ] Create `src/client.ts` — Port from Python `bitbucket/client.py`:
-  - `BitbucketClient` class using `HTTPClient` from `@aweave/cli`
+  - `BitbucketClient` class using `HTTPClient` from `@hod/aweave`
   - Auto-pagination: `_fetchAllPages()` method
   - `getPR()`, `listPRComments()`, `listPRTasks()` methods
   - Returns `MCPResponse` objects
@@ -736,7 +736,7 @@ Port all commands from Python `debate/cli.py`:
   - `pr <repo> <pr_id>` — Get PR details
   - `comments <repo> <pr_id>` — List PR comments (auto-pagination)
   - `tasks <repo> <pr_id>` — List PR tasks (auto-pagination)
-  - Options: `--workspace` (default: `tinybots`), `--format`, `--max`
+  - Options: `--workspace` (default: `nab`), `--format`, `--max`
   - Env vars: `BITBUCKET_USER`, `BITBUCKET_APP_PASSWORD`
   - **Outcome**: All bitbucket commands work
 
@@ -744,22 +744,22 @@ Port all commands from Python `debate/cli.py`:
 
 - [ ] Update `devtools/common/cli-core/src/program.ts`:
   ```typescript
-  import { bitbucketCommand } from '@aweave/cli-bitbucket';
+  import { bitbucketCommand } from '@hod/aweave-plugin-nab-confluence';
   program.addCommand(bitbucketCommand);
   ```
 - [ ] Rebuild and test
-  - **Outcome**: `aw tinybots-bitbucket <command>` works
+  - **Outcome**: `aw nab-confluence <command>` works
 
-### Phase 4: Migrate Docs CLI — `@aweave/cli-docs`
+### Phase 4: Migrate Docs CLI — `@hod/aweave-docs`
 
 > **Direct SQLite access** — No server. Uses `better-sqlite3` for `~/.aweave/docstore.db`.
 
-#### Step 15: Create `@aweave/cli-docs` Package
+#### Step 15: Create `@hod/aweave-docs` Package
 
 - [ ] Create `devtools/common/cli-docs/` directory
 - [ ] Create `package.json`:
-  - name: `@aweave/cli-docs`
-  - dependencies: `@aweave/cli` (workspace:*), `commander`, `better-sqlite3`
+  - name: `@hod/aweave-docs`
+  - dependencies: `@hod/aweave` (workspace:*), `commander`, `better-sqlite3`
   - devDependencies: `@types/better-sqlite3`
   - **Outcome**: Package initialized
 - [ ] Create `tsconfig.json`
@@ -790,7 +790,7 @@ Port all commands from Python `debate/cli.py`:
 
 - [ ] Update `devtools/common/cli-core/src/program.ts`:
   ```typescript
-  import { docsCommand } from '@aweave/cli-docs';
+  import { docsCommand } from '@hod/aweave-docs';
   program.addCommand(docsCommand);
   ```
 - [ ] Rebuild and test
@@ -804,9 +804,9 @@ Port all commands from Python `debate/cli.py`:
 - [ ] Remove Python workspace members from `devtools/pyproject.toml`:
   - Remove `common/cli/devtool` from `[tool.uv.workspace].members`
   - Remove `aweave` from dependencies
-- [ ] Remove `devtools/tinybots/cli/bitbucket/` directory (Python bitbucket CLI)
-  - Remove `tinybots/cli/bitbucket` from workspace members
-  - Remove `tinybots-bitbucket` from dependencies
+- [ ] Remove legacy Python CLI directories if still present
+  - Remove stale workspace members from `[tool.uv.workspace].members`
+  - Remove stale dependencies
 - [ ] Remove `devtools/nab/cli/confluence/` if not needed (or migrate separately)
 - [ ] Consider removing `devtools/.venv/` and `devtools/uv.lock` if no Python remains
 - [ ] Delete `devtools/scripts/generate-registry.py` (Node plugin registry no longer needed)

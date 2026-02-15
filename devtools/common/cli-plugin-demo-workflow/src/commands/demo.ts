@@ -8,9 +8,9 @@
  * raw mode (e.g., piped stdin, some IDE terminals).
  */
 
-import { WorkflowDashboard } from '@aweave/workflow-dashboard';
-import type { WorkflowActor } from '@aweave/workflow-engine';
-import { workflowMachine } from '@aweave/workflow-engine';
+import { WorkflowDashboard } from '@hod/aweave-workflow-dashboard';
+import type { WorkflowActor } from '@hod/aweave-workflow-engine';
+import { workflowMachine } from '@hod/aweave-workflow-engine';
 import { Command, Flags } from '@oclif/core';
 import { render } from 'ink';
 import React from 'react';

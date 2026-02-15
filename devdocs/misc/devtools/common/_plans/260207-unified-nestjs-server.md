@@ -25,13 +25,13 @@
 
 ## 🎯 Objective
 
-Restructure the devtools Node.js backend from standalone per-feature servers (e.g. `debate-server`) to a unified NestJS server with modular feature packages. Each feature becomes a separate pnpm workspace package (`@aweave/nestjs-<feature>`) exporting a NestJS module. The common server (`devtools/common/server/`) imports all feature modules and provides shared infrastructure (auth, config, error handling).
+Restructure the devtools Node.js backend from standalone per-feature servers (e.g. `debate-server`) to a unified NestJS server with modular feature packages. Each feature becomes a separate pnpm workspace package (`@hod/aweave-nestjs-<feature>`) exporting a NestJS module. The common server (`devtools/common/server/`) imports all feature modules and provides shared infrastructure (auth, config, error handling).
 
-The first migration target is `debate-server` → `@aweave/nestjs-debate`.
+The first migration target is `debate-server` → `@hod/aweave-nestjs-debate`.
 
 ### ⚠️ Key Considerations
 
-1. **Separate pnpm package per feature** — Each feature module is an independent pnpm workspace package with its own `package.json`, `tsconfig.json`, Prisma schema, and generated client. This enables future domain modules (e.g. `devtools/tinybots/nestjs-api/`) to follow the same pattern.
+1. **Separate pnpm package per feature** — Each feature module is an independent pnpm workspace package with its own `package.json`, `tsconfig.json`, Prisma schema, and generated client. This enables future domain modules (e.g. `devtools/nab/nestjs-api/`) to follow the same pattern.
 
 2. **Prisma v7 multi-database pattern** — Each feature module owns a separate SQLite database at `~/.aweave/db/<name>.db`. Each has its own `prisma/schema.prisma`, generated Prisma Client (output to `src/generated/prisma/`), and `DebatePrismaService`. No shared database between features.
 
@@ -49,13 +49,13 @@ The first migration target is `debate-server` → `@aweave/nestjs-debate`.
 
 ### 1. Package Naming & Location
 
-**Convention:** `@aweave/nestjs-<feature>` for package name, `devtools/<domain>/nestjs-<feature>/` for folder.
+**Convention:** `@hod/aweave-nestjs-<feature>` for package name, `devtools/<domain>/nestjs-<feature>/` for folder.
 
 | Package | Folder | Database |
 |---------|--------|----------|
-| `@aweave/nestjs-debate` | `devtools/common/nestjs-debate/` | `~/.aweave/db/debate.db` |
-| `@aweave/server` | `devtools/common/server/` | N/A (imports modules) |
-| Future: `@aweave/nestjs-<x>` | `devtools/<domain>/nestjs-<x>/` | `~/.aweave/db/<x>.db` |
+| `@hod/aweave-nestjs-debate` | `devtools/common/nestjs-debate/` | `~/.aweave/db/debate.db` |
+| `@hod/aweave-server` | `devtools/common/server/` | N/A (imports modules) |
+| Future: `@hod/aweave-nestjs-<x>` | `devtools/<domain>/nestjs-<x>/` | `~/.aweave/db/<x>.db` |
 
 ### 2. Prisma v7 Per-Feature Setup
 
@@ -453,7 +453,7 @@ devtools/
 ├── pnpm-workspace.yaml                    # 🔄 UPDATE - add common/nestjs-debate
 ├── common/
 │   ├── server/                            # 🔄 UPDATE - unified NestJS app
-│   │   ├── package.json                   # 🔄 UPDATE - add @aweave/nestjs-debate dep
+│   │   ├── package.json                   # 🔄 UPDATE - add @hod/aweave-nestjs-debate dep
 │   │   ├── nest-cli.json                  # ✅ EXISTS
 │   │   ├── tsconfig.json                  # ✅ EXISTS
 │   │   ├── ecosystem.config.cjs           # 🚧 NEW - pm2 config (moved from debate-server)
@@ -469,7 +469,7 @@ devtools/
 │   │               └── app-exception.filter.ts  # 🚧 NEW - global error formatting
 │   │
 │   ├── nestjs-debate/                     # 🚧 NEW - debate feature package
-│   │   ├── package.json                   # 🚧 NEW - @aweave/nestjs-debate
+│   │   ├── package.json                   # 🚧 NEW - @hod/aweave-nestjs-debate
 │   │   ├── tsconfig.json                  # 🚧 NEW
 │   │   ├── prisma/
 │   │   │   └── schema.prisma             # 🚧 NEW - debate DB schema
@@ -503,11 +503,11 @@ devtools/
 
 ### Phase 3: Detailed Implementation Steps
 
-#### Step 1: Create `@aweave/nestjs-debate` Package
+#### Step 1: Create `@hod/aweave-nestjs-debate` Package
 
 - [ ] Create `devtools/common/nestjs-debate/` directory
 - [ ] Create `package.json` with:
-  - name: `@aweave/nestjs-debate`
+  - name: `@hod/aweave-nestjs-debate`
   - dependencies: `@nestjs/common`, `@nestjs/websockets`, `@nestjs/platform-ws`, `@prisma/client`, `prisma`
   - peerDependencies: `@nestjs/core`
   - scripts: `build`, `prisma:generate`, `prisma:migrate`
@@ -631,17 +631,17 @@ These files have no framework dependencies and can be copied with minimal change
 
 #### Step 8: Update Main Server
 
-- [ ] Add `@aweave/nestjs-debate` as dependency in `devtools/common/server/package.json`:
+- [ ] Add `@hod/aweave-nestjs-debate` as dependency in `devtools/common/server/package.json`:
   ```json
   "dependencies": {
-    "@aweave/nestjs-debate": "workspace:*",
+    "@hod/aweave-nestjs-debate": "workspace:*",
     "@nestjs/platform-ws": "^11.0.0",
     ...
   }
   ```
 - [ ] Update `app.module.ts`:
   ```typescript
-  import { DebateModule } from '@aweave/nestjs-debate';
+  import { DebateModule } from '@hod/aweave-nestjs-debate';
   @Module({
     imports: [DebateModule],
   })
@@ -735,5 +735,5 @@ These files have no framework dependencies and can be copied with minimal change
 - [ ] **Prisma v7 availability** — Verify Prisma 7 is stable for SQLite. If v7 is not released yet, use latest v6 (same patterns, URL stays in schema.prisma instead of prisma.config.ts)
 - [ ] **debate-web WebSocket compatibility** — `debate-web` currently connects to `ws://127.0.0.1:3456/ws?debate_id=X`. After migration, verify NestJS `@WebSocketGateway({ path: '/ws' })` maintains the same URL path and message format
 - [ ] **pm2 ecosystem config** — Old config at `debate-server/ecosystem.config.cjs` manages both `debate-server` and `debate-web`. New config at `server/ecosystem.config.cjs` needs to manage `aweave-server` and `debate-web` with updated paths
-- [ ] **Generated Prisma client in build** — The `@aweave/nestjs-debate` build step must run `prisma generate` before `tsc`. Configure in package.json scripts: `"build": "prisma generate --schema=prisma/schema.prisma && tsc"`
-- [ ] **NestJS module resolution** — With separate packages and `workspace:*`, verify NestJS can resolve `@aweave/nestjs-debate` module at runtime. May need `paths` in tsconfig or `nest-cli.json` configuration
+- [ ] **Generated Prisma client in build** — The `@hod/aweave-nestjs-debate` build step must run `prisma generate` before `tsc`. Configure in package.json scripts: `"build": "prisma generate --schema=prisma/schema.prisma && tsc"`
+- [ ] **NestJS module resolution** — With separate packages and `workspace:*`, verify NestJS can resolve `@hod/aweave-nestjs-debate` module at runtime. May need `paths` in tsconfig or `nest-cli.json` configuration

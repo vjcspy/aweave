@@ -77,6 +77,16 @@ else
     warn "  export PATH=\"\$(pnpm -g bin):\$PATH\""
 fi
 
+# --- 6. Install git hooks ---
+info "Installing git hooks..."
+HOOKS_SCRIPT="$DEVTOOLS_ROOT/scripts/install-hooks.sh"
+if [ -f "$HOOKS_SCRIPT" ]; then
+    bash "$HOOKS_SCRIPT"
+    ok "Git hooks installed"
+else
+    warn "Hook installer not found at $HOOKS_SCRIPT — skipping"
+fi
+
 echo ""
 echo -e "${GREEN}${BOLD}=== Setup Complete ===${NC}"
 echo ""

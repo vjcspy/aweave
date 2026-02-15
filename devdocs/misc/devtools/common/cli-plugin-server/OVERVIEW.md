@@ -1,4 +1,4 @@
-# CLI Plugin: Server (`@aweave/cli-plugin-server`)
+# CLI Plugin: Server (`@hod/aweave-plugin-server`)
 
 > **Source:** `devtools/common/cli-plugin-server/`
 
@@ -33,7 +33,7 @@ aw server start --open        # Start + open browser at /debate
 1. Check for existing running server → refuse if already healthy (idempotent)
 2. Detect stale PID file → clean up and proceed
 3. Check port availability → refuse if occupied
-4. Spawn `node @aweave/server/dist/main.js` as detached process
+4. Spawn `node @hod/aweave-server/dist/main.js` as detached process
 5. Poll health endpoint (`/health`) until ready (10s timeout)
 6. Write state file to `~/.aweave/server.json`
 
@@ -77,11 +77,11 @@ aw server logs -n 100    # Last 100 lines
 
 ## Architecture
 
-The process manager is implemented in `@aweave/cli-shared` (`src/services/process-manager.ts`). The CLI plugin is a thin oclif wrapper around the process manager API.
+The process manager is implemented in `@hod/aweave-cli-shared` (`src/services/process-manager.ts`). The CLI plugin is a thin oclif wrapper around the process manager API.
 
 ```
-@aweave/cli-plugin-server
-  └── @aweave/cli-shared (process-manager.ts)
+@hod/aweave-plugin-server
+  └── @hod/aweave-cli-shared (process-manager.ts)
         ├── startServer()    → spawn detached + health check
         ├── stopServer()     → SIGTERM/SIGKILL + cleanup
         ├── getServerStatus() → PID check + health endpoint
@@ -109,7 +109,7 @@ cli-plugin-server/
 
 | Package | Role |
 |---------|------|
-| `@aweave/cli-shared` | Process manager, output helpers |
+| `@hod/aweave-cli-shared` | Process manager, output helpers |
 | `@oclif/core` | CLI framework |
 
 ## Development

@@ -4,7 +4,7 @@
  * Uses basic Ink useInput for keyboard handling (no external dependencies).
  */
 
-import type { HumanInputConfig } from '@aweave/workflow-engine';
+import type { HumanInputConfig } from '@hod/aweave-workflow-engine';
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 

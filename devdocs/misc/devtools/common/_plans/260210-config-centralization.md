@@ -48,7 +48,7 @@ Thiết kế và chuẩn hóa hệ thống config tập trung để CLI, NestJS,
 
 ```
 devtools/common/config-core/                 # ✅ DONE - shared config loader
-├── package.json                             # @aweave/config-core
+├── package.json                             # @hod/aweave-config-core
 ├── tsconfig.json
 ├── src/
 │   ├── index.ts                             # Public API: loadConfig, syncDefaults
@@ -62,7 +62,7 @@ devtools/common/config-core/                 # ✅ DONE - shared config loader
 └── README.md                                # Usage notes
 
 devtools/common/config/                      # ✅ DONE - default configs for common domain
-├── package.json                             # @aweave/config-common
+├── package.json                             # @hod/aweave-config-common
 ├── tsconfig.json
 ├── defaults/
 │   ├── server.yaml                          # Default config for server
@@ -71,17 +71,18 @@ devtools/common/config/                      # ✅ DONE - default configs for co
 └── src/
     └── index.ts                             # Export DEFAULT_CONFIG_DIR + file list
 
-devtools/nab/config/                         # 🚧 TODO - default configs for nab domain
-├── package.json                             # @aweave/config-nab
+devtools/nab/nab-config/                         # ✅ DONE - default configs for nab domain
+├── package.json                             # @hod/aweave-nab-config
 ├── tsconfig.json
 ├── defaults/
-│   ├── opensearch.yaml                      # Default config for NAB tools
-│   └── tracing.yaml
+│   ├── clm.yaml                             # CLM environment config
+│   ├── opensearch.yaml                      # OpenSearch client config (hosts, OSD version)
+│   └── opensearch-trace.yaml                # Trace pipeline config (discovery, expansion, window)
 └── src/
     └── index.ts                             # Export DEFAULT_CONFIG_DIR + file list
 
 devtools/common/cli-plugin-config/           # ✅ DONE - oclif plugin for aw config *
-├── package.json                             # @aweave/cli-plugin-config
+├── package.json                             # @hod/aweave-plugin-config
 ├── tsconfig.json
 └── src/
     └── commands/
@@ -98,11 +99,12 @@ devdocs/misc/devtools/common/config-core/
 - [x] Register new packages in `devtools/pnpm-workspace.yaml`:
   - `devtools/common/config-core`
   - `devtools/common/config`
-  - `devtools/nab/config`
+  - `devtools/nab/nab-config`
   - `devtools/common/cli-plugin-config`
-- [x] Add `@aweave/config-core` as dependency in consuming packages (`cli-plugin-config`, `server`, `debate-web`)
-- [ ] Add `@aweave/config-common` / `@aweave/config-nab` as dependency where needed
-- [x] Add `@aweave/cli-plugin-config` as dependency in `devtools/common/cli/package.json` + register in `oclif.plugins`
+- [x] Add `@hod/aweave-config-core` as dependency in consuming packages (`cli-plugin-config`, `server`, `debate-web`)
+- [x] Add `@hod/aweave-nab-config` + `@hod/aweave-config-core` in `cli-plugin-clm`, `opensearch-client`, `cli-plugin-nab-opensearch-trace`
+- [ ] Add `@hod/aweave-config-common` as dependency where needed
+- [x] Add `@hod/aweave-plugin-config` as dependency in `devtools/common/cli/package.json` + register in `oclif.plugins`
 - [ ] Ensure `defaults/*.yaml` files are included in `package.json` `"files"` field for publish/build
 - [ ] Define runtime-safe path resolution from compiled `dist/` to `defaults/` directory (use `__dirname` or `import.meta.url` relative resolution)
 
@@ -131,7 +133,7 @@ devdocs/misc/devtools/common/config-core/
        featureFlags: { ... }
      ```
 
-2. **Tạo package `@aweave/config-core`**
+2. **Tạo package `@hod/aweave-config-core`**
    - API đề xuất:
      - `getConfigRoot()` → trả về path config user.
      - `loadConfig<T>({ domain, name, defaultsDir })` → merge defaults + user override + env vars.
@@ -149,8 +151,8 @@ devdocs/misc/devtools/common/config-core/
    - **configVersion**: hỗ trợ migration hooks khi schema thay đổi giữa versions.
 
 3. **Tạo package config per-domain**
-   - `@aweave/config-common` tại `devtools/common/config/`
-   - `@aweave/config-nab` tại `devtools/nab/config/`
+   - `@hod/aweave-config-common` tại `devtools/common/config/`
+   - `@hod/aweave-nab-config` tại `devtools/nab/nab-config/`
    - Export:
      - `DEFAULT_CONFIG_DIR` (path tới folder `defaults/`)
      - `DEFAULT_CONFIG_FILES` (danh sách file để sync)
@@ -158,13 +160,13 @@ devdocs/misc/devtools/common/config-core/
 
 4. **Setup flow & CLI command ownership**
 
-   #### 4.1 CLI Plugin: `@aweave/cli-plugin-config`
+   #### 4.1 CLI Plugin: `@hod/aweave-plugin-config`
 
    **Package:** `devtools/common/cli-plugin-config/`
 
    ```
    devtools/common/cli-plugin-config/          # 🚧 TODO - new oclif plugin
-   ├── package.json                            # @aweave/cli-plugin-config
+   ├── package.json                            # @hod/aweave-plugin-config
    ├── tsconfig.json
    └── src/
        └── commands/
@@ -174,19 +176,19 @@ devdocs/misc/devtools/common/config-core/
    ```
 
    **Dependencies:**
-   - `@aweave/cli-shared` (shared oclif utilities)
-   - `@aweave/config-core` (config loader, sync, migration logic)
+   - `@hod/aweave-cli-shared` (shared oclif utilities)
+   - `@hod/aweave-config-core` (config loader, sync, migration logic)
 
    #### 4.2 Registration steps (monorepo wiring)
 
    - [x] Add `devtools/common/cli-plugin-config` to `devtools/pnpm-workspace.yaml`
    - [x] Add dependency in `devtools/common/cli/package.json`:
      ```json
-     "@aweave/cli-plugin-config": "workspace:*"
+     "@hod/aweave-plugin-config": "workspace:*"
      ```
    - [x] Register in oclif plugins (`devtools/common/cli/package.json` → `oclif.plugins`):
      ```json
-     "@aweave/cli-plugin-config"
+     "@hod/aweave-plugin-config"
      ```
    - [x] `pnpm install && pnpm build`
 
@@ -196,16 +198,16 @@ devdocs/misc/devtools/common/config-core/
      - Không có `--domain`: sync tất cả domains
      - `--force`: overwrite user config nếu đã tồn tại
      - Default (không `--force`): KHÔNG overwrite existing user files
-     - Internally calls `syncDefaultConfigs()` from `@aweave/config-core`
+     - Internally calls `syncDefaultConfigs()` from `@hod/aweave-config-core`
    - **`aw config migrate [--domain <domain>]`**
      - Tự động detect legacy files (vd: `~/.aweave/relay.json`, env-based configs)
      - Copy vào new config structure (non-destructive, KHÔNG xóa legacy files)
      - Print deprecation warning khi detect legacy files
-     - Internally calls `migrateFromLegacy()` from `@aweave/config-core`
+     - Internally calls `migrateFromLegacy()` from `@hod/aweave-config-core`
 
    #### 4.4 Integration with setup
 
-   - Tạo sync/migration logic trong `@aweave/config-core` (reusable).
+   - Tạo sync/migration logic trong `@hod/aweave-config-core` (reusable).
    - CLI plugin chỉ là thin wrapper gọi `config-core` API.
    - Update setup scripts hiện có để gọi `aw config sync` sau install.
 
@@ -260,7 +262,7 @@ devdocs/misc/devtools/common/config-core/
 
 ### Packages Created (2026-02-10)
 
-#### 1. `@aweave/config-core` — `devtools/common/config-core/`
+#### 1. `@hod/aweave-config-core` — `devtools/common/config-core/`
 
 Shared config loader library (Node-only, zero oclif dependency). YAML-based with `yaml` npm package.
 
@@ -285,7 +287,7 @@ Shared config loader library (Node-only, zero oclif dependency). YAML-based with
 
 **Env var coercion:** `"true"`/`"false"` → boolean, numeric strings → number.
 
-#### 2. `@aweave/cli-plugin-config` — `devtools/common/cli-plugin-config/`
+#### 2. `@hod/aweave-plugin-config` — `devtools/common/cli-plugin-config/`
 
 Thin oclif plugin wrapping `config-core` API.
 
@@ -293,22 +295,20 @@ Thin oclif plugin wrapping `config-core` API.
 - `aw config sync [--domain] [--force] [--format]` — Sync default configs to `~/.aweave/config/`. Auto-discovers domains with `<domain>/config/defaults/` directories.
 - `aw config migrate [--domain] [--format]` — Migrate legacy config files (registry in `src/lib/legacy.ts`, currently empty — populate when legacy files are identified).
 
-**Domain discovery:** The sync command automatically scans `devtools/*/config/defaults/` directories — no hardcoded domain list needed. When domain config packages (e.g. `@aweave/config-common`) are created with a `defaults/` folder, they will be auto-discovered.
+**Domain discovery:** The sync command automatically scans `devtools/*/config/defaults/` directories — no hardcoded domain list needed. When domain config packages (e.g. `@hod/aweave-config-common`) are created with a `defaults/` folder, they will be auto-discovered.
 
-#### 3. `@aweave/config-common` — `devtools/common/config/`
+### Implemented
 
-Domain config package for "common" with default YAML files and env override maps.
-
-**Default config files:**
-- `defaults/server.yaml` — NestJS server: port (3456), host, database paths
-- `defaults/debate-web.yaml` — Next.js: port (3457), clientPublic.apiBaseUrl (projection contract)
-- `defaults/cli.yaml` — CLI plugins: debate settings (serverUrl, waitDeadline, pollInterval, autoStartServices), service definitions (names, ports, health URLs)
-
-**Exports:** `DEFAULT_CONFIG_DIR`, `DOMAIN`, `DEFAULT_CONFIG_FILES`, `CONFIG_SCHEMAS`, `SERVER_ENV_OVERRIDES`, `DEBATE_WEB_ENV_OVERRIDES`, `CLI_ENV_OVERRIDES`
+- `@hod/aweave-nab-config` (`devtools/nab/nab-config/`) — domain config package for nab
+    - `defaults/clm.yaml` — CLM plugin (`cli-plugin-clm`) fully refactored
+    - `defaults/opensearch.yaml` — OpenSearch client (`opensearch-client`) refactored
+    - `defaults/opensearch-trace.yaml` — Trace plugin (`cli-plugin-nab-opensearch-trace`) refactored
+    - See: `devdocs/misc/devtools/nab/_plans/260210-clm-config-extraction.md`
 
 ### Not Implemented (Deferred)
 
-- `@aweave/config-nab` (`devtools/nab/config/`) — domain config package for nab
+- `@hod/aweave-config-common` (`devtools/common/config/`) — domain config package with default YAML files
 - `devdocs/misc/devtools/common/config-core/OVERVIEW.md` — documentation
 - Integration with `server`, `debate-web`, and existing CLI plugins
 - Actual legacy migration entries (empty registry in `LEGACY_CONFIG_MAP`)
+- Additional nab config files: `auth.yaml`

@@ -1,0 +1,19 @@
+{
+  "_comment": "Allowlist config for pre-push hook. On project branches, only files matching these patterns are allowed.",
+
+  "project_name": "",
+
+  "always_allowed": [
+    ".gitignore"
+  ],
+
+  "project_allowed": [
+    "devdocs/agent/commands/{PROJECT}/",
+    "devdocs/agent/rules/{PROJECT}/",
+    "devdocs/agent/skills/{PROJECT}/",
+    "devdocs/agent/templates/{PROJECT}/",
+    "devdocs/misc/devtools/{PROJECT}/",
+    "devdocs/projects/{PROJECT}/",
+    "devtools/{PROJECT}/"
+  ]
+}

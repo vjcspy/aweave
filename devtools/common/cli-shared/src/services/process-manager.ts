@@ -6,24 +6,17 @@
  * Log file: ~/.aweave/logs/server.log
  */
 
-import { createRequire } from 'node:module';
-
-import {
-  DEFAULT_CONFIG_DIR,
-  DOMAIN,
-  SERVER_ENV_OVERRIDES,
-} from '@aweave/config-common';
-import { loadConfig } from '@aweave/config-core';
 import { spawn } from 'child_process';
 import {
-  createReadStream,
   existsSync,
   mkdirSync,
-  openSync,
   readFileSync,
   unlinkSync,
   writeFileSync,
+  openSync,
+  createReadStream,
 } from 'fs';
+import { createConnection } from 'net';
 import { homedir } from 'os';
 import { join } from 'path';
 import { createInterface } from 'readline';
@@ -35,33 +28,35 @@ const LOGS_DIR = join(AWEAVE_DIR, 'logs');
 const STATE_FILE = join(AWEAVE_DIR, 'server.json');
 const LOG_FILE = join(LOGS_DIR, 'server.log');
 
-type ServerConfig = {
-  server?: {
-    port?: number;
-    host?: string;
-  };
-};
-
+/**
+ * Load server port/host from config system.
+ * Falls back to hardcoded defaults if config packages are not available.
+ */
 function loadServerDefaults(): { port: number; host: string } {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { DEFAULT_CONFIG_DIR, DOMAIN, SERVER_ENV_OVERRIDES } = require('@hod/aweave-config-common');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { loadConfig } = require('@hod/aweave-config-core');
     const config = loadConfig({
       domain: DOMAIN,
       name: 'server',
       defaultsDir: DEFAULT_CONFIG_DIR,
       envOverrides: SERVER_ENV_OVERRIDES,
-    }) as ServerConfig;
-
+    });
     return {
-      port: config.server?.port ?? 3456,
-      host: config.server?.host ?? '127.0.0.1',
+      port: (config as any).server?.port ?? 3456,
+      host: (config as any).server?.host ?? '127.0.0.1',
     };
   } catch {
+    // Config packages not available — use hardcoded defaults
     return { port: 3456, host: '127.0.0.1' };
   }
 }
 
-const DEFAULT_PORT = 3456;
-const DEFAULT_HOST = '127.0.0.1';
+const SERVER_DEFAULTS = loadServerDefaults();
+const DEFAULT_PORT = SERVER_DEFAULTS.port;
+const DEFAULT_HOST = SERVER_DEFAULTS.host;
 const HEALTH_TIMEOUT_MS = 10_000;
 const HEALTH_POLL_MS = 500;
 const STOP_TIMEOUT_MS = 5_000;
@@ -140,11 +135,21 @@ async function checkHealthEndpoint(
   }
 }
 
-async function isPortInUse(
-  port: number,
-  host: string = DEFAULT_HOST,
-): Promise<boolean> {
-  return checkHealthEndpoint(port, host, 1000);
+async function isPortInUse(port: number, host: string = DEFAULT_HOST): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = createConnection({ port, host });
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('error', () => {
+      resolve(false);
+    });
+    socket.setTimeout(1000, () => {
+      socket.destroy();
+      resolve(false);
+    });
+  });
 }
 
 // ── Public API ──
@@ -154,23 +159,14 @@ async function isPortInUse(
  * Works both in dev (workspace) and published (node_modules) contexts.
  */
 export function resolveServerEntry(): string {
-  const localRequire = createRequire(__filename);
   try {
-    return localRequire.resolve('@aweave/server/dist/main.js');
+    return require.resolve('@hod/aweave-server/dist/main.js');
   } catch {
     // Fallback: try relative path from this package
-    const fallback = join(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'server',
-      'dist',
-      'main.js',
-    );
+    const fallback = join(__dirname, '..', '..', '..', 'server', 'dist', 'main.js');
     if (existsSync(fallback)) return fallback;
     throw new Error(
-      'Cannot find @aweave/server entry point. ' +
+      'Cannot find @hod/aweave-server entry point. ' +
         'Ensure the server package is built: cd devtools/common/server && pnpm build',
     );
   }
@@ -191,9 +187,8 @@ export async function startServer(options?: {
   host?: string;
   version?: string;
 }): Promise<{ success: boolean; message: string; state?: ServerState }> {
-  const defaults = await loadServerDefaults();
-  const port = options?.port ?? defaults.port ?? DEFAULT_PORT;
-  const host = options?.host ?? defaults.host ?? DEFAULT_HOST;
+  const port = options?.port ?? DEFAULT_PORT;
+  const host = options?.host ?? DEFAULT_HOST;
   const version = options?.version ?? '0.1.0';
 
   ensureDirs();
@@ -221,12 +216,20 @@ export async function startServer(options?: {
     clearState();
   }
 
-  // Check if port is in use by another process
+  // Check if port is in use by another process — auto-kill and proceed
   if (await isPortInUse(port, host)) {
-    return {
-      success: false,
-      message: `Port ${port} is already in use. Stop the other process or use a different port.`,
-    };
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const killPort = require('kill-port');
+      await killPort(port);
+      // Wait for port to be fully released
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } catch {
+      return {
+        success: false,
+        message: `Port ${port} is already in use and could not be freed automatically.`,
+      };
+    }
   }
 
   // Resolve server entry
@@ -236,8 +239,7 @@ export async function startServer(options?: {
   } catch (err) {
     return {
       success: false,
-      message:
-        err instanceof Error ? err.message : 'Cannot find server entry point',
+      message: err instanceof Error ? err.message : 'Cannot find server entry point',
     };
   }
 
@@ -309,10 +311,7 @@ export async function startServer(options?: {
  * - Send SIGTERM → wait up to 5s → SIGKILL if needed
  * - Verify process gone → clear state file
  */
-export async function stopServer(): Promise<{
-  success: boolean;
-  message: string;
-}> {
+export async function stopServer(): Promise<{ success: boolean; message: string }> {
   const state = readState();
 
   if (!state) {
@@ -321,10 +320,7 @@ export async function stopServer(): Promise<{
 
   if (!isProcessAlive(state.pid)) {
     clearState();
-    return {
-      success: true,
-      message: 'Server was not running (stale state cleaned up)',
-    };
+    return { success: true, message: 'Server was not running (stale state cleaned up)' };
   }
 
   // Send SIGTERM
@@ -332,10 +328,7 @@ export async function stopServer(): Promise<{
     process.kill(state.pid, 'SIGTERM');
   } catch {
     clearState();
-    return {
-      success: true,
-      message: 'Server process not found (state cleaned up)',
-    };
+    return { success: true, message: 'Server process not found (state cleaned up)' };
   }
 
   // Wait for process to exit
@@ -344,10 +337,7 @@ export async function stopServer(): Promise<{
     await new Promise((resolve) => setTimeout(resolve, 200));
     if (!isProcessAlive(state.pid)) {
       clearState();
-      return {
-        success: true,
-        message: `Server stopped (was PID ${state.pid})`,
-      };
+      return { success: true, message: `Server stopped (was PID ${state.pid})` };
     }
   }
 
@@ -362,16 +352,10 @@ export async function stopServer(): Promise<{
   clearState();
 
   if (isProcessAlive(state.pid)) {
-    return {
-      success: false,
-      message: `Failed to stop server (PID ${state.pid})`,
-    };
+    return { success: false, message: `Failed to stop server (PID ${state.pid})` };
   }
 
-  return {
-    success: true,
-    message: `Server force-stopped (was PID ${state.pid})`,
-  };
+  return { success: true, message: `Server force-stopped (was PID ${state.pid})` };
 }
 
 /**
@@ -411,6 +395,43 @@ export async function restartServer(options?: {
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   return startServer(options);
+}
+
+/**
+ * Ensure the server is running — check status and auto-start if needed.
+ *
+ * Designed to be called from CLI commands that depend on the server
+ * (e.g., opensearch trace, clm open). Idempotent: if the server is
+ * already running and healthy, returns immediately.
+ *
+ * @param onLog Optional callback for progress messages (written to stderr by callers)
+ * @throws Object with { code, message, suggestion } if server cannot be started
+ */
+export async function ensureServerRunning(
+  onLog?: (msg: string) => void,
+): Promise<void> {
+  const log = onLog ?? (() => {});
+
+  const status = await getServerStatus();
+
+  if (status.running && status.healthy) {
+    log(`Server already running (PID ${status.state!.pid}, port ${status.state!.port})`);
+    return;
+  }
+
+  log('Server not running. Starting automatically...');
+
+  const result = await startServer();
+
+  if (!result.success) {
+    throw {
+      code: 'SERVER_START_FAILED',
+      message: `Failed to auto-start server: ${result.message}`,
+      suggestion: 'Try starting manually with: aw server start',
+    };
+  }
+
+  log(`  ✓ ${result.message}`);
 }
 
 /**

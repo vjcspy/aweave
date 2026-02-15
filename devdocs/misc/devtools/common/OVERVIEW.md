@@ -78,7 +78,7 @@ Use the coverage table to spot missing package overviews quickly.
 
 ```text
                     ┌──────────────────────────────┐
-                    │          @aweave/cli          │
+                    │          @hod/aweave          │
                     │     (oclif entrypoint)        │
                     └──┬───┬───┬───┬───┬───┬───┬──┘
                        │   │   │   │   │   │   │

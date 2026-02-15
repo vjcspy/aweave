@@ -1,11 +1,11 @@
 import {
   ContentType,
-  getLogFilePath,
   MCPContent,
   MCPResponse,
   output,
   readLogTail,
-} from '@aweave/cli-shared';
+  getLogFilePath,
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerLogs extends Command {

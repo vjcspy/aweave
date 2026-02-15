@@ -1,4 +1,4 @@
-import { output } from '@aweave/cli-shared';
+import { output } from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { stopServices } from '../../../lib/services';

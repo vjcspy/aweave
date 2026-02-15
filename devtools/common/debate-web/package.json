@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/debate-web",
+  "name": "@hod/aweave-debate-web",
   "version": "0.1.2",
   "scripts": {
     "dev": "rsbuild dev",
@@ -20,6 +20,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "geist": "^1.7.0",
     "lucide-react": "^0.563.0",
     "openapi-fetch": "^0.15.0",
     "react": "catalog:",

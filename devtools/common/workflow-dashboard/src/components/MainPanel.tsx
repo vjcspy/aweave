@@ -13,7 +13,7 @@ import type {
   LogEntry,
   StageState,
   WorkflowStatus,
-} from '@aweave/workflow-engine';
+} from '@hod/aweave-workflow-engine';
 import { Box, Text } from 'ink';
 
 import { HumanInputPanel } from './HumanInputPanel.js';

@@ -67,7 +67,7 @@ debate-web/
 ├── rsbuild.config.ts        # Rsbuild config (React, alias, proxy, assetPrefix)
 ├── postcss.config.cjs       # PostCSS with @tailwindcss/postcss
 ├── components.json          # shadcn/ui config
-├── package.json             # @aweave/debate-web
+├── package.json             # @hod/aweave-debate-web
 ├── tsconfig.json
 └── src/
     ├── index.html           # HTML template (theme flash prevention script)

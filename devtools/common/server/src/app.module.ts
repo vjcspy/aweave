@@ -1,4 +1,4 @@
-import { DebateModule } from '@aweave/nestjs-debate';
+import { DebateModule } from '@hod/aweave-nestjs-debate';
 import { Module } from '@nestjs/common';
 
 import { DebateSpaController } from './debate-spa.controller';

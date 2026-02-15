@@ -1,9 +1,4 @@
-import {
-  type Browser,
-  type BrowserContext,
-  chromium,
-  type Page,
-} from 'playwright-core';
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
 
 export interface LaunchBrowserOptions {
   /** System browser channel (e.g. 'chrome', 'msedge') */

@@ -104,8 +104,8 @@ This skill contains:
 
 | Variable | Required | Default | Description | Example |
 |----------|----------|---------|-------------|---------|
-| `REPO_PATH` | ✅ | - | Path to repo relative to workspace root | `projects/tinybots/backend/eve` |
-| `FEATURE_BRANCH` | ✅ | - | Name of feature branch to review | `feature/PROD-437-sensara-endpoints` |
+| `REPO_PATH` | ✅ | - | Path to repo relative to workspace root | `projects/nab/hod/ho-omh-customer-loan-mods-web` |
+| `FEATURE_BRANCH` | ✅ | - | Name of feature branch to review | `feature/E62181-new-manage-home-loan` |
 | `BASE_BRANCH` | ❌ | `develop` | Branch to compare against | `main`, `develop` |
 | `REVIEW_SCOPE` | ❌ | `full` | Review depth: `quick`, `full`, `deep` | `full` |
 
@@ -545,7 +545,7 @@ git diff $MERGE_BASE..HEAD
 
 | User Says | Extract |
 |-----------|---------|
-| "review `projects/tinybots/backend/eve` branch `feature/PROD-123`" | REPO_PATH=`projects/tinybots/backend/eve`, FEATURE_BRANCH=`feature/PROD-123` |
+| "review `projects/nab/hod/ho-omh-customer-loan-mods-web` branch `feature/E62181-new-mhl`" | REPO_PATH=`projects/nab/hod/ho-omh-customer-loan-mods-web`, FEATURE_BRANCH=`feature/E62181-new-mhl` |
 | "review code on `feature/PROD-123` in eve repo" | Ask for full REPO_PATH |
 | "review `feature/PROD-123` against `main`" | Ask for REPO_PATH, BASE_BRANCH=`main` |
 | "quick review `projects/foo/bar` `feat/x`" | REVIEW_SCOPE=`quick` |
@@ -557,7 +557,7 @@ If user input is ambiguous, ASK before proceeding:
 ```markdown
 I need clarification to start the code review:
 
-1. **Repository path:** What is the full path? (e.g., `projects/tinybots/backend/eve`)
+1. **Repository path:** What is the full path? (e.g., `projects/nab/hod/ho-omh-customer-loan-mods-web`)
 2. **Feature branch:** Which branch to review?
 3. **Base branch:** Compare against which branch? (default: `develop`)
 ```
@@ -580,19 +580,19 @@ https://bitbucket.org/org/repo/pull-requests/123 → Use API or ask
 ### Minimal
 
 ```
-Review branch `feature/PROD-437` in `projects/tinybots/backend/eve`
+Review branch `feature/E62181-new-mhl` in `projects/nab/hod/ho-omh-customer-loan-mods-web`
 ```
 
 ### Full
 
 ```
-Review branch `feature/PROD-437-sensara-endpoints` in `projects/tinybots/backend/eve` against `main`, do a deep review
+Review branch `feature/E62181-new-manage-home-loan` in `projects/nab/hod/ho-omh-customer-loan-mods-web` against `main`, do a deep review
 ```
 
 ### With Context
 
 ```
-Review the implementation on `feature/PROD-437` in `projects/tinybots/backend/eve`. 
-Focus on the new REST endpoints and their security implications.
+Review the implementation on `feature/E62181-new-mhl` in `projects/nab/hod/ho-omh-customer-loan-mods-web`. 
+Focus on the new GraphQL handlers and their error handling.
 Compare against `develop` branch.
 ```

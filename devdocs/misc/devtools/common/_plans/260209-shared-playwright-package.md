@@ -4,7 +4,7 @@
 
 - DevTools monorepo: `devdocs/misc/devtools/OVERVIEW.md`
 - CLI shared library pattern: `devtools/common/cli-shared/`
-- Current playwright consumer: `devtools/nab/cli-plugin-auth/src/lib/browser-auth.ts`
+- Current playwright consumer: `devtools/nab/plugin-nab-auth/src/lib/browser-auth.ts`
 - pnpm workspace config: `devtools/pnpm-workspace.yaml`
 
 ## Background & Decision Context
@@ -20,11 +20,11 @@ Hiện `playwright-core` được khai báo trực tiếp trong từng package (
 
 ### Giải pháp
 
-Tạo shared package `@aweave/playwright` tại `devtools/common/playwright/`. Package này:
+Tạo shared package `@hod/aweave-playwright` tại `devtools/common/playwright/`. Package này:
 
 - Wrap `playwright-core` và re-export API gốc (chromium, firefox, webkit, types)
 - Cung cấp helper functions với sensible defaults (launch browser, disable CORS, persistent context)
-- Các package khác depend vào `@aweave/playwright` thay vì `playwright-core` trực tiếp
+- Các package khác depend vào `@hod/aweave-playwright` thay vì `playwright-core` trực tiếp
 
 ### Tại sao shared package thay vì hoist lên root?
 
@@ -33,30 +33,30 @@ Tạo shared package `@aweave/playwright` tại `devtools/common/playwright/`. P
 | **Hoist lên root** | Đơn giản, nhanh | Implicit dependency, duplicate launch code, pnpm cần `public-hoist-pattern` |
 | **Shared package** ✅ | Explicit dependency, single source of truth cho launch logic, đúng pattern monorepo | Thêm 1 package (overhead nhỏ) |
 
-Chọn shared package vì nhất quán với pattern `@aweave/cli-shared` đã có, và tập trung logic browser launch vào 1 chỗ.
+Chọn shared package vì nhất quán với pattern `@hod/aweave-cli-shared` đã có, và tập trung logic browser launch vào 1 chỗ.
 
 ## Scope
 
 ### Phạm vi ảnh hưởng
 
-Tất cả playwright usage hiện tại nằm trong **1 package**: `devtools/nab/cli-plugin-auth/`.
+Tất cả playwright usage hiện tại nằm trong **1 package**: `devtools/nab/plugin-nab-auth/`.
 
 Tuy nhiên package mới được thiết kế cho **mọi package** trong monorepo cần browser automation.
 
 ## 🎯 Objective
 
-1. Tạo `@aweave/playwright` — shared package wrap `playwright-core` với helper functions
-2. Chuyển tất cả package đang depend `playwright-core` trực tiếp sang dùng `@aweave/playwright`
+1. Tạo `@hod/aweave-playwright` — shared package wrap `playwright-core` với helper functions
+2. Chuyển tất cả package đang depend `playwright-core` trực tiếp sang dùng `@hod/aweave-playwright`
 
 ### ⚠️ Key Considerations
 
-- **Re-export API gốc** — Consumer vẫn có thể `import { chromium } from '@aweave/playwright'` mà không bị giới hạn. Shared package không hide API, chỉ bổ sung helpers.
+- **Re-export API gốc** — Consumer vẫn có thể `import { chromium } from '@hod/aweave-playwright'` mà không bị giới hạn. Shared package không hide API, chỉ bổ sung helpers.
 - **No breaking change** — `browser-auth.ts` chỉ đổi import path, logic không thay đổi.
 - **Không cần `.npmrc` thay đổi** — Dùng `workspace:*` dependency, pnpm resolve bình thường.
 
 ## 🔄 Implementation Plan
 
-### Phase 1: Create `@aweave/playwright` Package
+### Phase 1: Create `@hod/aweave-playwright` Package
 
 #### 1.1 — Tạo package structure
 
@@ -81,7 +81,7 @@ devtools/common/playwright/            # 🚧 TODO - Shared playwright package
 
 ```json
 {
-  "name": "@aweave/playwright",
+  "name": "@hod/aweave-playwright",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",
@@ -170,9 +170,9 @@ args.push(
 
 ```yaml
 packages:
-  - nab/cli-plugin-auth
-  - nab/cli-plugin-confluence
-  - nab/cli-plugin-nab-opensearch
+  - nab/plugin-nab-auth
+  - nab/plugin-nab-confluence
+  - nab/plugin-nab-opensearch
   - common/server
   - common/nestjs-debate
   - common/debate-machine
@@ -202,29 +202,29 @@ Kết quả scan hiện tại (2026-02-09):
 
 | # | Package | File | Usage |
 |---|---------|------|-------|
-| 1 | `devtools/nab/cli-plugin-auth` | `package.json` | `"playwright-core": "^1.50.0"` |
-| 1 | `devtools/nab/cli-plugin-auth` | `src/lib/browser-auth.ts` | `import { chromium } from 'playwright-core'` |
+| 1 | `devtools/nab/plugin-nab-auth` | `package.json` | `"playwright-core": "^1.50.0"` |
+| 1 | `devtools/nab/plugin-nab-auth` | `src/lib/browser-auth.ts` | `import { chromium } from 'playwright-core'` |
 
 > Chỉ có **1 package** dùng playwright hiện tại.
 
 #### 2.2 — Migrate `cli-plugin-auth`
 
-- [ ] **`devtools/nab/cli-plugin-auth/package.json`** — Thay dependency
+- [ ] **`devtools/nab/plugin-nab-auth/package.json`** — Thay dependency
 
 ```diff
   "dependencies": {
-    "@aweave/cli-shared": "workspace:*",
-+   "@aweave/playwright": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
++   "@hod/aweave-playwright": "workspace:*",
     "@oclif/core": "^4.2.8",
 -   "playwright-core": "^1.50.0"
   },
 ```
 
-- [ ] **`devtools/nab/cli-plugin-auth/src/lib/browser-auth.ts`** — Đổi import
+- [ ] **`devtools/nab/plugin-nab-auth/src/lib/browser-auth.ts`** — Đổi import
 
 ```diff
 - import { chromium } from 'playwright-core';
-+ import { chromium } from '@aweave/playwright';
++ import { chromium } from '@hod/aweave-playwright';
 ```
 
 > Logic trong `browser-auth.ts` không thay đổi — chỉ đổi import source.
@@ -232,8 +232,8 @@ Kết quả scan hiện tại (2026-02-09):
 #### 2.3 — Rebuild & verify
 
 - [ ] `cd devtools && pnpm install`
-- [ ] `pnpm --filter @aweave/playwright build`
-- [ ] `pnpm --filter @aweave/cli-plugin-auth build`
+- [ ] `pnpm --filter @hod/aweave-playwright build`
+- [ ] `pnpm --filter @hod/aweave-plugin-nab-auth build`
 - [ ] Verify build thành công, không lỗi TypeScript
 
 ---
@@ -241,15 +241,15 @@ Kết quả scan hiện tại (2026-02-09):
 ## Dependency Graph (sau migration)
 
 ```
-@aweave/cli
-  ├── @aweave/cli-shared
-  ├── @aweave/cli-plugin-auth ──► @aweave/cli-shared
-  │                            ──► @aweave/playwright ──► playwright-core
-  ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared
-  ├── @aweave/cli-plugin-docs ──► @aweave/cli-shared
+@hod/aweave
+  ├── @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-nab-auth ──► @hod/aweave-cli-shared
+  │                            ──► @hod/aweave-playwright ──► playwright-core
+  ├── @hod/aweave-plugin-debate ──► @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-docs ──► @hod/aweave-cli-shared
   └── ...
 
-@aweave/playwright              # NEW — shared browser automation
+@hod/aweave-playwright              # NEW — shared browser automation
   └── playwright-core
 ```
 
@@ -261,7 +261,7 @@ Bất kỳ package nào cần browser automation:
 
 ```json
 "dependencies": {
-  "@aweave/playwright": "workspace:*"
+  "@hod/aweave-playwright": "workspace:*"
 }
 ```
 
@@ -269,11 +269,11 @@ Bất kỳ package nào cần browser automation:
 
 ```typescript
 // Option A: Dùng playwright-core API trực tiếp (re-exported)
-import { chromium } from '@aweave/playwright';
+import { chromium } from '@hod/aweave-playwright';
 const browser = await chromium.launch({ channel: 'msedge', headless: false });
 
 // Option B: Dùng helper có sẵn
-import { launchBrowser } from '@aweave/playwright';
+import { launchBrowser } from '@hod/aweave-playwright';
 const session = await launchBrowser({ channel: 'msedge', disableCors: true });
 await session.page.goto('https://example.com');
 await session.close();
@@ -293,4 +293,4 @@ await session.close();
 
 - [ ] Thêm `launchPersistentContext()` helper — giữ session/cookies giữa các lần chạy
 - [ ] Thêm cookie extraction helpers — tái sử dụng pattern từ `browser-auth.ts`
-- [ ] Cập nhật `devdocs/misc/devtools/OVERVIEW.md` — thêm `@aweave/playwright` vào dependency graph documentation
+- [ ] Cập nhật `devdocs/misc/devtools/OVERVIEW.md` — thêm `@hod/aweave-playwright` vào dependency graph documentation

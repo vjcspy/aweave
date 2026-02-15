@@ -1,4 +1,4 @@
-# Debate NestJS Module (`@aweave/nestjs-debate`)
+# Debate NestJS Module (`@hod/aweave-nestjs-debate`)
 
 > **Source:** `devtools/common/nestjs-debate/`
 > **Last Updated:** 2026-02-08
@@ -17,13 +17,13 @@ Module này là **complete backend** cho hệ thống debate giữa AI agents:
 **Thiết kế như separate pnpm package** để:
 - Tách biệt concern: debate logic không mix với server infrastructure
 - Có thể test độc lập
-- Future features follow cùng pattern: `@aweave/nestjs-<feature>`
+- Future features follow cùng pattern: `@hod/aweave-nestjs-<feature>`
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    @aweave/nestjs-debate                       │
+│                    @hod/aweave-nestjs-debate                       │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  DebateController (REST)        DebateGateway (WebSocket)    │
@@ -71,7 +71,7 @@ Module này là **complete backend** cho hệ thống debate giữa AI agents:
 | `better-sqlite3` | Synchronous SQLite3 driver (native C addon) |
 | `@types/better-sqlite3` (devDep) | TypeScript type definitions |
 
-**Peer dependency:** `@nestjs/core` (provided by `@aweave/server`)
+**Peer dependency:** `@nestjs/core` (provided by `@hod/aweave-server`)
 
 ## Exposed Exports
 
@@ -82,7 +82,7 @@ export { DebateService }       // Injectable — nếu cần inject từ module 
 export { ArgumentService }     // Injectable — nếu cần inject từ module khác
 export { DebateGateway }       // WebSocket gateway
 
-// All DTOs (entity, request, response, error) — consumed by @aweave/server for Swagger setup
+// All DTOs (entity, request, response, error) — consumed by @hod/aweave-server for Swagger setup
 export * from './dto';
 
 // WS event types — consumed by debate-web for WebSocket typing
@@ -338,7 +338,7 @@ const result = this.db.transaction(() => {
 
 ```
 devtools/common/nestjs-debate/
-├── package.json                    # @aweave/nestjs-debate
+├── package.json                    # @hod/aweave-nestjs-debate
 ├── tsconfig.json
 ├── nest-cli.json
 ├── .gitignore
@@ -370,7 +370,7 @@ devtools/common/nestjs-debate/
 
 > **Package manager:** Workspace dùng **pnpm** (không phải npm). Tất cả commands dùng `pnpm`.
 
-> **PM2:** `@aweave/server` (import module này) được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Khi develop nestjs-debate, **phải stop PM2 server** trước, rồi chạy server ở dev mode để có hot-reload.
+> **PM2:** `@hod/aweave-server` (import module này) được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Khi develop nestjs-debate, **phải stop PM2 server** trước, rồi chạy server ở dev mode để có hot-reload.
 
 ```bash
 # Stop PM2 server trước khi dev

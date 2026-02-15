@@ -1,5 +1,5 @@
 /**
- * @aweave/cli-shared — Shared utilities for the aw CLI ecosystem.
+ * @hod/aweave-cli-shared — Shared utilities for the aw CLI ecosystem.
  *
  * This package provides:
  * - MCP response format models (MCPResponse, MCPContent, MCPError)
@@ -7,7 +7,7 @@
  * - CLI output and content reading helpers
  * - pm2 service management utilities
  *
- * Both the main CLI (@aweave/cli) and all plugins (@aweave/cli-plugin-*)
+ * Both the main CLI (@hod/aweave) and all plugins (@hod/aweave-plugin-*)
  * depend on this package. It has NO CLI framework dependency (no oclif, no commander).
  */
 
@@ -42,6 +42,7 @@ export {
 
 // Server process manager (replaces PM2)
 export {
+  ensureServerRunning,
   getLogFilePath,
   getServerStatus,
   readLogTail,
