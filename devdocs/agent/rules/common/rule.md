@@ -1,3 +1,8 @@
+---
+source_of: AGENTS.md
+note: This is the source file for the AGENTS.md symlink at PROJECT_ROOT. Edit this file — AGENTS.md reflects changes automatically.
+---
+
 # AI Agent Entry Point
 
 ## Role
@@ -55,26 +60,70 @@ devdocs/agent/rules/common/workspaces/
 
 ## Task Detection
 
-After workspace detection, identify task type:
+After workspace detection, identify task type from user input.
 
-| Task Type | Description |
-|-----------|-------------|
-| `Plan` | Creating implementation plans |
-| `Implementation` | Writing/modifying code |
-| `Refactoring` | Restructuring existing code |
-| `Question` | Answering questions |
-| `Other` | General tasks |
+### Detection Rules
 
-## Dynamic Rules (Load Only When Needed)
+| User Input Signals | Task Type | Load Rule |
+|--------------------|-----------|-----------|
+| "create plan", "write plan", path to `_plans/`, "plan for..." | **Plan** | `devdocs/agent/rules/common/tasks/create-plan.md` |
+| "implement", "add", "build", "code", "fix", "update", "change" + code context | **Implementation** | `devdocs/agent/rules/common/tasks/implementation.md` |
+| "refactor", "restructure", "reorganize", "rename", "move", "extract", "split" | **Refactoring** | `devdocs/agent/rules/common/tasks/implementation.md` |
+| "what", "how", "why", "explain", "describe", "show me" — no action verb | **Question** | None — answer directly |
+| Does not match above | **Other** | None — follow user instructions |
+
+### Detection Examples
+
+| User Input | Task Type | Reason |
+|------------|-----------|--------|
+| "Create a plan for adding auth to the API" | Plan | keyword "create plan" |
+| "Implement the changes in `_plans/260209-Auth.md`" | Implementation | keyword "implement", plan is input not output |
+| "Fix the null pointer in `projects/nab/.../service.ts`" | Implementation | keyword "fix" + code path |
+| "Refactor database layer to use repository pattern" | Refactoring | keyword "refactor" |
+| "How does the auth middleware work?" | Question | "how does" pattern, no action verb |
+
+### Ambiguity Resolution
+
+- **Plan + Implementation** (e.g. "implement the plan at ..."): prefer **Implementation** — plan is input, not output
+- **Refactoring + Implementation** (e.g. "refactor and add ..."): prefer **Implementation** — refactoring is secondary
+- **Uncertain**: **ASK** user to clarify intent
+
+## Contextual Rules (Load When Needed)
 
 | Rule | Load When | Path |
 |------|-----------|------|
 | `project-structure.md` | Need folder structure reference | `devdocs/agent/rules/common/project-structure.md` |
-| `coding-standard-and-quality.md` | Implementation/Refactoring | `devdocs/agent/rules/common/coding/coding-standard-and-quality.md` |
-| `create-plan.md` | Task = Plan | `devdocs/agent/rules/common/tasks/create-plan.md` |
-| `implementation.md` | Task = Implementation/Refactoring | `devdocs/agent/rules/common/tasks/implementation.md` |
+| `coding-standard-and-quality.md` | Writing/modifying code (auto-loaded by implementation rule) | `devdocs/agent/rules/common/coding/coding-standard-and-quality.md` |
 
 > **Principle:** Load rules lazily to minimize context window usage.
+
+## Context Resolution (DEBUG)
+
+> **Temporary step** — remove when workflow is stable.
+
+After completing Workspace Detection, Scope Detection, and Task Detection, present the following summary to user and **WAIT for confirmation** before loading any context files:
+
+```
+**Workspace:** <detected workspace>
+**Scope:** <scope level>
+**Path Variables:** <extracted variables>
+**Task Type:** <type> (reason: <brief explanation>)
+
+**Context Files (loading order):**
+| # | File | Type | Exists |
+|---|------|------|--------|
+| 1 | devdocs/.../OVERVIEW.md | Global OVERVIEW | ✅/❌ |
+| 2 | devdocs/.../OVERVIEW.md | Repo/Package OVERVIEW | ✅/❌ |
+| ... | ... | ... | ... |
+
+**Search Scope:** (for Question/investigation tasks)
+1. <primary search location>
+2. <secondary search location>
+
+Proceed?
+```
+
+Check file existence before presenting. Flag missing required files with ❌.
 
 ## Execution Flow Summary
 
@@ -82,15 +131,27 @@ After workspace detection, identify task type:
 1. Read user input
    ↓
 2. Workspace Detection
-   - Match input against detection rules
-   - Load workspace-specific rule file
-   - Load required context (OVERVIEW files)
+   - Match input against workspace detection rules
+   - Load workspace-specific rule file (meta-rule, not context)
    ↓
-3. Task Detection
-   - Identify task type
-   - Load task-specific rules if needed
+3. Scope Detection (defined in workspace rule)
+   - Extract path variables from user input
+   - Determine scope level from path
    ↓
-4. Execute Task
+4. Task Detection
+   - Identify task type from input signals
+   ↓
+5. Context Resolution (DEBUG — temporary)
+   - Build context file list based on scope + task
+   - Check file existence
+   - Present summary to user → WAIT for confirmation
+   ↓
+6. Context Loading (general → specific → actionable)
+   - OVERVIEW chain (based on scope)
+   - Referenced files (user-provided: plan, spike, guide, etc.)
+   - Task rule (create-plan.md or implementation.md)
+   ↓
+7. Execute Task
    - Follow loaded context and rules
    - Verify output alignment with protocols
 ```

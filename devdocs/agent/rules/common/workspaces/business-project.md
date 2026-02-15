@@ -9,8 +9,29 @@ Extracted from user input:
 | Variable | Pattern | Example |
 |----------|---------|---------|
 | `<PROJECT_NAME>` | Folder directly under `projects/` | `nab` |
-| `<DOMAIN>` | Business domain within project | `backend`, `frontend`, `core` |
-| `<REPO_NAME>` | Specific repository | `ho-omh-customer-loan-mods-web`, `ho-omh-loanmodifications-api` |
+| `<DOMAIN>` | Business domain within project | `hod`, `core`, `frontend` |
+| `<REPO_NAME>` | Specific repository | `ho-omh-customer-loan-mods-web` |
+| `<FEATURE_NAME>` | Feature folder under `_features/` | `new-MHL` |
+
+## Scope Detection
+
+Determine working scope from the deepest meaningful path segment:
+
+| Path Contains | Scope | Variables Required |
+|---------------|-------|--------------------|
+| `_features/<FEATURE_NAME>/` | **feature** | PROJECT, DOMAIN, REPO, FEATURE |
+| `<PROJECT>/<DOMAIN>/<REPO>/` (any subfolder or file) | **repo** | PROJECT, DOMAIN, REPO |
+| `<PROJECT>/` only (no repo identified) | **project** | PROJECT |
+
+### Scope Detection Examples
+
+| User Input | Scope | Reason |
+|------------|-------|--------|
+| `devdocs/.../ho-omh-customer-loan-mods-web/_features/new-MHL/` | feature | path contains `_features/new-MHL/` |
+| `devdocs/.../ho-omh-customer-loan-mods-web/_features/new-MHL/_plans/260209-Something.md` | feature | plan under `_features/new-MHL/` |
+| `devdocs/.../ho-omh-customer-loan-mods-web/_plans/260209-Add-Trace-Decorator.md` | repo | plan at repo level, no `_features/` |
+| `projects/nab/hod/ho-omh-customer-loan-mods-web/app/server/src/main.ts` | repo | source code path under repo |
+| `devdocs/projects/nab/OVERVIEW.md` | project | only project-level path |
 
 ## Key Paths
 
@@ -29,38 +50,32 @@ Extracted from user input:
 
 ## Required Context Loading
 
-**Loading Order — MUST follow sequentially:**
+**Loading Order — MUST follow sequentially (general → specific → actionable):**
 
-1. **Global Overview** (if working on any repo within project)
-   ```
-   devdocs/projects/<PROJECT_NAME>/OVERVIEW.md
-   ```
+1. **OVERVIEW Chain** (based on scope — load up to detected level):
+   - Global OVERVIEW: `devdocs/projects/<PROJECT_NAME>/OVERVIEW.md` (all scopes)
+   - Repo OVERVIEW: `devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` (repo + feature scope)
+   - Feature OVERVIEW: `devdocs/.../<REPO_NAME>/_features/<FEATURE_NAME>/OVERVIEW.md` (feature scope only)
 
-2. **Repo Overview** (if working on specific repository)
-   ```
-   devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md
-   ```
+2. **Referenced Files** (user-provided — plan, spike, guide, etc.):
+   - Any file the user explicitly references or provides as input
+   - Read AFTER OVERVIEW chain so project context is established first
 
-3. **Feature Overview** (if working on a specific feature)
-   ```
-   devdocs/projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_features/<FEATURE_NAME>/OVERVIEW.md
-   ```
+3. **Task Rule** (based on detected task type):
+   - `devdocs/agent/rules/common/tasks/create-plan.md` (Plan task)
+   - `devdocs/agent/rules/common/tasks/implementation.md` (Implementation / Refactoring task)
 
-4. **Project Structure** (if need to understand folder structure)
-   ```
-   devdocs/agent/rules/common/project-structure.md
-   ```
+> **CRITICAL:** If any required OVERVIEW file does not exist or is empty, **STOP** and ask user to provide context before proceeding.
 
-> **CRITICAL:** If any required overview file does not exist or is empty, **STOP** and ask user to provide context before proceeding.
+## Search Scope
 
-## Path Detection Examples
+Where to search for information, based on detected scope (in priority order):
 
-| User Input | Extracted Variables |
-|------------|---------------------|
-| `projects/nab/hod/ho-omh-customer-loan-mods-web/app/server/src/main.ts` | PROJECT=nab, DOMAIN=hod, REPO=ho-omh-customer-loan-mods-web |
-| `devdocs/projects/nab/hod/ho-omh-loanmodifications-api/_plans/260115-Kafka-Refactor.md` | PROJECT=nab, DOMAIN=hod, REPO=ho-omh-loanmodifications-api |
-| `devdocs/projects/nab/hod/ho-omh-customer-loan-mods-web/_features/new-MHL/` | PROJECT=nab, DOMAIN=hod, REPO=ho-omh-customer-loan-mods-web, FEATURE=new-MHL |
-| `devdocs/projects/nab/OVERVIEW.md` | PROJECT=nab (no specific repo) |
+| Scope | Search Locations |
+|-------|------------------|
+| **feature** | 1. Feature docs: `devdocs/.../_features/<FEATURE_NAME>/` (all subfolders) 2. Repo OVERVIEW + repo docs 3. Source: `projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
+| **repo** | 1. Repo docs: `devdocs/.../<REPO_NAME>/` (all subfolders) 2. Source: `projects/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
+| **project** | 1. Project docs: `devdocs/projects/<PROJECT_NAME>/` 2. All repo OVERVIEWs under this project |
 
 ## Working with Plans
 
