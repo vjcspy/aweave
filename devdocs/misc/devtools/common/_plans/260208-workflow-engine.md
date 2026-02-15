@@ -22,10 +22,10 @@
 
 | Package | Status | Location |
 |---------|--------|----------|
-| `@aweave/workflow-engine` | ✅ Implemented (CJS) | `devtools/common/workflow-engine/` |
-| `@aweave/workflow-dashboard` | ✅ Implemented (ESM) | `devtools/common/workflow-dashboard/` |
-| `@aweave/cli-plugin-demo-workflow` | ✅ Implemented (ESM) | `devtools/common/cli-plugin-demo-workflow/` |
-| `@aweave/workflow-shared` | ❌ Deferred | Not created — build when first real workflow needs common handlers |
+| `@hod/aweave-workflow-engine` | ✅ Implemented (CJS) | `devtools/common/workflow-engine/` |
+| `@hod/aweave-workflow-dashboard` | ✅ Implemented (ESM) | `devtools/common/workflow-dashboard/` |
+| `@hod/aweave-plugin-demo-workflow` | ✅ Implemented (ESM) | `devtools/common/cli-plugin-demo-workflow/` |
+| `@hod/aweave-workflow-shared` | ❌ Deferred | Not created — build when first real workflow needs common handlers |
 
 ### Key deviations from original design
 
@@ -95,14 +95,14 @@ A **reusable workflow engine** that provides a standard definition, standard app
 | Infrastructure | Needs server, database | Zero infra — runs in-process |
 | Use case | Distributed systems, microservices | Local orchestration, dev tools |
 | Durability | ✅ Survive crashes | Optional — via `getPersistedSnapshot()` to file |
-| Already in stack | ❌ | ✅ Used in `@aweave/debate-machine` |
+| Already in stack | ❌ | ✅ Used in `@hod/aweave-debate-machine` |
 | Monorepo fit | Adds complexity | Native — another pnpm workspace package |
 
 **Decision:** xstate v5 for lifecycle + event bridge. Pure TypeScript for execution logic.
 
 ### Why Ink v6 for dashboard (not plain console.log)
 
-- Already in stack (`@aweave/cli-plugin-dashboard`)
+- Already in stack (`@hod/aweave-plugin-dashboard`)
 - React 19 component model = composable, testable
 - xstate ↔ Ink bridge via `@xstate/react` hooks (`useSelector`)
 - Custom reusable components: `Spinner`, `ElapsedTime`, `TaskRow`, `StageTree`, `HumanInputPanel`
@@ -804,7 +804,7 @@ Each workflow command supports:
 
 ```
 devtools/common/
-├── workflow-engine/                     # @aweave/workflow-engine (CJS) ✅
+├── workflow-engine/                     # @hod/aweave-workflow-engine (CJS) ✅
 │   ├── src/
 │   │   ├── index.ts                    # Barrel exports
 │   │   ├── types.ts                    # All type definitions
@@ -813,7 +813,7 @@ devtools/common/
 │   │   └── helpers.ts                  # withTimeout, sleep, formatDuration
 │   └── package.json                    # deps: xstate ^5
 │
-├── workflow-dashboard/                  # @aweave/workflow-dashboard (ESM) ✅
+├── workflow-dashboard/                  # @hod/aweave-workflow-dashboard (ESM) ✅
 │   ├── src/
 │   │   ├── index.ts                    # Export: WorkflowDashboard + all components
 │   │   ├── components/
@@ -828,7 +828,7 @@ devtools/common/
 │   │       └── useNavigation.ts        # ↑↓ keyboard navigation state
 │   └── package.json                    # deps: ink ^6, react ^19, @xstate/react ^4
 │
-├── workflow-shared/                     # @aweave/workflow-shared (CJS) ❌ DEFERRED
+├── workflow-shared/                     # @hod/aweave-workflow-shared (CJS) ❌ DEFERRED
 │   └── (not yet created — build when first real workflow needs common handlers)
 ```
 
@@ -836,7 +836,7 @@ devtools/common/
 
 ```
 devtools/common/
-├── cli-plugin-demo-workflow/            # @aweave/cli-plugin-demo-workflow (ESM) ✅
+├── cli-plugin-demo-workflow/            # @hod/aweave-plugin-demo-workflow (ESM) ✅
 │   ├── src/
 │   │   ├── index.ts                    # Empty (oclif auto-discovers commands)
 │   │   ├── commands/
@@ -852,11 +852,11 @@ Each workflow is a **separate oclif plugin** with a **single command**. No `run/
 ### Dependency flow
 
 ```
-@aweave/workflow-engine        ← Pure logic, types, xstate machine (CJS)
+@hod/aweave-workflow-engine        ← Pure logic, types, xstate machine (CJS)
        ↑
-@aweave/workflow-dashboard     ← Ink UI, reusable by all workflows (ESM)
+@hod/aweave-workflow-dashboard     ← Ink UI, reusable by all workflows (ESM)
        ↑
-@aweave/cli-plugin-*          ← oclif plugins: one per workflow (ESM)
+@hod/aweave-plugin-*          ← oclif plugins: one per workflow (ESM)
 ```
 
 ### CJS vs ESM
@@ -867,7 +867,7 @@ Each workflow is a **separate oclif plugin** with a **single command**. No `run/
 | workflow-dashboard | ESM | Ink v6 is ESM-only |
 | cli-plugin-* | ESM | Uses Ink (ESM) |
 
-Same pattern as `@aweave/debate-machine` (CJS) consumed by `cli-plugin-debate`.
+Same pattern as `@hod/aweave-debate-machine` (CJS) consumed by `cli-plugin-debate`.
 
 ---
 

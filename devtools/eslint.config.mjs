@@ -65,7 +65,7 @@ export default defineConfig(
       '**/node_modules/**',
       '**/generated/**',
       'common/debate-web/**',
-      'tinybots/local/**',
+      'nab/local/**',
       'ecosystem.config.cjs',
     ],
   },

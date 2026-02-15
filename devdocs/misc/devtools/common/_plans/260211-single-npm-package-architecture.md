@@ -26,7 +26,7 @@
 
 Chuyển đổi devtools monorepo từ mô hình "pull repo + pnpm link + pm2 start nhiều process" sang mô hình "npm publishable, install global hoặc npx, 1 process, 1 port". Giữ nguyên monorepo structure cho development.
 
-> **As implemented:** Publish tất cả workspace packages riêng lẻ lên npm (`pnpm -r publish`). User chạy `npx @aweave/cli server start --open` — npm tự resolve dependency graph. Approach "1 npm package duy nhất" (bundleDependencies) không khả thi với pnpm/yarn vì symlinks — xem Phase 4 implementation notes.
+> **As implemented:** Publish tất cả workspace packages riêng lẻ lên npm (`pnpm -r publish`). User chạy `npx @hod/aweave server start --open` — npm tự resolve dependency graph. Approach "1 npm package duy nhất" (bundleDependencies) không khả thi với pnpm/yarn vì symlinks — xem Phase 4 implementation notes.
 
 ### ⚠️ Key Considerations
 
@@ -44,7 +44,7 @@ Chuyển đổi devtools monorepo từ mô hình "pull repo + pnpm link + pm2 st
 
 7. **oclif `prepack` + `pnpm deploy`** — oclif có built-in `prepack` hook (generate manifest). Kết hợp với `pnpm deploy` để flatten workspace deps.
 
-8. **Server name trong `package.json`** — Hiện tại `server/package.json` có `"name": "server"` (không scoped). Cần đổi thành `"name": "@aweave/server"` để `pnpm deploy` resolve đúng.
+8. **Server name trong `package.json`** — Hiện tại `server/package.json` có `"name": "server"` (không scoped). Cần đổi thành `"name": "@hod/aweave-server"` để `pnpm deploy` resolve đúng.
 
 ## 🔄 Implementation Plan
 
@@ -161,7 +161,7 @@ devtools/common/debate-web/
 
 **Mục tiêu:** NestJS server serve cả API + WebSocket + static frontend trên 1 port duy nhất.
 
-- [x] **2.1** Install `@nestjs/serve-static` trong `@aweave/server`
+- [x] **2.1** Install `@nestjs/serve-static` trong `@hod/aweave-server`
   - `pnpm add @nestjs/serve-static` trong `devtools/common/server/`
   - **Outcome**: Package available
 
@@ -173,7 +173,7 @@ devtools/common/debate-web/
 
   ```typescript
   // devtools/common/server/src/app.module.ts
-  import { DebateModule } from '@aweave/nestjs-debate';
+  import { DebateModule } from '@hod/aweave-nestjs-debate';
   import { Module } from '@nestjs/common';
   import { ServeStaticModule } from '@nestjs/serve-static';
   import { join } from 'path';
@@ -272,7 +272,7 @@ devtools/common/debate-web/
 **Mục tiêu:** CLI tự quản lý server process. Loại bỏ PM2 dependency hoàn toàn.
 
 - [x] **3.1** Thiết kế process management module
-  - Tạo module trong `@aweave/cli-shared` (hoặc package riêng `@aweave/process-manager`)
+  - Tạo module trong `@hod/aweave-cli-shared` (hoặc package riêng `@hod/aweave-process-manager`)
   - **Target platforms:** macOS + Linux only (Windows daemon management deferred — `detached` + signals behave differently on Windows, sẽ address nếu có demand)
   - Core functions:
     - `startServer()` — spawn detached child process
@@ -309,7 +309,7 @@ devtools/common/debate-web/
   - Report success/failure cho user
   - **Outcome**: `aw server start` block cho đến khi server healthy
 
-- [x] **3.4** Tạo oclif plugin `@aweave/cli-plugin-server`
+- [x] **3.4** Tạo oclif plugin `@hod/aweave-plugin-server`
   - Commands:
     - `aw server start` — start server daemon, show port + PID
     - `aw server stop` — stop server daemon
@@ -320,7 +320,7 @@ devtools/common/debate-web/
 
   ```
   devtools/common/cli-plugin-server/
-  ├── package.json                # @aweave/cli-plugin-server
+  ├── package.json                # @hod/aweave-plugin-server
   ├── tsconfig.json
   └── src/
       └── commands/
@@ -333,7 +333,7 @@ devtools/common/debate-web/
   ```
 
 - [x] **3.5** Register plugin trong CLI
-  - Add `@aweave/cli-plugin-server` to `@aweave/cli` `package.json` dependencies
+  - Add `@hod/aweave-plugin-server` to `@hod/aweave` `package.json` dependencies
   - Add to `oclif.plugins` array
   - Add to `devtools/pnpm-workspace.yaml`
   - **Outcome**: `aw server start` available
@@ -341,7 +341,7 @@ devtools/common/debate-web/
 - [ ] **3.6** Auto-start server từ commands khác (deferred — existing ensureServices() pattern covers this)
   - Khi `aw debate create ...` gọi API mà server chưa chạy → tự động start
   - Check: try API call → nếu `ECONNREFUSED` → prompt user hoặc auto-start
-  - Implement trong `@aweave/cli-shared` HTTP client wrapper
+  - Implement trong `@hod/aweave-cli-shared` HTTP client wrapper
   - **Outcome**: UX mượt — user không cần nhớ start server trước
 
 - [x] **3.7** Cập nhật `debate-web` URL config cho auto-open
@@ -386,13 +386,13 @@ devtools/
 **Mục tiêu:** Build pipeline flatten monorepo thành 1 publishable npm package.
 
 - [x] **4.1** Fix package naming
-  - `devtools/common/server/package.json`: đổi `"name": "server"` → `"name": "@aweave/server"`
-  - `devtools/common/debate-web/package.json`: đổi `"name": "debate-web"` → `"name": "@aweave/debate-web"`
+  - `devtools/common/server/package.json`: đổi `"name": "server"` → `"name": "@hod/aweave-server"`
+  - `devtools/common/debate-web/package.json`: đổi `"name": "debate-web"` → `"name": "@hod/aweave-debate-web"`
   - **Outcome**: Tất cả packages có scoped names, `pnpm deploy` resolve đúng
 
-- [x] **4.2** Cập nhật `@aweave/cli` dependencies
-  - Add `@aweave/server` as dependency: `"@aweave/server": "workspace:*"`
-  - Add `@aweave/debate-web` as dependency: `"@aweave/debate-web": "workspace:*"`
+- [x] **4.2** Cập nhật `@hod/aweave` dependencies
+  - Add `@hod/aweave-server` as dependency: `"@hod/aweave-server": "workspace:*"`
+  - Add `@hod/aweave-debate-web` as dependency: `"@hod/aweave-debate-web": "workspace:*"`
   - Giữ `"private": true` trong cli `package.json` cho dev, toggle sang `false` lúc publish
   - **Outcome**: CLI package depends on tất cả packages cần publish
 
@@ -401,7 +401,7 @@ devtools/
   - **Build tool:** Dùng `pnpm turbo build` (align với existing turbo config) thay vì `pnpm -r build`
   - Step 1: `pnpm turbo build` (build tất cả packages, leverage turbo caching)
   - Step 2: Copy debate-web `dist/` → server `public/debate/`
-  - Step 3: `pnpm --filter @aweave/cli deploy ./release` (flatten workspace deps, rewrites `workspace:*` → actual versions)
+  - Step 3: `pnpm --filter @hod/aweave deploy ./release` (flatten workspace deps, rewrites `workspace:*` → actual versions)
   - Step 4: Update `release/package.json`: set `"private": false`
   - Step 5: **Validation** — verify publishability:
     - Check no `workspace:*` entries remain in `release/package.json`
@@ -428,7 +428,7 @@ devtools/
 
   echo "=== Deploying CLI package (pnpm deploy) ==="
   rm -rf "$RELEASE_DIR"
-  pnpm --filter @aweave/cli deploy "$RELEASE_DIR"
+  pnpm --filter @hod/aweave deploy "$RELEASE_DIR"
 
   echo "=== Post-processing ==="
   cd "$RELEASE_DIR"
@@ -450,21 +450,21 @@ devtools/
 
   # Print server entry path for verification
   echo ""
-  echo "Server entry: $(node -e "console.log(require.resolve('@aweave/server/dist/main.js'))")"
+  echo "Server entry: $(node -e "console.log(require.resolve('@hod/aweave-server/dist/main.js'))")"
 
   echo ""
   echo "=== Release package ready at $RELEASE_DIR ==="
   echo "To publish: cd $RELEASE_DIR && npm publish"
   ```
 
-- [x] **4.4** Cập nhật `@aweave/cli` `files` field
+- [x] **4.4** Cập nhật `@hod/aweave` `files` field
   - Ensure `"files"` bao gồm: `["bin", "dist", "oclif.manifest.json"]`
-  - Server và frontend assets đi qua `node_modules/@aweave/server/public/` (resolved by pnpm deploy)
+  - Server và frontend assets đi qua `node_modules/@hod/aweave-server/public/` (resolved by pnpm deploy)
   - **Outcome**: npm package chứa đúng files cần thiết
 
 - [x] **4.5** Cập nhật server entry path resolution
-  - CLI plugin `aw server start` cần biết path tới `@aweave/server/dist/main.js`
-  - Resolve bằng `require.resolve('@aweave/server/dist/main.js')` — works cả dev và published
+  - CLI plugin `aw server start` cần biết path tới `@hod/aweave-server/dist/main.js`
+  - Resolve bằng `require.resolve('@hod/aweave-server/dist/main.js')` — works cả dev và published
   - **Outcome**: CLI tìm đúng server entrypoint trong mọi context
 
 - [x] **4.6** Tạo npm scripts trong `devtools/package.json`
@@ -496,25 +496,25 @@ devtools/
 **Published package structure:**
 
 ```
-@aweave/cli (npm)
+@hod/aweave (npm)
 ├── bin/
 │   └── run.js                              # CLI entrypoint
 ├── dist/
 │   └── commands/                           # Built-in commands
 ├── oclif.manifest.json                     # oclif command manifest
 ├── node_modules/
-│   ├── @aweave/cli-shared/dist/            # Shared utilities
-│   ├── @aweave/cli-plugin-debate/dist/     # debate commands
-│   ├── @aweave/cli-plugin-server/dist/     # server commands
-│   ├── @aweave/cli-plugin-docs/dist/       # docs commands
-│   ├── @aweave/cli-plugin-*/dist/          # other plugins
-│   ├── @aweave/server/
+│   ├── @hod/aweave-cli-shared/dist/            # Shared utilities
+│   ├── @hod/aweave-plugin-debate/dist/     # debate commands
+│   ├── @hod/aweave-plugin-server/dist/     # server commands
+│   ├── @hod/aweave-plugin-docs/dist/       # docs commands
+│   ├── @hod/aweave-plugin-*/dist/          # other plugins
+│   ├── @hod/aweave-server/
 │   │   ├── dist/main.js                    # NestJS server entrypoint
 │   │   └── public/
 │   │       └── debate/                     # debate SPA static files
 │   │           ├── index.html
 │   │           └── assets/
-│   ├── @aweave/nestjs-debate/dist/         # debate backend module
+│   ├── @hod/aweave-nestjs-debate/dist/         # debate backend module
 │   ├── @oclif/core/                        # oclif runtime
 │   ├── @nestjs/*/                          # NestJS runtime
 │   └── ...                                 # other dependencies
@@ -550,7 +550,7 @@ devtools/
   - **Outcome**: Plugin documented
 
 - [x] **5.5** Cập nhật `devtools/README.md`
-  - Quick start cho end users: `npm install -g @aweave/cli && aw server start`
+  - Quick start cho end users: `npm install -g @hod/aweave && aw server start`
   - Dev setup cho contributors
   - **Outcome**: README serves both audiences
 
@@ -588,34 +588,34 @@ Phase 5 (Documentation) ← after all phases
 
 ### ✅ Completed — All Phases Implemented & Published to npm
 
-**Published packages (npm registry, `@aweave/` scope):**
+**Published packages (npm registry, `@hod/` scope):**
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `@aweave/cli` | 0.1.6 | CLI entrypoint (`aw` binary) |
-| `@aweave/cli-shared` | 0.1.0 | Shared utilities, process manager |
-| `@aweave/cli-plugin-debate` | 0.1.0 | `aw debate *` commands |
-| `@aweave/cli-plugin-docs` | 0.1.0 | `aw docs *` commands |
-| `@aweave/cli-plugin-dashboard` | 0.1.0 | `aw dashboard` (Ink terminal UI) |
-| `@aweave/cli-plugin-server` | 0.1.4 | `aw server *` (start/stop/status/restart/logs) |
-| `@aweave/cli-plugin-config` | 0.1.0 | `aw config *` commands |
-| `@aweave/cli-plugin-relay` | 0.1.0 | `aw relay *` commands |
-| `@aweave/cli-plugin-demo-workflow` | 0.1.2 | `aw demo` command |
-| `@aweave/server` | 0.0.6 | NestJS server (API + WS + static SPA) |
-| `@aweave/debate-web` | 0.1.1 | React SPA (Rsbuild, static HTML/JS/CSS) |
-| `@aweave/nestjs-debate` | 0.1.0 | Debate backend module |
-| `@aweave/debate-machine` | 0.1.0 | Debate state machine |
-| `@aweave/workflow-engine` | 0.1.0 | Workflow state machine |
-| `@aweave/workflow-dashboard` | 0.1.2 | Ink workflow UI |
-| `@aweave/config-core` | 0.1.0 | Config file loader |
-| `@aweave/config-common` | 0.1.0 | Shared config defaults |
-| `@aweave/playwright` | 0.1.0 | Playwright test utilities |
+| `@hod/aweave` | 0.1.6 | CLI entrypoint (`aw` binary) |
+| `@hod/aweave-cli-shared` | 0.1.0 | Shared utilities, process manager |
+| `@hod/aweave-plugin-debate` | 0.1.0 | `aw debate *` commands |
+| `@hod/aweave-plugin-docs` | 0.1.0 | `aw docs *` commands |
+| `@hod/aweave-plugin-dashboard` | 0.1.0 | `aw dashboard` (Ink terminal UI) |
+| `@hod/aweave-plugin-server` | 0.1.4 | `aw server *` (start/stop/status/restart/logs) |
+| `@hod/aweave-plugin-config` | 0.1.0 | `aw config *` commands |
+| `@hod/aweave-plugin-relay` | 0.1.0 | `aw relay *` commands |
+| `@hod/aweave-plugin-demo-workflow` | 0.1.2 | `aw demo` command |
+| `@hod/aweave-server` | 0.0.6 | NestJS server (API + WS + static SPA) |
+| `@hod/aweave-debate-web` | 0.1.1 | React SPA (Rsbuild, static HTML/JS/CSS) |
+| `@hod/aweave-nestjs-debate` | 0.1.0 | Debate backend module |
+| `@hod/aweave-debate-machine` | 0.1.0 | Debate state machine |
+| `@hod/aweave-workflow-engine` | 0.1.0 | Workflow state machine |
+| `@hod/aweave-workflow-dashboard` | 0.1.2 | Ink workflow UI |
+| `@hod/aweave-config-core` | 0.1.0 | Config file loader |
+| `@hod/aweave-config-common` | 0.1.0 | Shared config defaults |
+| `@hod/aweave-playwright` | 0.1.0 | Playwright test utilities |
 
 **Verified working:**
 ```bash
-npx @aweave/cli server start --open   # Installs from npm, starts server, opens browser
-npx @aweave/cli server status         # Shows PID, port, uptime
-npx @aweave/cli --help                # All topics: debate, server, docs, config, relay, dashboard
+npx @hod/aweave server start --open   # Installs from npm, starts server, opens browser
+npx @hod/aweave server status         # Shows PID, port, uptime
+npx @hod/aweave --help                # All topics: debate, server, docs, config, relay, dashboard
 ```
 
 ## Implementation Notes / As Implemented
@@ -636,14 +636,14 @@ npx @aweave/cli --help                # All topics: debate, server, docs, config
 - **NOT using `@nestjs/serve-static`** — it had issues with route priority (controller caught static file requests). Used `app.useStaticAssets()` (Express static middleware) in `main.ts` instead
 - **Static files:** `app.useStaticAssets(debateWebRoot, { prefix: '/debate' })` — registered before routes
 - **SPA fallback:** `DebateSpaController` checks `extname(req.path)` — only serves `index.html` for routes WITHOUT file extensions
-- **Path resolution:** `require.resolve('@aweave/debate-web/package.json')` → works both in dev (workspace) and published (node_modules)
+- **Path resolution:** `require.resolve('@hod/aweave-debate-web/package.json')` → works both in dev (workspace) and published (node_modules)
 - **Root redirect:** `RootRedirectController` → `res.redirect('/debate')`
 - **CORS:** Disabled in production (same-origin), enabled in dev
 
 ### Phase 3: CLI Process Management ✅
 
-- Process manager in `@aweave/cli-shared/src/services/process-manager.ts`
-- `@aweave/cli-plugin-server` with 5 commands: start, stop, status, restart, logs
+- Process manager in `@hod/aweave-cli-shared/src/services/process-manager.ts`
+- `@hod/aweave-plugin-server` with 5 commands: start, stop, status, restart, logs
 - Daemon: `child_process.spawn` with `detached: true`, stdout/stderr → `~/.aweave/logs/server.log`
 - State file: `~/.aweave/server.json` (PID, port, startedAt, version)
 - Health check: polls `http://127.0.0.1:3456/health` after spawn (10s timeout, 500ms interval)

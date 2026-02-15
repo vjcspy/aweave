@@ -3,7 +3,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 import { execSync } from 'child_process';
 
@@ -25,7 +25,6 @@ function tryOpenBrowser(url: string): boolean {
       execSync(`start "" "${url}"`, { stdio: 'ignore', shell: 'cmd.exe' });
       return true;
     }
-
     const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
     execSync(`${cmd} "${url}"`, { stdio: 'ignore' });
     return true;

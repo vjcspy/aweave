@@ -11,12 +11,11 @@ Build CLI tools and backend modules in the `devtools/` TypeScript monorepo. The 
 
 **Core Principles:**
 
-1. **MCP-Like by Design** — CLI is NOT an MCP server, but mirrors MCP conventions in response format, error handling, input schemas, and tool descriptions. Standards live in `@aweave/cli-shared`; all plugins inherit.
-2. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@aweave/cli-plugin-<name>`), auto-discovered at startup.
-3. **Shared Foundation** — `@aweave/cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
+1. **MCP-Like by Design** — CLI is NOT an MCP server, but mirrors MCP conventions in response format, error handling, input schemas, and tool descriptions. Standards live in `@hod/aweave-cli-shared`; all plugins inherit.
+2. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@hod/aweave-plugin-<name>`), auto-discovered at startup.
+3. **Shared Foundation** — `@hod/aweave-cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
 4. **No Cyclic Dependencies** — cli-shared is a leaf dependency. Plugins never import each other or the main CLI package.
 5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`, even in pm2. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
-6. **Use Alias Imports** — For internal package code, use `@/…` imports instead of deep relative paths.
 
 ---
 
@@ -25,29 +24,53 @@ Build CLI tools and backend modules in the `devtools/` TypeScript monorepo. The 
 ### Dependency Graph
 
 ```
-@aweave/cli-shared (pure utilities — zero external deps)
+@hod/aweave-cli-shared (pure utilities — zero external deps)
      ↑                    ↑
      |                    |
-@aweave/cli          @aweave/cli-plugin-*
+@hod/aweave          @hod/aweave-plugin-*
 (oclif main app)     (oclif plugins)
      |
      └── declares plugins in oclif.plugins config
 
-@aweave/server (NestJS — port 3456)
+@hod/aweave-server (NestJS — port 3456)
      ↑
      |
-@aweave/nestjs-<feature> (backend modules)
+@hod/aweave-nestjs-<feature> (backend modules)
 ```
 
 ### Package Map
 
 | Package | npm name | Location | Role |
 |---------|----------|----------|------|
-| CLI Shared | `@aweave/cli-shared` | `devtools/common/cli-shared/` | Pure utility library (MCP, HTTP, helpers) |
-| CLI Main | `@aweave/cli` | `devtools/common/cli/` | oclif app, plugin declarations, `aw` binary |
-| Plugins | `@aweave/cli-plugin-<name>` | `devtools/<domain>/cli-plugin-<name>/` | Domain command sets |
-| Server | `@aweave/server` | `devtools/common/server/` | Unified NestJS server |
-| Backend Modules | `@aweave/nestjs-<name>` | `devtools/common/nestjs-<name>/` | NestJS feature modules |
+| CLI Shared | `@hod/aweave-cli-shared` | `devtools/common/cli-shared/` | Pure utility library (MCP, HTTP, helpers) |
+| CLI Main | `@hod/aweave` | `devtools/common/cli/` | oclif app, plugin declarations, `aw` binary |
+| Plugins | `@hod/aweave-plugin-<name>` | `devtools/<domain>/cli-plugin-<name>/` | Domain command sets |
+| Server | `@hod/aweave-server` | `devtools/common/server/` | Unified NestJS server |
+| Backend Modules | `@hod/aweave-nestjs-<name>` | `devtools/common/nestjs-<name>/` | NestJS feature modules |
+
+### Package Naming Convention (MANDATORY)
+
+All packages are published under `@hod` scope to the company Artifactory registry. **Never use `@aweave` scope** — it is deprecated.
+
+| Category | Pattern | Example |
+|----------|---------|---------|
+| CLI entrypoint | `@hod/aweave` | `@hod/aweave` |
+| Common CLI plugins | `@hod/aweave-plugin-<name>` | `@hod/aweave-plugin-debate`, `@hod/aweave-plugin-docs` |
+| NAB CLI plugins | `@hod/aweave-plugin-nab-<name>` | `@hod/aweave-plugin-nab-auth`, `@hod/aweave-plugin-nab-clm` |
+| Common non-plugin packages | `@hod/aweave-<name>` | `@hod/aweave-cli-shared`, `@hod/aweave-server` |
+| Common NestJS modules | `@hod/aweave-nestjs-<name>` | `@hod/aweave-nestjs-debate` |
+| Common config packages | `@hod/aweave-config-<domain>` | `@hod/aweave-config-common`, `@hod/aweave-config-core` |
+| NAB non-plugin packages | `@hod/aweave-nab-<name>` | `@hod/aweave-nab-config`, `@hod/aweave-nab-opensearch-client` |
+| Web apps (common) | `@hod/aweave-<name>` | `@hod/aweave-debate-web` |
+| Web apps (NAB) | `@hod/aweave-nab-<name>` | `@hod/aweave-nab-tracing-log-web` |
+| Workspace root | `@hod/aweave-workspace` | `@hod/aweave-workspace` |
+
+**Key rules:**
+1. **Scope is always `@hod`** — required by corporate Artifactory (`HOD-NPM-BUILD`)
+2. **Prefix is always `aweave`** — e.g. `@hod/aweave-plugin-debate` not `@hod/plugin-debate`
+3. **Domain qualifier for NAB** — NAB packages include `nab` after the category prefix: `@hod/aweave-plugin-nab-<name>`, `@hod/aweave-nab-<name>`
+4. **No `cli-` in plugin names** — use `@hod/aweave-plugin-<name>` not `@hod/aweave-cli-plugin-<name>`
+5. **Dependencies use `workspace:*`** — inter-package refs in `package.json` use pnpm workspace protocol
 
 ### File-Based Command Routing
 
@@ -70,8 +93,8 @@ src/commands/<topic>/services/start.ts → aw <topic> services start
 | Tool name | oclif command path | `aw debate create` |
 | Tool description | `static description` on Command class | Each command file |
 | Input schema | `static flags` / `static args` with types | oclif flag definitions |
-| Tool response | `MCPResponse` JSON output | `@aweave/cli-shared` |
-| Error response | `MCPError` with code/message/suggestion | `@aweave/cli-shared` |
+| Tool response | `MCPResponse` JSON output | `@hod/aweave-cli-shared` |
+| Error response | `MCPError` with code/message/suggestion | `@hod/aweave-cli-shared` |
 | Pagination | `has_more`, `next_offset`, `total_count` | `createPaginatedResponse()` |
 
 ### Response Contract
@@ -101,7 +124,7 @@ src/commands/<topic>/services/start.ts → aw <topic> services start
 }
 ```
 
-### Key Exports from `@aweave/cli-shared`
+### Key Exports from `@hod/aweave-cli-shared`
 
 | Export | Purpose |
 |--------|---------|
@@ -151,12 +174,17 @@ devtools/<domain>/cli-plugin-<name>/
 ```
 
 Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
+NAB-domain plugins go in `devtools/nab/cli-plugin-<name>/`.
 
 ### Step 2: package.json
 
+**Package name depends on domain:**
+- Common domain: `@hod/aweave-plugin-<name>`
+- NAB domain: `@hod/aweave-plugin-nab-<name>`
+
 ```json
 {
-  "name": "@aweave/cli-plugin-<name>",
+  "name": "@hod/aweave-plugin-<name>",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",
@@ -171,7 +199,7 @@ Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/cli-shared": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
     "@oclif/core": "^4.2.8"
   },
   "devDependencies": {
@@ -200,10 +228,6 @@ Common-domain plugins go in `devtools/common/cli-plugin-<name>/`.
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
     "removeComments": true
   },
   "include": ["src/**/*"],
@@ -235,7 +259,7 @@ import {
   HTTPClientError,
   MCPContent,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 export class TopicList extends Command {
@@ -297,10 +321,10 @@ packages:
 ```json
 {
   "dependencies": {
-    "@aweave/cli-plugin-<name>": "workspace:*"
+    "@hod/aweave-plugin-<name>": "workspace:*"
   },
   "oclif": {
-    "plugins": ["@aweave/cli-plugin-<name>"]
+    "plugins": ["@hod/aweave-plugin-<name>"]
   }
 }
 ```
@@ -323,7 +347,7 @@ When a CLI plugin needs server-side logic (REST API, WebSocket, database):
 
 ```
 devtools/common/nestjs-<feature>/
-├── package.json          # @aweave/nestjs-<feature>
+├── package.json          # @hod/aweave-nestjs-<feature>
 ├── tsconfig.json
 └── src/
     ├── <feature>.module.ts
@@ -335,9 +359,9 @@ devtools/common/nestjs-<feature>/
 ### Integration
 
 1. Add to `pnpm-workspace.yaml`
-2. Add as dependency of `@aweave/server`
+2. Add as dependency of `@hod/aweave-server`
 3. Import in `devtools/common/server/src/app.module.ts`
-4. CLI plugin calls server endpoints via `HTTPClient` from `@aweave/cli-shared`
+4. CLI plugin calls server endpoints via `HTTPClient` from `@hod/aweave-cli-shared`
 
 ### pm2 Configuration (ecosystem.config.cjs)
 
@@ -386,30 +410,30 @@ All non-sensitive config values (URLs, ports, timeouts, feature flags, service d
 ### Architecture
 
 ```
-@aweave/config-core (shared loader — Node-only, zero oclif deps)
+@hod/aweave-config-core (shared loader — Node-only, zero oclif deps)
      ↑
      |
-@aweave/config-<domain> (default YAML files + schemas + env override maps)
+@hod/aweave-config-<domain> (default YAML files + schemas + env override maps)
      ↑
      |
-@aweave/cli-plugin-*, @aweave/server, debate-web, etc. (consumers)
+@hod/aweave-plugin-*, @hod/aweave-server, debate-web, etc. (consumers)
 ```
 
 ### Packages
 
 | Package | npm name | Location | Role |
 |---------|----------|----------|------|
-| Config Core | `@aweave/config-core` | `devtools/common/config-core/` | Shared loader: YAML parse, deep-merge, env override, sync, migration, projection |
-| Config Common | `@aweave/config-common` | `devtools/common/config/` | Default configs + schemas for the `common` domain |
-| Config CLI Plugin | `@aweave/cli-plugin-config` | `devtools/common/cli-plugin-config/` | `aw config sync`, `aw config migrate` commands |
+| Config Core | `@hod/aweave-config-core` | `devtools/common/config-core/` | Shared loader: YAML parse, deep-merge, env override, sync, migration, projection |
+| Config Common | `@hod/aweave-config-common` | `devtools/common/config/` | Default configs + schemas for the `common` domain |
+| Config CLI Plugin | `@hod/aweave-plugin-config` | `devtools/common/cli-plugin-config/` | `aw config sync`, `aw config migrate` commands |
 
 ### Rules (MANDATORY)
 
 1. **No hardcoded config in plugins/modules** — Do NOT create `src/lib/config.ts` with hardcoded URLs, ports, or defaults inside plugins or backend modules. All such values belong in the domain's config package (`devtools/<domain>/config/defaults/*.yaml`).
 2. **Sensitive values stay as env vars** — Tokens, API keys, secrets are NEVER stored in config files. Only reference them via `process.env` directly in the consuming code.
-3. **Config precedence** — `env vars > user config (~/.aweave/config/) > defaults (in-source)`. This is enforced by `@aweave/config-core`'s `loadConfig()`.
+3. **Config precedence** — `env vars > user config (~/.aweave/config/) > defaults (in-source)`. This is enforced by `@hod/aweave-config-core`'s `loadConfig()`.
 4. **One config package per domain** — Each domain (`common`, `nab`, etc.) has exactly one config package at `devtools/<domain>/config/` containing all default YAML files for that domain.
-5. **Next.js projection contract** — Config files used by Next.js apps must split values into `server` (private) and `clientPublic` (safe for browser) sections. Use `projectClientConfig()` from `@aweave/config-core` to enforce this.
+5. **Next.js projection contract** — Config files used by Next.js apps must split values into `server` (private) and `clientPublic` (safe for browser) sections. Use `projectClientConfig()` from `@hod/aweave-config-core` to enforce this.
 
 ### Where to Put Config Values
 
@@ -425,8 +449,8 @@ All non-sensitive config values (URLs, ports, timeouts, feature flags, service d
 ### How to Consume Config (in a plugin or module)
 
 ```typescript
-import { loadConfig } from '@aweave/config-core';
-import { DEFAULT_CONFIG_DIR, CLI_ENV_OVERRIDES } from '@aweave/config-common';
+import { loadConfig } from '@hod/aweave-config-core';
+import { DEFAULT_CONFIG_DIR, CLI_ENV_OVERRIDES } from '@hod/aweave-config-common';
 
 // Load config with full precedence: defaults → user override → env vars
 const config = loadConfig({
@@ -476,15 +500,15 @@ If creating tools for a new domain (e.g. `devtools/newdomain/`):
 | HTTP client | `cli-shared/src/http/` | `HTTPClient`, `HTTPClientError` |
 | Output/content helpers | `cli-shared/src/helpers/` | `output()`, `readContent()` |
 | pm2 utilities | `cli-shared/src/services/` | `startPm2()`, `checkHealth()` |
-| Cross-plugin domain logic | New `@aweave/<name>` package | `@aweave/debate-machine` |
-| Non-sensitive config (URLs, ports, timeouts) | Domain config package `defaults/*.yaml` | `@aweave/config-common` — see [Centralized Configuration](#centralized-configuration) |
+| Cross-plugin domain logic | New `@hod/aweave-<name>` package | `@hod/aweave-debate-machine` |
+| Non-sensitive config (URLs, ports, timeouts) | Domain config package `defaults/*.yaml` | `@hod/aweave-config-common` — see [Centralized Configuration](#centralized-configuration) |
 | Plugin helpers | Plugin `src/lib/helpers.ts` | `getClient()`, `filterResponse()` |
 | Plugin models | Plugin `src/lib/models.ts` | Domain interfaces/types |
 
 ### Rules
 
 1. **`cli-shared` must be generic** — no domain logic, no oclif dependency, zero external deps
-2. **New common package** — if logic is shared across plugins but too specific for cli-shared, create `@aweave/<name>` in `devtools/common/`
+2. **New common package** — if logic is shared across plugins but too specific for cli-shared, create `@hod/aweave-<name>` in `devtools/common/`
 3. **Never plugin-to-plugin imports** — shared code goes up to cli-shared or a new common package
 4. **Never plugin-to-cli-main imports** — only cli-main depends on plugins (via oclif config)
 
@@ -505,11 +529,12 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 ### Before Implementation
 
 - [ ] Read `devdocs/misc/devtools/OVERVIEW.md` for architecture context
-- [ ] Check existing exports from `@aweave/cli-shared` — don't duplicate
+- [ ] Check existing exports from `@hod/aweave-cli-shared` — don't duplicate
 - [ ] Decide: CLI-only or CLI + Backend?
 
 ### CLI Plugin
 
+- [ ] Package name follows `@hod` scope naming convention (see [Package Naming Convention](#package-naming-convention-mandatory))
 - [ ] Package created with correct `oclif` config in package.json
 - [ ] `eslint.config.mjs` created extending `baseConfig` from workspace root
 - [ ] `lint` and `lint:fix` scripts added to package.json
@@ -518,7 +543,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] `--format json|markdown` flag on every command (default: `json`)
 - [ ] Error handling: `HTTPClientError` → `handleServerError()`
 - [ ] Credentials via environment variables (never CLI flags — shell history risk)
-- [ ] Config values loaded via `@aweave/config-core` from domain config package — NO hardcoded defaults in plugin code (see [Centralized Configuration](#centralized-configuration))
+- [ ] Config values loaded via `@hod/aweave-config-core` from domain config package — NO hardcoded defaults in plugin code (see [Centralized Configuration](#centralized-configuration))
 - [ ] List commands auto-fetch all pages (`has_more: false`)
 - [ ] Write commands return minimal data — IDs, state only (token optimization)
 - [ ] Plugin registered in `pnpm-workspace.yaml` + `cli/package.json` oclif.plugins
@@ -526,7 +551,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 ### Backend Module (if needed)
 
 - [ ] NestJS module created with controller + service
-- [ ] Added as dependency of `@aweave/server`
+- [ ] Added as dependency of `@hod/aweave-server`
 - [ ] Imported in `app.module.ts`
 - [ ] CLI plugin calls endpoints via `HTTPClient`
 - [ ] pm2 config uses `NODE_ENV: 'development'` (full error visibility)
@@ -577,3 +602,4 @@ pm2 logs <app-name> --lines 30 --nostream
 - **Config core API:** `devtools/common/config-core/src/index.ts` (public API exports)
 - **Common domain config:** `devtools/common/config/` (default YAML files + schemas)
 - **MCP server guide (if converting):** `devdocs/agent/skills/common/mcp-builder/SKILL.md`
+- **Package rename plan (`@aweave` → `@hod`):** `devdocs/misc/devtools/nab/_plans/260212-package-rename-hod-scope.md`

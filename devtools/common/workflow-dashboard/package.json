@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/workflow-dashboard",
+  "name": "@hod/aweave-workflow-dashboard",
   "version": "0.1.3",
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aweave/workflow-engine": "workspace:*",
+    "@hod/aweave-workflow-engine": "workspace:*",
     "@xstate/react": "^6",
     "ink": "catalog:",
     "react": "catalog:",

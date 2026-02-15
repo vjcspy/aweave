@@ -28,7 +28,7 @@ Add `@nestjs/swagger` to the NestJS debate module, auto-generate `openapi.json`,
 
 3. **No breaking changes to API contract:** The REST API response format (`{ success, data }` envelope, snake_case fields) must remain identical. This work adds type generation on top of the existing contract.
 
-4. **Swagger setup lives in `@aweave/server`**, not in `nestjs-debate`. The module provides DTOs; the server configures SwaggerModule and generates the spec.
+4. **Swagger setup lives in `@hod/aweave-server`**, not in `nestjs-debate`. The module provides DTOs; the server configures SwaggerModule and generates the spec.
 
 5. **WebSocket types are NOT covered by OpenAPI.** They will use a manually-defined generic envelope that references the same DTO types exported from `nestjs-debate`.
 
@@ -438,7 +438,7 @@ export type ClientToServerEvent = SubmitInterventionEvent | SubmitRulingEvent;
 ```typescript
 // Add to devtools/common/nestjs-debate/src/index.ts
 
-// All DTOs (entity, request, response, error) — consumed by @aweave/server for Swagger setup
+// All DTOs (entity, request, response, error) — consumed by @hod/aweave-server for Swagger setup
 export * from './dto';
 
 // WS event types — consumed by debate-web for WebSocket typing
@@ -449,7 +449,7 @@ export type {
 } from './ws-types';
 ```
 
-> **Note:** `export * from './dto'` re-exports all DTO classes. This is the public contract — `@aweave/server` imports `ListDebatesResponseDto`, `PollResultNewResponseDto`, `ErrorResponseDto`, etc. from this path. Keep the barrel export in `dto/index.ts` complete.
+> **Note:** `export * from './dto'` re-exports all DTO classes. This is the public contract — `@hod/aweave-server` imports `ListDebatesResponseDto`, `PollResultNewResponseDto`, `ErrorResponseDto`, etc. from this path. Keep the barrel export in `dto/index.ts` complete.
 
 ---
 
@@ -538,7 +538,7 @@ import {
   ListDebatesResponseDto, GetDebateResponseDto, WriteResultResponseDto,
   PollResultNewResponseDto, PollResultNoNewResponseDto,
   ErrorResponseDto,
-} from '@aweave/nestjs-debate';
+} from '@hod/aweave-nestjs-debate';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -586,7 +586,7 @@ import {
   ListDebatesResponseDto, GetDebateResponseDto, WriteResultResponseDto,
   PollResultNewResponseDto, PollResultNoNewResponseDto,
   ErrorResponseDto,
-} from '@aweave/nestjs-debate';
+} from '@hod/aweave-nestjs-debate';
 
 async function generate() {
   const app = await NestFactory.create(AppModule, { logger: false });
@@ -838,7 +838,7 @@ Steps 1-6 are server-side. Steps 7-11 are client-side. Step 12 is docs.
 - [ ] **Poll endpoint response** is a union type (`has_new_argument: true | false` with different shapes). OpenAPI handles this with `oneOf` and concrete DTOs (`PollResultNewResponseDto` / `PollResultNoNewResponseDto`). Generated TS types may be slightly verbose; may need a discriminated union helper on client side.
 - [ ] **`openapi.json` generation requires server bootable** — the generate script creates a full NestJS app instance. This means Prisma client must be generated first, and DB file must exist (or script should handle graceful init). Consider if a lighter approach (like `@nestjs/swagger` CLI plugin) becomes available.
 - [ ] **`DebateState` as enum vs string:** Currently `state` field is typed as `string` in DTOs with `enum` constraint. The generated TypeScript type will be a string union. Components that use `DebateState` type should still work, but verify autocomplete behavior.
-- [ ] **`debate-web` has no dependency on `@aweave/nestjs-debate`** — WS event types are duplicated (mirrored) in client's `lib/types.ts`. This is intentional to avoid pulling NestJS packages into Next.js. If types drift, the entity types (Debate, Argument) from OpenAPI act as the shared anchor.
+- [ ] **`debate-web` has no dependency on `@hod/aweave-nestjs-debate`** — WS event types are duplicated (mirrored) in client's `lib/types.ts`. This is intentional to avoid pulling NestJS packages into Next.js. If types drift, the entity types (Debate, Argument) from OpenAPI act as the shared anchor.
 - [ ] **CI enforcement for `openapi.json` freshness** — currently manual regeneration + commit. Consider adding a CI step that runs `generate:openapi` and fails if the output differs from the committed file, as a follow-up task.
 
 ## Implementation Notes / As Implemented

@@ -19,15 +19,15 @@
 
 ## 🎯 Objective
 
-Tạo oclif plugin `@aweave/cli-plugin-dashboard` sử dụng Ink v6 để build interactive terminal dashboard hiển thị real data từ hệ thống devtools. Plugin này vừa là công cụ monitoring thực tế, vừa là reference implementation cho việc tích hợp Ink vào oclif plugin ecosystem.
+Tạo oclif plugin `@hod/aweave-plugin-dashboard` sử dụng Ink v6 để build interactive terminal dashboard hiển thị real data từ hệ thống devtools. Plugin này vừa là công cụ monitoring thực tế, vừa là reference implementation cho việc tích hợp Ink vào oclif plugin ecosystem.
 
 ### ⚠️ Key Considerations
 
-1. **ESM + CJS Interop**: Plugin là ESM (`"type": "module"`), root CLI (`@aweave/cli`) là CJS. oclif v4 hỗ trợ CJS root load ESM plugin, nhưng linked ESM plugin PHẢI được compile trước (`pnpm build`) — không hỗ trợ ts-node dev mode.
+1. **ESM + CJS Interop**: Plugin là ESM (`"type": "module"`), root CLI (`@hod/aweave`) là CJS. oclif v4 hỗ trợ CJS root load ESM plugin, nhưng linked ESM plugin PHẢI được compile trước (`pnpm build`) — không hỗ trợ ts-node dev mode.
 
 2. **Không dùng community Ink packages**: `ink-spinner`, `ink-table`, `ink-big-text`... đều có peer dep `ink ^4` hoặc `^5`, conflict với Ink v6/React 19. Tự build custom components từ Ink primitives — vừa showcase Ink tốt hơn, vừa zero conflicts.
 
-3. **Selective reuse of `@aweave/cli-shared`**: Dashboard does not use MCPResponse format (interactive UI, not AI agent output). However, `@aweave/cli-shared` exports `checkHealth()` (already async) which will be reused directly. PM2 utilities in `cli-shared` are sync (`execSync`-based) and unsuitable for interactive rendering — dashboard builds its own async variants using `execFile`/`spawn`. Dependency tree: `@oclif/core` + `ink` + `react` + `@aweave/cli-shared` (for `checkHealth` only).
+3. **Selective reuse of `@hod/aweave-cli-shared`**: Dashboard does not use MCPResponse format (interactive UI, not AI agent output). However, `@hod/aweave-cli-shared` exports `checkHealth()` (already async) which will be reused directly. PM2 utilities in `cli-shared` are sync (`execSync`-based) and unsuitable for interactive rendering — dashboard builds its own async variants using `execFile`/`spawn`. Dependency tree: `@oclif/core` + `ink` + `react` + `@hod/aweave-cli-shared` (for `checkHealth` only).
 
 4. **Non-blocking data collection (CRITICAL)**: All external process calls (`pm2 jlist`, `df`, `pnpm --version`) MUST use async `child_process.execFile` or `spawn` — NEVER `execSync`. Synchronous calls block the Node event loop and freeze Ink's rendering/input handling. Each data source defines a timeout and stale-data indicator. Performance budget: no single data collection tick may block the event loop for >50ms.
 
@@ -51,10 +51,10 @@ Tạo oclif plugin `@aweave/cli-plugin-dashboard` sử dụng Ink v6 để build
 
 - [x] Verify oclif v4 + ESM plugin interop
   - **Outcome**: Confirm CJS root CLI loads ESM plugin thành công
-- [x] **GATE: Verify `@aweave/cli-shared` ESM import from ESM plugin**
+- [x] **GATE: Verify `@hod/aweave-cli-shared` ESM import from ESM plugin**
   - **Steps:**
     1. Build `cli-shared` (`pnpm build` in `devtools/common/cli-shared`)
-    2. Create minimal `src/test-interop.ts` in dashboard plugin that imports `{ checkHealth }` from `@aweave/cli-shared`
+    2. Create minimal `src/test-interop.ts` in dashboard plugin that imports `{ checkHealth }` from `@hod/aweave-cli-shared`
     3. Build dashboard plugin (`pnpm build`)
     4. Run: `node dist/test-interop.js` — must execute without import errors
   - **Pass criteria:** Named import resolves, function callable
@@ -106,7 +106,7 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 │   └── lib/
 │       ├── pm2.ts                              # Async pm2 jlist parser + log stream spawner
 │       ├── system.ts                           # os module wrappers, async df, versions
-│       └── health.ts                           # Re-exports checkHealth from @aweave/cli-shared + latency wrapper
+│       └── health.ts                           # Re-exports checkHealth from @hod/aweave-cli-shared + latency wrapper
 └── test/
     ├── lib/
     │   ├── pm2.test.ts                         # pm2 parser + fallback tests
@@ -123,7 +123,7 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 - [x] Create `devtools/common/cli-plugin-dashboard/package.json`:
   ```json
   {
-    "name": "@aweave/cli-plugin-dashboard",
+    "name": "@hod/aweave-plugin-dashboard",
     "version": "0.1.0",
     "private": true,
     "type": "module",
@@ -139,7 +139,7 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
       "topicSeparator": " "
     },
     "dependencies": {
-      "@aweave/cli-shared": "workspace:*",
+      "@hod/aweave-cli-shared": "workspace:*",
       "@oclif/core": "^4.2.8",
       "ink": "^6.6.0",
       "react": "^19.0.0"
@@ -173,8 +173,8 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 - [x] Create empty `src/index.ts`
 - [x] Add to `devtools/pnpm-workspace.yaml`: `common/cli-plugin-dashboard`
 - [x] Add to `devtools/common/cli/package.json`:
-  - dependency: `"@aweave/cli-plugin-dashboard": "workspace:*"`
-  - oclif.plugins: add `"@aweave/cli-plugin-dashboard"`
+  - dependency: `"@hod/aweave-plugin-dashboard": "workspace:*"`
+  - oclif.plugins: add `"@hod/aweave-plugin-dashboard"`
 - [x] `pnpm install` → verify dependency resolution
 
 #### Step 2: Build Shared Components
@@ -193,7 +193,7 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 - [x] `lib/system.ts` — `getMemoryUsage()`: os.totalmem/freemem → percentage + formatted (pure JS)
 - [x] `lib/system.ts` — `getDiskUsage()`: async via `execFile('df', ['-h', '/'])` → parse. OS-gated: skip on Windows. Timeout: 5s
 - [x] `lib/system.ts` — `getVersions()`: node version (process.version), pnpm version (async execFile), os info (os module)
-- [x] `lib/health.ts` — Reuse `checkHealth()` from `@aweave/cli-shared` (already async with AbortController). Extend with latency measurement: return `{ healthy: boolean, latencyMs: number | null }`
+- [x] `lib/health.ts` — Reuse `checkHealth()` from `@hod/aweave-cli-shared` (already async with AbortController). Extend with latency measurement: return `{ healthy: boolean, latencyMs: number | null }`
 - [x] `hooks/useInterval.ts` — Generic interval hook: `useInterval(callback, delayMs)`, auto-cleanup on unmount
 - [x] `hooks/useServices.ts` — Combines async pm2 + health, polls every 5s, tracks loading/stale state per source
 - [x] `hooks/useSystemInfo.ts` — CPU/mem/disk, polls every 2s, maintains sparkline history (last 30 readings)
@@ -414,14 +414,14 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 │                                                                         │
 │  ┌─ Packages (10) ─────────────────────────────────────────────────┐  │
 │  │  Package                        Path                    Built   │  │
-│  │  @aweave/cli                    common/cli/             ✓       │  │
-│  │  @aweave/cli-shared             common/cli-shared/      ✓       │  │
-│  │  @aweave/cli-plugin-debate      common/cli-plugin-...   ✓       │  │
-│  │  @aweave/cli-plugin-docs        common/cli-plugin-...   ✓       │  │
-│  │  @aweave/cli-plugin-dashboard   common/cli-plugin-...   ✗       │  │
-│  │  @aweave/server                 common/server/          ✓       │  │
-│  │  @aweave/nestjs-debate          common/nestjs-debate/   ✓       │  │
-│  │  @aweave/debate-machine         common/debate-machine/  ✓       │  │
+│  │  @hod/aweave                    common/cli/             ✓       │  │
+│  │  @hod/aweave-cli-shared             common/cli-shared/      ✓       │  │
+│  │  @hod/aweave-plugin-debate      common/cli-plugin-...   ✓       │  │
+│  │  @hod/aweave-plugin-docs        common/cli-plugin-...   ✓       │  │
+│  │  @hod/aweave-plugin-dashboard   common/cli-plugin-...   ✗       │  │
+│  │  @hod/aweave-server                 common/server/          ✓       │  │
+│  │  @hod/aweave-nestjs-debate          common/nestjs-debate/   ✓       │  │
+│  │  @hod/aweave-debate-machine         common/debate-machine/  ✓       │  │
 │  │  debate-web                     common/debate-web/      ✓       │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
@@ -471,14 +471,14 @@ devtools/common/cli-plugin-dashboard/           # 🚧 TODO - New ESM oclif plug
 - [x] ink-spinner, ink-table community packages peer dep conflict với Ink v6 — decision: build custom components
 - [x] `pm2 jlist` output format cần verify trên máy hiện tại (pm2 version specific)
 - [ ] Terminal minimum width assumption (80 cols) — cần test narrow terminals
-- [x] `@aweave/cli-shared` ESM/CJS interop — promoted to Phase 1 mandatory gate with pass/fail criteria and fallback strategy
+- [x] `@hod/aweave-cli-shared` ESM/CJS interop — promoted to Phase 1 mandatory gate with pass/fail criteria and fallback strategy
 
 ## Implementation Notes / As Implemented
 
 ### ESM + CJS Interop
 
 - Plugin uses `"type": "module"` and `tsconfig.json` with `module: "Node16"`, `jsx: "react-jsx"`
-- `@aweave/cli-shared` imported via `createRequire(import.meta.url)` in `lib/health.ts` — the plan's fallback strategy. Named imports resolve correctly.
+- `@hod/aweave-cli-shared` imported via `createRequire(import.meta.url)` in `lib/health.ts` — the plan's fallback strategy. Named imports resolve correctly.
 - oclif v4 CJS root CLI loads the ESM plugin successfully after `pnpm build`. All 5 commands are discoverable via `aw dashboard --help`.
 
 ### Architecture Decisions

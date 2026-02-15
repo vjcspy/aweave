@@ -17,16 +17,16 @@
 1. Move state machine from `nestjs-debate` (server) to `cli-plugin-debate` (CLI) — CLI is the primary owner
 2. Use **xstate** library for state machine definition
 3. Current state must sync to database via NestJS server
-4. Create shared package `@aweave/debate-machine` for the xstate definition
+4. Create shared package `@hod/aweave-debate-machine` for the xstate definition
 5. Server still validates transitions (because `debate-web` bypasses CLI)
 
 ## 🎯 Objective
 
-Extract the debate state machine into a shared package `@aweave/debate-machine` using **xstate v5**. The CLI plugin becomes the primary state machine consumer (pre-validation, available actions guidance for AI agents). The NestJS server imports the same machine for final validation before persisting state to the database.
+Extract the debate state machine into a shared package `@hod/aweave-debate-machine` using **xstate v5**. The CLI plugin becomes the primary state machine consumer (pre-validation, available actions guidance for AI agents). The NestJS server imports the same machine for final validation before persisting state to the database.
 
 ### ⚠️ Key Considerations
 
-1. **Single definition, two consumers** — The xstate machine is defined once in `@aweave/debate-machine`. Both `cli-plugin-debate` and `nestjs-debate` import it. No duplicated logic.
+1. **Single definition, two consumers** — The xstate machine is defined once in `@hod/aweave-debate-machine`. Both `cli-plugin-debate` and `nestjs-debate` import it. No duplicated logic.
 
 2. **Server MUST still validate** — `debate-web` (Arbitrator) submits INTERVENTION/RULING directly to the server via WebSocket, bypassing CLI entirely. Server uses the same xstate machine to validate these transitions. Additionally, race conditions between concurrent CLI instances (Proposer + Opponent) require server-side validation as the final gatekeeper.
 
@@ -39,7 +39,7 @@ Extract the debate state machine into a shared package `@aweave/debate-machine` 
 
 5. **State machine does NOT handle `create` (MOTION)** — Creating a debate is initialization, not a state transition. The xstate machine starts in `AWAITING_OPPONENT`. The `create` command skips state machine validation entirely (there's no prior state to validate against).
 
-6. **Types split** — Core types (`DebateState`, `ArgumentType`, `Role`) move to `@aweave/debate-machine`. API-specific types (`WaiterRole`, `WaitAction`, `SuccessResponse`, `ErrorResponse`) stay in `@aweave/nestjs-debate` and import core types from the shared package.
+6. **Types split** — Core types (`DebateState`, `ArgumentType`, `Role`) move to `@hod/aweave-debate-machine`. API-specific types (`WaiterRole`, `WaitAction`, `SuccessResponse`, `ErrorResponse`) stay in `@hod/aweave-nestjs-debate` and import core types from the shared package.
 
 ## 📐 Spec / Decisions
 
@@ -241,7 +241,7 @@ export function toDebateEvent(
 
 ### 4. Mapping: Old Functions → New Functions
 
-| Old (`nestjs-debate/src/state-machine.ts`) | New (`@aweave/debate-machine`) | Notes |
+| Old (`nestjs-debate/src/state-machine.ts`) | New (`@hod/aweave-debate-machine`) | Notes |
 |---|---|---|
 | `isActionAllowed(state, role, action)` | `canTransition(state, event)` | Event-based instead of string-based action |
 | `calculateNextState(state, argType, role, opts)` | `transition(state, event)` | Returns `null` instead of same state on failure |
@@ -269,7 +269,7 @@ After migration:
 
 ```typescript
 // NEW
-import { toDebateEvent, transition } from '@aweave/debate-machine';
+import { toDebateEvent, transition } from '@hod/aweave-debate-machine';
 
 // Convert to xstate event
 const event = toDebateEvent(input.type as ArgumentType, input.role as Role, { close: input.close });
@@ -288,8 +288,8 @@ if (!nextState) throw toActionNotAllowedError(debate.state, input.role, input.ac
 
 ```typescript
 // NEW in get-context.ts
-import { getAvailableActions } from '@aweave/debate-machine';
-import type { DebateState, Role } from '@aweave/debate-machine';
+import { getAvailableActions } from '@hod/aweave-debate-machine';
+import type { DebateState, Role } from '@hod/aweave-debate-machine';
 
 // After receiving server response:
 const debate = data.debate as Record<string, unknown>;
@@ -328,7 +328,7 @@ AI agent can immediately see what actions are available without guessing.
 
 ```typescript
 // After receiving new argument in poll response:
-import { getAvailableActions } from '@aweave/debate-machine';
+import { getAvailableActions } from '@hod/aweave-debate-machine';
 
 const debateState = data.debate_state as DebateState;
 const enriched = {
@@ -349,11 +349,11 @@ Write commands (`submit`, `appeal`, `request-completion`) do **NOT** pre-validat
 - Server error messages are already structured (`ActionNotAllowedError` with `code`, `suggestion`)
 - Net effect: doubling HTTP calls for marginal UX benefit
 
-If future requirements demand CLI-side validation (e.g., offline mode), the infrastructure is ready — just import from `@aweave/debate-machine`.
+If future requirements demand CLI-side validation (e.g., offline mode), the infrastructure is ready — just import from `@hod/aweave-debate-machine`.
 
 ## 🔄 Implementation Plan
 
-### Phase 1: Create `@aweave/debate-machine` Package ✅ DONE
+### Phase 1: Create `@hod/aweave-debate-machine` Package ✅ DONE
 
 - [x] Create directory `devtools/common/debate-machine/`
 - [x] Create `devtools/common/debate-machine/package.json`
@@ -405,21 +405,21 @@ If future requirements demand CLI-side validation (e.g., offline mode), the infr
 - [x] Update `devtools/pnpm-workspace.yaml` — add `common/debate-machine`
 - [x] Run `cd devtools && pnpm install` to link workspace package
 - [x] Run `cd devtools/common/debate-machine && pnpm build` to verify compilation
-  - **Outcome**: `@aweave/debate-machine` builds successfully, exports all functions and types
+  - **Outcome**: `@hod/aweave-debate-machine` builds successfully, exports all functions and types
 
-### Phase 2: Update `@aweave/nestjs-debate` to Use Shared Machine ✅ DONE
+### Phase 2: Update `@hod/aweave-nestjs-debate` to Use Shared Machine ✅ DONE
 
-- [x] Add dependency `@aweave/debate-machine: workspace:*` in `nestjs-debate/package.json`
-- [x] Update `nestjs-debate/src/types.ts` — remove core types, re-export from `@aweave/debate-machine`
+- [x] Add dependency `@hod/aweave-debate-machine: workspace:*` in `nestjs-debate/package.json`
+- [x] Update `nestjs-debate/src/types.ts` — remove core types, re-export from `@hod/aweave-debate-machine`
 - [x] Update `nestjs-debate/src/argument.service.ts` — replace `isActionAllowed`/`calculateNextState` with `toDebateEvent`/`canTransition`/`transition`
 - [x] Update `nestjs-debate/src/debate.service.ts` — remove unused `state-machine` import
 - [x] Delete `nestjs-debate/src/state-machine.ts`
 - [x] Verify no other files import from `./state-machine`
 - [x] `pnpm build` succeeds
 
-### Phase 3: Update `@aweave/cli-plugin-debate` to Use Shared Machine ✅ DONE
+### Phase 3: Update `@hod/aweave-plugin-debate` to Use Shared Machine ✅ DONE
 
-- [x] Add dependency `@aweave/debate-machine: workspace:*` in `cli-plugin-debate/package.json`
+- [x] Add dependency `@hod/aweave-debate-machine: workspace:*` in `cli-plugin-debate/package.json`
 - [x] Update `get-context.ts` — enrich response with `available_actions` for all 3 roles
 - [x] Update `wait.ts` — include `available_actions` for waiting role when new argument arrives
 - [x] `pnpm build` succeeds
@@ -441,10 +441,10 @@ If future requirements demand CLI-side validation (e.g., offline mode), the infr
 
 ### ✅ Completed Achievements
 
-- [x] Created `@aweave/debate-machine` package with xstate v5 machine definition (5 states, 5 events, 3 guards)
+- [x] Created `@hod/aweave-debate-machine` package with xstate v5 machine definition (5 states, 5 events, 3 guards)
 - [x] 4 utility functions: `canTransition`, `transition`, `getAvailableActions`, `toDebateEvent`
-- [x] `@aweave/nestjs-debate` now imports shared machine — old `state-machine.ts` deleted
-- [x] `@aweave/cli-plugin-debate` enriches `get-context` and `wait` responses with `available_actions`
+- [x] `@hod/aweave-nestjs-debate` now imports shared machine — old `state-machine.ts` deleted
+- [x] `@hod/aweave-plugin-debate` enriches `get-context` and `wait` responses with `available_actions`
 - [x] Full workspace builds (9 packages), 52/52 transition tests pass
 - [x] All documentation updated (3 docs: cli-plugin-debate OVERVIEW, debate.md, new debate-machine OVERVIEW)
 
@@ -458,6 +458,6 @@ If future requirements demand CLI-side validation (e.g., offline mode), the infr
 
 - [x] **Turbo build dependency** — pnpm workspace topology handles this via `workspace:*` dependency declarations. `pnpm -r build` builds `debate-machine` before its consumers.
 
-- [ ] **Future: CLI-side pre-validation** — Current implementation skips pre-validation in write commands (to avoid extra HTTP calls). If needed later, `@aweave/debate-machine` provides all the infrastructure. Write commands would need to either: (a) accept `--current-state` flag from AI agent, or (b) fetch state internally before validating.
+- [ ] **Future: CLI-side pre-validation** — Current implementation skips pre-validation in write commands (to avoid extra HTTP calls). If needed later, `@hod/aweave-debate-machine` provides all the infrastructure. Write commands would need to either: (a) accept `--current-state` flag from AI agent, or (b) fetch state internally before validating.
 
 - [ ] **Future: xstate Stately Studio visualization** — xstate machines can be visualized at https://stately.ai/viz. The `debateMachine` can be exported and pasted there for visual debugging.

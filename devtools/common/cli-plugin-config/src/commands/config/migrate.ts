@@ -3,12 +3,12 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import {
   getConfigRoot,
   migrateFromLegacy,
   type MigrateResult,
-} from '@aweave/config-core';
+} from '@hod/aweave-config-core';
 import { Command, Flags } from '@oclif/core';
 
 import { LEGACY_CONFIG_MAP } from '../../lib/legacy';

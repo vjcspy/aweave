@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -7,8 +7,7 @@ const STORAGE_KEY = 'theme';
 function getStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark' || stored === 'system')
-      return stored;
+    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   } catch {
     // localStorage unavailable (SSR, privacy mode)
   }
@@ -20,8 +19,7 @@ function getSystemPrefersDark(): boolean {
 }
 
 function applyTheme(theme: Theme): void {
-  const isDark =
-    theme === 'dark' || (theme === 'system' && getSystemPrefersDark());
+  const isDark = theme === 'dark' || (theme === 'system' && getSystemPrefersDark());
   document.documentElement.classList.toggle('dark', isDark);
 }
 

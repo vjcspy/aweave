@@ -1,0 +1,142 @@
+#!/bin/bash
+# =============================================================================
+# pre-push hook
+#
+# Enforces path-based allowlist on project branches (projects/*).
+# On non-master branches, only files matching the allowlist are allowed.
+#
+# Config: devtools/scripts/hooks/pre-push-allowlist.json
+#   - project_name: override project name (empty = resolve from branch)
+#   - always_allowed: files/paths always permitted
+#   - project_allowed: path patterns with {PROJECT} placeholder
+# =============================================================================
+
+set -e
+
+# --- Colors ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# --- Resolve repo root & config ---
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CONFIG_FILE="$REPO_ROOT/devtools/scripts/hooks/pre-push-allowlist.json"
+
+# --- Get current branch ---
+BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo "")"
+
+# Skip: detached HEAD
+[ -z "$BRANCH" ] && exit 0
+
+# Skip: master
+[ "$BRANCH" = "master" ] && exit 0
+
+# Skip: not a projects/* branch
+[[ "$BRANCH" =~ ^projects/ ]] || exit 0
+
+# --- Check config file exists ---
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo -e "${YELLOW}[pre-push]${NC} Config not found: $CONFIG_FILE — skipping enforcement."
+    exit 0
+fi
+
+# --- Resolve project name: config override > branch name ---
+PROJECT_NAME="$(python3 -c "
+import json
+with open('$CONFIG_FILE') as f:
+    c = json.load(f)
+print(c.get('project_name', '') or '')
+")"
+
+if [ -z "$PROJECT_NAME" ]; then
+    PROJECT_NAME="${BRANCH#projects/}"
+fi
+
+if [ -z "$PROJECT_NAME" ]; then
+    echo -e "${RED}[pre-push]${NC} Could not determine project name from config or branch: $BRANCH"
+    exit 1
+fi
+
+# --- Build allowed paths from config ---
+ALLOWED_PATHS=()
+
+while IFS= read -r path; do
+    [ -n "$path" ] && ALLOWED_PATHS+=("$path")
+done < <(python3 -c "
+import json
+with open('$CONFIG_FILE') as f:
+    c = json.load(f)
+for p in c.get('always_allowed', []):
+    print(p)
+for p in c.get('project_allowed', []):
+    print(p.replace('{PROJECT}', '$PROJECT_NAME'))
+")
+
+# --- Check commits being pushed ---
+VIOLATIONS=()
+ZERO="0000000000000000000000000000000000000000"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    # Deleting branch
+    [ "$local_sha" = "$ZERO" ] && continue
+
+    # Determine diff range
+    if [ "$remote_sha" = "$ZERO" ]; then
+        RANGE="master...$local_sha"
+    else
+        RANGE="$remote_sha..$local_sha"
+    fi
+
+    CHANGED_FILES="$(git diff --name-only "$RANGE" 2>/dev/null || echo "")"
+    [ -z "$CHANGED_FILES" ] && continue
+
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
+
+        ALLOWED=false
+        for pattern in "${ALLOWED_PATHS[@]}"; do
+            # Exact match
+            if [ "$file" = "$pattern" ]; then
+                ALLOWED=true; break
+            fi
+            # Prefix match (pattern ends with /)
+            if [[ "$pattern" == */ ]] && [[ "$file" == "$pattern"* ]]; then
+                ALLOWED=true; break
+            fi
+        done
+
+        [ "$ALLOWED" = false ] && VIOLATIONS+=("$file")
+    done <<< "$CHANGED_FILES"
+done
+
+# --- Report ---
+if [ ${#VIOLATIONS[@]} -gt 0 ]; then
+    UNIQUE=($(printf '%s\n' "${VIOLATIONS[@]}" | sort -u))
+
+    echo ""
+    echo -e "${RED}${BOLD}══════════════════════════════════════════════════════════${NC}"
+    echo -e "${RED}${BOLD}  PUSH REJECTED — Path violation on branch: $BRANCH${NC}"
+    echo -e "${RED}${BOLD}══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${RED}Files outside allowed scope for project '${BOLD}$PROJECT_NAME${NC}${RED}':${NC}"
+    echo ""
+    for v in "${UNIQUE[@]}"; do
+        echo -e "  ${RED}✗${NC} $v"
+    done
+
+    echo ""
+    echo -e "${YELLOW}Allowed paths:${NC}"
+    for p in "${ALLOWED_PATHS[@]}"; do
+        echo -e "  ${GREEN}✓${NC} $p"
+    done
+
+    echo ""
+    echo -e "${YELLOW}To modify common/shared files, switch to ${BOLD}master${NC}${YELLOW} branch.${NC}"
+    echo -e "${YELLOW}Config: devtools/scripts/hooks/pre-push-allowlist.json${NC}"
+    echo ""
+    exit 1
+fi
+
+exit 0

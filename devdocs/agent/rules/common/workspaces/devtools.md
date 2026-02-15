@@ -2,6 +2,33 @@
 
 Workspace for development tools, CLI applications, and backend services — all TypeScript/Node.js.
 
+## Path Variables
+
+Extracted from user input:
+
+| Variable | Pattern | Example |
+|----------|---------|---------|
+| `<DOMAIN>` | Folder directly under `devtools/` | `common`, `nab` |
+| `<PACKAGE_NAME>` | Specific package within domain | `server`, `cli-plugin-debate`, `nestjs-debate` |
+
+## Scope Detection
+
+Determine working scope from the path:
+
+| Path Contains | Scope | Variables Required |
+|---------------|-------|--------------------|
+| `<DOMAIN>/<PACKAGE_NAME>/` (specific package) | **package** | DOMAIN, PACKAGE |
+| `devtools/` or `devdocs/misc/devtools/` only (no specific package) | **global** | — |
+
+### Scope Detection Examples
+
+| User Input | Scope | Reason |
+|------------|-------|--------|
+| `devtools/common/server/src/main.ts` | package | specific package `server` under `common` |
+| `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md` | package | docs for `cli-plugin-debate` package |
+| `devdocs/misc/devtools/common/_plans/260212-rename.md` | global | plan at root level, not package-specific |
+| `devtools/common/cli/` | package | specific package `cli` under `common` |
+
 ## Key Paths
 
 | Purpose | Path |
@@ -16,11 +43,11 @@ Workspace for development tools, CLI applications, and backend services — all 
 ```
 devtools/                           # Source code (100% TypeScript)
 ├── common/                         # Shared tools across all domains
-│   ├── cli-core/                   # @aweave/cli — root CLI + shared utilities
-│   ├── cli-debate/                 # @aweave/cli-debate — aw debate commands
-│   ├── cli-docs/                   # @aweave/cli-docs — aw docs commands
-│   ├── server/                     # @aweave/server — unified NestJS server
-│   ├── nestjs-debate/              # @aweave/nestjs-debate — debate backend module
+│   ├── cli-core/                   # @hod/aweave — root CLI + shared utilities
+│   ├── cli-debate/                 # @hod/aweave-debate — aw debate commands
+│   ├── cli-docs/                   # @hod/aweave-docs — aw docs commands
+│   ├── server/                     # @hod/aweave-server — unified NestJS server
+│   ├── nestjs-debate/              # @hod/aweave-nestjs-debate — debate backend module
 │   └── debate-web/                 # Next.js debate monitoring UI
 ├── <domain>/                       # Domain-specific tools
 │   ├── cli-<tool>/                 # CLI packages for this domain
@@ -41,41 +68,34 @@ devdocs/misc/devtools/              # Documentation
 
 ## Required Context Loading
 
-**Loading Order — MUST follow sequentially:**
+**Loading Order — MUST follow sequentially (general → specific → actionable):**
 
-1. **Global Overview** (ALWAYS read first)
-   ```
-   devdocs/misc/devtools/OVERVIEW.md
-   ```
+1. **OVERVIEW Chain** (based on scope):
+   - Global OVERVIEW: `devdocs/misc/devtools/OVERVIEW.md` (all scopes)
+   - Package OVERVIEW (package scope only — pick matching pattern):
+     - CLI packages: `devdocs/misc/devtools/<DOMAIN>/cli-<PACKAGE_NAME>/OVERVIEW.md`
+     - NestJS modules: `devdocs/misc/devtools/<DOMAIN>/nestjs-<PACKAGE_NAME>/OVERVIEW.md`
+     - Server: `devdocs/misc/devtools/<DOMAIN>/server/OVERVIEW.md`
+     - Other: `devdocs/misc/devtools/<DOMAIN>/<PACKAGE_NAME>/OVERVIEW.md`
 
-2. **Package Overview** (if working on specific package)
+2. **Referenced Files** (user-provided — plan, spike, guide, etc.):
+   - Any file the user explicitly references or provides as input
+   - Read AFTER OVERVIEW chain so project context is established first
 
-   For CLI packages:
-   ```
-   devdocs/misc/devtools/common/cli-<package>/OVERVIEW.md
-   ```
-
-   For NestJS modules:
-   ```
-   devdocs/misc/devtools/common/nestjs-<package>/OVERVIEW.md
-   ```
-
-   For server:
-   ```
-   devdocs/misc/devtools/common/server/OVERVIEW.md
-   ```
-
-   For domain-specific packages:
-   ```
-   devdocs/misc/devtools/<domain>/<package>/OVERVIEW.md
-   ```
-
-3. **Project Structure** (if need to understand folder structure)
-   ```
-   devdocs/agent/rules/common/project-structure.md
-   ```
+3. **Task Rule** (based on detected task type):
+   - `devdocs/agent/rules/common/tasks/create-plan.md` (Plan task)
+   - `devdocs/agent/rules/common/tasks/implementation.md` (Implementation / Refactoring task)
 
 > **CRITICAL:** If Global Overview does not exist or is empty, **STOP** and ask user to provide context before proceeding.
+
+## Search Scope
+
+Where to search for information, based on detected scope (in priority order):
+
+| Scope | Search Locations |
+|-------|------------------|
+| **package** | 1. Package docs: `devdocs/misc/devtools/<DOMAIN>/<PACKAGE_NAME>/` 2. Source: `devtools/<DOMAIN>/<PACKAGE_NAME>/` 3. Global OVERVIEW |
+| **global** | 1. Global docs: `devdocs/misc/devtools/` (all subfolders) 2. All package OVERVIEWs 3. Source: `devtools/` |
 
 ## Skill Loading
 
@@ -87,14 +107,14 @@ Load skill when task matches trigger. Read **after** context loading above.
 
 ## Path Detection Examples
 
-| User Input | Package Type | Package Overview Path |
-|------------|--------------|----------------------|
-| `devtools/common/cli-core/` | CLI (core) | `devdocs/misc/devtools/common/cli-core/OVERVIEW.md` |
-| `devtools/common/cli-debate/` | CLI (debate) | `devdocs/misc/devtools/common/cli-debate/OVERVIEW.md` |
-| `devtools/common/server/` | NestJS Server | `devdocs/misc/devtools/common/server/OVERVIEW.md` |
-| `devtools/common/nestjs-debate/` | NestJS Module | `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` |
-| `devtools/tinybots/cli-bitbucket/` | Domain CLI | `devdocs/misc/devtools/tinybots/cli-bitbucket/OVERVIEW.md` |
-| `devdocs/misc/devtools/common/_plans/260207-*.md` | Plan file | Load Global OVERVIEW + related package OVERVIEW |
+| User Input | Scope | Package Type | Package Overview Path |
+|------------|-------|--------------|----------------------|
+| `devtools/common/cli-core/` | package | CLI (core) | `devdocs/misc/devtools/common/cli-core/OVERVIEW.md` |
+| `devtools/common/cli-debate/` | package | CLI (debate) | `devdocs/misc/devtools/common/cli-debate/OVERVIEW.md` |
+| `devtools/common/server/` | package | NestJS Server | `devdocs/misc/devtools/common/server/OVERVIEW.md` |
+| `devtools/common/nestjs-debate/` | package | NestJS Module | `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md` |
+| `devtools/nab/cli-confluence/` | package | Domain CLI | `devdocs/misc/devtools/nab/cli-confluence/OVERVIEW.md` |
+| `devdocs/misc/devtools/common/_plans/260207-*.md` | global | Plan file | Load Global OVERVIEW + related package OVERVIEW |
 
 ## CLI Development
 
@@ -103,7 +123,7 @@ Load skill when task matches trigger. Read **after** context loading above.
 - Root program: `devtools/common/cli-core/src/program.ts`
 - Each domain exports a Commander `Command` object
 - Root composes via `.addCommand()`
-- Global install: `pnpm add -g @aweave/cli` → `aw` available globally
+- Global install: `pnpm add -g @hod/aweave` → `aw` available globally
 - Run dev mode: `cd devtools/common/cli-core && node dist/bin/aw.js <cmd>`
 
 ### Adding New CLI Tools

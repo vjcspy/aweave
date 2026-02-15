@@ -120,7 +120,7 @@ Cần có cơ chế cấu hình để AI agents biết các CLI tools được p
 │                                                                             │
 │   ┌──────────────┐         HTTP/REST         ┌──────────────────────┐       │
 │   │  OCLIF CLI   │ ◄───────────────────────► │   Unified Server     │       │
-│   │(@aweave/cli) │                           │     (NestJS)         │       │
+│   │(@hod/aweave) │                           │     (NestJS)         │       │
 │   └──────────────┘                           │                      │       │
 │         ▲                                    │  ┌────────────────┐  │       │
 │         │                                    │  │     Prisma     │  │       │
@@ -154,14 +154,14 @@ Cần có cơ chế cấu hình để AI agents biết các CLI tools được p
 **Data Flow:**
 - CLI **KHÔNG** access database trực tiếp.
 - Mọi data access đều qua NestJS server (HTTP REST API).
-- State machine được định nghĩa trong `@aweave/debate-machine` (xstate v5) — shared package.
+- State machine được định nghĩa trong `@hod/aweave-debate-machine` (xstate v5) — shared package.
 - CLI import machine để tính `available_actions` (pre-validation/hinting).
 - Server import machine để validate strict rules trước khi persist vào DB.
 - Server là single source of truth cho locking và data persistence.
 
 ### 2.1 State Machine
 
-Sử dụng package `@aweave/debate-machine` để quản lý trạng thái.
+Sử dụng package `@hod/aweave-debate-machine` để quản lý trạng thái.
 
 #### 2.1.1 States
 
@@ -254,11 +254,11 @@ Sử dụng framework OCLIF. Code nằm tại `devtools/common/cli` và `devtool
 
 #### 2.3.1 Các components trong `devtools`
 
-- **@aweave/cli**: Core CLI entry point.
-- **@aweave/cli-plugin-debate**: OCLIF plugin chứa các command `aw debate ...`.
-- **@aweave/debate-machine**: Shared XState machine logic.
-- **@aweave/nestjs-debate**: NestJS module cho debate logic.
-- **@aweave/server**: Unified NestJS server hosting các module.
+- **@hod/aweave**: Core CLI entry point.
+- **@hod/aweave-plugin-debate**: OCLIF plugin chứa các command `aw debate ...`.
+- **@hod/aweave-debate-machine**: Shared XState machine logic.
+- **@hod/aweave-nestjs-debate**: NestJS module cho debate logic.
+- **@hod/aweave-server**: Unified NestJS server hosting các module.
 
 #### 2.3.2 Database Schema (Prisma)
 
@@ -322,7 +322,7 @@ Tại một thời điểm chỉ có 1 request write được xử lý cho một
 
 #### 2.4.2 State/Role Validation
 
-Server sử dụng `@aweave/debate-machine` để validate mọi action trước khi ghi vào DB.
+Server sử dụng `@hod/aweave-debate-machine` để validate mọi action trước khi ghi vào DB.
 Nếu `canTransition(currentState, event)` trả về false, server ném lỗi `ActionNotAllowed` về phía CLI.
 
 ### 2.5 Error Handling & Recovery
@@ -376,7 +376,7 @@ Web application (Next.js) để Arbitrator (Human) theo dõi và can thiệp.
 Node.js server unified tại `devtools/common/server`.
 
 #### 2.8.1 Responsibilities
-1. **Modules**: Load `@aweave/nestjs-debate` module.
+1. **Modules**: Load `@hod/aweave-nestjs-debate` module.
 2. **REST API**: Phục vụ CLI requests.
 3. **WebSocket**: Phục vụ Web real-time updates.
 4. **Persistence**: Quản lý connection tới SQLite via Prisma.

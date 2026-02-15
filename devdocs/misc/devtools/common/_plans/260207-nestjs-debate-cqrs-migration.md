@@ -28,7 +28,7 @@
 
 ## 🎯 Objective
 
-Migrate `@aweave/nestjs-debate` from layered architecture (Controller → Service → DB + WS broadcast) to CQRS pattern using `@nestjs/cqrs`. This establishes the reference implementation for all future NestJS feature modules in the devtools ecosystem.
+Migrate `@hod/aweave-nestjs-debate` from layered architecture (Controller → Service → DB + WS broadcast) to CQRS pattern using `@nestjs/cqrs`. This establishes the reference implementation for all future NestJS feature modules in the devtools ecosystem.
 
 ### ⚠️ Key Considerations
 
@@ -42,7 +42,7 @@ Migrate `@aweave/nestjs-debate` from layered architecture (Controller → Servic
 
 5. **Dependencies: @nestjs/cqrs + pino stack** — RxJS already bundled with NestJS. No Jotai, no custom EventBus. Use @nestjs/cqrs Sagas for RxJS-based event effects. Pino stack (`nestjs-pino`, `pino-http`, `pino-pretty`) installed at server level — all modules benefit.
 
-6. **Pino is server-wide, not debate-specific** — Pino logger is configured in `@aweave/server` (root module), not in `@aweave/nestjs-debate`. The debate module's CQRS middleware uses `PinoLogger` (injectable from `nestjs-pino`). This means pino setup is a prerequisite step that benefits all current and future NestJS modules.
+6. **Pino is server-wide, not debate-specific** — Pino logger is configured in `@hod/aweave-server` (root module), not in `@hod/aweave-nestjs-debate`. The debate module's CQRS middleware uses `PinoLogger` (injectable from `nestjs-pino`). This means pino setup is a prerequisite step that benefits all current and future NestJS modules.
 
 7. **Pino replaces NestJS default Logger transparently** — After setup, existing `Logger` from `@nestjs/common` is backed by pino. No need to update every file at once. Explicit `PinoLogger` used only where structured context (correlationId, commandName) is needed (CQRS middleware, Sagas).
 
@@ -54,14 +54,14 @@ Migrate `@aweave/nestjs-debate` from layered architecture (Controller → Servic
 
 ### Phase 1: Analysis & Preparation
 
-- [ ] Install pino stack in `@aweave/server` (server-wide)
+- [ ] Install pino stack in `@hod/aweave-server` (server-wide)
   - **Command**: `cd devtools/common/server && pnpm add nestjs-pino pino-http && pnpm add -D pino-pretty`
   - **Outcome**: Pino available to all NestJS modules. No behavior change yet (LoggerModule not imported).
   - **Note**: `pino` itself is a transitive dep of `nestjs-pino` — no need to install separately.
-- [ ] Install `@nestjs/cqrs` dependency in `@aweave/nestjs-debate`
+- [ ] Install `@nestjs/cqrs` dependency in `@hod/aweave-nestjs-debate`
   - **Command**: `cd devtools/common/nestjs-debate && pnpm add @nestjs/cqrs`
   - **Outcome**: Dependency added, no breaking changes (CqrsModule not imported yet)
-- [ ] Install `nestjs-pino` in `@aweave/nestjs-debate` (for `PinoLogger` injectable in CQRS middleware)
+- [ ] Install `nestjs-pino` in `@hod/aweave-nestjs-debate` (for `PinoLogger` injectable in CQRS middleware)
   - **Command**: `cd devtools/common/nestjs-debate && pnpm add nestjs-pino`
   - **Outcome**: `PinoLogger` importable. Actual pino instance provided by server's `LoggerModule.forRoot()`.
 - [ ] Define Command/Event type inventory based on current service methods
@@ -843,7 +843,7 @@ Each node has a name. Each transition logged. AI agent reconstructs from correla
 - [ ] **Gateway circular dependency** — Current `setHandlers` pattern exists because Gateway and Services have circular deps. With CQRS, Gateway depends on CommandBus (no circular). But `BroadcastHandler` depends on Gateway. Verify NestJS DI resolves `BroadcastHandler → DebateGateway` without circular issues (both are providers in same module, should be fine).
 - [ ] **Event serialization in logs** — Command/Event payloads may contain large content strings (up to 10KB). Logging middleware (Step 2) deliberately omits `content` and `motionContent` fields. Verify no accidental serialization of large fields via pino's default behavior.
 - [ ] **pino-http + WebSocket** — `pino-http` auto-logs HTTP requests but does NOT auto-log WebSocket messages. WS commands are logged explicitly via LoggingCommandBus when gateway dispatches commands. Verify WS-originated flows have correlationId (generated in gateway's `handleIntervention`/`handleRuling`).
-- [ ] **pino-pretty as devDependency** — `pino-pretty` installed as devDependency in `@aweave/server`. In production, `transport` is `undefined` → pino writes raw JSON to stdout. Verify production build does NOT fail due to missing `pino-pretty` (it should be fine since transport is conditionally set).
+- [ ] **pino-pretty as devDependency** — `pino-pretty` installed as devDependency in `@hod/aweave-server`. In production, `transport` is `undefined` → pino writes raw JSON to stdout. Verify production build does NOT fail due to missing `pino-pretty` (it should be fine since transport is conditionally set).
 - [ ] **Log level configuration** — `LOG_LEVEL` env var controls pino level. Default: `debug` (dev), `info` (production). CommandBus/EventBus logs at `info` level. Verify CQRS logs are visible at default `info` level.
 - [ ] **Existing Logger calls** — After pino setup, all existing `Logger` from `@nestjs/common` (in debate-prisma.service, debate.gateway, argument.service) automatically output via pino. No code changes needed. Verify output format is consistent.
 - [ ] **OVERVIEW updates** — After migration, update:

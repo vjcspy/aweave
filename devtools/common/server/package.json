@@ -1,5 +1,5 @@
 {
-  "name": "@aweave/server",
+  "name": "@hod/aweave-server",
   "version": "0.0.7",
   "description": "",
   "author": "",
@@ -25,10 +25,10 @@
     "generate:openapi": "ts-node -r tsconfig-paths/register src/scripts/generate-openapi.ts"
   },
   "dependencies": {
-    "@aweave/config-common": "workspace:*",
-    "@aweave/config-core": "workspace:*",
-    "@aweave/debate-web": "workspace:*",
-    "@aweave/nestjs-debate": "workspace:*",
+    "@hod/aweave-config-common": "workspace:*",
+    "@hod/aweave-config-core": "workspace:*",
+    "@hod/aweave-debate-web": "workspace:*",
+    "@hod/aweave-nestjs-debate": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",

@@ -1,7 +1,7 @@
-import type { Argument, Debate } from './api';
+import type { Debate, Argument } from './api';
 
 // Re-export for convenience — components use these as union types
-export type { Argument, Debate };
+export type { Debate, Argument };
 export type DebateState = Debate['state'];
 export type ArgumentType = Argument['type'];
 export type Role = Argument['role'];
@@ -24,7 +24,4 @@ export type ServerToClientMessage =
 
 export type ClientToServerMessage =
   | WsEvent<'submit_intervention', { debate_id: string; content?: string }>
-  | WsEvent<
-      'submit_ruling',
-      { debate_id: string; content: string; close?: boolean }
-    >;
+  | WsEvent<'submit_ruling', { debate_id: string; content: string; close?: boolean }>;

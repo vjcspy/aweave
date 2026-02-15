@@ -1,4 +1,4 @@
-# @aweave/debate-web
+# @hod/aweave-debate-web
 
 React SPA for monitoring AI agent debates and submitting arbitrator actions.
 

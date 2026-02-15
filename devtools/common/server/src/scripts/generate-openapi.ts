@@ -7,7 +7,7 @@ import {
   PollResultNewResponseDto,
   PollResultNoNewResponseDto,
   WriteResultResponseDto,
-} from '@aweave/nestjs-debate';
+} from '@hod/aweave-nestjs-debate';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
