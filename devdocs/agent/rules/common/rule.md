@@ -3,7 +3,9 @@ source_of: AGENTS.md
 note: This is the source file for the AGENTS.md symlink at PROJECT_ROOT. Edit this file — AGENTS.md reflects changes automatically.
 ---
 
-# AI Agent Entry Point
+# AI Agent Entry Point — MANDATORY WORKFLOW
+
+> **CRITICAL:** This file is a **mandatory step-by-step checklist**. You MUST execute each step in order. DO NOT skip steps. DO NOT proceed to the next step until the current step is complete.
 
 ## Role
 
@@ -12,11 +14,9 @@ Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.
 ## Core Principles
 
 1. **Language Agnostic** — Adapt code style to match existing repository conventions
-2. **Context-Aware** — Never hallucinate paths; use provided paths or perform discovery
-3. **Safety First** — Do not modify critical files without a clear plan
-4. **Context Required** — If required context is missing, **STOP** and ask user
-5. **Direct Path Trust** — All user-provided paths are relative to `<PROJECT_ROOT>`; use them directly without verification
-6. **Paths Always Relative** — **ALL paths are ALWAYS relative to `<PROJECT_ROOT>`** — in documents, conversations, file operations, outputs, and references. Never use partial/nested paths.
+2. **Context-Aware** — Never hallucinate paths. All user-provided paths are relative to `<PROJECT_ROOT>`; use them directly without verification. If discovery is needed, use provided paths or shell commands.
+3. **Safety First** — Do not modify critical files without a clear plan. If required context is missing, **STOP** and ask user.
+4. **Paths Always Relative** — **ALL paths are ALWAYS relative to `<PROJECT_ROOT>`** — in documents, conversations, file operations, outputs, and references. Never use partial/nested paths.
 
 ## Source Code Location
 
@@ -24,11 +24,24 @@ Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.
 
 **If file discovery tools don't work for `projects/`:** Use shell commands (`ls`, `find`) to discover paths, then use standard tools with explicit paths.
 
-## Workspace Detection (MUST DO FIRST)
+## Fast Track: Debate Tasks
 
-Analyze user input to detect workspace type before any task execution.
+> **When to use:** User request involves acting as **Proposer** or **Opponent** in a debate, or references `debate-proposer.md` / `debate-opponent.md`.
 
-### Detection Rules
+**SKIP ALL steps below.** Load the appropriate command file directly and execute:
+
+| Role | Command File |
+|------|--------------|
+| Proposer | `devdocs/agent/commands/common/debate-proposer.md` |
+| Opponent | `devdocs/agent/commands/common/debate-opponent.md` |
+
+Context loading (OVERVIEWs, source code, project rules) is handled by the debate rule files loaded within the command.
+
+---
+
+## Step 1: Workspace Detection
+
+**MUST do before any task execution.** Analyze user input to detect workspace type.
 
 | User Input Pattern | Workspace | Action |
 |--------------------|-----------|--------|
@@ -36,33 +49,20 @@ Analyze user input to detect workspace type before any task execution.
 | `devdocs/projects/<project>/...` | **business-project** | Load `devdocs/agent/rules/common/workspaces/business-project.md` |
 | `devtools/...` | **devtools** | Load `devdocs/agent/rules/common/workspaces/devtools.md` |
 | `devdocs/misc/devtools/...` | **devtools** | Load `devdocs/agent/rules/common/workspaces/devtools.md` |
-| No path mentioned (general question) | **general** | Skip workspace loading → Go to Task Detection |
-| Path mentioned but cannot determine workspace | — | **STOP & ASK** user to clarify |
+| No path mentioned (general question) | **general** | Skip workspace loading → Go to Step 2 |
+| Path mentioned but cannot determine | — | **STOP & ASK** user to clarify |
 
-### Detection Examples
+**Examples:**
 
-| User Input | Detected Workspace |
-|------------|--------------------|
-| "Update `projects/nab/hod/ho-omh-customer-loan-mods-web/app/server/src/main.ts`" | business-project |
-| "Read plan at `devdocs/projects/nab/hod/ho-omh-customer-loan-mods-web/_plans/260209-Add-Trace-Decorator.md`" | business-project |
-| "Implement feature in `devtools/common/cli/devtool/aweave/debate/`" | devtools |
-| "Check `devdocs/misc/devtools/common/_plans/260131-debate-cli.md`" | devtools |
-| "How do I use git rebase?" | general (no workspace) |
-| "Update the config file" | **STOP & ASK** — which config? |
+| User Input | Workspace |
+|------------|-----------|
+| "Update `projects/nab/hod/ho-omh-customer-loan-mods-web/...`" | business-project |
+| "Implement feature in `devtools/common/cli/...`" | devtools |
+| "How do I use git rebase?" | general |
 
-### Workspace Rules Location
+## Step 2: Task Detection
 
-```
-devdocs/agent/rules/common/workspaces/
-├── business-project.md    # Context loading for projects/
-└── devtools.md            # Context loading for devtools/
-```
-
-## Task Detection
-
-After workspace detection, identify task type from user input.
-
-### Detection Rules
+Identify task type from user input.
 
 | User Input Signals | Task Type | Load Rule |
 |--------------------|-----------|-----------|
@@ -72,36 +72,29 @@ After workspace detection, identify task type from user input.
 | "what", "how", "why", "explain", "describe", "show me" — no action verb | **Question** | None — answer directly |
 | Does not match above | **Other** | None — follow user instructions |
 
-### Detection Examples
+**Ambiguity Resolution:**
 
-| User Input | Task Type | Reason |
-|------------|-----------|--------|
-| "Create a plan for adding auth to the API" | Plan | keyword "create plan" |
-| "Implement the changes in `_plans/260209-Auth.md`" | Implementation | keyword "implement", plan is input not output |
-| "Fix the null pointer in `projects/nab/.../service.ts`" | Implementation | keyword "fix" + code path |
-| "Refactor database layer to use repository pattern" | Refactoring | keyword "refactor" |
-| "How does the auth middleware work?" | Question | "how does" pattern, no action verb |
-
-### Ambiguity Resolution
-
-- **Plan + Implementation** (e.g. "implement the plan at ..."): prefer **Implementation** — plan is input, not output
-- **Refactoring + Implementation** (e.g. "refactor and add ..."): prefer **Implementation** — refactoring is secondary
+- **Plan + Implementation** (e.g. "implement the plan at ..."): prefer **Implementation**
+- **Refactoring + Implementation** (e.g. "refactor and add ..."): prefer **Implementation**
 - **Uncertain**: **ASK** user to clarify intent
 
-## Contextual Rules (Load When Needed)
+**Contextual Rules (load lazily to minimize context window):**
 
 | Rule | Load When | Path |
 |------|-----------|------|
 | `project-structure.md` | Need folder structure reference | `devdocs/agent/rules/common/project-structure.md` |
-| `coding-standard-and-quality.md` | Writing/modifying code (auto-loaded by implementation rule) | `devdocs/agent/rules/common/coding/coding-standard-and-quality.md` |
+| `coding-standard-and-quality.md` | Writing/modifying code | `devdocs/agent/rules/common/coding/coding-standard-and-quality.md` |
 
-> **Principle:** Load rules lazily to minimize context window usage.
+## Step 3: Context Resolution — MUST STOP AND WAIT
 
-## Context Resolution (DEBUG)
+> **CRITICAL: DO NOT load any context files or execute any task until user confirms.**
 
-> **Temporary step** — remove when workflow is stable.
+After completing Step 1 (Workspace Detection) and Step 2 (Task Detection), you MUST:
 
-After completing Workspace Detection, Scope Detection, and Task Detection, present the following summary to user and **WAIT for confirmation** before loading any context files:
+1. Build the context summary below
+2. Check file existence for each context file
+3. **Present the summary to user**
+4. **STOP. WAIT for user to confirm before proceeding.**
 
 ```
 **Workspace:** <detected workspace>
@@ -123,38 +116,16 @@ After completing Workspace Detection, Scope Detection, and Task Detection, prese
 Proceed?
 ```
 
-Check file existence before presenting. Flag missing required files with ❌.
+Flag missing required files with ❌.
 
-## Execution Flow Summary
+## Step 4: Context Loading & Execution
 
-```
-1. Read user input
-   ↓
-2. Workspace Detection
-   - Match input against workspace detection rules
-   - Load workspace-specific rule file (meta-rule, not context)
-   ↓
-3. Scope Detection (defined in workspace rule)
-   - Extract path variables from user input
-   - Determine scope level from path
-   ↓
-4. Task Detection
-   - Identify task type from input signals
-   ↓
-5. Context Resolution (DEBUG — temporary)
-   - Build context file list based on scope + task
-   - Check file existence
-   - Present summary to user → WAIT for confirmation
-   ↓
-6. Context Loading (general → specific → actionable)
-   - OVERVIEW chain (based on scope)
-   - Referenced files (user-provided: plan, spike, guide, etc.)
-   - Task rule (create-plan.md or implementation.md)
-   ↓
-7. Execute Task
-   - Follow loaded context and rules
-   - Verify output alignment with protocols
-```
+**Only after user confirms Step 3.** Load context and execute:
+
+1. **OVERVIEW chain** (general → specific, based on scope)
+2. **Referenced files** (user-provided: plan, spike, guide, etc.)
+3. **Task rule** (create-plan.md or implementation.md)
+4. **Execute task** — follow loaded context and rules
 
 ## Output Constraints
 
