@@ -241,7 +241,7 @@ projects/k/misc/git-relay-server/src/
 
 **CLI — `devtools/common/cli-plugin-relay/src/lib/crypto.ts`**
 
-- [ ] Replace `encrypt(data, keyBase64)` → `EncryptResult` with `encryptPayload(metadata, keyBase64, binaryData?)` → `string`
+- [x] Replace `encrypt(data, keyBase64)` → `EncryptResult` with `encryptPayload(metadata, keyBase64, binaryData?)` → `string`
 
 ```typescript
 /**
@@ -279,7 +279,7 @@ export function encryptPayload(
 
 **Server — `projects/k/misc/git-relay-server/src/services/crypto.ts`**
 
-- [ ] Add `decryptPayload(gameData, key)` → `{ metadata, data? }`
+- [x] Add `decryptPayload(gameData, key)` → `{ metadata, data? }`
 
 ```typescript
 interface DecryptedPayload {
@@ -314,10 +314,10 @@ export function decryptPayload(gameData: string, key: Buffer): DecryptedPayload 
 
 **`projects/k/misc/git-relay-server/src/server.ts`**
 
-- [ ] Add decrypt middleware **after auth middleware** (auth rejects unauthenticated requests first, then decrypt runs on verified requests only)
-- [ ] Middleware: if `req.body.gameData` exists → decrypt → set `req.body` (metadata) + `req.binaryData` (raw data)
-- [ ] Skip for GET requests (no body)
-- [ ] Extend Express `Request` type to include `binaryData?: Buffer`
+- [x] Add decrypt middleware **after auth middleware** (auth rejects unauthenticated requests first, then decrypt runs on verified requests only)
+- [x] Middleware: if `req.body.gameData` exists → decrypt → set `req.body` (metadata) + `req.binaryData` (raw data)
+- [x] Skip for GET requests (no body)
+- [x] Extend Express `Request` type to include `binaryData?: Buffer`
 
 ```typescript
 // Auth middleware FIRST — rejects unauthenticated callers before any decrypt work
@@ -348,16 +348,16 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
 
 **`projects/k/misc/git-relay-server/src/routes/data.ts`** (NEW — from patches.ts)
 
-- [ ] Create `createDataRouter(config, sessionStore)` → Router
-- [ ] `POST /chunk` — store chunk: metadata from `req.body` ({sessionId, chunkIndex, totalChunks}), raw data from `req.binaryData`
-- [ ] `POST /complete` — validate all chunks received, set status → `'complete'`
+- [x] Create `createDataRouter(config, sessionStore)` → Router
+- [x] `POST /chunk` — store chunk: metadata from `req.body` ({sessionId, chunkIndex, totalChunks}), raw data from `req.binaryData`
+- [x] `POST /complete` — validate all chunks received, set status → `'complete'`
   - Payload chỉ còn `{sessionId}` (không còn repo, branch, iv, authTag)
-- [ ] `GET /status/:sessionId` — return session status (same logic)
+- [x] `GET /status/:sessionId` — return session status (same logic)
 
 **`projects/k/misc/git-relay-server/src/routes/gr.ts`** (NEW)
 
-- [ ] Create `createGRRouter(config, sessionStore, repoManager)` → Router
-- [ ] `POST /process` — Git Relay processing trigger
+- [x] Create `createGRRouter(config, sessionStore, repoManager)` → Router
+- [x] `POST /process` — Git Relay processing trigger
   - Validate: `{sessionId, repo, branch, baseBranch}`
   - Validate session status === `'complete'`
   - Set status → `'processing'`, return 202
@@ -365,30 +365,30 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
 
 **`projects/k/misc/git-relay-server/src/server.ts`**
 
-- [ ] Update route mounting:
+- [x] Update route mounting:
   ```typescript
   app.use('/api/data', createDataRouter(config, sessionStore));
   app.use('/api/gr', createGRRouter(config, sessionStore, repoManager));
   ```
-- [ ] Delete import of `createPatchesRouter`
+- [x] Delete import of `createPatchesRouter`
 
 **`projects/k/misc/git-relay-server/src/routes/patches.ts`**
 
-- [ ] DELETE file (replaced by data.ts + gr.ts)
+- [x] DELETE file (replaced by data.ts + gr.ts)
 
 #### Step 4: Server Types Update
 
 **`projects/k/misc/git-relay-server/src/lib/types.ts`**
 
-- [ ] Add `'complete'` to `SessionStatus`: `'receiving' | 'complete' | 'processing' | 'pushed' | 'failed'`
-- [ ] **State guard acceptance criteria:**
+- [x] Add `'complete'` to `SessionStatus`: `'receiving' | 'complete' | 'processing' | 'pushed' | 'failed'`
+- [x] **State guard acceptance criteria:**
   - Server rejects `POST /chunk` when session status is `complete|processing|pushed|failed` (add `complete` to existing `storeChunk` guard)
   - Server rejects `POST /complete` when session status is not `receiving`
   - Server rejects `POST /gr/process` when session status is not `complete`
   - `complete → processing` transition validated and idempotent (re-trigger returns same 202)
   - All status type definitions and handlers across CLI/server include `complete`
-- [ ] Simplify `CompleteRequest` → `{ sessionId: string }` (remove repo, branch, iv, authTag)
-- [ ] Add `GRProcessRequest` interface:
+- [x] Simplify `CompleteRequest` → `{ sessionId: string }` (remove repo, branch, iv, authTag)
+- [x] Add `GRProcessRequest` interface:
   ```typescript
   interface GRProcessRequest {
     sessionId: string;
@@ -397,70 +397,70 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
     baseBranch: string;
   }
   ```
-- [ ] Remove `iv` and `authTag` fields from all interfaces (no longer needed)
-- [ ] Update `ChunkRequest`: remove `data: string` field (raw data comes from `req.binaryData` via binary framing, not from JSON body)
+- [x] Remove `iv` and `authTag` fields from all interfaces (no longer needed)
+- [x] Update `ChunkRequest`: remove `data: string` field (raw data comes from `req.binaryData` via binary framing, not from JSON body)
 
 #### Step 5: Vercel Route Restructuring
 
 **Delete old routes:**
 
-- [ ] Delete `projects/k/misc/git-relay-vercel/src/app/api/relay/` directory
+- [x] Delete `projects/k/misc/git-relay-vercel/src/app/api/relay/` directory
 
 **Create new routes:**
 
-- [ ] `src/app/api/game/chunk/route.ts` — POST → forward to `/api/data/chunk`
-- [ ] `src/app/api/game/chunk/complete/route.ts` — POST → forward to `/api/data/complete`
-- [ ] `src/app/api/game/chunk/status/[sessionId]/route.ts` — GET → forward to `/api/data/status/:id`
-- [ ] `src/app/api/game/gr/route.ts` — POST → forward to `/api/gr/process`
+- [x] `src/app/api/game/chunk/route.ts` — POST → forward to `/api/data/chunk`
+- [x] `src/app/api/game/chunk/complete/route.ts` — POST → forward to `/api/data/complete`
+- [x] `src/app/api/game/chunk/status/[sessionId]/route.ts` — GET → forward to `/api/data/status/:id`
+- [x] `src/app/api/game/gr/route.ts` — POST → forward to `/api/gr/process`
 
 **Update `src/lib/forward.ts`:**
 
-- [ ] Update path mappings (no logic changes — relay still forwards as-is)
+- [x] Update path mappings (no logic changes — relay still forwards as-is)
 
 #### Step 6: CLI Client Updates
 
 **`devtools/common/cli-plugin-relay/src/lib/relay-client.ts`**
 
-- [ ] Import `encryptPayload` from `./crypto`
-- [ ] Update `fetchWithRetry` to accept `encryptionKey` param and wrap body: `{"gameData": encryptPayload(metadata, encryptionKey, binaryData?)}`
+- [x] Import `encryptPayload` from `./crypto`
+- [x] Update `fetchWithRetry` to accept `encryptionKey` param and wrap body: `{"gameData": encryptPayload(metadata, encryptionKey, binaryData?)}`
   - Requires passing `encryptionKey` to all client functions
-- [ ] Update URL paths: `/api/relay/*` → `/api/game/*`
+- [x] Update URL paths: `/api/relay/*` → `/api/game/*`
   - `uploadChunk`: `/api/game/chunk`
   - `signalComplete`: `/api/game/chunk/complete`
   - `pollStatus`: `/api/game/chunk/status/:id`
-- [ ] Add `triggerGR(relayUrl, apiKey, encryptionKey, payload)` function
+- [x] Add `triggerGR(relayUrl, apiKey, encryptionKey, payload)` function
   - POST to `/api/game/gr`
   - payload: `{sessionId, repo, branch, baseBranch}`
-- [ ] Update `CompletePayload` → `{sessionId}` only (remove iv, authTag, repo, branch, baseBranch)
-- [ ] Add `GRPayload` interface: `{sessionId, repo, branch, baseBranch}`
-- [ ] Update `uploadChunk` signature: accept raw `Buffer` chunk data (not base64 string), pass as `binaryData` to `encryptPayload`
-- [ ] Update `ChunkUploadPayload`: remove `data: string` field (raw data passed separately as binary)
+- [x] Update `CompletePayload` → `{sessionId}` only (remove iv, authTag, repo, branch, baseBranch)
+- [x] Add `GRPayload` interface: `{sessionId, repo, branch, baseBranch}`
+- [x] Update `uploadChunk` signature: accept raw `Buffer` chunk data (not base64 string), pass as `binaryData` to `encryptPayload`
+- [x] Update `ChunkUploadPayload`: remove `data: string` field (raw data passed separately as binary)
 
 **`devtools/common/cli-plugin-relay/src/lib/chunker.ts`**
 
-- [ ] No changes needed — chunk size defaults stay the same (3 MB default, 3.4 MB hard cap)
+- [x] No changes needed — chunk size defaults stay the same (3 MB default, 3.4 MB hard cap)
 
 **`devtools/common/cli-plugin-relay/src/commands/relay/push.ts`**
 
-- [ ] Remove step 5 (patch-level encryption): no more `encrypt(patch, key)` → `{encrypted, iv, authTag}`
-- [ ] Update step 6 (chunk): split raw `patch` buffer directly (not `encrypted` buffer)
-- [ ] Update step 7 (upload): pass `chunks[i]` as raw Buffer (not base64), relay-client handles binary framing
-- [ ] Update step 8 (complete): payload = `{sessionId}` only
-- [ ] Add step 8.5 (trigger GR): call `triggerGR()` with `{sessionId, repo, branch, baseBranch}`
+- [x] Remove step 5 (patch-level encryption): no more `encrypt(patch, key)` → `{encrypted, iv, authTag}`
+- [x] Update step 6 (chunk): split raw `patch` buffer directly (not `encrypted` buffer)
+- [x] Update step 7 (upload): pass `chunks[i]` as raw Buffer (not base64), relay-client handles binary framing
+- [x] Update step 8 (complete): payload = `{sessionId}` only
+- [x] Add step 8.5 (trigger GR): call `triggerGR()` with `{sessionId, repo, branch, baseBranch}`
 
 **`devtools/common/cli-plugin-relay/src/commands/relay/status.ts`**
 
-- [ ] Update URL path: `/api/relay/status/` → `/api/game/chunk/status/`
+- [x] Update URL path: `/api/relay/status/` → `/api/game/chunk/status/`
 
 #### Step 7: Session Store Update
 
 **`projects/k/misc/git-relay-server/src/services/session-store.ts`**
 
-- [ ] Support `'complete'` status in status transitions
-- [ ] Update `storeChunk` guard: add `'complete'` to rejected statuses (`processing|pushed|failed` → `complete|processing|pushed|failed`)
-- [ ] Add method or update `setStatus` to transition `receiving` → `complete` (reject if not `receiving`)
-- [ ] GR route transitions `complete` → `processing` → `pushed`/`failed` (reject if not `complete`)
-- [ ] Make `complete → processing` idempotent: if already `processing`, return same 202 response
+- [x] Support `'complete'` status in status transitions
+- [x] Update `storeChunk` guard: add `'complete'` to rejected statuses (`processing|pushed|failed` → `complete|processing|pushed|failed`)
+- [x] Add method or update `setStatus` to transition `receiving` → `complete` (reject if not `receiving`)
+- [x] GR route transitions `complete` → `processing` → `pushed`/`failed` (reject if not `complete`)
+- [x] Make `complete → processing` idempotent: if already `processing`, return same 202 response
 
 ---
 
@@ -629,3 +629,30 @@ _Pending implementation_
 
 - [ ] **Additional feature codes** — Data transport API is generic. Future features beyond GR can register their own processing endpoints (e.g., code `CF` for config sync).
 - [ ] **POST-based status endpoint** — Currently GET with sessionId in URL. Could change to POST with encrypted body for full traffic disguise. Low priority (UUID in URL reveals nothing).
+
+## Implementation Notes / As Implemented
+
+- Implemented full transport-level body encryption using `gameData` in CLI and server:
+  - CLI now frames `[4B metadataLen][metadata JSON][raw binary]`, encrypts with AES-256-GCM, and sends `{"gameData":"..."}`.
+  - Server now decrypts `gameData` in middleware, restoring metadata to `req.body` and chunk bytes to `req.binaryData`.
+- Removed patch-level IV/authTag flow from CLI complete payload and server processing pipeline.
+- Split server route responsibilities:
+  - New generic data transport routes at `/api/data/chunk`, `/api/data/complete`, `/api/data/status/:sessionId`.
+  - New Git Relay route at `/api/gr/process`.
+  - Deleted legacy `src/routes/patches.ts`.
+- Added `complete` session state and guards:
+  - `receiving -> complete` via `markComplete()`
+  - `complete -> processing` via `startProcessing()`
+  - Re-trigger of processing is idempotent (`processing` returns same 202 behavior).
+- Migrated Vercel routes from `/api/relay/*` to `/api/game/*` and forwarded to new server endpoints.
+- CLI client changes:
+  - `relay-client` wraps all POST bodies in encrypted `gameData`.
+  - Added `triggerGR()` call after `signalComplete()`.
+  - `pollStatus()` now reads from `/api/game/chunk/status/:sessionId`.
+- Implementation deviations vs original checklist wording:
+  - `src/lib/forward.ts` logic remained unchanged; mapping updates were implemented in new `src/app/api/game/**/route.ts` files.
+  - `src/commands/relay/status.ts` did not require direct edits because status path migration is centralized in `src/lib/relay-client.ts`.
+- Validation executed:
+  - `projects/k/misc/git-relay-server`: `npm install`, `npm run build` (pass)
+  - `projects/k/misc/git-relay-vercel`: `npm run build` (pass)
+  - `devtools/common/cli-plugin-relay`: `pnpm lint:fix`, `pnpm lint`, `pnpm build` (pass)
