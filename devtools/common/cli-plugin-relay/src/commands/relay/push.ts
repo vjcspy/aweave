@@ -12,10 +12,10 @@ import { Command, Flags } from '@oclif/core';
 
 import { DEFAULT_CHUNK_SIZE, splitIntoChunks } from '../../lib/chunker';
 import { loadConfig, validateRequiredConfig } from '../../lib/config';
-import { encrypt } from '../../lib/crypto';
 import {
   pollStatus,
   signalComplete,
+  triggerGR,
   uploadChunk,
 } from '../../lib/relay-client';
 
@@ -127,11 +127,8 @@ export class RelayPush extends Command {
       this.exit(4);
     }
 
-    // 5. Encrypt
-    const { encrypted, iv, authTag } = encrypt(patch, config.encryptionKey!);
-
-    // 6. Chunk
-    const chunks = splitIntoChunks(encrypted, chunkSize);
+    // 5. Chunk raw patch data
+    const chunks = splitIntoChunks(patch, chunkSize);
 
     // 7. Upload chunks
     const sessionId = randomUUID();
@@ -140,32 +137,45 @@ export class RelayPush extends Command {
 
     try {
       for (let i = 0; i < chunks.length; i++) {
-        await uploadChunk(config.relayUrl!, config.apiKey!, {
-          sessionId,
-          chunkIndex: i,
-          totalChunks: chunks.length,
-          data: chunks[i].toString('base64'),
-        });
+        await uploadChunk(
+          config.relayUrl!,
+          config.apiKey!,
+          config.encryptionKey!,
+          {
+            sessionId,
+            chunkIndex: i,
+            totalChunks: chunks.length,
+          },
+          chunks[i],
+        );
       }
 
       // 8. Signal complete
-      await signalComplete(config.relayUrl!, config.apiKey!, {
+      await signalComplete(
+        config.relayUrl!,
+        config.apiKey!,
+        config.encryptionKey!,
+        {
+          sessionId,
+        },
+      );
+
+      // 9. Trigger GR processing
+      await triggerGR(config.relayUrl!, config.apiKey!, config.encryptionKey!, {
         sessionId,
         repo: flags.repo,
         branch,
         baseBranch,
-        iv: iv.toString('base64'),
-        authTag: authTag.toString('base64'),
       });
 
-      // 9. Poll status
+      // 10. Poll status
       const result = await pollStatus(
         config.relayUrl!,
         config.apiKey!,
         sessionId,
       );
 
-      // 10. Output result
+      // 11. Output result
       const success = result.status === 'pushed';
       output(
         new MCPResponse({

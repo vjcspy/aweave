@@ -1,3 +1,5 @@
+import { encryptPayload } from './crypto';
+
 /** Max retry attempts for failed requests */
 const MAX_RETRIES = 3;
 
@@ -14,21 +16,22 @@ interface ChunkUploadPayload {
   sessionId: string;
   chunkIndex: number;
   totalChunks: number;
-  data: string; // base64
 }
 
 interface CompletePayload {
   sessionId: string;
+}
+
+interface GRPayload {
+  sessionId: string;
   repo: string;
   branch: string;
   baseBranch: string;
-  iv: string; // base64
-  authTag: string; // base64
 }
 
 interface StatusResponse {
   sessionId: string;
-  status: 'receiving' | 'processing' | 'pushed' | 'failed';
+  status: 'receiving' | 'complete' | 'processing' | 'pushed' | 'failed';
   message: string;
   details?: Record<string, unknown>;
 }
@@ -39,20 +42,51 @@ interface StatusResponse {
 export async function uploadChunk(
   relayUrl: string,
   apiKey: string,
+  encryptionKey: string,
   payload: ChunkUploadPayload,
+  chunkData: Buffer,
 ): Promise<{ success: boolean; received: number }> {
-  return fetchWithRetry(`${relayUrl}/api/relay/chunk`, apiKey, payload);
+  return fetchWithRetry(
+    `${relayUrl}/api/game/chunk`,
+    apiKey,
+    encryptionKey,
+    payload,
+    chunkData,
+  );
 }
 
 /**
- * Signal that all chunks are uploaded. Triggers server-side processing.
+ * Signal that all chunks are uploaded.
  */
 export async function signalComplete(
   relayUrl: string,
   apiKey: string,
+  encryptionKey: string,
   payload: CompletePayload,
 ): Promise<void> {
-  await fetchWithRetry(`${relayUrl}/api/relay/complete`, apiKey, payload);
+  await fetchWithRetry(
+    `${relayUrl}/api/game/chunk/complete`,
+    apiKey,
+    encryptionKey,
+    payload,
+  );
+}
+
+/**
+ * Trigger Git Relay processing for a completed session.
+ */
+export async function triggerGR(
+  relayUrl: string,
+  apiKey: string,
+  encryptionKey: string,
+  payload: GRPayload,
+): Promise<void> {
+  await fetchWithRetry(
+    `${relayUrl}/api/game/gr`,
+    apiKey,
+    encryptionKey,
+    payload,
+  );
 }
 
 /**
@@ -67,7 +101,7 @@ export async function pollStatus(
 
   while (Date.now() - startTime < MAX_POLL_DURATION_MS) {
     const response = await fetchJson(
-      `${relayUrl}/api/relay/status/${sessionId}`,
+      `${relayUrl}/api/game/chunk/status/${sessionId}`,
       {
         method: 'GET',
         headers: {
@@ -97,19 +131,22 @@ export async function pollStatus(
 async function fetchWithRetry<T>(
   url: string,
   apiKey: string,
-  body: unknown,
+  encryptionKey: string,
+  metadata: object,
+  binaryData?: Buffer,
 ): Promise<T> {
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
+      const gameData = encryptPayload(metadata, encryptionKey, binaryData);
       return (await fetchJson(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Relay-Key': apiKey,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ gameData }),
       })) as T;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
