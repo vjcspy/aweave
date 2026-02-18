@@ -1,4 +1,4 @@
-# Unified NestJS Server (`@aweave/server`)
+# Unified NestJS Server (`@hod/aweave-server`)
 
 > **Source:** `devtools/common/server/`
 > **Last Updated:** 2026-02-07
@@ -10,13 +10,13 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 - **Single Process:** Chỉ cần start 1 server cho tất cả features (debate, docs, future features)
 - **Shared Infrastructure:** Auth guard, exception filter, CORS — viết 1 lần, dùng chung
 - **REST + WebSocket:** Phục vụ cả RESTful API cho CLI và WebSocket cho web UI
-- **Module Composition:** Mỗi feature là 1 pnpm package riêng (`@aweave/nestjs-<feature>`), server chỉ import modules
+- **Module Composition:** Mỗi feature là 1 pnpm package riêng (`@hod/aweave-nestjs-<feature>`), server chỉ import modules
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    @aweave/server                              │
+│                    @hod/aweave-server                              │
 │                   (NestJS Application)                         │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -29,7 +29,7 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 │                                                              │
 │  ┌──────────────────────┐  ┌────────────────────────────┐   │
 │  │   DebateModule        │  │   Future: DocsModule       │   │
-│  │ (@aweave/nestjs-debate)│  │ (@aweave/nestjs-docs)      │   │
+│  │ (@hod/aweave-nestjs-debate)│  │ (@hod/aweave-nestjs-docs)      │   │
 │  └──────────────────────┘  └────────────────────────────┘   │
 │           Feature Modules (separate pnpm packages)           │
 │                                                              │
@@ -51,15 +51,16 @@ Unified NestJS server là **single entry point** cho tất cả backend services
 | `@nestjs/core`, `@nestjs/common` | NestJS framework |
 | `@nestjs/platform-express` | HTTP adapter |
 | `@nestjs/platform-ws`, `@nestjs/websockets` | WebSocket adapter (ws library) |
+| `@nestjs/serve-static` | Static file serving (debate-web SPA) |
 | `@nestjs/swagger` | OpenAPI spec generation + Swagger UI |
-| `@aweave/nestjs-debate` | Debate feature module (workspace dependency) |
+| `@hod/aweave-nestjs-debate` | Debate feature module (workspace dependency) |
 
 **Dependency graph:**
 
 ```
-@aweave/server
-  └── @aweave/nestjs-debate (workspace:*)
-  └── @aweave/nestjs-<future> (workspace:*)
+@hod/aweave-server
+  └── @hod/aweave-nestjs-debate (workspace:*)
+  └── @hod/aweave-nestjs-<future> (workspace:*)
 ```
 
 ## Configuration
@@ -92,14 +93,16 @@ pnpm generate:types     # regenerates lib/api-types.ts from openapi.json
 
 ```
 devtools/common/server/
-├── package.json                         # @aweave/server
+├── package.json                         # @hod/aweave-server
 ├── nest-cli.json
 ├── tsconfig.json
 ├── tsconfig.build.json
 ├── openapi.json                         # Generated OpenAPI spec (committed)
 ├── src/
 │   ├── main.ts                          # Bootstrap: NestFactory, WsAdapter, Swagger, guards, filters
-│   ├── app.module.ts                    # Root module: imports feature modules
+│   ├── app.module.ts                    # Root module: imports feature modules, ServeStaticModule
+│   ├── debate-spa.controller.ts         # Serves debate-web SPA at /debate
+│   ├── root-redirect.controller.ts      # Redirects / to /debate
 │   ├── scripts/
 │   │   └── generate-openapi.ts          # Standalone OpenAPI spec generator
 │   └── shared/
@@ -141,6 +144,15 @@ Supports:
 - NestJS `HttpException`
 - Unknown errors → 500 `INTERNAL_ERROR`
 
+## Static File Serving
+
+The debate-web SPA (React + Rsbuild, static HTML/JS/CSS) is served by the server under the `/debate` prefix via `@nestjs/serve-static`:
+
+- **ServeStaticModule** in `app.module.ts` mounts the built SPA from `public/` (copied from `debate-web` build output)
+- **DebateSpaController** handles `/debate/*` routes with `index.html` fallback for client-side routing
+- **RootRedirectController** redirects `/` to `/debate`
+- **CORS:** In production, CORS is disabled — the SPA is same-origin with the API (both served from the same server)
+
 ## Adding a New Feature Module
 
 Pattern để thêm feature mới vào server:
@@ -149,11 +161,11 @@ Pattern để thêm feature mới vào server:
 2. **Export** NestJS module từ package: `export { MyFeatureModule } from './my-feature.module'`
 3. **Add dependency** trong `devtools/common/server/package.json`:
    ```json
-   "@aweave/nestjs-<feature>": "workspace:*"
+   "@hod/aweave-nestjs-<feature>": "workspace:*"
    ```
 4. **Import** trong `app.module.ts`:
    ```typescript
-   import { MyFeatureModule } from '@aweave/nestjs-<feature>';
+   import { MyFeatureModule } from '@hod/aweave-nestjs-<feature>';
    @Module({ imports: [DebateModule, MyFeatureModule] })
    export class AppModule {}
    ```
@@ -163,12 +175,11 @@ Pattern để thêm feature mới vào server:
 
 > **Package manager:** Workspace dùng **pnpm** (không phải npm). Tất cả commands dùng `pnpm`.
 
-> **PM2:** Production server được quản lý bởi PM2 (`devtools/ecosystem.config.cjs`). Trước khi chạy dev mode, **phải stop PM2** để tránh port conflict.
+> **Process management:** Server được quản lý bởi CLI (`aw server start`). Trước khi chạy dev mode, **phải stop server** để tránh port conflict.
 
 ```bash
-# Stop PM2 process trước khi dev
-cd devtools
-pm2 stop aweave-server
+# Stop server nếu đang chạy (nếu dùng aw server start)
+aw server stop
 
 # Install dependencies (from workspace root)
 pnpm install
@@ -182,9 +193,8 @@ cd common/server && pnpm build
 # Dev mode (watch)
 cd common/server && pnpm start:dev
 
-# Start lại PM2 khi dev xong
-cd devtools
-pm2 start ecosystem.config.cjs --only aweave-server
+# Hoặc dùng CLI để chạy server
+aw server start
 ```
 
 **Health check:**
@@ -200,5 +210,5 @@ curl http://127.0.0.1:3456/health
 - **Debate CLI Plugin:** `devtools/common/cli-plugin-debate/`
 - **Debate CLI Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
 - **Debate Web (frontend):** `devtools/common/debate-web/`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-unified-nestjs-server.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-unified-nestjs-server.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`

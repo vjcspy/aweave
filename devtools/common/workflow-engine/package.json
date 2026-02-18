@@ -1,0 +1,22 @@
+{
+  "name": "@hod/aweave-workflow-engine",
+  "version": "0.1.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && tsc-alias -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "xstate": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsc-alias": "catalog:",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

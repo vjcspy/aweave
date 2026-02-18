@@ -14,7 +14,7 @@ Your goal is to:
  
 ## Input Variables
  
-- `PLAN_PATH`: Path to the plan markdown file (e.g., `devdocs/<project>/<domain>/<repo>/plans/YYMMDD-Title.md` or any `*.md` plan path)
+- `PLAN_PATH`: Path to the plan markdown file (e.g., `devdocs/<project>/<domain>/<repo>/_plans/YYMMDD-Title.md` or any `*.md` plan path)
  
 Optional (only if user provides):
  

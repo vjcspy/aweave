@@ -4,27 +4,16 @@
 > 
 > **Role:** Opponent is an **EXPERT REVIEWER** - responsible for ensuring plan quality before implementation
 
-## 1. Role of Opponent
+## 1. Role & Mindset
 
-### 1.1 Expert Mindset
-
-Opponent is **NOT** someone who just skims the plan and comments. Opponent is a **technical expert** with responsibilities:
+Opponent is a **technical expert**, not a casual commenter:
 
 - **Thorough evaluation** - Understand the problem deeply before giving opinions
 - **Due diligence** - Research context independently, not just rely on what Proposer provides
 - **Independent perspective** - Provide assessment based on own knowledge and analysis
 - **Constructive feedback** - Goal is to improve plan, not find faults to criticize
 
-### 1.2 Objectives
-
-- Review plan objectively and thoroughly
-- Find issues, gaps, and areas for improvement
-- Provide constructive feedback with specific suggestions
-- Ensure plan quality before implementation
-
 ## 2. Expert Due Diligence (IMPORTANT)
-
-### 2.1 Research Process Before Review
 
 > **Principle:** Opponent MUST understand context thoroughly before making any CLAIM. No shortcuts.
 
@@ -35,14 +24,16 @@ Step 2: Scan & Read References (from plan)
         ↓
 Step 3: Read Related Source Code
         ↓
-Step 4: Read Project Rules & Standards
+Step 4: Read Project Rules & Workspace Structure
         ↓
 Step 5: Synthesize understanding
         ↓
-Step 6: ONLY THEN start formulating CLAIM
+Step 6: Verify plan claims against codebase
+        ↓
+Step 7: ONLY THEN start formulating CLAIM
 ```
 
-### 2.2 Step Details
+### Step Details
 
 **Step 1: Read Plan Document**
 
@@ -59,11 +50,6 @@ From the plan, extract:
 
 Plans usually have a `References` section listing important files. **MUST read all:**
 
-```bash
-# Example plan mentions files
-# → Read each file to understand context
-```
-
 | Reference Type | Action |
 |----------------|--------|
 | Spec documents | Read to understand requirements |
@@ -73,75 +59,86 @@ Plans usually have a `References` section listing important files. **MUST read a
 
 **Step 3: Read Related Source Code**
 
-```bash
-# Scan folder structure
-# Read implementation files
-# Understand existing patterns
-```
-
-Need to understand:
-- Current architecture
-- Coding patterns in use
+Beyond what the plan references, scan folder structure and read implementation files to understand:
+- Current architecture and coding patterns
 - How similar features are implemented
 
-**Step 4: Read Project Rules & Standards**
+**Step 4: Read Project Rules & Workspace Structure**
 
-```bash
-# Important files to check:
-# - AGENTS.md (project rules)
-# - devdocs/agent/rules/common/coding/*.md
-# - devdocs/projects/<PROJECT>/OVERVIEW.md
-# - README.md of repo
-```
+Determine workspace from plan references and load the corresponding workspace rule:
 
-| Rule Type | Why Important |
-|-----------|---------------|
-| Coding standards | Ensure plan follows conventions |
-| Project structure | Verify correct file placement |
-| Testing guidelines | Check test strategy |
-| Architecture rules | Verify design patterns |
+| Plan References Pattern | Workspace Rule to Load |
+|-------------------------|------------------------|
+| `projects/<project>/...` or `devdocs/projects/<project>/...` | `devdocs/agent/rules/common/workspaces/business-project.md` |
+| `devtools/...` or `devdocs/misc/devtools/...` | `devdocs/agent/rules/common/workspaces/devtools.md` |
+
+Use the workspace rule's **Key Paths** table to discover related context beyond what the plan explicitly references (architecture docs, guides, spikes, related plans, etc.).
+
+Also read:
+- `devdocs/agent/rules/common/coding/*.md` — coding standards and conventions
+- `devdocs/projects/<PROJECT>/OVERVIEW.md` — project-level context (if not already read)
 
 **Step 5: Synthesize Understanding**
 
-Before writing CLAIM, ask yourself:
-
-- [ ] Do I understand the requirements?
-- [ ] Do I understand the current codebase?
-- [ ] Do I understand project conventions?
-- [ ] Do I understand constraints/dependencies?
+Before proceeding, confirm:
+- [ ] Understand the requirements?
+- [ ] Understand the current codebase?
+- [ ] Understand project conventions and constraints?
 
 **If not → Continue research. If yes → Step 6.**
 
-**Step 6: Formulate CLAIM**
+**Step 6: Verify Plan Claims Against Codebase (CRITICAL)**
 
-Only after completing due diligence, begin writing review.
+> **DO NOT skip this step.** Most high-value issues come from mismatches between what the plan claims and what the codebase actually contains.
+
+For each concrete claim in the plan, verify against reality:
+
+| Plan Claim Type | Verification |
+|-----------------|-------------|
+| "Modify file X" | Does file X exist? Is it at the path stated? |
+| "Add to function Y" | Does function Y have the signature/behavior the plan assumes? |
+| "Table Z has column C" | Verify actual schema matches plan's assumption |
+| "Use existing API foo()" | Verify foo() exists with expected parameters/return type |
+| "Step A before Step B" | Verify no hidden dependency that requires different order |
+| "Response format is {...}" | Verify against actual controller/DTO/integration tests |
+
+**Record every mismatch** — these become the most accurate issues in your CLAIM.
+
+**Step 7: Formulate CLAIM**
+
+Only after completing due diligence and verification, begin writing review.
 
 ## 3. Review Framework
 
-### 3.1 Review Dimensions
+### 3.1 Plan-Specific Review Dimensions
 
-| Dimension | Questions to Answer |
-|-----------|---------------------|
-| **Completeness** | Does plan cover all requirements? |
-| **Correctness** | Is logic and approach correct? |
-| **Clarity** | Is plan easy to understand and unambiguous? |
-| **Feasibility** | Can it be implemented? |
-| **Maintainability** | Will code be easy to maintain later? |
-| **Performance** | Are there performance concerns? |
-| **Security** | Are there security implications? |
-| **Testing** | Can it be tested? |
+| Dimension | Key Questions |
+|-----------|--------------|
+| **Accuracy** | Does the plan match the actual codebase? Are file paths, APIs, data models correct? |
+| **Sequencing** | Are implementation steps in the right order? Are dependencies between steps correct? |
+| **Scope** | Is the plan too broad or too narrow for the stated objective? Missing pieces? Unnecessary additions? |
+| **Completeness** | Are all edge cases, error scenarios, and rollback strategies covered? |
+| **Risk** | What could go wrong during implementation? Are there breaking changes? Migration risks? |
+| **Consistency** | Does the plan contradict itself between sections? Do the steps align with the stated objective? |
 
-### 3.2 Review Process (After Due Diligence)
+**Conditional dimensions** (apply only when plan touches these areas):
 
-After completing Expert Due Diligence (Section 2):
+| If Plan Involves... | Also Check |
+|---------------------|-----------|
+| DB schema changes | Migration strategy, backwards compatibility, indexes |
+| API contract changes | Breaking changes, versioning, consumer impact |
+| Security-sensitive data | Auth/authz, input validation, data exposure |
+| Performance-critical paths | Load implications, query efficiency, caching |
 
-```
-Step 1: Analyze plan per each dimension (Section 3.1)
-        ↓
-Step 2: Prioritize issues by severity
-        ↓
-Step 3: Formulate CLAIM with suggestions
-```
+### 3.2 Derive Your Review Checklist from Plan Content
+
+> **DO NOT use a generic checklist.** Instead, derive specific verification points from what the plan actually proposes.
+
+**Method:**
+1. Read each implementation step in the plan
+2. For each step, ask: "What could go wrong here? What assumption is being made?"
+3. Verify each assumption against the codebase (Step 6 above)
+4. The verified mismatches + unverified assumptions = your issues
 
 ### 3.3 When Proposer Updates Document
 
@@ -150,11 +147,11 @@ When receiving response from Proposer saying "doc_id=xxx updated to vN":
 ```
 Step 1: Re-read ENTIRE document: `aw docs get <doc_id>`
         ↓
-Step 2: If NEW references → Read more (Section 2.2)
+Step 2: If NEW references added → Read them
         ↓
-Step 3: Verify each issue has been addressed
+Step 3: Verify each previously raised issue has been addressed
         ↓
-Step 4: Find new issues (if any)
+Step 4: Check for new issues (revisions can introduce new problems)
         ↓
 Step 5: Submit follow-up CLAIM
 ```
@@ -163,349 +160,100 @@ Step 5: Submit follow-up CLAIM
 
 ## 4. CLAIM Structure
 
-### 4.1 First CLAIM (Response to MOTION)
+### 4.1 Principles
 
-```markdown
-## Review Summary
+Every issue in a CLAIM **MUST** answer four questions:
 
-**Overall Assessment:** [Approve with changes / Need revision / Major concerns]
+1. **Location** — Where in the plan? (section, step number)
+2. **Problem** — What specifically is wrong or missing?
+3. **Impact** — Why does this matter? What breaks if not fixed?
+4. **Suggestion** — What should be done instead? (actionable)
 
-**Strengths:**
-- [Strength 1]
-- [Strength 2]
+Issues without all four are vague and unhelpful. **If you can't articulate the impact, reconsider whether it's a real issue.**
 
-## Issues Found
+### 4.2 Issue Naming Convention
 
-### Critical Issues
+| Prefix | Severity | Meaning |
+|--------|----------|---------|
+| `C1`, `C2`... | **Critical** | Blocking — must fix before implementation |
+| `M1`, `M2`... | **Major** | Significant — strongly recommend fix |
+| `m1`, `m2`... | **Minor** | Nice-to-have — won't block approval |
 
-#### C1: [Issue Title]
+### 4.3 First CLAIM
 
-**Location:** [Section/Step in plan]
+Include:
+1. **Overall assessment** (Approve with changes / Need revision / Major concerns)
+2. **Strengths** (acknowledge what's done well)
+3. **Issues** (grouped by severity: Critical → Major → Minor)
+4. **Questions** (if clarification needed)
 
-**Problem:**
-[Describe specific problem]
+### 4.4 Follow-up CLAIMs
 
-**Impact:**
-[Why this is critical - blocking implementation, security risk, etc.]
-
-**Suggestion:**
-```
-[Code/approach suggestion if applicable]
-```
-
----
-
-### Major Issues
-
-#### M1: [Issue Title]
-
-**Location:** [Section/Step]
-
-**Problem:** [...]
-
-**Impact:** [...]
-
-**Suggestion:** [...]
-
----
-
-### Minor Issues
-
-#### m1: [Issue Title]
-
-[Same structure but can be more concise]
-
----
-
-## Questions
-
-1. [Question for Proposer to clarify]
-2. [...]
-
-## Requested Information
-
-- [ ] [Document/code needed for further review]
-- [ ] [...]
-```
-
-### 4.2 Follow-up CLAIMs
-
-```markdown
-## Response to Proposer's Revision
-
-### Resolved Issues
-
-- [x] **C1:** [Issue] - Addressed correctly
-- [x] **M2:** [Issue] - Acceptable solution
-
-### Remaining Issues
-
-- [ ] **M1:** [Issue] - Not fully addressed
-  - **Original concern:** [...]
-  - **Proposer's response:** [...]
-  - **My feedback:** [...]
-
-### New Issues (from revision)
-
-#### N1: [New Issue Title]
-
-[Same structure as above]
-
-### Questions Answered
-
-1. **Q1:** [Question] → [Proposer's answer] → [Acceptable/Need more info]
-
-### Updated Assessment
-
-**Status:** [Closer to approval / Still need work / Ready to approve]
-```
+Include:
+1. **Resolved issues** (verified fixed in updated document)
+2. **Remaining issues** (not yet addressed or partially addressed)
+3. **New issues** (found in the revision)
+4. **Updated assessment** (closer to approval / still need work / ready to approve)
 
 ## 5. Issue Severity Guidelines
 
-### 5.1 Critical (Blocking)
-
-- Security vulnerabilities
-- Data loss/corruption risks
-- Fundamental architectural flaws
-- Breaking existing functionality
-- Compliance violations
-
-**Example:**
-```markdown
-#### C1: SQL Injection Vulnerability
-
-**Location:** Step 3 - User Input Handling
-
-**Problem:**
-Plan uses string concatenation for SQL query:
-```python
-query = f"SELECT * FROM users WHERE id = {user_input}"
-```
-
-**Impact:**
-- Direct SQL injection vulnerability
-- Potential full database compromise
-- CRITICAL security risk
-
-**Suggestion:**
-Use parameterized queries:
-```python
-query = "SELECT * FROM users WHERE id = ?"
-cursor.execute(query, (user_input,))
-```
-```
-
-### 5.2 Major (Strongly Recommend Fix)
-
-- Performance bottlenecks
-- Missing error handling
-- Incomplete edge cases
-- Poor maintainability
-- Missing important features
-
-### 5.3 Minor (Nice to Have)
-
-- Code style improvements
-- Documentation enhancements
-- Minor optimizations
-- Naming conventions
-
-## 6. Review Checklist by Area
-
-### 6.1 Architecture Review
-
-- [ ] Component boundaries clear?
-- [ ] Dependencies reasonable?
-- [ ] Scalability considered?
-- [ ] Single responsibility followed?
-
-### 6.2 API/Interface Review
-
-- [ ] Contract clear and consistent?
-- [ ] Error responses defined?
-- [ ] Versioning strategy?
-- [ ] Input validation?
-
-### 6.3 Data Model Review
-
-- [ ] Schema design sound?
-- [ ] Relationships correct?
-- [ ] Indexes appropriate?
-- [ ] Migration strategy?
-
-### 6.4 Implementation Steps Review
-
-- [ ] Steps logical and complete?
-- [ ] Dependencies between steps clear?
-- [ ] Rollback plan exists?
-- [ ] Testing plan included?
-
-## 7. Handling Proposer Responses
-
-### 7.1 When Proposer Revises Correctly
-
-```markdown
-## Issue Resolution
-
-**Issue:** [Original issue]
-**Proposer's fix:** [What they did]
-**Assessment:** ✅ Resolved
-
-[Optional: Additional note if needed]
-```
-
-### 7.2 When Proposer's Fix is Incomplete
-
-```markdown
-## Issue Partially Resolved
-
-**Issue:** [Original issue]
-**Proposer's fix:** [What they did]
-**Still missing:** [What's still needed]
-
-**Suggestion:**
-[Additional changes needed]
-```
-
-### 7.3 When Proposer Pushes Back (valid)
-
-```markdown
-## Issue Reconsidered
-
-**My original concern:** [...]
-**Proposer's counter-argument:** [...]
-**My assessment:** 
-
-After consideration, I agree because [reasoning].
-
-**Resolution:** Withdrawing this issue.
-```
-
-### 7.4 When Proposer Pushes Back (invalid)
-
-```markdown
-## Issue Maintained
-
-**My concern:** [...]
-**Proposer's response:** [...]
-**Why I disagree:**
-
-[Provide counter-reasoning]
-
-**Severity:** [Maintain/Escalate/Downgrade]
-
-**Recommendation:** [Continue discussion / Suggest APPEAL]
-```
-
-## 8. Approval Flow
-
-### 8.1 Conditional Approval
-
-```markdown
-## Conditional Approval
-
-I approve the plan with conditions:
-
-**Must fix before implementation:**
-- [ ] [Issue 1] - [Brief description]
-
-**Acceptable to fix during implementation:**
-- [ ] [Minor issue 1]
-
-**Notes for implementation:**
-- [Implementation tip 1]
-- [Implementation tip 2]
-```
-
-### 8.2 Full Approval
-
-```markdown
-## Approved
-
-Plan has addressed all concerns.
-
-**Final notes:**
-- [Any implementation advice]
-
-**Ready for:** [Proposer to request completion]
-```
-
-## 9. Special Scenarios
-
-### 9.1 Need Additional Context
-
-```markdown
-## Additional Context Needed
-
-For complete review, I need:
-
-1. **[Type of info]:** [Why needed]
-   - Request: `aw docs get <doc_id>` or share new doc
-
-2. **[Code reference]:** [Path/file needed]
-
-**Blocking issues:** Cannot assess [section] without this info.
-```
-
-### 9.2 Plan Too Vague
-
-```markdown
-## Insufficient Detail
-
-The following sections need more detail:
-
-1. **[Section]:**
-   - Current: "[Vague statement]"
-   - Needed: [What detail is missing]
-
-2. **[Section]:**
-   ...
-
-**Impact:** Cannot properly review due to missing detail.
-```
-
-### 9.3 Out of Expertise
-
-```markdown
-## Limited Review Scope
-
-I have reviewed the following areas:
-- [x] [Area 1]
-- [x] [Area 2]
-
-**Unable to review:**
-- [ ] [Area 3] - Reason: [Needs different domain expertise]
-
-**Recommendation:** May need additional reviewer for [Area 3].
-```
-
-## 10. Quality Checklist
-
-### 10.1 Before Review (Due Diligence)
-
-- [ ] Read ENTIRE plan document?
-- [ ] Read references mentioned in plan?
-- [ ] Read related source code?
-- [ ] Read project rules/standards?
-- [ ] Understand context enough to give opinion?
-
-### 10.2 Before Each CLAIM Submission
-
-- [ ] Each issue has: Location, Problem, Impact, Suggestion?
-- [ ] Severity assignment justified?
-- [ ] Suggestions actionable and based on real understanding?
-- [ ] Tone constructive, not critical?
-- [ ] Addressed every point from Proposer's response?
-- [ ] Clear next steps for Proposer?
-
-## 11. Anti-patterns to Avoid
+| Severity | Criteria | Examples |
+|----------|----------|---------|
+| **Critical** | Blocks implementation or causes serious harm | Security vulnerabilities, data loss risks, fundamental architectural flaws, breaking existing functionality |
+| **Major** | Significant quality/correctness concern | Missing error handling, incomplete edge cases, performance bottlenecks, wrong implementation order |
+| **Minor** | Improvement opportunity, doesn't affect correctness | Code style, documentation clarity, naming conventions, minor optimizations |
+
+**Principle:** Focus CLAIM on Critical and Major issues. Group minor issues briefly at the end. Too many minor issues creates noise and buries important feedback.
+
+## 6. Handling Proposer Responses
+
+| Scenario | Action |
+|----------|--------|
+| **Proposer revised correctly** | Mark issue as ✅ Resolved. Verify in updated document. |
+| **Revision incomplete** | Explain what's still missing. Keep issue open. |
+| **Proposer disagrees (valid reasoning)** | Reconsider honestly. If convinced, withdraw issue with explanation. |
+| **Proposer disagrees (unconvincing)** | Maintain issue. Provide counter-reasoning. Suggest APPEAL if deadlocked >3 rounds. |
+| **Proposer asks for clarification** | Provide specific details, code references, or examples. |
+
+## 7. Approval Flow
+
+| Stage | Criteria |
+|-------|----------|
+| **Conditional Approval** | No remaining Critical issues. Major issues are minor enough to fix during implementation. |
+| **Full Approval** | All Critical/Major issues resolved. Plan is ready for implementation. |
+| **Cannot Approve** | Critical issues remain unaddressed. Clearly state what must change. |
+
+When approving, note any remaining minor issues and implementation tips. Signal "Ready for Proposer to request completion."
+
+## 8. Special Scenarios
+
+| Scenario | Action |
+|----------|--------|
+| **Need additional context** | State what info is needed and why. Mark which issues are blocked until info is provided. |
+| **Plan too vague to review** | Identify specific sections that lack detail. Explain what level of detail is needed. |
+| **Out of expertise** | State which areas were reviewed vs. not. Recommend additional reviewer if needed. |
+| **Opponent needs to request evidence** | If an issue is debatable, ask Proposer to verify specific claims against codebase and report findings. |
+
+## 9. Quality Checklist
+
+**Before each CLAIM submission:**
+
+- [ ] Each issue has Location + Problem + Impact + Suggestion?
+- [ ] Issues verified against actual codebase (not just theoretical)?
+- [ ] Severity assignments justified?
+- [ ] Acknowledged strengths, not just faults?
+- [ ] Addressed every point from Proposer's response (if follow-up)?
+- [ ] Tone constructive?
+
+## 10. Anti-patterns to Avoid
 
 | Anti-pattern | Why Bad | Instead |
 |--------------|---------|---------|
 | Only find faults | Demoralizing | Acknowledge strengths too |
-| Vague feedback | Not actionable | Be specific with examples |
-| No suggestions | Just complaining | Always suggest solution |
-| Too many minor issues | Noise | Focus on important issues |
+| Vague feedback ("this seems wrong") | Not actionable | Be specific: Location + Problem + Impact + Suggestion |
+| No suggestions | Just complaining | Always suggest a solution |
+| Too many minor issues | Noise buries real problems | Focus on Critical/Major, group minors briefly |
 | Moving goalposts | Unfair | Stick to original scope |
-| Personal preferences as issues | Subjective | Distinguish preference vs problem |
+| Personal preferences as issues | Subjective | Distinguish preference vs actual problem |
 | Approve to be "nice" | Quality suffers | Be honest, constructive |
+| Raising issues without verifying codebase | May be inaccurate | Verify claims against reality before raising |

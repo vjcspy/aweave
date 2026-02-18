@@ -1,5 +1,6 @@
 // @ts-check
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
@@ -11,7 +12,7 @@ import tseslint from 'typescript-eslint';
  * Import in package-level configs:
  *   import { baseConfig } from '../../eslint.config.mjs';
  */
-export const baseConfig = tseslint.config(
+export const baseConfig = defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   prettierRecommended,
@@ -48,17 +49,23 @@ export const baseConfig = tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  {
+    files: ['**/*.js', '**/*.cjs', '**/*.mjs'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 );
 
 /** Root-level ESLint config (for running `eslint .` from workspace root) */
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
       '**/generated/**',
       'common/debate-web/**',
-      'tinybots/local/**',
+      'nab/local/**',
       'ecosystem.config.cjs',
     ],
   },

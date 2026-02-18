@@ -2,17 +2,15 @@
 
 > *AI + Weave — Weaving engineering context with intelligence*
 
-An AI-first engineering platform that weaves together code, documentation, operations, and context into a unified workspace.
+A platform for working with AI Agents at maximum efficiency — from code, documentation, to operations. **aweave** provides the structure, context, and tools so that AI agents can understand your codebase deeply and collaborate effectively.
 
 ## Overview
 
-**aweave** consolidates multiple projects and tools under a single root, enabling:
+**aweave** consolidates projects, documentation, and developer tools under a single root:
 
-- **AI-First Development** — Optimized for AI coding assistants with structured context
-- **Context Weaving** — Pull context from Confluence, logs, incidents into actionable insights
-- **Requirements Management** — Extract, sync, and track requirements across sources
-- **Centralized DevTools** — Shared infrastructure for local dev, testing, and operations
-- **Multi-Project Support** — Manage multiple independent projects in one workspace
+- **Structured Context for AI** — Documentation, rules, and commands organized so AI agents load exactly the context they need
+- **Multi-Project Workspace** — Manage multiple independent projects with consistent conventions
+- **DevTools Ecosystem** — CLI tools and applications that extend AI agent capabilities beyond code editing
 
 ## Directory Structure
 
@@ -34,23 +32,53 @@ An AI-first engineering platform that weaves together code, documentation, opera
 │
 ├── devtools/                   # Development tools & utilities
 │   ├── common/                 # Shared tools across all projects
-│   │   └── cli/                # Shared CLI tools (dt)
 │   └── <PROJECT_NAME>/         # Project-specific devtools
-│       └── local/              # Local dev infrastructure
-│           ├── docker-compose.yaml
-│           ├── Justfile        # Just commands
-│           └── prisma/         # Database schemas
 │
-├── projects/                   # Source code root
+├── projects/                   # Source code (gitignored)
 │   └── <PROJECT_NAME>/         # Project container
 │       └── <DOMAIN>/           # Domain grouping
 │           └── <REPO>/         # Individual repository
 │
-├── AGENTS.md                   # AI Agent instructions (symlink)
+├── AGENTS.md                   # AI Agent entry point
 └── README.md                   # This file
 ```
 
-## Path Conventions
+## How AI Context Works
+
+The key to effective AI collaboration is **structured context loading**. Instead of dumping everything into the AI's context window, aweave loads context lazily based on what you're working on.
+
+### Entry Point: `AGENTS.md`
+
+`AGENTS.md` is the entry point for all AI agents. It defines:
+
+1. **Core Principles** — Language agnostic, context-aware, safety-first conventions
+2. **Workspace Detection** — AI automatically detects what you're working on from your input path and loads the appropriate context
+3. **Task Detection** — Identifies whether you're planning, implementing, refactoring, or asking questions
+4. **Dynamic Rules** — Additional rules (coding standards, task-specific protocols) are loaded only when needed
+
+### Workspace-Aware Routing
+
+AI agents detect workspace type from your input and load relevant context automatically:
+
+| Your Input Contains | Workspace Type | What Gets Loaded |
+|---------------------|----------------|------------------|
+| `projects/<project>/...` | Business Project | Project & repo OVERVIEW files |
+| `devtools/...` | DevTools | DevTools OVERVIEW files |
+| General question | None | No extra context |
+
+### Context Layers
+
+```
+AGENTS.md (always loaded)
+  → Workspace rules (loaded per workspace type)
+    → OVERVIEW.md files (project/repo context)
+      → Task rules (coding standards, plan templates, etc.)
+        → Agent commands (debate, docs, etc.)
+```
+
+Each layer is loaded **only when needed**, keeping the context window efficient.
+
+### Path Conventions
 
 | Path Pattern | Description | Example |
 |--------------|-------------|---------|
@@ -58,77 +86,52 @@ An AI-first engineering platform that weaves together code, documentation, opera
 | `devdocs/projects/<PROJECT>/<DOMAIN>/<REPO>/` | Documentation | `devdocs/projects/tinybots/backend/wonkers-api/` |
 | `devtools/<PROJECT>/local/` | Local dev tools | `devtools/tinybots/local/` |
 
-## Working with AI Agents
+> **Tip:** Always specify a path when asking AI to work on code. This triggers the correct workspace detection and context loading.
 
-This workspace is optimized for AI coding assistants. The `AGENTS.md` file contains detailed instructions for AI agents.
+## DevTools
 
-### Workspace-Aware Routing
+### Auth
 
-AI agents automatically detect workspace type from your input:
-
-| Your Input Contains | Workspace Type | Context Loaded |
-|---------------------|----------------|----------------|
-| `projects/<project>/...` | Business Project | Project & Repo OVERVIEW |
-| `devtools/...` | DevTools | DevTools OVERVIEW |
-| `devdocs/misc/devtools/...` | DevTools | DevTools OVERVIEW |
-| General question | None | No extra context |
-
-### Key Rules for AI Agents
-
-1. **Specify the path** when working with code:
-   - Business projects: `projects/<PROJECT>/<DOMAIN>/<REPO>/`
-   - DevTools: `devtools/<domain>/<package>/`
-
-2. **Context is loaded automatically** based on detected workspace
-
-3. **Use DevTools** for local development:
-   ```bash
-   just -f devtools/<PROJECT>/local/Justfile <command>
-   ```
-
-## Current Projects
-
-| Project | Description | DevTools |
-|---------|-------------|----------|
-| `tinybots` | Backend services for telemetry & automation | `devtools/tinybots/local/` |
-| `vocalmeet` | WordPress-based assessment platform | `devtools/vocalmeet/local/` |
-
-## Quick Start
-
-### Prerequisites
-
-- [Just](https://github.com/casey/just) — Command runner
-- [Docker](https://www.docker.com/) — Container runtime
-- [uv](https://github.com/astral-sh/uv) — Python package manager (for CLI tools)
-- [pnpm](https://pnpm.io/) — Node.js package manager
-
-### DevTools CLI
+Browser-based SSO authentication for NAB internal services.
 
 ```bash
-# Install the dt CLI tool
-cd devtools && ./scripts/install-all.sh
+# Login to OpenSearch (opens browser for SSO)
+aw auth login -s opensearch -e sit
 
-# Use dt commands
-dt <command>
+# Check credential status
+aw auth status
+
+# Clear browser session data (SSO cookies, cached profiles)
+aw auth clear-session
 ```
 
-### Project-Specific Commands
+First login requires full SSO (email + password + MFA). Subsequent logins reuse the browser session — auto-select account or skip password entirely.
 
-```bash
-# TinyBots example
-just -f devtools/tinybots/local/Justfile start-wonkers-api
-just -f devtools/tinybots/local/Justfile test-wonkers-api
+### Debate
 
-# Vocalmeet example
-just -f devtools/vocalmeet/local/Justfile up
-just -f devtools/vocalmeet/local/Justfile logs
-```
+Let two AI agents debate a topic (e.g. review an implementation plan) while you monitor and arbitrate via a web dashboard.
+
+#### How to Use
+
+**Session 1 — Proposer** (creates the debate):
+
+Ask the AI agent to read `devdocs/agent/commands/common/debate-proposer.md`, then provide the document/topic you want debated. The agent will create the debate and wait for the opponent.
+
+**Session 2 — Opponent** (joins the debate):
+
+In a separate AI agent session, ask it to read `devdocs/agent/commands/common/debate-opponent.md`, then provide the `debate_id` from session 1. The agent will review and challenge the proposal.
+
+**Monitor** — Open the debate-web dashboard at [http://localhost:3457](http://localhost:3457) to watch the conversation in real-time, intervene, or submit rulings as Arbitrator.
+
+Both agents handle the entire flow automatically — creating arguments, waiting for responses, revising documents, and closing the debate when consensus is reached.
 
 ## Documentation
 
-- **AI Agent Rules**: See `AGENTS.md` for AI assistant guidelines
-- **DevTools Guide**: See `devtools/README.md` for development tools
-- **Project Overviews**: See `devdocs/projects/<PROJECT>/OVERVIEW.md` for each project
+- **AI Agent Entry Point**: `AGENTS.md`
+- **Agent Rules**: `devdocs/agent/rules/`
+- **Agent Commands**: `devdocs/agent/commands/`
+- **Project Overviews**: `devdocs/projects/<PROJECT>/OVERVIEW.md`
+- **DevTools Docs**: `devdocs/misc/devtools/`
 
 ## License
 

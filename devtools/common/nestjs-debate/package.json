@@ -1,26 +1,31 @@
 {
-  "name": "@aweave/nestjs-debate",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@hod/aweave-nestjs-debate",
+  "version": "0.1.1",
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nest build"
+    "build": "nest build && tsc-alias -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@aweave/debate-machine": "workspace:*",
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/platform-ws": "^11.0.1",
-    "@nestjs/swagger": "^11.2.6",
-    "@nestjs/websockets": "^11.0.1",
-    "better-sqlite3": "^11.0.0"
+    "@hod/aweave-debate-machine": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/platform-ws": "catalog:",
+    "@nestjs/swagger": "catalog:",
+    "@nestjs/websockets": "catalog:",
+    "better-sqlite3": "catalog:"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
-    "@types/node": "^22.10.7",
+    "@nestjs/cli": "catalog:",
+    "@types/better-sqlite3": "catalog:",
+    "@types/node": "catalog:",
     "@types/ws": "^8.5.12",
-    "@types/better-sqlite3": "^7.0.0",
-    "typescript": "^5.7.3"
+    "tsc-alias": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "@nestjs/core": "^11.0.0"

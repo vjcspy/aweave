@@ -29,7 +29,11 @@ export function saveConfig(updates: Partial<RelayConfig>): RelayConfig {
   const merged = { ...existing, ...updates };
 
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
+  fs.writeFileSync(
+    CONFIG_FILE,
+    JSON.stringify(merged, null, 2) + '\n',
+    'utf-8',
+  );
 
   return merged;
 }

@@ -1,3 +1,32 @@
+catalog:
+  # CLI
+  "@oclif/core": "^4.2.8"
+
+  # React / Ink
+  react: "19.2.3"
+  "@types/react": "^19.0.0"
+  ink: "^6.6.0"
+
+  # State management
+  xstate: "^5"
+
+  # NestJS
+  "@nestjs/common": "^11.0.1"
+  "@nestjs/platform-ws": "^11.0.1"
+  "@nestjs/swagger": "^11.2.6"
+  "@nestjs/websockets": "^11.0.1"
+  "@nestjs/cli": "^11.0.0"
+
+  # Database
+  better-sqlite3: "^11.8.1"
+  "@types/better-sqlite3": "^7.6.13"
+
+  # Tooling
+  typescript: "^5.7.3"
+  "@types/node": "^22.10.7"
+  ts-node: "^10.9.2"
+  tsc-alias: "^1.8.16"
+
 packages:
   - nab/cli/foo
   - common/server
@@ -5,11 +34,19 @@ packages:
   - common/debate-machine
   - common/debate-web
   - common/cli-shared
+  - common/playwright
   - common/cli
   - common/cli-plugin-debate
   - common/cli-plugin-docs
   - common/cli-plugin-dashboard
   - common/cli-plugin-relay
+  - common/workflow-engine
+  - common/workflow-dashboard
+  - common/config-core
+  - common/config
+  - common/cli-plugin-config
+  - common/cli-plugin-server
+  - common/cli-plugin-demo-workflow
 
 onlyBuiltDependencies:
   - "@nestjs/core"

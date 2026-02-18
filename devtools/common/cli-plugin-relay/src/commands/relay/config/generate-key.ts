@@ -5,11 +5,12 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 export class RelayConfigGenerateKey extends Command {
-  static description = 'Generate a random AES-256 encryption key (base64 encoded)';
+  static description =
+    'Generate a random AES-256 encryption key (base64 encoded)';
 
   static flags = {
     format: Flags.string({
@@ -32,7 +33,8 @@ export class RelayConfigGenerateKey extends Command {
             type: ContentType.JSON,
             data: {
               key,
-              usage: 'Use this key in both CLI config (aw relay config set --encryption-key) and server .env (ENCRYPTION_KEY)',
+              usage:
+                'Use this key in both CLI config (aw relay config set --encryption-key) and server .env (ENCRYPTION_KEY)',
             },
           }),
         ],

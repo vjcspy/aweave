@@ -3,7 +3,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { getConfigPath, saveConfig } from '../../../lib/config';
@@ -14,8 +14,12 @@ export class RelayConfigSet extends Command {
   static flags = {
     'relay-url': Flags.string({ description: 'Vercel relay URL' }),
     'api-key': Flags.string({ description: 'Relay API key' }),
-    'encryption-key': Flags.string({ description: 'AES-256 encryption key (base64)' }),
-    'chunk-size': Flags.integer({ description: 'Chunk size in bytes (max: 3400000)' }),
+    'encryption-key': Flags.string({
+      description: 'AES-256 encryption key (base64)',
+    }),
+    'chunk-size': Flags.integer({
+      description: 'Chunk size in bytes (max: 3400000)',
+    }),
     'base-branch': Flags.string({ description: 'Default base branch' }),
     format: Flags.string({
       default: 'json',
@@ -30,7 +34,8 @@ export class RelayConfigSet extends Command {
     const updates: Record<string, unknown> = {};
     if (flags['relay-url']) updates.relayUrl = flags['relay-url'];
     if (flags['api-key']) updates.apiKey = flags['api-key'];
-    if (flags['encryption-key']) updates.encryptionKey = flags['encryption-key'];
+    if (flags['encryption-key'])
+      updates.encryptionKey = flags['encryption-key'];
     if (flags['chunk-size'] != null) updates.chunkSize = flags['chunk-size'];
     if (flags['base-branch']) updates.defaultBaseBranch = flags['base-branch'];
 
@@ -39,7 +44,7 @@ export class RelayConfigSet extends Command {
       return;
     }
 
-    const saved = saveConfig(updates);
+    saveConfig(updates);
 
     output(
       new MCPResponse({

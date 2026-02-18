@@ -33,46 +33,39 @@ Please read the **ENTIRE** plan document and review.
 ```
 
 **DO NOT include in MOTION:**
-- ❌ Context, requirements (already in plan)
-- ❌ Implementation steps (already in plan)  
-- ❌ Technical decisions (already in plan)
-- ❌ Risks (already in plan)
-- ❌ Focus Areas / Key Technical Decisions to Review
+- Context, requirements, implementation steps, technical decisions, risks (already in plan)
+- Focus Areas / Key Technical Decisions to Review
 
 **Rationale:** 
-- Avoid duplication, keep argument lean, single source of truth is the document
-- **Opponent is the expert** - let them determine what to focus on based on their own due diligence
-- **Avoid bias** - don't direct Opponent to only look where Proposer points, may miss issues elsewhere
+- Single source of truth is the document — avoid duplication
+- **Opponent is the expert** — let them determine what to focus on
+- **Avoid bias** — don't direct Opponent to only look where Proposer points
 
 ## 3. Document Update Workflow (IMPORTANT)
-
-### 3.1 Core Principles
 
 | Rule | Description |
 |------|-------------|
 | **Local-first** | Main document (plan.md) lives locally, edit directly |
-| **Version on change** | Each document edit → MUST submit new version |
+| **Version on change** | Each document edit → MUST submit new version via `aw docs submit` |
 | **Notify Opponent** | Response MUST include version update info |
 
-### 3.2 Workflow When Accepting Valid Feedback
+**Workflow when revising document:**
 
 ```
-Step 1: Read CLAIM from Opponent
+Edit ./plan.md locally
         ↓
-Step 2: Identify issues to address
+aw docs submit <doc_id> --file ./plan.md --summary "..."
         ↓
-Step 3: Edit file ./plan.md directly at local
+Submit CLAIM response with: "doc_id=xxx updated to vN"
         ↓
-Step 4: Submit new version
-        $ aw docs submit <doc_id> --file ./plan.md --summary "..."
-        → Response: { "version": N }
-        ↓
-Step 5: Submit CLAIM response with version info
+Request Opponent to re-read ENTIRE document
 ```
 
-### 3.3 Response Format (With Document Update)
+> **Anti-pattern:** Editing document without submitting version → Opponent has no way to verify changes. ALWAYS `aw docs submit` after every edit.
 
-> **Principle:** Response should be concise, DO NOT explain in detail what was changed. Document has full details - request Opponent to re-read.
+**Response format (with document update):**
+
+> Keep response concise. DO NOT explain in detail what was changed — document has full details. Request Opponent to re-read.
 
 ```markdown
 ## Response to Opponent's Review
@@ -91,262 +84,147 @@ Step 5: Submit CLAIM response with version info
 
 ### Action Required
 
-**Please re-read the ENTIRE updated document** to:
-1. Verify issues have been addressed
-2. Continue review if there are remaining concerns
-
+**Please re-read the ENTIRE updated document** to verify changes.
 Command: `aw docs get <doc_id>`
-
----
-
-## Document Version Summary
-
-| Document | Previous | Current | Changes |
-|----------|----------|---------|---------|
-| doc_id=xxx (plan.md) | v1 | v2 | Fixed C1, M1 |
-
-**Verify changes:** `aw docs get <doc_id>`
 ```
 
-## 4. Response Guidelines
+## 4. Evaluating Opponent Issues (CRITICAL)
 
-### 4.1 When Opponent Raises Valid Issue
+> **Principle:** DO NOT accept or reject issues based on gut feeling. VERIFY against the actual codebase before deciding.
 
-**Actions (in order):**
-1. Acknowledge issue
-2. Analyze impact
-3. **Edit document locally**
-4. **Submit new version** (`aw docs submit`)
-5. Compose response with version info
+### 4.1 Evaluation Decision Tree
 
-**Response format:**
+For each issue Opponent raises, follow this sequence:
+
+```
+Opponent raises issue
+  │
+  ├─ Does issue cite specific code/file/behavior?
+  │   YES → Go to Step A: Verify against codebase
+  │   NO  → Go to Step B: Request evidence
+  │
+  ├─ Step A: VERIFY against codebase
+  │   Read the relevant files/code Opponent references.
+  │   │
+  │   ├─ Opponent is correct (code confirms issue) → ACCEPT & revise
+  │   ├─ Opponent misread the code → COUNTER with evidence
+  │   └─ Situation is ambiguous → DISCUSS, ask for clarification
+  │
+  ├─ Step B: REQUEST evidence
+  │   Ask Opponent to provide specific file/code/behavior reference.
+  │   Do not accept or reject until evidence is provided.
+  │
+  └─ After verification, determine category:
+      │
+      ├─ Genuine gap in plan → ACCEPT & revise (Section 4.2)
+      ├─ Valid concern but current approach is better → COUNTER with reasoning (Section 4.3)
+      ├─ Based on misunderstanding of plan → CLARIFY (Section 4.4)
+      └─ Based on misreading of codebase → COUNTER with code evidence (Section 4.3)
+```
+
+### 4.2 Accepting Valid Issues
+
+1. Acknowledge the issue
+2. **Edit document locally**
+3. **Submit new version** (`aw docs submit`)
+4. Respond with status table + version info (Section 3 format)
+
+> **NOT needed in response:** Impact analysis, summary of change, details of what was changed. Document has full details.
+
+### 4.3 Countering Invalid Issues
+
+> **MUST provide evidence**, not just opinions. Read the relevant code and cite specifics.
 
 ```markdown
 ## Response to [Issue Name]
 
-**Status:** ✅ Accepted
+**Status:** ❌ Disagree
 
-**Document:** doc_id=xxx updated to **v2**
+**Opponent's claim:** [Summarize what they said]
 
-**Action Required:** Please re-read document to verify change.
-```
+**Evidence from codebase:**
+[Cite specific file, line, or behavior that contradicts the claim]
 
-> **NOT needed:** Impact analysis, summary of change, details of what was changed. Document has full details - Opponent reading directly will understand better.
-
-### 4.2 When Opponent Raises Invalid/Unclear Issue
-
-**Actions:**
-1. Clarify understanding
-2. Provide counter-reasoning
-3. Offer to discuss further
-
-**Response format:**
-
-```markdown
-## Response to [Issue Name]
-
-**My Understanding:** [Summarize issue as I understand it]
-
-**Counter-argument:**
-[Explain why current approach is still valid]
-
-**Evidence/Reasoning:**
-- [Point 1]
-- [Point 2]
+**Reasoning:**
+[Why current approach is correct/better]
 
 **Open to Discussion:** [If Opponent has additional context, willing to reconsider]
 ```
 
-### 4.3 When Clarification Needed from Opponent
+### 4.4 Requesting Clarification
+
+When an issue is unclear or seems based on incomplete understanding:
 
 ```markdown
-## Clarification Needed
+**Status:** ❓ Need clarification
 
-Before addressing [Issue], I need to understand better:
-
-1. [Question 1]
-2. [Question 2]
-
-Please clarify so I can respond accurately.
+Before I can address this, I need to understand:
+1. [Specific question]
+2. [What code/behavior are you referring to?]
 ```
 
-## 5. Revision Guidelines
-
-### 5.1 When to Revise?
+### 4.5 When to Revise vs Not
 
 | Scenario | Action | Submit Version? |
 |----------|--------|-----------------|
-| Technical flaw pointed out | Revise immediately | ✅ Yes |
-| Better alternative suggested | Evaluate and revise if better | ✅ Yes |
-| Missing edge case | Add handling | ✅ Yes |
+| Technical flaw confirmed in codebase | Revise immediately | ✅ Yes |
+| Better alternative with evidence | Evaluate, revise if convinced | ✅ Yes |
+| Missing edge case (verified) | Add handling | ✅ Yes |
 | Unclear documentation | Clarify and update | ✅ Yes |
-| Style preference | No need to revise unless strong reason | ❌ No |
+| Style/preference without technical merit | Do not revise | ❌ No |
+| Issue without codebase evidence | Request evidence first | ❌ Wait |
 
-### 5.2 Revision Tracking (in Response)
+## 5. APPEAL Guidelines
 
-```markdown
-## Changes in This Revision
+### When to APPEAL
 
-| Section | Change | Reason | Doc Version |
-|---------|--------|--------|-------------|
-| [Section 1] | [What changed] | [Why] | v1 → v2 |
-| [Section 2] | [What changed] | [Why] | v1 → v2 |
-
-## Document Updates
-
-- **doc_id=xxx (plan.md):** v1 → v2
-- Verify: `aw docs get <doc_id>`
-
-## Outstanding Issues
-
-- [ ] [Issue still being discussed]
-- [x] [Issue resolved in this revision]
-```
-
-### 5.3 Anti-pattern: Editing Without Submitting Version
-
-❌ **DON'T DO:**
-```
-1. Edit ./plan.md
-2. Submit response saying "fixed"
-3. Forget to submit version
-→ Opponent has no way to verify!
-```
-
-✅ **ALWAYS DO:**
-```
-1. Edit ./plan.md
-2. aw docs submit <doc_id> --file ./plan.md --summary "..." → v2
-3. Submit response with "doc_id=xxx updated to v2"
-→ Opponent can verify changes
-```
-
-## 6. APPEAL Guidelines
-
-### 6.1 When to APPEAL?
-
-- Dispute over fundamental design decision
-- Cannot reach consensus after 3 rounds
-- Need business/product decision (not technical)
+- Dispute over fundamental design decision (not implementation detail)
+- Cannot reach consensus after 3 rounds on same point
+- Need business/product decision (not purely technical)
 - Trade-off needs stakeholder input
 
-### 6.2 APPEAL Content for Coding Plan
+> **APPEAL content template** is in `devdocs/agent/commands/common/debate-proposer.md` Section 5. Follow that format.
 
-```markdown
-## Appeal: [Decision/Issue Name]
+**Anti-patterns:**
+- APPEAL too early → Waste Arbitrator time. Try to resolve first.
+- APPEAL too late → Deadlock. APPEAL when stuck >3 rounds.
 
-### Context
+## 6. Request Completion
 
-Debating about: [implementation plan for X]
-
-### Point of Contention
-
-[Describe the point of disagreement]
-
-### Proposer's Position
-
-**Approach:** [My approach]
-
-**Reasoning:**
-- [Reason 1]
-- [Reason 2]
-
-**Trade-offs accepted:**
-- [Trade-off 1]
-
-### Opponent's Position
-
-**Approach:** [Their approach]
-
-**Their reasoning:**
-- [Their reason 1]
-- [Their reason 2]
-
-### Options for Arbitrator
-
-1. **Option A (Proposer's approach):**
-   - Pros: [...]
-   - Cons: [...]
-
-2. **Option B (Opponent's approach):**
-   - Pros: [...]
-   - Cons: [...]
-
-3. **Option C (Hybrid):**
-   - [Describe hybrid approach]
-
-4. **Option D:** Arbitrator proposes alternative approach
-
-### Additional Context
-
-- Timeline pressure: [Yes/No]
-- Reversibility: [Easy/Hard to change later]
-- Team expertise: [Relevant info]
-```
-
-## 7. Request Completion Guidelines
-
-### 7.1 When to Request?
+### When to Request
 
 - All Critical/Major issues resolved
 - Opponent explicitly agrees or raises no new issues
 - Plan has been stable for at least 1 round
 
-### 7.2 Completion Content
+### Completion Content
 
-```markdown
-## Resolution Summary
+Include:
+1. Summary of agreed changes from original plan
+2. Outstanding minor items (accepted as-is, with reason)
+3. Next steps after debate closes
 
-### Agreed Implementation Plan
+> **Completion content template** is in `devdocs/agent/commands/common/debate-proposer.md` Section 6. Follow that format.
 
-[Final version of plan]
+## 7. Quality Checklist
 
-### Changes from Original
+Before each submission:
 
-| Original | Final | Reason for Change |
-|----------|-------|-------------------|
-| [Old approach 1] | [New approach 1] | [Why] |
-| [Old approach 2] | [New approach 2] | [Why] |
-
-### Outstanding Items (accepted as-is)
-
-- [Minor item 1] - Accepted because [reason]
-- [Minor item 2] - Will address in separate PR
-
-### Acknowledgments
-
-- Thank Opponent for [specific valuable feedback]
-
-### Next Steps (after debate closes)
-
-1. [ ] Start implementation
-2. [ ] [Other action items]
-```
-
-## 8. Quality Checklist
-
-Before each submission, verify:
-
+- [ ] **Verified** Opponent's claims against codebase before accepting/rejecting?
 - [ ] Response addresses ALL points Opponent raised?
-- [ ] Technical reasoning clear and accurate?
-- [ ] Plan sections updated consistently?
+- [ ] Technical reasoning backed by evidence (not just opinion)?
 - [ ] No contradictions with previous statements?
-- [ ] Changes tracked properly?
+- [ ] **Document edited locally + `aw docs submit` + version info in response?** (if accepting)
 - [ ] Tone professional and constructive?
-- [ ] **Document edited locally?** (if accepting feedback)
-- [ ] **Ran `aw docs submit` to create new version?**
-- [ ] **Response includes version info for Opponent to verify?**
 
-## 9. Anti-patterns to Avoid
+## 8. Anti-patterns to Avoid
 
 | Anti-pattern | Why Bad | Instead |
 |--------------|---------|---------|
 | Defensive reactions | Not productive | Acknowledge valid points |
-| Ignoring issues | Trust breakdown | Address every issue |
-| Vague responses | Doesn't resolve | Be specific |
-| Changing without explaining | Confusing | Track all changes |
-| APPEAL too early | Waste Arbitrator time | Try to resolve first |
-| APPEAL too late | Deadlock | APPEAL when needed |
-| **Edit doc without submitting version** | Opponent cannot verify | ALWAYS `aw docs submit` after edit |
-| **Paste full doc into argument** | Bloat, hard to track changes | Only summary + doc_id reference |
-| **Create new file each response** | Clutter, hard to manage | Use `--content` or fixed file |
+| Accepting without verifying | May accept invalid issue, degrade plan | Verify against codebase first |
+| Rejecting without evidence | Unconvincing, trust breakdown | Counter with code references |
+| Ignoring issues | Trust breakdown | Address every issue explicitly |
+| Vague responses ("I'll look into it") | Doesn't resolve | Be specific about accept/reject/clarify |
+| Edit doc without submitting version | Opponent cannot verify | ALWAYS `aw docs submit` after edit |
+| Paste full doc into argument | Bloat, hard to track | Only summary + doc_id reference |

@@ -4,6 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import Database = require('better-sqlite3');
 import { mkdirSync } from 'fs';
 import { homedir } from 'os';
@@ -364,19 +365,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return row ? mapArgumentRow(row) : undefined;
   }
 
-  findArgumentsExcludeMotionAsc(
-    debateId: string,
-    limit: number,
-  ): Argument[] {
+  findArgumentsExcludeMotionAsc(debateId: string, limit: number): Argument[] {
     return this.stmts.findArgumentsExcludeMotionAsc
       .all(debateId, limit)
       .map(mapArgumentRow);
   }
 
-  findArgumentsExcludeMotionDesc(
-    debateId: string,
-    limit: number,
-  ): Argument[] {
+  findArgumentsExcludeMotionDesc(debateId: string, limit: number): Argument[] {
     return this.stmts.findArgumentsExcludeMotionDesc
       .all(debateId, limit)
       .map(mapArgumentRow);

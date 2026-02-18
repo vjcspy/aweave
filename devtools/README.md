@@ -1,79 +1,157 @@
-# Devtools
+# DevTools
 
-Unified TypeScript monorepo: CLI (`aw`), backend (NestJS), frontend (Next.js).
+Unified TypeScript CLI + server + web UI for development workflow automation.
 
-## Prerequisites
+## For Users
+
+### Install & Run (npx — no install needed)
+
+```bash
+# Start server + open debate web UI
+npx @hod/aweave server start --open
+
+# Or install globally
+npm install -g @hod/aweave
+aw server start --open
+```
+
+### Available Commands
+
+```bash
+# Server management
+aw server start [--open] [--port 3456]   # Start server daemon
+aw server stop                            # Stop server
+aw server status                          # Show PID, port, uptime
+aw server restart                         # Restart server
+aw server logs [-n 50]                    # View server logs
+
+# Debate
+aw debate create --debate-id <uuid> --title "..." --type general_debate --content "..."
+aw debate list
+aw debate submit --debate-id <uuid> --role proposer --type CLAIM --content "..."
+
+# Other tools
+aw docs create ...                        # Document management
+aw config sync                            # Config synchronization
+aw dashboard                              # Interactive terminal UI
+aw version                                # Show version
+```
+
+### What It Does
+
+- **Server** starts on `http://127.0.0.1:3456` (1 process, 1 port)
+- **Debate Web UI** at `http://127.0.0.1:3456/debate/` — monitor AI agent debates in real-time
+- **REST API** at `/debates`, `/health` — create/manage debates programmatically
+- **WebSocket** at `/ws` — real-time debate updates
+- **Swagger UI** at `/api-docs` (dev mode)
+
+---
+
+## For Contributors
+
+### Prerequisites
 
 - Node.js >= 20
-- pnpm >= 10
-- pm2 (`npm install -g pm2`)
+- pnpm (`npm install -g pnpm`)
 
-## Quickstart
+### Setup
 
 ```bash
 cd devtools
-pnpm install
-pnpm -r build
+pnpm install          # Install all workspace dependencies
+pnpm -r build         # Build all packages
 ```
 
-Install CLI globally:
+### Development Workflow
 
 ```bash
-cd common/cli
-pnpm link --global
-```
+# Link CLI globally for development
+cd common/cli && pnpm link --global
 
-After install, run `aw --help` from anywhere.
+# Now `aw` command is available system-wide (uses local source)
+aw server start
+aw debate list
 
-## Start Services
-
-```bash
-pm2 start ecosystem.config.cjs
-
-# Check status
-pm2 list
-
-# View logs
-pm2 logs
-```
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `aweave-server` | 3456 | NestJS API + WebSocket |
-| `debate-web` | 3457 | Next.js debate monitoring UI |
-
-## Packages
-
-| Package | Path | Description |
-|---------|------|-------------|
-| `@aweave/cli` | `common/cli/` | Root CLI entrypoint (oclif) |
-| `@aweave/cli-shared` | `common/cli-shared/` | Shared CLI libraries (MCP, HTTP, pm2) |
-| `@aweave/cli-plugin-debate` | `common/cli-plugin-debate/` | `aw debate` commands |
-| `@aweave/cli-plugin-docs` | `common/cli-plugin-docs/` | `aw docs` commands |
-| `@aweave/cli-plugin-dashboard` | `common/cli-plugin-dashboard/` | `aw dashboard` commands |
-| `server` | `common/server/` | Unified NestJS server |
-| `@aweave/nestjs-debate` | `common/nestjs-debate/` | Debate backend module (Prisma + SQLite) |
-| `@aweave/debate-machine` | `common/debate-machine/` | Debate state machine |
-| `debate-web` | `common/debate-web/` | Next.js debate web UI |
-
-## Development
-
-```bash
-# Build everything
-pnpm -r build
+# Start debate-web dev server (HMR + proxy to NestJS on port 3456)
+cd common/debate-web && pnpm dev     # http://localhost:3457
 
 # Build specific package
-cd common/server && pnpm build
+cd common/<package> && pnpm build
 
-# Run server directly (dev)
-cd common/server && node dist/main.js
+# Build all
+cd devtools && pnpm -r build
+```
 
-# Run CLI (dev, without global install)
-cd common/cli && ./bin/dev.js --help
+### Project Structure
+
+```
+devtools/
+├── common/                          # Shared packages
+│   ├── cli/                         # @hod/aweave — oclif entrypoint, `aw` binary
+│   ├── cli-shared/                  # @hod/aweave-cli-shared — HTTP client, output helpers
+│   ├── cli-plugin-debate/           # aw debate *
+│   ├── cli-plugin-docs/             # aw docs *
+│   ├── cli-plugin-server/           # aw server * (start/stop/status/restart/logs)
+│   ├── cli-plugin-dashboard/        # aw dashboard (Ink terminal UI)
+│   ├── cli-plugin-config/           # aw config *
+│   ├── cli-plugin-relay/            # aw relay *
+│   ├── server/                      # @hod/aweave-server — NestJS (API + WebSocket + static SPA)
+│   ├── nestjs-debate/               # @hod/aweave-nestjs-debate — debate backend module
+│   ├── debate-web/                  # @hod/aweave-debate-web — React SPA (Rsbuild)
+│   ├── debate-machine/              # @hod/aweave-debate-machine — debate state machine
+│   ├── workflow-engine/             # @hod/aweave-workflow-engine — xstate workflow engine
+│   ├── workflow-dashboard/          # @hod/aweave-workflow-dashboard — Ink workflow UI
+│   ├── config-core/                 # @hod/aweave-config-core — config loader
+│   └── config/                      # @hod/aweave-config-common — shared config
+├── pnpm-workspace.yaml              # Workspace package list + version catalog
+├── package.json                     # Root scripts (build, lint, publish)
+└── scripts/
+    └── build-release.sh             # Build + generate oclif manifest
+```
+
+### Publishing to Artifactory
+
+All workspace packages are published to Artifactory under `@hod/` scope. pnpm handles dependency order and rewrites `workspace:*` to actual versions automatically.
+
+```bash
+# 1. Build all packages
+pnpm -r build
+
+# 2. Generate oclif manifest
+cd common/cli && pnpm exec oclif manifest && cd ../..
+
+# 3. Bump versions (all packages at once)
+pnpm -r exec -- npm version patch --no-git-tag-version
+
+# 4. Publish (pnpm resolves dependency order)
+pnpm -r publish --no-git-checks
+
+# Or use the release script:
+bash scripts/build-release.sh
+```
+
+**Version bump chain:** If you change a leaf package (e.g. `cli-shared`), you must also bump all packages that depend on it (e.g. `cli-plugin-debate`, `cli`). pnpm rewrites `workspace:*` to the exact version at publish time.
+
+### Architecture
+
+```
+User: npx @hod/aweave server start --open
+  │
+  ├─ npm installs @hod/aweave + all @hod/* dependencies
+  ├─ CLI resolves @hod/aweave-server/dist/main.js via require.resolve()
+  ├─ Spawns detached Node.js process (daemon)
+  ├─ NestJS server starts on port 3456:
+  │   ├─ /debates, /ws         → REST API + WebSocket (from @hod/aweave-nestjs-debate)
+  │   ├─ /debate/*             → Static SPA files (from @hod/aweave-debate-web/dist/)
+  │   ├─ /health               → Health check
+  │   └─ /                     → Redirect to /debate
+  └─ Opens browser at http://127.0.0.1:3456/debate/
 ```
 
 ## Documentation
 
-- **Full Overview:** `devdocs/misc/devtools/OVERVIEW.md`
-- **Server docs:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
-- **Debate module docs:** `devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md`
+- **Full architecture:** `devdocs/misc/devtools/OVERVIEW.md`
+- **Server:** `devdocs/misc/devtools/common/server/OVERVIEW.md`
+- **Debate Web:** `devdocs/misc/devtools/common/debate-web/OVERVIEW.md`
+- **CLI plugins:** `devdocs/misc/devtools/common/cli-plugin-<name>/OVERVIEW.md`
+- **Plans:** `devdocs/misc/devtools/common/_plans/`

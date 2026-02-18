@@ -1,4 +1,4 @@
-# Debate Machine (`@aweave/debate-machine`)
+# Debate Machine (`@hod/aweave-debate-machine`)
 
 > **Source:** `devtools/common/debate-machine/`
 > **Last Updated:** 2026-02-07
@@ -11,8 +11,8 @@ This package defines the debate state machine using xstate v5 and provides utili
 
 | Consumer | How it uses the machine |
 |----------|------------------------|
-| `@aweave/cli-plugin-debate` | `getAvailableActions()` to enrich `get-context` and `wait` responses with valid actions per role |
-| `@aweave/nestjs-debate` | `canTransition()` + `transition()` to validate and compute state transitions before persisting to database |
+| `@hod/aweave-plugin-debate` | `getAvailableActions()` to enrich `get-context` and `wait` responses with valid actions per role |
+| `@hod/aweave-nestjs-debate` | `canTransition()` + `transition()` to validate and compute state transitions before persisting to database |
 | `debate-web` (future) | Could import for client-side validation |
 
 ## Exports
@@ -69,7 +69,7 @@ AWAITING_ARBITRATOR ◄───────────────────
 
 ```
 devtools/common/debate-machine/
-├── package.json              # @aweave/debate-machine
+├── package.json              # @hod/aweave-debate-machine
 ├── tsconfig.json             # CommonJS (oclif + NestJS compatible)
 └── src/
     ├── index.ts              # Barrel export
@@ -80,7 +80,7 @@ devtools/common/debate-machine/
 
 ## Related
 
-- **Debate Spec:** `devdocs/misc/devtools/plans/debate.md` (section 2.1 — states & transitions)
+- **Debate Spec:** `devdocs/misc/devtools/common/_plans/debate.md` (section 2.1 — states & transitions)
 - **CLI Plugin:** `devtools/common/cli-plugin-debate/`
 - **NestJS Module:** `devtools/common/nestjs-debate/`
-- **Migration Plan:** `devdocs/misc/devtools/plans/260207-xstate-debate-machine.md`
+- **Migration Plan:** `devdocs/misc/devtools/common/_plans/260207-xstate-debate-machine.md`

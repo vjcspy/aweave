@@ -1,69 +1,114 @@
 #!/bin/bash
-# Doctor script - check environment requirements
+# Doctor script - check and install environment requirements
+# Dependencies: nvm → Node 22 → pnpm → pm2
 
 set -e
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo "=== Environment Check ==="
+REQUIRED_NODE_MAJOR=22
+
+info()  { echo -e "${BLUE}→${NC} $1"; }
+ok()    { echo -e "  ${GREEN}✓${NC} $1"; }
+warn()  { echo -e "  ${YELLOW}!${NC} $1"; }
+fail()  { echo -e "  ${RED}✗${NC} $1"; }
+
+echo ""
+echo "=== Devtools Doctor ==="
 echo ""
 
-# Check Python
-echo -n "Python: "
-if command -v python3 &> /dev/null; then
-    PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-    echo -e "${GREEN}$PYTHON_VERSION${NC}"
+# ─── 1. nvm ───────────────────────────────────────────────────────────
+
+info "Checking nvm..."
+
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+if command -v nvm &> /dev/null; then
+    ok "nvm $(nvm --version)"
 else
-    echo -e "${RED}NOT FOUND${NC}"
-    echo "  Please install Python 3.12+"
-    exit 1
+    warn "nvm not found — installing..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+    if command -v nvm &> /dev/null; then
+        ok "nvm $(nvm --version) installed"
+    else
+        fail "Failed to install nvm"
+        echo "  Please install manually: https://github.com/nvm-sh/nvm"
+        exit 1
+    fi
 fi
 
-# Check Python version >= 3.12
-PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
-PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
-if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 12 ]); then
-    echo -e "  ${YELLOW}Warning: Python 3.12+ recommended (found $PYTHON_VERSION)${NC}"
-fi
+# ─── 2. Node 22 ──────────────────────────────────────────────────────
 
-# Check pip
-echo -n "pip: "
-if command -v pip3 &> /dev/null; then
-    PIP_VERSION=$(pip3 --version 2>&1 | cut -d' ' -f2)
-    echo -e "${GREEN}$PIP_VERSION${NC}"
-else
-    echo -e "${RED}NOT FOUND${NC}"
-fi
+info "Checking Node.js $REQUIRED_NODE_MAJOR..."
 
-# Check uv (optional)
-echo -n "uv: "
-if command -v uv &> /dev/null; then
-    UV_VERSION=$(uv --version 2>&1 | cut -d' ' -f2)
-    echo -e "${GREEN}$UV_VERSION${NC}"
-else
-    echo -e "${YELLOW}NOT FOUND (optional, will use pip)${NC}"
-fi
-
-# Check Node
-echo -n "Node: "
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version 2>&1)
-    echo -e "${GREEN}$NODE_VERSION${NC}"
+    NODE_MAJOR=$(echo "$NODE_VERSION" | sed 's/v//' | cut -d'.' -f1)
+
+    if [ "$NODE_MAJOR" -ge "$REQUIRED_NODE_MAJOR" ]; then
+        ok "Node $NODE_VERSION"
+    else
+        warn "Node $NODE_VERSION found, need v$REQUIRED_NODE_MAJOR+ — installing..."
+        nvm install "$REQUIRED_NODE_MAJOR"
+        nvm use "$REQUIRED_NODE_MAJOR"
+        ok "Node $(node --version) installed"
+    fi
 else
-    echo -e "${YELLOW}NOT FOUND (needed for Node plugins)${NC}"
+    warn "Node not found — installing v$REQUIRED_NODE_MAJOR..."
+    nvm install "$REQUIRED_NODE_MAJOR"
+    nvm use "$REQUIRED_NODE_MAJOR"
+    ok "Node $(node --version) installed"
 fi
 
-# Check pnpm
-echo -n "pnpm: "
+# ─── 3. pnpm ─────────────────────────────────────────────────────────
+
+info "Checking pnpm..."
+
 if command -v pnpm &> /dev/null; then
-    PNPM_VERSION=$(pnpm --version 2>&1)
-    echo -e "${GREEN}$PNPM_VERSION${NC}"
+    ok "pnpm $(pnpm --version)"
 else
-    echo -e "${YELLOW}NOT FOUND (needed for Node plugins)${NC}"
+    warn "pnpm not found — installing via corepack..."
+    corepack enable
+    corepack prepare pnpm@latest --activate
+
+    if command -v pnpm &> /dev/null; then
+        ok "pnpm $(pnpm --version) installed"
+    else
+        fail "Failed to install pnpm via corepack"
+        echo "  Try: npm install -g pnpm"
+        exit 1
+    fi
 fi
+
+# ─── 4. pm2 (global) ─────────────────────────────────────────────────
+
+info "Checking pm2..."
+
+if command -v pm2 &> /dev/null; then
+    ok "pm2 $(pm2 --version)"
+else
+    warn "pm2 not found — installing globally..."
+    pnpm add -g pm2
+
+    if command -v pm2 &> /dev/null; then
+        ok "pm2 $(pm2 --version) installed"
+    else
+        fail "Failed to install pm2"
+        echo "  Try: npm install -g pm2"
+        exit 1
+    fi
+fi
+
+# ─── Done ─────────────────────────────────────────────────────────────
 
 echo ""
-echo "=== Check Complete ==="
+echo -e "${GREEN}=== All checks passed ===${NC}"
+echo ""

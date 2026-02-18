@@ -38,9 +38,7 @@ export class DashboardLogs extends Command {
     // Interactive Ink rendering
     const { render } = await import('ink');
     const React = await import('react');
-    const { LogsPanel } = await import(
-      '../../components/panels/LogsPanel.js'
-    );
+    const { LogsPanel } = await import('../../components/panels/LogsPanel.js');
 
     render(
       React.createElement(LogsPanel, {
@@ -57,21 +55,24 @@ export class DashboardLogs extends Command {
     const stream = createPm2LogStream(serviceName);
     let lineCount = 0;
 
-    stream.emitter.on('line', (line: { timestamp: Date; service: string; message: string }) => {
-      this.log(
-        JSON.stringify({
-          timestamp: line.timestamp.toISOString(),
-          service: line.service,
-          message: line.message,
-        }),
-      );
+    stream.emitter.on(
+      'line',
+      (line: { timestamp: Date; service: string; message: string }) => {
+        this.log(
+          JSON.stringify({
+            timestamp: line.timestamp.toISOString(),
+            service: line.service,
+            message: line.message,
+          }),
+        );
 
-      lineCount++;
-      if (maxLines && lineCount >= maxLines) {
-        stream.stop();
-        process.exit(0);
-      }
-    });
+        lineCount++;
+        if (maxLines && lineCount >= maxLines) {
+          stream.stop();
+          process.exit(0);
+        }
+      },
+    );
 
     stream.emitter.on('error', (err: Error) => {
       this.error(`Log stream error: ${err.message}`);

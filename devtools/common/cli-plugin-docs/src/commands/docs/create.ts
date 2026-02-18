@@ -5,7 +5,7 @@ import {
   MCPResponse,
   output,
   readContent,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import * as db from '../../lib/db';

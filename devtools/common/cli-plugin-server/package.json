@@ -1,0 +1,28 @@
+{
+  "name": "@hod/aweave-plugin-server",
+  "version": "0.1.5",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && tsc-alias -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "oclif": {
+    "commands": "./dist/commands",
+    "topicSeparator": " "
+  },
+  "dependencies": {
+    "@hod/aweave-cli-shared": "workspace:*",
+    "@hod/aweave-server": "workspace:*",
+    "@oclif/core": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsc-alias": "catalog:",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

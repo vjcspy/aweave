@@ -1,4 +1,4 @@
-# Unified CLI Entrypoint (`@aweave/cli`)
+# Unified CLI Entrypoint (`@hod/aweave`)
 
 > **Source:** `devtools/common/cli/`
 > **Last Updated:** 2026-02-07
@@ -10,7 +10,7 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 - **Single Entrypoint:** `aw <command>` — one binary for the entire devtools CLI
 - **Plugin Composition:** Declares and auto-loads domain plugins via the oclif plugin system
 - **Global Install:** Installed via `pnpm link --global`, available system-wide
-- **Extensible:** Adding a new domain = create `@aweave/cli-plugin-<name>`, add to oclif config
+- **Extensible:** Adding a new domain = create `@hod/aweave-plugin-<name>`, add to oclif config
 
 **Why oclif?** `aw` is a platform CLI serving multiple domains (e.g. `common/`, `nab/`, future domains). oclif provides:
 1. Standard plugin system — auto-discovery, no manual require/catch
@@ -22,7 +22,7 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       @aweave/cli                              │
+│                       @hod/aweave                              │
 │                    (oclif Application)                          │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -30,13 +30,13 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 │                       │                                      │
 │                       ├── Built-in commands (version)         │
 │                       │                                      │
-│                       ├── @aweave/cli-plugin-debate           │
+│                       ├── @hod/aweave-plugin-debate           │
 │                       │   └── aw debate *                     │
 │                       │                                      │
-│                       ├── @aweave/cli-plugin-docs             │
+│                       ├── @hod/aweave-plugin-docs             │
 │                       │   └── aw docs *                       │
 │                       │                                      │
-│                       └── @aweave/cli-plugin-<name>           │
+│                       └── @hod/aweave-plugin-<name>           │
 │                           └── aw <name> *                     │
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
@@ -56,18 +56,18 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 |---------|------|
 | `@oclif/core` | oclif framework (command parsing, plugin loading) |
 | `@oclif/plugin-help` | Auto-generated help text |
-| `@aweave/cli-shared` | Shared utilities (MCP, HTTP, helpers) |
-| `@aweave/cli-plugin-*` | Domain command plugins (workspace dependencies) |
+| `@hod/aweave-cli-shared` | Shared utilities (MCP, HTTP, helpers) |
+| `@hod/aweave-plugin-*` | Domain command plugins (workspace dependencies) |
 
 **devDependencies:** `oclif` (CLI for manifest generation), `ts-node`, `typescript`
 
 **Dependency graph (no cycles):**
 ```
-@aweave/cli
-  ├── @aweave/cli-shared
-  ├── @aweave/cli-plugin-debate ──► @aweave/cli-shared
-  ├── @aweave/cli-plugin-docs ──► @aweave/cli-shared
-  └── @aweave/cli-plugin-<name> ──► @aweave/cli-shared
+@hod/aweave
+  ├── @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-debate ──► @hod/aweave-cli-shared
+  ├── @hod/aweave-plugin-docs ──► @hod/aweave-cli-shared
+  └── @hod/aweave-plugin-<name> ──► @hod/aweave-cli-shared
 ```
 
 ## Configuration
@@ -82,9 +82,9 @@ oclif-based main CLI application — provides the global `aw` command. This pack
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "plugins": [
-      "@aweave/cli-plugin-debate",
-      "@aweave/cli-plugin-docs",
-      "@aweave/cli-plugin-<name>"
+      "@hod/aweave-plugin-debate",
+      "@hod/aweave-plugin-docs",
+      "@hod/aweave-plugin-<name>"
     ]
   }
 }
@@ -100,11 +100,11 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 
 ### Adding a New Plugin
 
-1. Create `@aweave/cli-plugin-<name>` package (see plugin OVERVIEW files for pattern)
+1. Create `@hod/aweave-plugin-<name>` package (see plugin OVERVIEW files for pattern)
 2. Add to `devtools/pnpm-workspace.yaml`
 3. Add dependency in this package's `package.json`:
    ```json
-   "@aweave/cli-plugin-<name>": "workspace:*"
+   "@hod/aweave-plugin-<name>": "workspace:*"
    ```
 4. Add to `oclif.plugins` array in this package's `package.json`
 5. `pnpm install && pnpm build`
@@ -113,7 +113,7 @@ oclif-based main CLI application — provides the global `aw` command. This pack
 
 ```
 devtools/common/cli/
-├── package.json                    # @aweave/cli — oclif config, plugin declarations
+├── package.json                    # @hod/aweave — oclif config, plugin declarations
 ├── tsconfig.json
 ├── bin/
 │   ├── run.js                     # Production entrypoint (#!/usr/bin/env node)
@@ -166,5 +166,5 @@ cd devtools/common/cli && bin/dev.js debate generate-id
 - **Debate Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md`
 - **Docs Plugin:** `devtools/common/cli-plugin-docs/`
 - **Docs Plugin Overview:** `devdocs/misc/devtools/common/cli-plugin-docs/OVERVIEW.md`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`
 - **Global DevTools Overview:** `devdocs/misc/devtools/OVERVIEW.md`
