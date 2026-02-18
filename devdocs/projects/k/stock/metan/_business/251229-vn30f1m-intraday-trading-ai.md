@@ -1,4 +1,4 @@
-# Project Plan: VN30F1M Intraday Trading AI Model
+# VN30F1M Intraday Trading AI Model
 
 > **Status:** 📋 PLANNING  
 > **Last Updated:** 2026-01-03
