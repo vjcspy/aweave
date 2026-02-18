@@ -5,8 +5,8 @@
 
 ## References
 
-- Overview: `devdocs/projects/metan/stock/OVERVIEW.md`
-- VN30 Feature Pipeline: `devdocs/projects/metan/stock/260101-build-vn30-feature-pipeline.md`
+- Overview: `devdocs/projects/k/stock/metan/OVERVIEW.md`
+- VN30 Feature Pipeline: `devdocs/projects/k/stock/metan/_plans/260101-build-vn30-feature-pipeline.md`
 - Related Bug: Time format mismatch between `candle.time` ('Z' suffix) and `aggregated_df.index` ('+00:00')
 
 ## Problem Statement
