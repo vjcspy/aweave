@@ -1,6 +1,6 @@
 # 260218: Optimize VN30 Pipeline - Shared Data Layer & Parallel Processing
 
-> **Status:** 📋 PLANNING
+> **Status:** ✅ IMPLEMENTED
 > **Date:** 2026-02-18
 
 ## References
@@ -74,8 +74,8 @@ VN30FeaturePipeline.run()
 
 `_cached_data` is currently a **class-level** dict (line 22), shared across all instances. This causes race conditions under concurrent access. Must be moved to instance-level.
 
-- [ ] Move `_cached_data` from class attribute to `__init__` (instance attribute)
-- [ ] Verify no external code relies on cross-instance cache sharing
+- [x] Move `_cached_data` from class attribute to `__init__` (instance attribute)
+- [x] Verify no external code relies on cross-instance cache sharing
 
 ```python
 class StockDataCollector:
@@ -104,8 +104,8 @@ Modify three components to accept pre-fetched data while keeping full backward c
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/persistor/intraday/intraday_symbol_feature_persistor.py`
 
-- [ ] Add optional `stock_data_collector` parameter to `__init__`
-- [ ] In `persist()`, use external collector if provided, otherwise create new (current behavior)
+- [x] Add optional `stock_data_collector` parameter to `__init__`
+- [x] In `persist()`, use external collector if provided, otherwise create new (current behavior)
 
 ```python
 def __init__(
@@ -129,8 +129,8 @@ def persist(self) -> dict[str, Any]:
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/info/domain/index/tick_vn30_index_calculator.py`
 
-- [ ] Add optional `tick_candles_by_symbol` and `stocks_info` parameters to `__init__`
-- [ ] In `calculate()`, skip fetch steps if data already provided
+- [x] Add optional `tick_candles_by_symbol` and `stocks_info` parameters to `__init__`
+- [x] In `calculate()`, skip fetch steps if data already provided
 
 ```python
 def __init__(
@@ -155,8 +155,8 @@ def calculate(self) -> list[VN30IndexCandle]:
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/aggregator/vn30/vn30_whale_footprint_aggregator.py`
 
-- [ ] Add optional `stocks_info` parameter to `__init__`
-- [ ] In `calculate()`, skip `_fetch_stocks_info()` if data already provided
+- [x] Add optional `stocks_info` parameter to `__init__`
+- [x] In `calculate()`, skip `_fetch_stocks_info()` if data already provided
 
 ```python
 def __init__(
@@ -180,17 +180,17 @@ def calculate(self) -> pd.DataFrame:
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/aggregator/vn30/vn30_whale_footprint_aggregator.py`
 
-- [ ] Line 260: Replace `!= 30` with `!= len(self.symbols)` and fix comment
+- [x] Line 260: Replace `!= 30` with `!= len(self.symbols)` and fix comment
 
 ### Phase 2: Refactor `VN30FeaturePipeline` — Shared Data Layer
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/persistor/vn30/vn30_feature_pipeline.py`
 
-- [ ] Add `max_workers` parameter to `__init__` (default `6`)
-- [ ] Add interval guard clause: raise `ValueError` if `interval != FIVE_MINUTES` (since `TickVN30IndexCalculator` hardcodes 5m)
-- [ ] Add `_prefetch_all_data()` method that creates 30 `StockDataCollector` instances and triggers data loading
-- [ ] Store shared data as instance attributes: `_collectors`, `_stocks_info`, `_tick_candles_by_symbol`
-- [ ] Update `run()` to call prefetch first, then pass cached data downstream
+- [x] Add `max_workers` parameter to `__init__` (default `6`)
+- [x] Add interval guard clause: raise `ValueError` if `interval != FIVE_MINUTES` (since `TickVN30IndexCalculator` hardcodes 5m)
+- [x] Add `_prefetch_all_data()` method that creates 30 `StockDataCollector` instances and triggers data loading
+- [x] Store shared data as instance attributes: `_collectors`, `_stocks_info`, `_tick_candles_by_symbol`
+- [x] Update `run()` to call prefetch first, then pass cached data downstream
 
 ```python
 def __init__(
@@ -233,7 +233,7 @@ def run(self) -> dict[str, Any]:
     # ...
 ```
 
-- [ ] Implement `_prefetch_all_data()` with per-symbol error isolation:
+- [x] Implement `_prefetch_all_data()` with per-symbol error isolation:
 
 ```python
 def _prefetch_all_data(self) -> None:
@@ -280,9 +280,9 @@ def _prefetch_all_data(self) -> None:
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/persistor/vn30/vn30_feature_pipeline.py`
 
-- [ ] Refactor `_calculate_component_features()` to use ThreadPoolExecutor
-- [ ] Extract single-symbol processing into `_process_single_symbol()` for thread submission
-- [ ] Collect results and errors from futures
+- [x] Refactor `_calculate_component_features()` to use ThreadPoolExecutor
+- [x] Extract single-symbol processing into `_process_single_symbol()` for thread submission
+- [x] Collect results and errors from futures
 
 ```python
 def _calculate_component_features(self, existing_dates: dict[str, set[str]]) -> dict[str, int]:
@@ -338,7 +338,7 @@ def _process_single_symbol(self, symbol: str) -> dict[str, Any]:
 
 **File:** `projects/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/persistor/vn30/vn30_feature_pipeline.py`
 
-- [ ] Update `_calculate_index_candles()` to pass pre-fetched data:
+- [x] Update `_calculate_index_candles()` to pass pre-fetched data:
 
 ```python
 def _calculate_index_candles(self) -> list[VN30IndexCandle]:
@@ -352,7 +352,7 @@ def _calculate_index_candles(self) -> list[VN30IndexCandle]:
     return calculator.calculate()
 ```
 
-- [ ] Update `_aggregate_features()` to pass pre-fetched stocks_info:
+- [x] Update `_aggregate_features()` to pass pre-fetched stocks_info:
 
 ```python
 def _aggregate_features(self) -> pd.DataFrame:
@@ -367,8 +367,8 @@ def _aggregate_features(self) -> pd.DataFrame:
 
 ### Phase 5: Fix Minor Issues
 
-- [ ] Fix `_find_candle_at_timepoint` in `TickVN30IndexCalculator` — build lookup dict for O(1) access instead of O(N) linear scan
-- [ ] Fix VN30 index OHLCV rounding: keep `float` (2 decimal places from `TickVN30IndexCalculator`) instead of `round()` to `int`
+- [x] Fix `_find_candle_at_timepoint` in `TickVN30IndexCalculator` — build lookup dict for O(1) access instead of O(N) linear scan
+- [x] Fix VN30 index OHLCV rounding: keep `float` (2 decimal places from `TickVN30IndexCalculator`) instead of `round()` to `int`
 
 ## Affected Files Summary
 
@@ -399,17 +399,17 @@ def _aggregate_features(self) -> pd.DataFrame:
 
 ## Execution Checklist
 
-- [ ] Phase 0: `StockDataCollector` — move `_cached_data` to instance-level
-- [ ] Phase 1a: `IntradaySymbolFeaturePersistor` — optional `stock_data_collector`
-- [ ] Phase 1b: `TickVN30IndexCalculator` — optional pre-fetched data
-- [ ] Phase 1c: `VN30WhaleFootprintAggregator` — optional `stocks_info`
-- [ ] Phase 1d: Fix hard-coded `30`
-- [ ] Phase 2: `VN30FeaturePipeline` — interval guard + shared data layer + `_prefetch_all_data()` with error isolation
-- [ ] Phase 3: `VN30FeaturePipeline` — parallel `_calculate_component_features()`
-- [ ] Phase 4: `VN30FeaturePipeline` — pass pre-fetched data to Steps 3 & 4
-- [ ] Phase 5a: Fix `_find_candle_at_timepoint` O(1) lookup
-- [ ] Phase 5b: Fix VN30 index OHLCV float precision
-- [ ] Linter check
+- [x] Phase 0: `StockDataCollector` — move `_cached_data` to instance-level
+- [x] Phase 1a: `IntradaySymbolFeaturePersistor` — optional `stock_data_collector`
+- [x] Phase 1b: `TickVN30IndexCalculator` — optional pre-fetched data
+- [x] Phase 1c: `VN30WhaleFootprintAggregator` — optional `stocks_info`
+- [x] Phase 1d: Fix hard-coded `30`
+- [x] Phase 2: `VN30FeaturePipeline` — interval guard + shared data layer + `_prefetch_all_data()` with error isolation
+- [x] Phase 3: `VN30FeaturePipeline` — parallel `_calculate_component_features()`
+- [x] Phase 4: `VN30FeaturePipeline` — pass pre-fetched data to Steps 3 & 4
+- [x] Phase 5a: Fix `_find_candle_at_timepoint` O(1) lookup
+- [x] Phase 5b: Fix VN30 index OHLCV float precision
+- [x] Linter check
 - [ ] Test: `max_workers=1` sequential correctness
 - [ ] Test: `max_workers=6` parallel correctness + timing
 
@@ -418,3 +418,26 @@ def _aggregate_features(self) -> pd.DataFrame:
 ### Completed Achievements
 
 - [To be filled after implementation]
+
+## Implementation Notes / As Implemented
+
+- Implemented all planned code changes across 5 target source files with additive interfaces for backward compatibility.
+- `StockDataCollector` cache is now instance-scoped, removing class-level shared mutable state for thread safety.
+- Added optional injected data paths:
+  - `IntradaySymbolFeaturePersistor(..., stock_data_collector=...)`
+  - `TickVN30IndexCalculator(..., tick_candles_by_symbol=..., stocks_info=...)`
+  - `VN30WhaleFootprintAggregator(..., stocks_info=...)`
+- Refactored `VN30FeaturePipeline`:
+  - Added `max_workers` (default `6`) and guard clause enforcing `IntradayInterval.FIVE_MINUTES`
+  - Added `_prefetch_all_data()` with per-symbol error isolation and abort-on-any-failure behavior
+  - Parallelized component feature persistence via `_process_single_symbol()` and `ThreadPoolExecutor`
+  - Passed pre-fetched tick/stocks data into index calculator and aggregator
+  - Preserved VN30 index OHLC as float values (no int rounding in persistence row mapping)
+- Optimized `TickVN30IndexCalculator` candle retrieval:
+  - Replaced O(N) search per symbol/timepoint with O(1) lookup map built once per symbol
+  - Added guard clauses for missing injected stock/tick data
+- Validation performed:
+  - `uv run ruff check` on modified files: passed
+  - `uv run python -m compileall` on modified files: passed
+- Not run (per task rule / not explicitly requested):
+  - End-to-end runtime tests for `max_workers=1` and `max_workers=6`
