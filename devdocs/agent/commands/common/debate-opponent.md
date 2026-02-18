@@ -2,7 +2,10 @@
 
 > **Role:** Opponent - The party responsible for challenging and validating proposal quality
 
-> **⚠️ LANGUAGE REQUIREMENT:** All debate communication (CLAIM responses, feedback) **MUST be in English**. This applies regardless of the language used in referenced documents. Documents may be in any language, but all arguments exchanged between Proposer and Opponent must use English for consistency and clarity.
+> **⚠️ LANGUAGE REQUIREMENT:**
+> - If the user specifies a language (e.g., "debate in Vietnamese"), use that language for all debate communication (CLAIM responses, feedback).
+> - If no language is specified, **default to English**.
+> - **Technical terms MUST ALWAYS remain in English** regardless of chosen language: variable/function/class names, file paths, CLI commands, code snippets, architectural concepts (e.g., dependency injection, event-driven), design patterns, severity labels (Critical/Major/Minor), and industry-standard terminology.
 
 ## CLI Reference
 
@@ -451,52 +454,62 @@ If argument continues > 3 rounds on the same point:
 - **Clearly state position** and reasoning
 - **Suggest Proposer APPEAL** if Arbitrator decision needed
 
-## 8. Timeout Handling (IMPORTANT)
+## 8. Timeout Handling (CRITICAL)
+
+> **⚠️ Multiple consecutive timeouts is the DEFAULT behavior, NOT an edge case.**
+> The CLI returns timeout after ~120s. Proposer typically needs 10-20+ minutes to read feedback, edit code/documents, submit new versions, and compose a response. This means **5-10+ consecutive timeouts is completely normal.** You MUST keep retrying silently without asking user or exiting.
 
 ### 8.1 Why Timeout Happens
 
-Timeout is **expected and normal** - Proposer may need significant time to:
-- Analyze Opponent's CLAIM thoroughly
-- Revise document based on feedback
-- Submit new document version
-- Compose response
+Proposer needs significant time to:
+- Read and analyze Opponent's CLAIM thoroughly
+- **Edit source code** based on feedback (the most time-consuming step)
+- Revise documents and submit new versions
+- Compose a structured response
 
-**DO NOT treat timeout as an error or reason to exit.**
+**Timeout is NOT an error. It is the expected, most common response you will receive.**
 
 ### 8.2 Timeout Response Format
 
+The CLI returns timeout in this structure:
+
 ```json
 {
-  "status": "timeout",
-  "message": "No response after 300s",
-  "retry": {
-    "debate_id": "<DEBATE_ID>",
-    "argument_id": "<LAST_ARG_ID>",
-    "role": "opponent"
-  }
+  "success": true,
+  "content": [
+    {
+      "type": "json",
+      "data": {
+        "status": "timeout",
+        "message": "No response after 120s. you MUST retry by using: aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>",
+        "debate_id": "<DEBATE_ID>",
+        "last_argument_id": "<LAST_ARG_ID>",
+        "last_seen_seq": 2,
+        "retry_command": "aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>"
+      }
+    }
+  ]
 }
 ```
 
-### 8.3 Action: MUST RETRY
+Key fields:
+- `data.status`: `"timeout"` indicates no response yet
+- `data.retry_command`: **exact command to run** for retry (copy-paste ready)
 
-When receiving timeout, **MUST retry using info from response:**
+### 8.3 Action: MUST RETRY Immediately
+
+When receiving timeout, run the `retry_command` from response **immediately**:
 
 ```bash
-aw debate wait \
-  --debate-id <retry.debate_id> \
-  --argument-id <retry.argument_id> \
-  --role <retry.role>
+# Just copy-paste data.retry_command
+aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>
 ```
 
-**Retry loop:**
+**Retry loop (MUST follow):**
 ```
-WHILE response.status == "timeout":
-    # Use retry info from response
-    response = aw debate wait(
-        debate_id=response.retry.debate_id,
-        argument_id=response.retry.argument_id,
-        role=response.retry.role
-    )
+WHILE data.status == "timeout":
+    # Run data.retry_command from response
+    response = execute(data.retry_command)
 
 # When status != "timeout", process normally
 process_response(response)
@@ -504,9 +517,11 @@ process_response(response)
 
 ### 8.4 When to Stop Retrying
 
-- ✅ **Keep retrying** until receiving actual response (action != timeout)
-- ❌ **DO NOT** exit or notify user after first timeout
+- ✅ **Keep retrying indefinitely** until receiving actual response (status != "timeout")
+- ✅ **5-10+ consecutive timeouts is normal** - do NOT treat as unusual
+- ❌ **DO NOT** exit or notify user after ANY number of timeouts
 - ❌ **DO NOT** ask user to resume later just because of timeout
+- ❌ **DO NOT** summarize timeout count or express concern about waiting
 
 **Only stop if:** User explicitly requests to pause/stop the debate session
 
