@@ -2,7 +2,7 @@
 
 ## References
 
-- `/Users/kai/work/k/python/metan/devdocs/projects/metan/stock/business/251115-whale-footsprint-feature.md`
+- `devdocs/projects/k/stock/metan/business/251115-whale-footsprint-feature.md`
 
 ## User Requirements
 

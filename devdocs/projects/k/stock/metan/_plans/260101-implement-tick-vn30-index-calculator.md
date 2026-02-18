@@ -5,9 +5,9 @@
 
 ## References
 
-- Overview: `devdocs/projects/metan/stock/OVERVIEW.md`
-- VN30 Features Plan: `devdocs/projects/metan/stock/251229-vn30-aggregate-features-plan.md`
-- TCBS VN30 Index Calculator: `devdocs/projects/metan/stock/251227-implement-vn30-index-calculator.md`
+- Overview: `devdocs/projects/k/stock/metan/OVERVIEW.md`
+- VN30 Features Plan: `devdocs/projects/k/stock/metan/_plans/251229-vn30-aggregate-features-plan.md`
+- TCBS VN30 Index Calculator: `devdocs/projects/k/stock/metan/_plans/251227-implement-vn30-index-calculator.md`
 - Stock Data Collector: `packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 - Existing Index Module: `packages/stock/metan/stock/info/domain/index/`
 - Candle Models: `packages/stock/metan/stock/info/domain/candle/models.py`

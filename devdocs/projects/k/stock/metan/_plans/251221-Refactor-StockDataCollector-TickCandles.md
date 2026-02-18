@@ -3,7 +3,7 @@
 ## References
 
 > `packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
-> `devdocs/projects/metan/stock/OVERVIEW.md`
+> `devdocs/projects/k/stock/metan/OVERVIEW.md`
 
 ## User Requirements
 

@@ -5,9 +5,9 @@
 
 ## References
 
-- Overview: `devdocs/projects/metan/stock/OVERVIEW.md`
-- Tick VN30 Index Calculator: `devdocs/projects/metan/stock/260101-implement-tick-vn30-index-calculator.md`
-- VN30 Aggregate Features Plan: `devdocs/projects/metan/stock/251229-vn30-aggregate-features-plan.md`
+- Overview: `devdocs/projects/k/stock/metan/OVERVIEW.md`
+- Tick VN30 Index Calculator: `devdocs/projects/k/stock/metan/_plans/260101-implement-tick-vn30-index-calculator.md`
+- VN30 Aggregate Features Plan: `devdocs/projects/k/stock/metan/_plans/251229-vn30-aggregate-features-plan.md`
 - Existing VN30 Aggregate Script: `packages/stock/metan/stock/testbed/calculate_vn30_aggregate.py`
 - Feature Persistor: `packages/stock/metan/stock/trading/domain/feature/persistor/intraday/intraday_symbol_feature_persistor.py`
 - VN30 Aggregator: `packages/stock/metan/stock/trading/domain/feature/aggregator/vn30/vn30_whale_footprint_aggregator.py`

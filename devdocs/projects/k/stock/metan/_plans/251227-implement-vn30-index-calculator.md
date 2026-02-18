@@ -2,7 +2,7 @@
 
 ## References
 
-- Overview: `devdocs/projects/metan/stock/OVERVIEW.md`
+- Overview: `devdocs/projects/k/stock/metan/OVERVIEW.md`
 - Stock Model: `packages/stock/metan/stock/info/domain/stock/models.py`
 - Candle Models: `packages/stock/metan/stock/info/domain/candle/models.py`
 - TCBS Candle Fetcher: `packages/stock/metan/stock/info/domain/stock_data_collector/external/tcbs/tcbs_symbol_candle_fetcher.py`
