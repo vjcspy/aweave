@@ -3,13 +3,14 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { getConfigPath, loadConfig } from '../../../lib/config';
 
 export class RelayConfigShow extends Command {
-  static description = 'Display current relay configuration (sensitive values masked)';
+  static description =
+    'Display current relay configuration (sensitive values masked)';
 
   static flags = {
     format: Flags.string({
@@ -27,7 +28,9 @@ export class RelayConfigShow extends Command {
     const masked = {
       relayUrl: config.relayUrl || '(not set)',
       apiKey: config.apiKey ? maskValue(config.apiKey) : '(not set)',
-      encryptionKey: config.encryptionKey ? maskValue(config.encryptionKey) : '(not set)',
+      encryptionKey: config.encryptionKey
+        ? maskValue(config.encryptionKey)
+        : '(not set)',
       chunkSize: config.chunkSize || 3_145_728,
       defaultBaseBranch: config.defaultBaseBranch || 'main',
       configPath: getConfigPath(),

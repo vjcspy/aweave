@@ -40,9 +40,8 @@ export class DashboardServices extends Command {
     // Interactive Ink rendering
     const { render } = await import('ink');
     const React = await import('react');
-    const { ServicesPanel } = await import(
-      '../../components/panels/ServicesPanel.js'
-    );
+    const { ServicesPanel } =
+      await import('../../components/panels/ServicesPanel.js');
 
     const intervalMs = flags['refresh-interval'] * 1000;
 

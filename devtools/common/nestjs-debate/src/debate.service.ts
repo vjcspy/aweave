@@ -1,4 +1,4 @@
-import type { DebateState } from '@aweave/debate-machine';
+import type { DebateState } from '@hod/aweave-debate-machine';
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 

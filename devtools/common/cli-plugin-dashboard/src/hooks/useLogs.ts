@@ -35,9 +35,7 @@ export function useLogs(
     stream.emitter.on('line', (line: LogLine) => {
       setLines((prev) => {
         const updated = [...prev, line];
-        return updated.length > maxLines
-          ? updated.slice(-maxLines)
-          : updated;
+        return updated.length > maxLines ? updated.slice(-maxLines) : updated;
       });
     });
 

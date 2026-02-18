@@ -5,7 +5,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { filterWriteResponse, getClient } from '../../lib/helpers';

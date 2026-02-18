@@ -1,0 +1,21 @@
+# Default config for CLI plugins (oclif)
+# User override: ~/.aweave/config/common/cli.yaml
+# Sensitive values (DEBATE_AUTH_TOKEN) must use environment variables — not this file.
+
+configVersion: 1
+
+debate:
+  serverUrl: "http://127.0.0.1:3456"
+  waitDeadline: 120
+  pollInterval: 2
+  autoStartServices: true
+
+services:
+  server:
+    name: "aweave-server"
+    port: 3456
+    healthUrl: "http://127.0.0.1:3456/health"
+  debateWeb:
+    name: "debate-web"
+    port: 3457
+    healthUrl: "http://127.0.0.1:3457"

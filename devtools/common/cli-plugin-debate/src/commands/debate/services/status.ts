@@ -3,7 +3,7 @@ import {
   MCPContent,
   MCPResponse,
   output,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 import { Command, Flags } from '@oclif/core';
 
 import { getServicesStatus } from '../../../lib/services';
@@ -21,7 +21,7 @@ export class DebateServicesStatus extends Command {
 
   async run() {
     const { flags } = await this.parse(DebateServicesStatus);
-    const status = getServicesStatus();
+    const status = await getServicesStatus();
     output(
       new MCPResponse({
         success: true,

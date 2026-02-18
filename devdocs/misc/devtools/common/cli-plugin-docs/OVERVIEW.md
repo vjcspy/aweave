@@ -1,4 +1,4 @@
-# Docs CLI Plugin (`@aweave/cli-plugin-docs`)
+# Docs CLI Plugin (`@hod/aweave-plugin-docs`)
 
 > **Source:** `devtools/common/cli-plugin-docs/`
 > **Last Updated:** 2026-02-07
@@ -23,7 +23,7 @@ Lưu trữ và quản lý documents (chủ yếu markdown) với version history
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                   @aweave/cli-plugin-docs                       │
+│                   @hod/aweave-plugin-docs                       │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  commands/docs/                                              │
@@ -54,7 +54,7 @@ Lưu trữ và quản lý documents (chủ yếu markdown) với version history
 | Package | Role |
 |---------|------|
 | `@oclif/core` | oclif Command class, Flags, Args |
-| `@aweave/cli-shared` | MCPResponse, output helpers, readContent |
+| `@hod/aweave-cli-shared` | MCPResponse, output helpers, readContent |
 | `better-sqlite3` | Synchronous SQLite driver (native binding) |
 
 **No server dependency.** Plugin works standalone — chỉ cần SQLite database file.
@@ -119,7 +119,7 @@ Retry on UNIQUE constraint violation (concurrent writers).
 
 ```
 devtools/common/cli-plugin-docs/
-├── package.json                    # @aweave/cli-plugin-docs
+├── package.json                    # @hod/aweave-plugin-docs
 ├── tsconfig.json
 └── src/
     ├── index.ts                    # (empty — oclif auto-discovers commands)
@@ -156,7 +156,7 @@ rm -f /tmp/test-docs.db
 
 ## Related
 
-- **Docs CLI Plan:** `devdocs/misc/devtools/plans/260131-docs-cli-tool.md`
+- **Docs CLI Plan:** `devdocs/misc/devtools/common/_plans/260131-docs-cli-tool.md`
 - **Shared Utilities:** `devtools/common/cli-shared/`
 - **Main CLI:** `devtools/common/cli/`
-- **Architecture Plan:** `devdocs/misc/devtools/plans/260207-cli-oclif-refactor.md`
+- **Architecture Plan:** `devdocs/misc/devtools/common/_plans/260207-cli-oclif-refactor.md`

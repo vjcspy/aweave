@@ -7,6 +7,7 @@
 
 import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+
 import { useCallback, useEffect, useState } from 'react';
 
 export interface WorkspacePackage {
@@ -47,7 +48,9 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-async function scanWorkspace(devtoolsRoot: string): Promise<WorkspacePackage[]> {
+async function scanWorkspace(
+  devtoolsRoot: string,
+): Promise<WorkspacePackage[]> {
   const workspaceYaml = resolve(devtoolsRoot, 'pnpm-workspace.yaml');
   const content = await readFile(workspaceYaml, 'utf-8');
 
@@ -68,7 +71,10 @@ async function scanWorkspace(devtoolsRoot: string): Promise<WorkspacePackage[]> 
       // Try reading package.json for the real name
       let name = pkgPath.split('/').pop() ?? pkgPath;
       try {
-        const pkgJson = await readFile(resolve(fullPath, 'package.json'), 'utf-8');
+        const pkgJson = await readFile(
+          resolve(fullPath, 'package.json'),
+          'utf-8',
+        );
         const parsed = JSON.parse(pkgJson) as { name?: string };
         if (parsed.name) name = parsed.name;
       } catch {
@@ -84,7 +90,11 @@ async function scanWorkspace(devtoolsRoot: string): Promise<WorkspacePackage[]> 
         path: pkgPath,
         built: hasDistDir || hasNextDir,
       });
-    } else if (inPackages && !line.trim().startsWith('-') && line.trim() !== '') {
+    } else if (
+      inPackages &&
+      !line.trim().startsWith('-') &&
+      line.trim() !== ''
+    ) {
       // End of packages section
       break;
     }

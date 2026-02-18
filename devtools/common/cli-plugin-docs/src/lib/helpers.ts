@@ -2,7 +2,7 @@
  * Shared helpers for docs CLI commands.
  */
 
-import { errorResponse, MCPResponse } from '@aweave/cli-shared';
+import { errorResponse, MCPResponse } from '@hod/aweave-cli-shared';
 
 export function validateFormatNoPlain(
   format: string,

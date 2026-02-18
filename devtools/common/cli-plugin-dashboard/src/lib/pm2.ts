@@ -5,7 +5,7 @@
  * Synchronous calls block the Node event loop and freeze Ink rendering.
  */
 
-import { execFile, spawn, type ChildProcess } from 'node:child_process';
+import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 
 export interface Pm2Process {

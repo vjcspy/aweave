@@ -1,7 +1,7 @@
 /**
  * Health check utilities.
  *
- * Re-exports checkHealth from @aweave/cli-shared and extends with
+ * Re-exports checkHealth from @hod/aweave-cli-shared and extends with
  * latency measurement.
  */
 
@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 // ESM→CJS interop: cli-shared is CJS, this plugin is ESM.
 // Use createRequire() as fallback strategy per plan Phase 1 gate.
 const require = createRequire(import.meta.url);
-const cliShared = require('@aweave/cli-shared') as {
+const cliShared = require('@hod/aweave-cli-shared') as {
   checkHealth: (url: string, timeout?: number) => Promise<boolean>;
 };
 

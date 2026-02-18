@@ -44,9 +44,8 @@ export class DashboardSystem extends Command {
     // Interactive Ink rendering
     const { render } = await import('ink');
     const React = await import('react');
-    const { SystemPanel } = await import(
-      '../../components/panels/SystemPanel.js'
-    );
+    const { SystemPanel } =
+      await import('../../components/panels/SystemPanel.js');
 
     const instance = render(React.createElement(SystemPanel));
 
