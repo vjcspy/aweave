@@ -57,10 +57,10 @@ devtools/*/
 # ========================================
 # Branch: projects/meta
 # ========================================
-!devdocs/agent/commands/meta/
-!devdocs/agent/rules/meta/
-!devdocs/agent/skills/meta/
-!devdocs/agent/templates/meta/
-!devdocs/misc/devtools/meta/
-!devdocs/projects/meta/
-!devtools/meta/
+!devdocs/agent/commands/k/
+!devdocs/agent/rules/k/
+!devdocs/agent/skills/k/
+!devdocs/agent/templates/k/
+!devdocs/misc/devtools/k/
+!devdocs/projects/k/
+!devtools/k/
