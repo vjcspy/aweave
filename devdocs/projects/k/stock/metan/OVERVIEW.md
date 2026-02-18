@@ -24,31 +24,6 @@ The VN30 feature pipeline is now complete and operational. Key capabilities:
 
 **Next Step:** Test AI models for intraday VN30F1M derivative price prediction.
 
-## Recent Changes Log
-
-### Since Jan 01 2026:
-
-- **Added `VN30FeaturePipeline`** ⭐: Complete end-to-end pipeline for building VN30 features:
-  - Smart skip: Only calculates features for symbols/dates not already in DB
-  - Batch date check: Single query for all 31 symbols (30 components + VN30)
-  - Integrates `TickVN30IndexCalculator` for index OHLCV
-  - Aggregates whale footprint features via `VN30WhaleFootprintAggregator`
-  - Persists VN30 as `symbol="VN30"` to `stock_trading_feature_candles`
-  - Entry point: `python -m metan.stock.testbed.build_vn30_features`
-
-- **Added `VN30BaseMarketCapCalculator`**: Calculates and stores VN30 base market cap at 2025-12-31 03:10 UTC in `stock_common_configuration` table. Base index: 2012.
-- **Updated VN30 Index Calculators**: Both `TickVN30IndexCalculator` and `TcbsVN30IndexCalculator` now use the stored base market cap from DB instead of calculating from first candle.
-- **Added `TickVN30IndexCalculator`**: New tick-based VN30 index calculator using Supabase tick candles instead of TCBS REST. Ensures data consistency between VN30 index and whale footprint features for AI model training.
-
-### Since `15a8728` → `6fc4cba`:
-
-- **Added `info/domain/index/` module**: New `TcbsVN30IndexCalculator` calculates VN30 index using market cap weighted methodology with free-float ratios.
-- **Added `trading/domain/feature/aggregator/vn30/` module**: New `VN30WhaleFootprintAggregator` aggregates whale footprint features from 30 VN30 stocks into index-level features.
-- **Added `common/utils/time_utils.py`**: Time normalization utility (`normalize_iso8601`).
-- **Refactored `IntradayTimepointsService`**: Moved to `info/domain/candle/` for better organization.
-- **Added intermediate values feature**: New `intermediate_values.py` computes `pc_value_5d`, `close_price`, and accumulated values required for VN30 aggregation.
-- **Enhanced `StockDataCollector`**: Added `stock()` method to fetch stock metadata including `total_shares`.
-
 ## Repo Purpose & Bounded Context
 
 - Part of `metan-workspace` (see `pyproject.toml` workspace members), this package (`metan-stock`) delivers stock-specific data collection and feature generation used by trading analytics and derivative products (e.g., VN30F1M aggregation described in feature doc).
@@ -343,71 +318,11 @@ This reduces database/API calls when requesting the same data multiple times.
 
 ---
 
-### 🆕 TcbsVN30IndexCalculator (info.domain.index)
-
-> **File:** `packages/stock/metan/stock/info/domain/index/tcbs_vn30_index_calculator.py`
-
-Calculates VN30 Index using market cap weighted methodology.
-
-**Formula:**
-
-```text
-IndexValue = (TotalMarketCap / BaseTotalMarketCap) × BaseIndex
-```
-
-Where:
-
-- `TotalMarketCap = Σ(Price_i × TotalShares_i × FreeFloatRatio_i)` for all 30 symbols
-- `BaseTotalMarketCap` = TotalMarketCap of the first candle
-- `BaseIndex` = 2020.01 (default)
-
-**Usage:**
-
-```python
-from metan.stock.info.domain.index.tcbs_vn30_index_calculator import TcbsVN30IndexCalculator
-
-calculator = TcbsVN30IndexCalculator(
-    start_date="2025-01-01",
-    end_date="2025-01-05",
-    use_free_float=True,  # Apply free-float ratios
-)
-index_candles = calculator.calculate()  # Returns list[VN30IndexCandle]
-```
-
-**Return Type:**
-
-```python
-class VN30IndexCandle(BaseModel):
-    time: str      # ISO 8601 UTC
-    open: float    # Index value from open prices
-    high: float    # Index value from high prices
-    low: float     # Index value from low prices
-    close: float   # Index value from close prices
-    volume: int    # Total volume of all 30 symbols
-    value: int     # Total traded value in millions VND
-```
-
-**Constants:**
-
-- `VN30_SYMBOLS`: List of 30 VN30 component symbols
-- `VN30_FREE_FLOAT_RATIOS`: Free-float ratio for each symbol (default 1.0)
-- `DEFAULT_BASE_INDEX`: 2020.01
-
----
-
 ### 🆕 TickVN30IndexCalculator (info.domain.index)
 
 > **File:** `packages/stock/metan/stock/info/domain/index/tick_vn30_index_calculator.py`
 
 Calculates VN30 Index using tick candle data from Supabase instead of TCBS REST API. Uses the same data source as `VN30WhaleFootprintAggregator` to ensure consistency between index and feature calculations for AI model training.
-
-**Key Differences from TcbsVN30IndexCalculator:**
-
-| Aspect | TcbsVN30IndexCalculator | TickVN30IndexCalculator |
-|--------|------------------------|------------------------|
-| Data Source | `price_candles_by_date()` → TCBS REST | `tick_candles_by_date()` → Supabase |
-| Base Index | 2020.01 | 1000 |
-| Consistency | May differ from features | Same source as whale footprint |
 
 **Usage:**
 
