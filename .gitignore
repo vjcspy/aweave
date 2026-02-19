@@ -62,3 +62,14 @@ resources/workspaces/*
 # Resources — devtools docs, only common/ on master
 resources/workspaces/devtools/*/
 !resources/workspaces/devtools/common/
+
+# ========================================
+# Branch: workspaces/k
+# ========================================
+!agent/commands/k/
+!agent/rules/k/
+!agent/skills/k/
+!agent/templates/k/
+!resources/workspaces/devtools/k/
+!resources/workspaces/k/
+!workspaces/devtools/k/
