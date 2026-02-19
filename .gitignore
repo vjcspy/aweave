@@ -11,45 +11,48 @@ personal/
 AGENTS.md
 
 # ========================================
-# Source Code (fully managed per project branch)
+# User data (structure tracked, content ignored)
 # ========================================
-projects/**
-!projects/.gitkeep
+user/memory/**
+!user/memory/.gitkeep
+user/snippets/**
+!user/snippets/.gitkeep
+user/context/**
+!user/context/.gitkeep
 
 # ========================================
-# Project-specific: devdocs/agent
-# Only common/ tracked on master
+# Workspaces
 # ========================================
-devdocs/agent/commands/*
-!devdocs/agent/commands/common/
+workspaces/*/
+!workspaces/devtools/
 
-devdocs/agent/rules/*
-!devdocs/agent/rules/common/
+# Legacy (will be removed after all workspace branches are migrated)
+projects/
 
-devdocs/agent/skills/*
-!devdocs/agent/skills/common/
-
-devdocs/agent/templates/*
-!devdocs/agent/templates/common/
+# DevTools — only common/, scripts/ and root files on master
+workspaces/devtools/*/
+!workspaces/devtools/common/
+!workspaces/devtools/scripts/
 
 # ========================================
-# Project-specific: devdocs/projects
-# Excluded from master entirely
+# Agent — only common/ on master
 # ========================================
-devdocs/projects/*
-!devdocs/projects/.gitkeep
+agent/commands/*
+!agent/commands/common/
+agent/rules/*
+!agent/rules/common/
+agent/skills/*
+!agent/skills/common/
+agent/templates/*
+!agent/templates/common/
 
 # ========================================
-# Project-specific: devdocs/misc/devtools
-# Only common/ tracked on master
+# Resources — workspace docs excluded on master
 # ========================================
-devdocs/misc/devtools/*/
-!devdocs/misc/devtools/common/
+resources/workspaces/*
+!resources/workspaces/.gitkeep
+!resources/workspaces/devtools/
 
-# ========================================
-# Project-specific: devtools
-# Only common/, scripts/ and root files tracked on master
-# ========================================
-devtools/*/
-!devtools/common/
-!devtools/scripts/
+# Resources — devtools docs, only common/ on master
+resources/workspaces/devtools/*/
+!resources/workspaces/devtools/common/

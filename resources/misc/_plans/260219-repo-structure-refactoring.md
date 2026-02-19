@@ -33,13 +33,13 @@
 
 ### Problems with Current Structure
 
-1. **`projects/` is misleading** — The repo is a multi-workspace platform, but `projects/` implies individual projects. This term also collides with `devdocs/projects/` (documentation mirror), creating confusion about which `projects/` is being referenced.
+1. **`projects/` is misleading** — The repo is a multi-workspace platform, but `projects/` implies individual projects. This term also collides with `resources/workspaces/` (documentation mirror), creating confusion about which `projects/` is being referenced.
 
 2. **`devdocs/` mixes concerns** — It bundles three unrelated things: AI agent brain (`agent/`), project documentation (`projects/`), and misc docs (`misc/`). The agent configuration is behavioral, not documentation — it should live at root level.
 
 3. **`devtools/` is isolated** — devtools follows the same `domain/repo` hierarchy as business workspaces, but sits at root as a separate entity. It should live alongside other workspaces for consistency.
 
-4. **`devdocs/misc/devtools/`** — DevTools documentation is buried under a `misc/` folder with no clear relationship to the `devtools/` source code.
+4. **`resources/workspaces/devtools/`** — DevTools documentation is buried under a `misc/` folder with no clear relationship to the `devtools/` source code.
 
 5. **No tiered context loading** — All OVERVIEW.md files are loaded as full documents. There's no lightweight "summary" layer for quick identification before committing to a full read.
 
@@ -63,7 +63,7 @@
 ├── README.md
 ├── .gitignore
 │
-├── agent/                       # AI Agent brain (moved from devdocs/agent/)
+├── agent/                       # AI Agent brain (moved from agent/)
 │   ├── commands/
 │   │   ├── common/              # Shared commands (tracked on master)
 │   │   └── <ws>/                # Workspace-specific (tracked on ws branch)
@@ -88,7 +88,7 @@
 │
 ├── resources/                   # Documentation & context (renamed from devdocs/)
 │   ├── workspaces/              # Workspace docs
-│   │   ├── devtools/            # DevTools docs (moved from devdocs/misc/devtools/)
+│   │   ├── devtools/            # DevTools docs (moved from resources/workspaces/devtools/)
 │   │   │   ├── ABSTRACT.md      # L0: 100-200 tokens
 │   │   │   ├── OVERVIEW.md      # L1: full overview
 │   │   │   └── common/
@@ -138,17 +138,17 @@
 | Purpose | Old Path | New Path |
 |---------|----------|----------|
 | Source code | `projects/<WS>/<DOMAIN>/<REPO>/` | `workspaces/<WS>/<DOMAIN>/<REPO>/` |
-| Workspace docs | `devdocs/projects/<WS>/<DOMAIN>/<REPO>/` | `resources/workspaces/<WS>/<DOMAIN>/<REPO>/` |
-| Agent rules | `devdocs/agent/rules/common/` | `agent/rules/common/` |
-| Agent commands | `devdocs/agent/commands/common/` | `agent/commands/common/` |
-| Agent skills | `devdocs/agent/skills/common/` | `agent/skills/common/` |
-| Agent templates | `devdocs/agent/templates/common/` | `agent/templates/common/` |
+| Workspace docs | `resources/workspaces/<WS>/<DOMAIN>/<REPO>/` | `resources/workspaces/<WS>/<DOMAIN>/<REPO>/` |
+| Agent rules | `agent/rules/common/` | `agent/rules/common/` |
+| Agent commands | `agent/commands/common/` | `agent/commands/common/` |
+| Agent skills | `agent/skills/common/` | `agent/skills/common/` |
+| Agent templates | `agent/templates/common/` | `agent/templates/common/` |
 | DevTools source | `devtools/common/<pkg>/` | `workspaces/devtools/common/<pkg>/` |
-| DevTools docs | `devdocs/misc/devtools/common/<pkg>/` | `resources/workspaces/devtools/common/<pkg>/` |
-| Misc docs | `devdocs/misc/<folder>/` | `resources/misc/<folder>/` |
+| DevTools docs | `resources/workspaces/devtools/common/<pkg>/` | `resources/workspaces/devtools/common/<pkg>/` |
+| Misc docs | `resources/misc/<folder>/` | `resources/misc/<folder>/` |
 | Workspace type | `business-project` | `business-workspace` |
 | Branch names | `projects/<ws>` | `workspaces/<ws>` |
-| AGENTS.md target | `devdocs/agent/rules/common/rule.md` | `agent/rules/common/rule.md` |
+| AGENTS.md target | `agent/rules/common/rule.md` | `agent/rules/common/rule.md` |
 
 ### Git Branch Architecture (New)
 
@@ -184,10 +184,10 @@ Path references in files are updated using ordered replacement rules. Apply most
 
 | # | Old Pattern | New Pattern | Notes |
 |---|-------------|-------------|-------|
-| 1 | `devdocs/misc/devtools/` | `resources/workspaces/devtools/` | DevTools docs (most specific) |
-| 2 | `devdocs/projects/` | `resources/workspaces/` | Workspace docs |
-| 3 | `devdocs/agent/` | `agent/` | Agent config |
-| 4 | `devdocs/misc/` | `resources/misc/` | Remaining misc |
+| 1 | `resources/workspaces/devtools/` | `resources/workspaces/devtools/` | DevTools docs (most specific) |
+| 2 | `resources/workspaces/` | `resources/workspaces/` | Workspace docs |
+| 3 | `agent/` | `agent/` | Agent config |
+| 4 | `resources/misc/` | `resources/misc/` | Remaining misc |
 | 5 | `devdocs/` | *(should be empty after 1-4, flag if found)* | Catch-all |
 | 6 | `devtools/` → `workspaces/devtools/` | Context-sensitive | Only standalone refs, not part of longer paths already handled |
 | 7 | `projects/` → `workspaces/` | Context-sensitive | Only source code refs |
@@ -212,25 +212,25 @@ Path references in files are updated using ordered replacement rules. Apply most
 
 All moves use `git mv` to preserve history. Order: deepest paths first.
 
-- [ ] **2.1** Move `devdocs/agent/` → `agent/`
+- [ ] **2.1** Move `agent/` → `agent/`
   ```bash
   git mv devdocs/agent agent
   ```
 
-- [ ] **2.2** Move `devdocs/misc/devtools/` → `resources/workspaces/devtools/`
+- [ ] **2.2** Move `resources/workspaces/devtools/` → `resources/workspaces/devtools/`
   ```bash
   mkdir -p resources/workspaces
-  git mv devdocs/misc/devtools resources/workspaces/devtools
+  git mv resources/misc/devtools resources/workspaces/devtools
   ```
 
-- [ ] **2.3** Move `devdocs/misc/` → `resources/misc/`
+- [ ] **2.3** Move `resources/misc/` → `resources/misc/`
   ```bash
   git mv devdocs/misc resources/misc
   ```
 
-- [ ] **2.4** Move `devdocs/projects/.gitkeep` → `resources/workspaces/.gitkeep`
+- [ ] **2.4** Move `resources/workspaces/.gitkeep` → `resources/workspaces/.gitkeep`
   ```bash
-  git mv devdocs/projects/.gitkeep resources/workspaces/.gitkeep
+  git mv resources/workspaces/.gitkeep resources/workspaces/.gitkeep
   rmdir devdocs/projects 2>/dev/null || true
   ```
 
@@ -350,17 +350,17 @@ These files define AI agent behavior. Correctness is critical.
 - [ ] **4.1** Update `agent/rules/common/rule.md` (AGENTS.md source) — 17 refs
   - Frontmatter: update symlink note path
   - Workspace detection table: `projects/<project>/...` → `workspaces/<ws>/...`
-  - Workspace detection table: `devdocs/projects/<project>/...` → `resources/workspaces/<ws>/...`
+  - Workspace detection table: `resources/workspaces/<project>/...` → `resources/workspaces/<ws>/...`
   - Workspace detection table: `devtools/...` → `workspaces/devtools/...`
-  - Workspace detection table: `devdocs/misc/devtools/...` → `resources/workspaces/devtools/...`
+  - Workspace detection table: `resources/workspaces/devtools/...` → `resources/workspaces/devtools/...`
   - Workspace type: `business-project` → `business-workspace`
-  - Load path: `devdocs/agent/rules/common/workspaces/business-project.md` → `agent/rules/common/workspaces/business-workspace.md`
-  - Load path: `devdocs/agent/rules/common/workspaces/devtools.md` → `agent/rules/common/workspaces/devtools.md`
-  - Task rule paths: `devdocs/agent/rules/common/tasks/*` → `agent/rules/common/tasks/*`
-  - Contextual rules paths: `devdocs/agent/rules/common/project-structure.md` → `agent/rules/common/project-structure.md`
-  - Contextual rules paths: `devdocs/agent/rules/common/coding/*` → `agent/rules/common/coding/*`
+  - Load path: `agent/rules/common/workspaces/business-project.md` → `agent/rules/common/workspaces/business-workspace.md`
+  - Load path: `agent/rules/common/workspaces/devtools.md` → `agent/rules/common/workspaces/devtools.md`
+  - Task rule paths: `agent/rules/common/tasks/*` → `agent/rules/common/tasks/*`
+  - Contextual rules paths: `agent/rules/common/project-structure.md` → `agent/rules/common/project-structure.md`
+  - Contextual rules paths: `agent/rules/common/coding/*` → `agent/rules/common/coding/*`
   - Examples: update all example paths
-  - Fast Track paths: `devdocs/agent/commands/common/debate-*.md` → `agent/commands/common/debate-*.md`
+  - Fast Track paths: `agent/commands/common/debate-*.md` → `agent/commands/common/debate-*.md`
   - Source Code Location section: `projects/` → `workspaces/`
 
 - [ ] **4.2** Update `agent/rules/common/workspaces/business-workspace.md` — 31 refs
@@ -379,7 +379,7 @@ These files define AI agent behavior. Correctness is critical.
   - Description: `devtools/` → `workspaces/devtools/`
   - Path variables: `devtools/` → `workspaces/devtools/`
   - All Key Paths: source and doc paths
-  - Folder structure diagram: both `devtools/` and `devdocs/misc/devtools/`
+  - Folder structure diagram: both `devtools/` and `resources/workspaces/devtools/`
   - Context loading paths
   - Search scope paths
   - Skill loading paths
@@ -402,27 +402,27 @@ These files define AI agent behavior. Correctness is critical.
 ### Phase 5: Update Agent Rules (Tasks + Debate — 4 files, ~10 refs)
 
 - [ ] **5.1** Update `agent/rules/common/tasks/create-plan.md` — 2 refs
-  - Template path: `devdocs/agent/templates/common/create-plan.md` → `agent/templates/common/create-plan.md`
+  - Template path: `agent/templates/common/create-plan.md` → `agent/templates/common/create-plan.md`
 
 - [ ] **5.2** Update `agent/rules/common/tasks/implementation.md` — 2 refs
-  - Coding standards path: `devdocs/agent/rules/common/coding/...` → `agent/rules/common/coding/...`
+  - Coding standards path: `agent/rules/common/coding/...` → `agent/rules/common/coding/...`
   - Source locate: `projects/<PROJECT_NAME>/...` → `workspaces/<PROJECT_NAME>/...`
   - Plan file path pattern: `devdocs/**/_plans/*.md` → `resources/**/_plans/*.md`
 
 - [ ] **5.3** Update `agent/rules/common/debate/proposer/coding-plan.md` — 2 refs
-  - Command reference: `devdocs/agent/commands/common/debate-proposer.md` → `agent/commands/common/debate-proposer.md`
+  - Command reference: `agent/commands/common/debate-proposer.md` → `agent/commands/common/debate-proposer.md`
 
 - [ ] **5.4** Update `agent/rules/common/debate/opponent/coding-plan.md` — 4 refs
-  - Workspace rule paths in table: `devdocs/agent/rules/common/workspaces/business-project.md` → `agent/rules/common/workspaces/business-workspace.md`
-  - Workspace rule paths in table: `devdocs/agent/rules/common/workspaces/devtools.md` → `agent/rules/common/workspaces/devtools.md`
-  - Coding standards: `devdocs/agent/rules/common/coding/*.md` → `agent/rules/common/coding/*.md`
-  - Project overview: `devdocs/projects/<PROJECT>/OVERVIEW.md` → `resources/workspaces/<PROJECT>/OVERVIEW.md`
+  - Workspace rule paths in table: `agent/rules/common/workspaces/business-project.md` → `agent/rules/common/workspaces/business-workspace.md`
+  - Workspace rule paths in table: `agent/rules/common/workspaces/devtools.md` → `agent/rules/common/workspaces/devtools.md`
+  - Coding standards: `agent/rules/common/coding/*.md` → `agent/rules/common/coding/*.md`
+  - Project overview: `resources/workspaces/<PROJECT>/OVERVIEW.md` → `resources/workspaces/<PROJECT>/OVERVIEW.md`
 
 ### Phase 6: Update Agent Commands (6 files, ~28 refs)
 
 - [ ] **6.1** Update + enhance `agent/commands/common/create-overview.md` — 5 refs + NEW ABSTRACT.md section
   - Path resolution table: `projects/<PROJECT>/...` → `workspaces/<WS>/...`
-  - Path resolution table: `devdocs/projects/...` → `resources/workspaces/...`
+  - Path resolution table: `resources/workspaces/...` → `resources/workspaces/...`
   - Resolution logic: all path derivation rules
   - **NEW: Add Phase 4 — ABSTRACT.md Generation**
     - After generating/updating OVERVIEW.md, also create/update `ABSTRACT.md` in same directory
@@ -437,18 +437,18 @@ These files define AI agent behavior. Correctness is critical.
     - If ABSTRACT.md does not exist, generate it from the OVERVIEW.md content
 
 - [ ] **6.2** Update `agent/commands/common/debate-proposer.md` — 4 refs
-  - CLI reference paths: `devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md` → `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md`
-  - CLI reference paths: `devdocs/misc/devtools/common/cli-plugin-docs/OVERVIEW.md` → `resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md`
-  - Rule file paths: `devdocs/agent/rules/common/debate/proposer/*.md` → `agent/rules/common/debate/proposer/*.md`
+  - CLI reference paths: `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md` → `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md`
+  - CLI reference paths: `resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md` → `resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md`
+  - Rule file paths: `agent/rules/common/debate/proposer/*.md` → `agent/rules/common/debate/proposer/*.md`
 
 - [ ] **6.3** Update `agent/commands/common/debate-opponent.md` — 4 refs
   - Same CLI reference paths as debate-proposer
-  - Rule file paths: `devdocs/agent/rules/common/debate/opponent/*.md` → `agent/rules/common/debate/opponent/*.md`
+  - Rule file paths: `agent/rules/common/debate/opponent/*.md` → `agent/rules/common/debate/opponent/*.md`
 
 - [ ] **6.4** Update `agent/commands/common/review-branch.md` — 6 refs
-  - Skill path: `devdocs/agent/skills/common/code-review/SKILL.md` → `agent/skills/common/code-review/SKILL.md`
+  - Skill path: `agent/skills/common/code-review/SKILL.md` → `agent/skills/common/code-review/SKILL.md`
   - REPO_PATH examples: `projects/nab/hod/...` → `workspaces/nab/hod/...`
-  - Project context paths: `devdocs/projects/<PROJECT>/...` → `resources/workspaces/<PROJECT>/...`
+  - Project context paths: `resources/workspaces/<PROJECT>/...` → `resources/workspaces/<PROJECT>/...`
 
 - [ ] **6.5** Update `agent/commands/common/review-plan.md` — 4 refs
   - Plan path pattern: `devdocs/<project>/<domain>/<repo>/_plans/...` → `resources/workspaces/<ws>/<domain>/<repo>/_plans/...`
@@ -460,7 +460,7 @@ These files define AI agent behavior. Correctness is critical.
 
 - [ ] **7.1** Update `agent/skills/common/devtools-cli-builder/SKILL.md` — 39 refs
   - All `devtools/` source paths → `workspaces/devtools/`
-  - All `devdocs/misc/devtools/` doc paths → `resources/workspaces/devtools/`
+  - All `resources/workspaces/devtools/` doc paths → `resources/workspaces/devtools/`
   - Workspace config paths
 
 - [ ] **7.2** Update `agent/skills/common/workflow-builder/SKILL.md` — 5 refs
@@ -491,10 +491,10 @@ Most devtools doc files can be updated with ordered sed replacements:
 
 ```bash
 find resources/workspaces/devtools/ -name '*.md' -exec sed -i '' \
-  -e 's|devdocs/misc/devtools/|resources/workspaces/devtools/|g' \
-  -e 's|devdocs/projects/|resources/workspaces/|g' \
-  -e 's|devdocs/agent/|agent/|g' \
-  -e 's|devdocs/misc/|resources/misc/|g' \
+  -e 's|resources/workspaces/devtools/|resources/workspaces/devtools/|g' \
+  -e 's|resources/workspaces/|resources/workspaces/|g' \
+  -e 's|agent/|agent/|g' \
+  -e 's|resources/misc/|resources/misc/|g' \
   {} +
 ```
 
@@ -583,7 +583,7 @@ Create ABSTRACT.md alongside each OVERVIEW.md on master. Content: 100-200 tokens
   git commit -m "refactor: restructure repo — workspaces, agent, resources, user
 
   - projects/ → workspaces/ (source code)
-  - devdocs/agent/ → agent/ (AI agent brain at root)
+  - agent/ → agent/ (AI agent brain at root)
   - devdocs/ → resources/ (documentation & context)
   - devtools/ → workspaces/devtools/ (unified under workspaces)
   - Add user/ folder for user-specific data
@@ -646,21 +646,21 @@ find devtools/ -type d -maxdepth 1 2>/dev/null  # should show workspace domain d
 Move them:
 
 ```bash
-# Workspace docs: devdocs/projects/<WS>/ → resources/workspaces/<WS>/
-git mv devdocs/projects/<WS_NAME> resources/workspaces/<WS_NAME>
+# Workspace docs: resources/workspaces/<WS>/ → resources/workspaces/<WS>/
+git mv resources/workspaces/<WS_NAME> resources/workspaces/<WS_NAME>
 
 # Workspace agent files (if any):
-git mv devdocs/agent/commands/<WS_NAME> agent/commands/<WS_NAME> 2>/dev/null
-git mv devdocs/agent/rules/<WS_NAME> agent/rules/<WS_NAME> 2>/dev/null
-git mv devdocs/agent/skills/<WS_NAME> agent/skills/<WS_NAME> 2>/dev/null
-git mv devdocs/agent/templates/<WS_NAME> agent/templates/<WS_NAME> 2>/dev/null
+git mv agent/commands/<WS_NAME> agent/commands/<WS_NAME> 2>/dev/null
+git mv agent/rules/<WS_NAME> agent/rules/<WS_NAME> 2>/dev/null
+git mv agent/skills/<WS_NAME> agent/skills/<WS_NAME> 2>/dev/null
+git mv agent/templates/<WS_NAME> agent/templates/<WS_NAME> 2>/dev/null
 
 # Workspace devtools domain (if any):
-git mv devdocs/misc/devtools/<WS_NAME> resources/workspaces/devtools/<WS_NAME> 2>/dev/null
+git mv resources/workspaces/devtools/<WS_NAME> resources/workspaces/devtools/<WS_NAME> 2>/dev/null
 git mv devtools/<WS_NAME> workspaces/devtools/<WS_NAME> 2>/dev/null
 
 # Clean up empty old directories:
-rmdir devdocs/projects devdocs/agent/commands devdocs/agent/rules devdocs/agent/skills devdocs/agent/templates devdocs/misc/devtools devdocs/misc devdocs/agent devdocs devtools 2>/dev/null
+rmdir devdocs/projects agent/commands agent/rules agent/skills agent/templates resources/misc/devtools devdocs/misc devdocs/agent devdocs devtools 2>/dev/null
 ```
 
 #### B.3: Update Workspace-Specific Content
@@ -669,10 +669,10 @@ Apply the same replacement rules to workspace docs:
 
 ```bash
 find resources/workspaces/<WS_NAME>/ -name '*.md' -exec sed -i '' \
-  -e 's|devdocs/misc/devtools/|resources/workspaces/devtools/|g' \
-  -e 's|devdocs/projects/|resources/workspaces/|g' \
-  -e 's|devdocs/agent/|agent/|g' \
-  -e 's|devdocs/misc/|resources/misc/|g' \
+  -e 's|resources/workspaces/devtools/|resources/workspaces/devtools/|g' \
+  -e 's|resources/workspaces/|resources/workspaces/|g' \
+  -e 's|agent/|agent/|g' \
+  -e 's|resources/misc/|resources/misc/|g' \
   -e 's|projects/<WS_NAME>/|workspaces/<WS_NAME>/|g' \
   {} +
 ```
@@ -698,12 +698,12 @@ Replace the old branch negate section at the end of `.gitignore`:
 # ========================================
 # Branch: projects/<WS_NAME>
 # ========================================
-!devdocs/agent/commands/<WS_NAME>/
-!devdocs/agent/rules/<WS_NAME>/
-!devdocs/agent/skills/<WS_NAME>/
-!devdocs/agent/templates/<WS_NAME>/
-!devdocs/misc/devtools/<WS_NAME>/
-!devdocs/projects/<WS_NAME>/
+!agent/commands/<WS_NAME>/
+!agent/rules/<WS_NAME>/
+!agent/skills/<WS_NAME>/
+!agent/templates/<WS_NAME>/
+!resources/workspaces/devtools/<WS_NAME>/
+!resources/workspaces/<WS_NAME>/
 !devtools/<WS_NAME>/
 ```
 

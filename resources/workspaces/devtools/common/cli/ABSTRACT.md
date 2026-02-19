@@ -1,0 +1,3 @@
+# CLI — Abstract
+
+The CLI package (`@hod/aweave`) is the oclif-based main application that provides the global `aw` command — the single entrypoint for the entire devtools ecosystem. It contains no business logic; its sole responsibility is bootstrapping oclif, declaring plugins in `package.json`, and auto-discovering domain commands at startup. Each domain ships its commands as an oclif plugin (`@hod/aweave-plugin-<name>`), which the CLI loads automatically. The package is installed globally via `pnpm link --global` or consumed via `npx @hod/aweave`, and depends on `@oclif/core` and `@oclif/plugin-help` for command routing, flag validation, and auto-generated help.

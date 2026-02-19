@@ -1,0 +1,3 @@
+# Debate CLI Plugin — Abstract
+
+The Debate CLI Plugin (`@hod/aweave-plugin-debate`) is an oclif plugin providing the `aw debate` command topic for AI agents to manage and participate in structured debates. It acts as an HTTP client to the NestJS server, handling debate lifecycle operations (create, submit arguments, appeal, request completion, ruling, intervention) and enriching responses with `available_actions` computed locally via the shared xstate debate machine. The plugin auto-starts the NestJS server and debate-web via pm2, uses token-optimized write responses for AI agent consumption, and wraps all output in MCP response format. It depends on `@hod/aweave-cli-shared` for utilities and `@hod/aweave-debate-machine` for state validation.
