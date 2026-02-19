@@ -1,0 +1,47 @@
+---
+description: Cursor tools behavior with gitignored folders
+globs: workspaces/**
+alwaysApply: true
+---
+
+# Gitignore Tool Behavior
+
+The `workspaces/` folder contains source code. Business workspaces are excluded from git tracking (`.gitignore`), while `workspaces/devtools/` is tracked. This affects some Cursor tools.
+
+## Tool Compatibility for gitignored workspaces
+
+| Tool | Works | Notes |
+|------|-------|-------|
+| `Read` | ✅ | Can read files with full path |
+| `Grep` | ✅ | Can search content |
+| `StrReplace` | ✅ | Can edit files |
+| `Write` | ✅ | Can create/overwrite files |
+| `LS` | ❌ | Shows empty (respects .gitignore) |
+| `Glob` | ❌ | Cannot find files (respects .gitignore) |
+| `Shell` | ✅ | Full access via `ls`, `cat`, `find`, etc. |
+
+## Recommended Workflow
+
+When working with source code in gitignored workspaces:
+
+1. **Discover files** using Shell commands:
+
+```bash
+ls -la workspaces/k/stock/metan/packages/
+find workspaces/k/ -name "*.py" -type f | head -20
+```
+
+1. **Read/Edit** using standard tools with discovered paths:
+
+```
+Read: workspaces/k/stock/metan/packages/stock/metan/main.py
+StrReplace: edit with full path
+```
+
+## Why This Happens
+
+Cursor's `LS` and `Glob` tools respect `.gitignore` patterns. Since business workspaces under `workspaces/` are gitignored, these tools cannot list or find files there.
+
+Other tools (`Read`, `Grep`, `StrReplace`, `Write`) work with explicit paths regardless of gitignore status.
+
+> **Note:** `workspaces/devtools/` is tracked in git and works with all Cursor tools normally.
