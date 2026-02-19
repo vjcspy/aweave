@@ -301,11 +301,11 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 **Approach:**
 1. Export 500 ngày VN30 features từ DB
 2. Build triple barrier labels (TP=0.5%, SL=0.3%)
-3. Statistical analysis:
+3. Statistical analysis (dùng toàn bộ 500 ngày, không cần split):
    - Chia mỗi feature thành quartiles, so sánh label distribution giữa các nhóm
    - Mutual information score giữa features và labels
    - Visualization: tỷ lệ LONG labels khi shark buy value ở top 25% vs bottom 25%
-4. Quick LightGBM (default params, train 400 ngày, test 100 ngày)
+4. Quick LightGBM (default params, train 200 ngày ~12K samples, test 50 ngày ~3K samples). Nếu signal đủ mạnh, nó sẽ xuất hiện ngay cả với ít data — nếu cần 400 ngày mới beat random thì signal quá yếu để trade thực tế.
 5. Feature importance ranking
 
 **Go/No-Go:** Gate 1 + Gate 2
