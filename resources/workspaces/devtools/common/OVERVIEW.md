@@ -34,7 +34,7 @@ Use the coverage table to spot missing package overviews quickly.
 
 ### Domain Plugins
 
-- **cli-plugin-tinybots-bitbucket:** TinyBots domain plugin providing `aw tinybots-bitbucket` topic — Bitbucket PR details, comments, tasks (direct Bitbucket REST API v2.0; auto-pagination) ([devdocs/misc/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md](devdocs/misc/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md))
+- **cli-plugin-tinybots-bitbucket:** TinyBots domain plugin providing `aw tinybots-bitbucket` topic — Bitbucket PR details, comments, tasks (direct Bitbucket REST API v2.0; auto-pagination) ([resources/workspaces/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md](resources/workspaces/devtools/tinybots/cli-plugin-bitbucket/OVERVIEW.md))
 
 ### Shared Libraries
 
