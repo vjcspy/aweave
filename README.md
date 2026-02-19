@@ -10,7 +10,7 @@ A platform for working with AI Agents at maximum efficiency — from code, docum
 
 AI coding agents are powerful, but their effectiveness depends entirely on the quality of context they receive. In real-world multi-project environments, developers face persistent friction:
 
-- **Fragmented Context** — Source code lives in cloned repos, documentation is scattered across wikis and READMEs, architecture decisions exist only in Slack threads. Agents have no unified place to find what they need.
+- **Fragmented Context** — Source code lives in cloned repos, documentation is scattered across wikis and READMEs, architecture decisions exist only in Microsoft Teams. Agents have no unified place to find what they need.
 - **Context Window Exhaustion** — Stuffing entire OVERVIEWs, plans, and codebases into a single prompt is expensive, noisy, and often exceeds model limits. Most of that context is irrelevant to the current task.
 - **No Workspace Awareness** — Agents treat every request the same regardless of which project, domain, or repository you're working in. They can't automatically load the right architecture docs or coding conventions.
 - **Agent Capabilities Stop at Code** — IDE-based agents can read and write files, but they can't authenticate to internal services, orchestrate multi-agent debates, trace production logs, or manage local infrastructure.
