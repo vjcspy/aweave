@@ -176,12 +176,12 @@ Update it to reflect any significant changes in the OVERVIEW.md update.
 ```markdown
 # <Repository/Project Name> — Abstract
 
-<One paragraph, 100-200 tokens. Describe: what this is, its primary purpose, key technologies, domain context, and relationship to other components in the workspace.>
+<One paragraph, target 100-200 tokens (hard maximum 500 tokens). Describe: what this is, its primary purpose, key technologies, domain context, and relationship to other components in the workspace.>
 ```
 
 ### Constraints
 
-- Maximum 200 tokens
+- Target 100-200 tokens (hard maximum 500 tokens)
 - Single paragraph (no headings, no bullet points in the body)
 - Must be self-contained — reader should understand what this repo does without reading OVERVIEW.md
 - Technical terms allowed, but no deep implementation details
