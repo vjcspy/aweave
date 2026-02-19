@@ -53,6 +53,7 @@ agent/skills/*
 !agent/skills/common/
 agent/templates/*
 !agent/templates/common/
+agent/_local/*
 
 # ========================================
 # Resources — workspace docs excluded on master
