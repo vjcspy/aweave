@@ -1,0 +1,3 @@
+# Debate Machine — Abstract
+
+The Debate Machine (`@hod/aweave-debate-machine`) is a shared xstate v5 state machine definition that serves as the single source of truth for debate state transitions in the AI agent debate system. It defines 5 states (AWAITING_OPPONENT, AWAITING_PROPOSER, AWAITING_ARBITRATOR, INTERVENTION_PENDING, CLOSED), 5 event types, and 3 guards, along with utility functions: `canTransition()` for validation, `transition()` for computing next state, `getAvailableActions()` for role-based action enumeration, and `toDebateEvent()` for bridging database models to xstate events. Both the CLI plugin and NestJS backend import this package, eliminating logic duplication and ensuring consistent state validation across consumers.

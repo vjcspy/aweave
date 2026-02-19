@@ -1,0 +1,3 @@
+# Server CLI Plugin — Abstract
+
+The Server CLI Plugin (`@hod/aweave-plugin-server`) is an oclif plugin providing `aw server` commands for managing the NestJS server daemon lifecycle — start, stop, restart, status, and logs. It replaces pm2 for server management by using native Node.js `child_process.spawn` with detached mode, writing state to `~/.aweave/server.json`. The start command checks for existing processes, detects stale PID files, verifies port availability, spawns the server, and polls the `/health` endpoint until ready. It depends on `@hod/aweave-cli-shared` for shared utilities and manages the `@hod/aweave-server` process on the default port 3456.
