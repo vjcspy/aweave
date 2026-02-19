@@ -28,6 +28,8 @@ user/snippets/**
 !user/snippets/.gitkeep
 user/context/**
 !user/context/.gitkeep
+user/_local/**
+!user/_local/.gitkeep
 
 # ========================================
 # Workspaces
