@@ -3,64 +3,62 @@
 # ========================================
 .DS_Store
 .idea/
-.cursor/
-.trae/
-personal/
+.vscode/
 
 # Symlinks
 AGENTS.md
 
 # ========================================
-# Source Code (fully managed per project branch)
+# Root — ignore any new folder at root
 # ========================================
-projects/**
-!projects/.gitkeep
+/*/
+!agent/
+!resources/
+!workspaces/
+!user/
+!.cursor/
+!.trae/
 
 # ========================================
-# Project-specific: devdocs/agent
-# Only common/ tracked on master
+# User data (structure tracked, content ignored)
 # ========================================
-devdocs/agent/commands/*
-!devdocs/agent/commands/common/
-
-devdocs/agent/rules/*
-!devdocs/agent/rules/common/
-
-devdocs/agent/skills/*
-!devdocs/agent/skills/common/
-
-devdocs/agent/templates/*
-!devdocs/agent/templates/common/
+user/memory/**
+!user/memory/.gitkeep
+user/snippets/**
+!user/snippets/.gitkeep
+user/context/**
+!user/context/.gitkeep
 
 # ========================================
-# Project-specific: devdocs/projects
-# Excluded from master entirely
+# Workspaces
 # ========================================
-devdocs/projects/*
-!devdocs/projects/.gitkeep
+workspaces/*/
+!workspaces/devtools/
+
+# DevTools — only common/, scripts/ and root files on master
+workspaces/devtools/*/
+!workspaces/devtools/common/
+!workspaces/devtools/scripts/
 
 # ========================================
-# Project-specific: devdocs/misc/devtools
-# Only common/ tracked on master
+# Agent — only common/ on master
 # ========================================
-devdocs/misc/devtools/*/
-!devdocs/misc/devtools/common/
+agent/commands/*
+!agent/commands/common/
+agent/rules/*
+!agent/rules/common/
+agent/skills/*
+!agent/skills/common/
+agent/templates/*
+!agent/templates/common/
 
 # ========================================
-# Project-specific: devtools
-# Only common/, scripts/ and root files tracked on master
+# Resources — workspace docs excluded on master
 # ========================================
-devtools/*/
-!devtools/common/
-!devtools/scripts/
+resources/workspaces/*
+!resources/workspaces/.gitkeep
+!resources/workspaces/devtools/
 
-# ========================================
-# Branch: projects/meta
-# ========================================
-!devdocs/agent/commands/k/
-!devdocs/agent/rules/k/
-!devdocs/agent/skills/k/
-!devdocs/agent/templates/k/
-!devdocs/misc/devtools/k/
-!devdocs/projects/k/
-!devtools/k/
+# Resources — devtools docs, only common/ on master
+resources/workspaces/devtools/*/
+!resources/workspaces/devtools/common/

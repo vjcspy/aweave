@@ -6,46 +6,94 @@ A platform for working with AI Agents at maximum efficiency — from code, docum
 
 ## Overview
 
-**aweave** consolidates projects, documentation, and developer tools under a single root:
+### Challenges in AI-Assisted Development
 
-- **Structured Context for AI** — Documentation, rules, and commands organized so AI agents load exactly the context they need
-- **Multi-Project Workspace** — Manage multiple independent projects with consistent conventions
-- **DevTools Ecosystem** — CLI tools and applications that extend AI agent capabilities beyond code editing
+AI coding agents are powerful, but their effectiveness depends entirely on the quality of context they receive. In real-world multi-project environments, developers face persistent friction:
+
+- **Fragmented Context** — Source code lives in cloned repos, documentation is scattered across wikis and READMEs, architecture decisions exist only in Microsoft Teams. Agents have no unified place to find what they need.
+- **Context Window Exhaustion** — Stuffing entire OVERVIEWs, plans, and codebases into a single prompt is expensive, noisy, and often exceeds model limits. Most of that context is irrelevant to the current task.
+- **No Workspace Awareness** — Agents treat every request the same regardless of which project, domain, or repository you're working in. They can't automatically load the right architecture docs or coding conventions.
+- **Agent Capabilities Stop at Code** — IDE-based agents can read and write files, but they can't authenticate to internal services, orchestrate multi-agent debates, trace production logs, or manage local infrastructure.
+- **Lost Institutional Knowledge** — Context painstakingly built in one session — decisions made, patterns learned, preferences expressed — vanishes when the session ends.
+- **No Structure for Agent Behavior** — Agent instructions are ad-hoc prompts rather than versioned, composable rules. There's no systematic way to define how agents should plan, review, or implement across different projects.
+
+### The aweave Solution
+
+**aweave** is a workspace platform designed specifically for AI Agent collaboration. It provides structure, context, and tooling so agents operate with deep understanding of your codebase — not shallow pattern matching.
+
+The core idea: **treat the agent's working environment like a well-organized brain** — with clear separation between knowledge (resources), behavior (agent rules), capabilities (devtools), and memory (user data).
+
+- **Filesystem-Based Context Management** — Unified organization of source code, documentation, agent rules, and user data under one root. No vector databases, no external services — just files and directories that both humans and agents can navigate naturally.
+
+- **Tiered Context Loading** — Every documented entity has three tiers: L0 (ABSTRACT.md, 100-200 tokens for quick identification), L1 (OVERVIEW.md, 1-2 pages for planning), and L2 (detailed docs, loaded only when needed). Agents scan L0 to decide relevance, load L1 for context, and dive into L2 only for deep work — reducing token consumption by 60-80% compared to loading everything upfront.
+
+- **Workspace-Aware Routing** — Agents detect which workspace, domain, and repository you're working in from your input path, then automatically load the relevant architecture docs, coding standards, and conventions. No manual context stuffing required.
+
+- **Composable Agent Brain** — Rules, commands, skills, and templates are versioned files organized by scope (common vs. workspace-specific). Agents load behavior definitions dynamically — coding standards when writing code, plan templates when planning, debate protocols when reviewing.
+
+- **Agent-Native DevTools** — A unified CLI (`aw`) and backend server that extend agent capabilities beyond the IDE. Agents can autonomously authenticate to internal services, orchestrate multi-agent debates for plan review, trace production logs, manage local infrastructure, and more — all through structured CLI commands designed for machine consumption.
+
+- **Branch-Based Workspace Isolation** — Each workspace lives on its own git branch. The `master` branch is the template with shared infrastructure. Workspace branches merge master and add workspace-specific docs, rules, and tools. Clean separation without repo sprawl.
+
+- **Persistent User Context** — Dedicated `user/` directory for profile, preferences, memory, and personal context that agents reference across sessions. The agent remembers your working style, past decisions, and domain expertise.
 
 ## Directory Structure
 
 ```
 <PROJECT_ROOT>/
-├── devdocs/                    # Documentation & AI Agent context
-│   ├── agent/                  # Agent configurations
-│   │   ├── commands/           # Custom agent commands
-│   │   ├── templates/          # Document templates
-│   │   └── rules/              # Working protocols & guidelines
-│   ├── misc/                   # Cross-domain documentation
-│   │   └── devtools/           # DevTools documentation per domain
-│   └── projects/               # Project-specific documentation
-│       └── <PROJECT_NAME>/     # Mirrors projects/ structure
-│           ├── OVERVIEW.md     # Global project overview
-│           └── <DOMAIN>/<REPO>/
-│               ├── OVERVIEW.md # Repository overview
-│               └── plans/      # Implementation plans
+├── agent/                         # AI Agent brain
+│   ├── commands/                  # Custom agent commands
+│   ├── templates/                 # Document templates
+│   ├── rules/                     # Working protocols & guidelines
+│   └── skills/                    # Domain-specific agent skills
 │
-├── devtools/                   # Development tools & utilities
-│   ├── common/                 # Shared tools across all projects
-│   └── <PROJECT_NAME>/         # Project-specific devtools
+├── resources/                     # Documentation & context
+│   ├── workspaces/                # Workspace-specific docs
+│   │   ├── devtools/              # DevTools documentation
+│   │   │   ├── ABSTRACT.md        # L0 summary
+│   │   │   ├── OVERVIEW.md        # L1 full overview
+│   │   │   └── common/<PACKAGE>/  # Per-package docs
+│   │   └── <WORKSPACE>/           # Business workspace docs
+│   │       ├── ABSTRACT.md        # L0 summary
+│   │       ├── OVERVIEW.md        # L1 workspace overview
+│   │       └── <DOMAIN>/<REPO>/
+│   │           ├── ABSTRACT.md    # L0 summary
+│   │           ├── OVERVIEW.md    # L1 repo overview
+│   │           └── _plans/        # L2 detailed docs
+│   └── misc/                      # Cross-cutting documentation
 │
-├── projects/                   # Source code (gitignored)
-│   └── <PROJECT_NAME>/         # Project container
-│       └── <DOMAIN>/           # Domain grouping
-│           └── <REPO>/         # Individual repository
+├── workspaces/                    # Source code
+│   ├── devtools/                  # Platform tooling (tracked in git)
+│   │   ├── common/                # Shared tools across domains
+│   │   └── <DOMAIN>/              # Domain-specific devtools
+│   └── <WORKSPACE>/               # Business workspaces (gitignored)
+│       └── <DOMAIN>/<REPO>/       # Individual repository
 │
-├── AGENTS.md                   # AI Agent entry point
-└── README.md                   # This file
+├── user/                          # User-specific data
+│   ├── profile.md                 # User identity & preferences
+│   ├── preferences.yaml           # Agent behavior config
+│   ├── bookmarks.md               # Quick links
+│   ├── memory/                    # AI agent memory across sessions
+│   ├── snippets/                  # Reusable code templates
+│   └── context/                   # Long-term context files
+│
+├── AGENTS.md                      # AI Agent entry point
+└── README.md                      # This file
 ```
 
 ## How AI Context Works
 
 The key to effective AI collaboration is **structured context loading**. Instead of dumping everything into the AI's context window, aweave loads context lazily based on what you're working on.
+
+### Tiered Context Loading
+
+Every documented entity has up to three tiers of context:
+
+| Tier | File | Size | Purpose |
+|------|------|------|---------|
+| **L0 (Abstract)** | `ABSTRACT.md` | 100-200 tokens | Quick identification — agent reads to decide if this entity is relevant |
+| **L1 (Overview)** | `OVERVIEW.md` | 1-2 pages | Core information — architecture, key paths, usage for planning |
+| **L2 (Details)** | `_plans/`, `_architecture/`, etc. | Full docs | Deep reading — only when agent needs implementation details |
 
 ### Entry Point: `AGENTS.md`
 
@@ -62,8 +110,8 @@ AI agents detect workspace type from your input and load relevant context automa
 
 | Your Input Contains | Workspace Type | What Gets Loaded |
 |---------------------|----------------|------------------|
-| `projects/<project>/...` | Business Project | Project & repo OVERVIEW files |
-| `devtools/...` | DevTools | DevTools OVERVIEW files |
+| `workspaces/<ws>/...` | Business Workspace | Workspace & repo OVERVIEW files |
+| `workspaces/devtools/...` | DevTools | DevTools OVERVIEW files |
 | General question | None | No extra context |
 
 ### Context Layers
@@ -71,9 +119,10 @@ AI agents detect workspace type from your input and load relevant context automa
 ```
 AGENTS.md (always loaded)
   → Workspace rules (loaded per workspace type)
-    → OVERVIEW.md files (project/repo context)
-      → Task rules (coding standards, plan templates, etc.)
-        → Agent commands (debate, docs, etc.)
+    → ABSTRACT.md (L0 — quick identification)
+      → OVERVIEW.md (L1 — core context)
+        → Task rules (coding standards, plan templates, etc.)
+          → Agent commands (debate, docs, etc.)
 ```
 
 Each layer is loaded **only when needed**, keeping the context window efficient.
@@ -82,9 +131,9 @@ Each layer is loaded **only when needed**, keeping the context window efficient.
 
 | Path Pattern | Description | Example |
 |--------------|-------------|---------|
-| `projects/<PROJECT>/<DOMAIN>/<REPO>/` | Source code | `projects/tinybots/backend/wonkers-api/` |
-| `devdocs/projects/<PROJECT>/<DOMAIN>/<REPO>/` | Documentation | `devdocs/projects/tinybots/backend/wonkers-api/` |
-| `devtools/<PROJECT>/local/` | Local dev tools | `devtools/tinybots/local/` |
+| `workspaces/<WS>/<DOMAIN>/<REPO>/` | Source code | `workspaces/k/stock/metan/` |
+| `resources/workspaces/<WS>/<DOMAIN>/<REPO>/` | Documentation | `resources/workspaces/k/stock/metan/` |
+| `workspaces/devtools/<DOMAIN>/` | DevTools source | `workspaces/devtools/common/cli/` |
 
 > **Tip:** Always specify a path when asking AI to work on code. This triggers the correct workspace detection and context loading.
 
@@ -115,11 +164,11 @@ Let two AI agents debate a topic (e.g. review an implementation plan) while you 
 
 **Session 1 — Proposer** (creates the debate):
 
-Ask the AI agent to read `devdocs/agent/commands/common/debate-proposer.md`, then provide the document/topic you want debated. The agent will create the debate and wait for the opponent.
+Ask the AI agent to read `agent/commands/common/debate-proposer.md`, then provide the document/topic you want debated. The agent will create the debate and wait for the opponent.
 
 **Session 2 — Opponent** (joins the debate):
 
-In a separate AI agent session, ask it to read `devdocs/agent/commands/common/debate-opponent.md`, then provide the `debate_id` from session 1. The agent will review and challenge the proposal.
+In a separate AI agent session, ask it to read `agent/commands/common/debate-opponent.md`, then provide the `debate_id` from session 1. The agent will review and challenge the proposal.
 
 **Monitor** — Open the debate-web dashboard at [http://localhost:3457](http://localhost:3457) to watch the conversation in real-time, intervene, or submit rulings as Arbitrator.
 
@@ -128,10 +177,10 @@ Both agents handle the entire flow automatically — creating arguments, waiting
 ## Documentation
 
 - **AI Agent Entry Point**: `AGENTS.md`
-- **Agent Rules**: `devdocs/agent/rules/`
-- **Agent Commands**: `devdocs/agent/commands/`
-- **Project Overviews**: `devdocs/projects/<PROJECT>/OVERVIEW.md`
-- **DevTools Docs**: `devdocs/misc/devtools/`
+- **Agent Rules**: `agent/rules/`
+- **Agent Commands**: `agent/commands/`
+- **Workspace Overviews**: `resources/workspaces/<WS>/OVERVIEW.md`
+- **DevTools Docs**: `resources/workspaces/devtools/`
 
 ## License
 

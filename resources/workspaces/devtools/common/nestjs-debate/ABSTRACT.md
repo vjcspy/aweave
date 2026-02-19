@@ -1,0 +1,3 @@
+# NestJS Debate — Abstract
+
+The NestJS Debate module (`@hod/aweave-nestjs-debate`) is the complete backend for the AI agent debate system, packaged as a standalone NestJS module imported by the unified server. It provides a REST API for debate and argument CRUD operations, a WebSocket gateway for real-time updates to the debate-web UI, interval polling for CLI wait commands, and `better-sqlite3` persistence with its own SQLite database. The module enforces state machine validation via the shared `@hod/aweave-debate-machine` package, implements idempotency through `client_request_id`, and uses per-debate mutex locking for concurrent access safety. It follows the `@hod/aweave-nestjs-<feature>` pattern for modular backend development.

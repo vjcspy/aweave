@@ -1,0 +1,3 @@
+# Demo Workflow Plugin — Abstract
+
+The Demo Workflow Plugin (`@hod/aweave-plugin-demo-workflow`) is an ESM oclif plugin that runs a 7-stage demo workflow showcasing all features of the workflow engine. It serves as both a reference implementation for new workflow plugins and an integration test verifying the engine, Ink dashboard, and xstate machine work end-to-end. The demo exercises parallel execution, race strategy, dynamic task generation with reducers, human-in-the-loop approval gates, retry with exponential backoff, streaming output, and timeout handling. It supports interactive mode (Ink v6 terminal dashboard) and non-interactive JSON mode with auto-resolved human input, and is invoked via `aw demo`.
