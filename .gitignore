@@ -3,12 +3,21 @@
 # ========================================
 .DS_Store
 .idea/
-.cursor/
-.trae/
-personal/
+.vscode/
 
 # Symlinks
 AGENTS.md
+
+# ========================================
+# Root — ignore any new folder at root
+# ========================================
+/*/
+!agent/
+!resources/
+!workspaces/
+!user/
+!.cursor/
+!.trae/
 
 # ========================================
 # User data (structure tracked, content ignored)
@@ -25,9 +34,6 @@ user/context/**
 # ========================================
 workspaces/*/
 !workspaces/devtools/
-
-# Legacy (will be removed after all workspace branches are migrated)
-projects/
 
 # DevTools — only common/, scripts/ and root files on master
 workspaces/devtools/*/

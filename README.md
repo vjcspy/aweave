@@ -6,12 +6,36 @@ A platform for working with AI Agents at maximum efficiency — from code, docum
 
 ## Overview
 
-**aweave** consolidates workspaces, documentation, and developer tools under a single root:
+### Challenges in AI-Assisted Development
 
-- **Structured Context for AI** — Documentation, rules, and commands organized so AI agents load exactly the context they need
-- **Multi-Workspace Platform** — Manage multiple independent workspaces with consistent conventions
-- **DevTools Ecosystem** — CLI tools and applications that extend AI agent capabilities beyond code editing
-- **Tiered Context Loading** — ABSTRACT.md (L0) + OVERVIEW.md (L1) + detailed docs (L2) minimize token consumption
+AI coding agents are powerful, but their effectiveness depends entirely on the quality of context they receive. In real-world multi-project environments, developers face persistent friction:
+
+- **Fragmented Context** — Source code lives in cloned repos, documentation is scattered across wikis and READMEs, architecture decisions exist only in Slack threads. Agents have no unified place to find what they need.
+- **Context Window Exhaustion** — Stuffing entire OVERVIEWs, plans, and codebases into a single prompt is expensive, noisy, and often exceeds model limits. Most of that context is irrelevant to the current task.
+- **No Workspace Awareness** — Agents treat every request the same regardless of which project, domain, or repository you're working in. They can't automatically load the right architecture docs or coding conventions.
+- **Agent Capabilities Stop at Code** — IDE-based agents can read and write files, but they can't authenticate to internal services, orchestrate multi-agent debates, trace production logs, or manage local infrastructure.
+- **Lost Institutional Knowledge** — Context painstakingly built in one session — decisions made, patterns learned, preferences expressed — vanishes when the session ends.
+- **No Structure for Agent Behavior** — Agent instructions are ad-hoc prompts rather than versioned, composable rules. There's no systematic way to define how agents should plan, review, or implement across different projects.
+
+### The aweave Solution
+
+**aweave** is a workspace platform designed specifically for AI Agent collaboration. It provides structure, context, and tooling so agents operate with deep understanding of your codebase — not shallow pattern matching.
+
+The core idea: **treat the agent's working environment like a well-organized brain** — with clear separation between knowledge (resources), behavior (agent rules), capabilities (devtools), and memory (user data).
+
+- **Filesystem-Based Context Management** — Unified organization of source code, documentation, agent rules, and user data under one root. No vector databases, no external services — just files and directories that both humans and agents can navigate naturally.
+
+- **Tiered Context Loading** — Every documented entity has three tiers: L0 (ABSTRACT.md, 100-200 tokens for quick identification), L1 (OVERVIEW.md, 1-2 pages for planning), and L2 (detailed docs, loaded only when needed). Agents scan L0 to decide relevance, load L1 for context, and dive into L2 only for deep work — reducing token consumption by 60-80% compared to loading everything upfront.
+
+- **Workspace-Aware Routing** — Agents detect which workspace, domain, and repository you're working in from your input path, then automatically load the relevant architecture docs, coding standards, and conventions. No manual context stuffing required.
+
+- **Composable Agent Brain** — Rules, commands, skills, and templates are versioned files organized by scope (common vs. workspace-specific). Agents load behavior definitions dynamically — coding standards when writing code, plan templates when planning, debate protocols when reviewing.
+
+- **Agent-Native DevTools** — A unified CLI (`aw`) and backend server that extend agent capabilities beyond the IDE. Agents can autonomously authenticate to internal services, orchestrate multi-agent debates for plan review, trace production logs, manage local infrastructure, and more — all through structured CLI commands designed for machine consumption.
+
+- **Branch-Based Workspace Isolation** — Each workspace lives on its own git branch. The `master` branch is the template with shared infrastructure. Workspace branches merge master and add workspace-specific docs, rules, and tools. Clean separation without repo sprawl.
+
+- **Persistent User Context** — Dedicated `user/` directory for profile, preferences, memory, and personal context that agents reference across sessions. The agent remembers your working style, past decisions, and domain expertise.
 
 ## Directory Structure
 
