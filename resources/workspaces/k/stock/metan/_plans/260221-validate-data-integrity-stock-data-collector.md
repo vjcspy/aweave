@@ -19,6 +19,7 @@
 ## Objective
 
 Move data integrity validation (prices vs ticks date-set comparison) from the feature calculator layer down into `StockDataCollector`. The new method validates that every trading day (determined by prices) has corresponding tick data. It uses a class-level range cache so that:
+
 - Multiple instances with the same `(symbol, date range)` don't re-validate.
 - A previously validated superset range covers any subset range without additional DB queries.
 
@@ -34,11 +35,11 @@ Move data integrity validation (prices vs ticks date-set comparison) from the fe
 
 ### Phase 1: Analysis & Preparation
 
-- [ ] Confirm validation logic: for every date in `prices` within `[effective_start, end_date]`, there must be a corresponding date in `ticks`
+- [x] Confirm validation logic: for every date in `prices` within `[effective_start, end_date]`, there must be a corresponding date in `ticks`
   - **Outcome**: Validation compares `set(price_dates) - set(tick_dates)` → if non-empty, raise `ValueError` listing the missing dates
-- [ ] Define cache data structure
+- [x] Define cache data structure
   - **Outcome**: `ClassVar[dict[str, list[tuple[str, str]]]]` — key is `symbol`, value is list of `(start, end)` validated ranges
-- [ ] Define subset-check algorithm
+- [x] Define subset-check algorithm
   - **Outcome**: For a given `(symbol, start, end)`, iterate the symbol's validated ranges and return `True` if any range `(vs, ve)` satisfies `vs <= start` and `ve >= end`
 
 ### Phase 2: Implementation Structure
@@ -60,24 +61,29 @@ workspaces/k/stock/metan/packages/stock/metan/stock/
 
 File: `workspaces/k/stock/metan/packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 
-- [ ] Update existing import to include `ClassVar`:
+- [x] Update existing import to include `ClassVar`:
+
   ```python
   from typing import Any, ClassVar, cast
   ```
+
   (existing line 2 is `from typing import Any, cast` — merge `ClassVar` into it)
-- [ ] Add class-level attribute with sequential-only constraint:
+- [x] Add class-level attribute with sequential-only constraint:
+
   ```python
   # Not thread-safe: only use in sequential execution contexts.
   _validated_integrity_ranges: ClassVar[dict[str, list[tuple[str, str]]]] = {}
   ```
+
   Key: `symbol`, Value: list of `(effective_start, end_date)` tuples that have been validated.
-- [ ] Note: subset check only covers single continuous ranges. Overlapping/adjacent ranges (e.g., `(01-01, 01-10)` + `(01-11, 01-20)`) are stored separately and won't cover a cross-range request like `(01-05, 01-15)`. This is acceptable because in practice, all callers within a pipeline run use the same date range per symbol.
+- [x] Note: subset check only covers single continuous ranges. Overlapping/adjacent ranges (e.g., `(01-01, 01-10)` + `(01-11, 01-20)`) are stored separately and won't cover a cross-range request like `(01-05, 01-15)`. This is acceptable because in practice, all callers within a pipeline run use the same date range per symbol.
 
 #### Step 2: Add `_is_range_already_validated` private method
 
 File: `workspaces/k/stock/metan/packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 
-- [ ] Implement subset check:
+- [x] Implement subset check:
+
   ```python
   @classmethod
   def _is_range_already_validated(cls, symbol: str, start: str, end: str) -> bool:
@@ -86,13 +92,15 @@ File: `workspaces/k/stock/metan/packages/stock/metan/stock/info/domain/stock_dat
               return True
       return False
   ```
+
   String comparison on `YYYY-MM-DD` dates works correctly for lexicographic ordering.
 
 #### Step 3: Add `validate_data_integrity` public method
 
 File: `workspaces/k/stock/metan/packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 
-- [ ] Implement the method:
+- [x] Implement the method:
+
   ```python
   def validate_data_integrity(self, lookback_days: int = 0) -> None:
       effective_start = (
@@ -139,30 +147,40 @@ File: `workspaces/k/stock/metan/packages/stock/metan/stock/info/domain/stock_dat
 
 File: `workspaces/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/calculator/common/base.py`
 
-- [ ] Delete the `validate_dayset_equality` function (lines 145–153)
-- [ ] Remove related imports if any become unused (`Price`, `TickCandle` — verify usage by other functions in the same file first)
+- [x] Delete the `validate_dayset_equality` function (lines 145–153)
+- [x] Remove related imports if any become unused (`Price`, `TickCandle` — verify usage by other functions in the same file first)
 
 #### Step 5: Update `WhaleFootprintFeatureCalculator`
 
 File: `workspaces/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/calculator/whale_footprint/whale_footprint_feature_calculator.py`
 
-- [ ] Remove `validate_dayset_equality` from the import block (line 22)
-- [ ] Replace the `validate_dayset_equality(...)` call (lines 100–105) with:
+- [x] Remove `validate_dayset_equality` from the import block (line 22)
+- [x] Replace the `validate_dayset_equality(...)` call (lines 100–105) with:
+
   ```python
   self.data_collector.validate_data_integrity(lookback_days=FEATURE_ROLLING_WINDOW_DAYS)
   ```
-- [ ] Place the call early in `_cal_candle_features`, before `tick_candles_by_date()` — this way validation runs first and fails fast before any heavy processing. Note: `validate_data_integrity` calls `_fetch_ticks` and `_fetch_prices` which populate the instance cache, so subsequent calls to `tick_candles_by_date()` and `prices()` reuse cached data.
+
+- [x] Place the call early in `_cal_candle_features`, before `tick_candles_by_date()` — this way validation runs first and fails fast before any heavy processing. Note: `validate_data_integrity` calls `_fetch_ticks` and `_fetch_prices` which populate the instance cache, so subsequent calls to `tick_candles_by_date()` and `prices()` reuse cached data.
 
 #### Step 6: Verify no other callers of `validate_dayset_equality`
 
-- [ ] Grep the codebase for `validate_dayset_equality` to confirm no other files reference it
-- [ ] If clean, the removal in Step 4 is safe
+- [x] Grep the codebase for `validate_dayset_equality` to confirm no other files reference it
+- [x] If clean, the removal in Step 4 is safe
 
 ## Summary of Results
 
 ### Completed Achievements
 
-- _To be updated after implementation_
+- Added `_validated_integrity_ranges` caching directly in `StockDataCollector` to optimize repetitive validations.
+- Implemented `validate_data_integrity` method to replace top-layer date validation functionality.
+- Removed legacy `validate_dayset_equality` in `base.py` and modified `WhaleFootprintFeatureCalculator`.
+- Verified system-wide stability with a regex search showing no legacy callers remaining.
+
+## Implementation Notes / As Implemented
+
+- Validation effectively calls `_fetch_prices` and `_fetch_ticks`. No wasteful queries occur because instances retrieve directly from populated internal `_cached_data`.
+- Updated unused `Price` model import alongside removal of `validate_dayset_equality` in `base.py`.
 
 ## Outstanding Issues & Follow-up
 
