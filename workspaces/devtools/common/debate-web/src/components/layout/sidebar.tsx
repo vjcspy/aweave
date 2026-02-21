@@ -1,26 +1,62 @@
+import { MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useParams } from 'react-router';
-import { MessageSquare } from 'lucide-react';
-import { ThemeToggle } from './theme-toggle';
+
 import { DebateList } from '@/components/debate/debate-list';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-export function Sidebar() {
+import { ThemeToggle } from './theme-toggle';
+
+export interface SidebarProps {
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
+}
+
+export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const params = useParams();
   const activeDebateId = params?.id as string | undefined;
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r bg-sidebar">
-      <div className="flex h-14 items-center justify-between px-4">
+    <aside className="group flex h-full w-full flex-col bg-sidebar">
+      <div
+        className={`flex h-14 items-center px-4 ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+      >
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            <span className="font-semibold">Debate</span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          <span className="font-semibold">Debate</span>
+          {!isCollapsed && <ThemeToggle />}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="h-8 w-8 text-muted-foreground"
+            title={isCollapsed ? 'Open sidebar' : 'Close sidebar'}
+          >
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
         </div>
-        <ThemeToggle />
       </div>
       <Separator />
-      <div className="flex-1 overflow-hidden">
-        <DebateList activeDebateId={activeDebateId} />
-      </div>
+      {!isCollapsed ? (
+        <div className="flex-1 overflow-hidden">
+          <DebateList activeDebateId={activeDebateId} />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-hidden flex flex-col items-center py-4">
+          <MessageSquare className="h-5 w-5 text-muted-foreground transition-opacity opacity-50 group-hover:opacity-100" />
+        </div>
+      )}
     </aside>
   );
 }
