@@ -165,15 +165,20 @@ Generate from the OVERVIEW.md content just created:
 
 1. Extract the TL;DR and Repo Purpose sections
 2. Synthesize into a single paragraph of 100-200 tokens
-3. Write to ABSTRACT.md
+3. Write to ABSTRACT.md with YAML frontmatter including `overview_path: {TARGET_PATH}`
 
 ### When ABSTRACT.md Exists
 
 Update it to reflect any significant changes in the OVERVIEW.md update.
+Always update YAML frontmatter `overview_path` to match `{TARGET_PATH}`.
 
 ### Output Template
 
 ```markdown
+---
+overview_path: {TARGET_PATH}
+---
+
 # <Repository/Project Name> — Abstract
 
 <One paragraph, target 100-200 tokens (hard maximum 500 tokens). Describe: what this is, its primary purpose, key technologies, domain context, and relationship to other components in the workspace.>
@@ -182,6 +187,7 @@ Update it to reflect any significant changes in the OVERVIEW.md update.
 ### Constraints
 
 - Target 100-200 tokens (hard maximum 500 tokens)
+- YAML frontmatter is required and must include only `overview_path`
 - Single paragraph (no headings, no bullet points in the body)
 - Must be self-contained — reader should understand what this repo does without reading OVERVIEW.md
 - Technical terms allowed, but no deep implementation details

@@ -37,9 +37,13 @@ Determine working scope from the deepest meaningful path segment:
 
 | Purpose | Path |
 |---------|------|
+| **Global Abstract** | `resources/workspaces/<PROJECT_NAME>/ABSTRACT.md` |
 | **Source Code** | `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
 | **Global Overview** | `resources/workspaces/<PROJECT_NAME>/OVERVIEW.md` |
+| **Repo Abstract** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/ABSTRACT.md` |
 | **Repo Overview** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` |
+| **Feature Abstract** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_features/<FEATURE_NAME>/ABSTRACT.md` |
+| **Feature Overview** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_features/<FEATURE_NAME>/OVERVIEW.md` |
 | **Features** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_features/` |
 | **Plans** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_plans/` |
 | **Spikes** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_spikes/` |
@@ -52,20 +56,29 @@ Determine working scope from the deepest meaningful path segment:
 
 **Loading Order — MUST follow sequentially (general → specific → actionable):**
 
-1. **OVERVIEW Chain** (based on scope — load up to detected level):
-   - Global OVERVIEW: `resources/workspaces/<PROJECT_NAME>/OVERVIEW.md` (all scopes)
-   - Repo OVERVIEW: `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` (repo + feature scope)
-   - Feature OVERVIEW: `resources/.../<REPO_NAME>/_features/<FEATURE_NAME>/OVERVIEW.md` (feature scope only)
+1. **ABSTRACT Chain (Required, based on scope — load up to detected level):**
+   - Global ABSTRACT: `resources/workspaces/<PROJECT_NAME>/ABSTRACT.md` (all scopes)
+   - Repo ABSTRACT: `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/ABSTRACT.md` (repo + feature scope)
+   - Feature ABSTRACT: `resources/.../<REPO_NAME>/_features/<FEATURE_NAME>/ABSTRACT.md` (feature scope only)
 
-2. **Referenced Files** (user-provided — plan, spike, guide, etc.):
+2. **OVERVIEW Chain (Conditional, based on ABSTRACT relevance):**
+   - Global OVERVIEW: `resources/workspaces/<PROJECT_NAME>/OVERVIEW.md` (load only if Global ABSTRACT exists, non-empty, and relevant)
+   - Repo OVERVIEW: `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` (load only if Repo ABSTRACT exists, non-empty, and relevant)
+   - Feature OVERVIEW: `resources/.../<REPO_NAME>/_features/<FEATURE_NAME>/OVERVIEW.md` (load only if Feature ABSTRACT exists, non-empty, and relevant)
+
+3. **Referenced Files** (user-provided — plan, spike, guide, etc.):
    - Any file the user explicitly references or provides as input
-   - Read AFTER OVERVIEW chain so project context is established first
+   - Read AFTER ABSTRACT/OVERVIEW context is established
 
-3. **Task Rule** (based on detected task type):
+4. **Task Rule** (based on detected task type):
    - `agent/rules/common/tasks/create-plan.md` (Plan task)
    - `agent/rules/common/tasks/implementation.md` (Implementation / Refactoring task)
 
-> **CRITICAL:** If any required OVERVIEW file does not exist or is empty, **STOP** and ask user to provide context before proceeding.
+> **CRITICAL:**
+> - `ABSTRACT.md` is mandatory at project/repo/feature scope levels (as applicable to detected scope).
+> - If a required `ABSTRACT.md` is missing or empty, skip its corresponding `OVERVIEW.md` (do not load OVERVIEW for that level).
+> - Never load an `OVERVIEW.md` without its corresponding `ABSTRACT.md`.
+> - If no required ABSTRACT is available for detected scope, **STOP** and ask user to provide context.
 
 ## Search Scope
 
@@ -73,9 +86,9 @@ Where to search for information, based on detected scope (in priority order):
 
 | Scope | Search Locations |
 |-------|------------------|
-| **feature** | 1. Feature docs: `resources/.../_features/<FEATURE_NAME>/` (all subfolders) 2. Repo OVERVIEW + repo docs 3. Source: `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
-| **repo** | 1. Repo docs: `resources/.../<REPO_NAME>/` (all subfolders) 2. Source: `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
-| **project** | 1. Project docs: `resources/workspaces/<PROJECT_NAME>/` 2. All repo OVERVIEWs under this project |
+| **feature** | 1. Feature docs + Feature ABSTRACT: `resources/.../_features/<FEATURE_NAME>/` (all subfolders) 2. Repo ABSTRACT + repo docs 3. Source: `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
+| **repo** | 1. Repo docs + Repo ABSTRACT: `resources/.../<REPO_NAME>/` (all subfolders) 2. Source: `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` |
+| **project** | 1. Project docs + Global ABSTRACT: `resources/workspaces/<PROJECT_NAME>/` 2. Repo ABSTRACT files under this project (then conditional OVERVIEW where relevant) |
 
 ## Working with Plans
 
@@ -92,7 +105,8 @@ When creating plans, use template: `agent/templates/common/create-plan.md`
 Feature documentation is stored at: `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_features/<FEATURE_NAME>/`
 
 Each feature folder contains:
-- `OVERVIEW.md` — Feature overview (mandatory)
+- `ABSTRACT.md` — Feature short context (mandatory)
+- `OVERVIEW.md` — Feature detailed context (conditional, loaded only when ABSTRACT is relevant)
 - `confluence/` — Source of truth documents from Confluence
 - `notes/` — Extracted/analyzed notes
 - `_plans/` — Feature-specific implementation plans
