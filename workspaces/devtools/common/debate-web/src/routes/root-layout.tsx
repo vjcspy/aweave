@@ -7,7 +7,7 @@ import { Outlet } from 'react-router';
  */
 export function RootLayout() {
   return (
-    <div className="font-sans antialiased">
+    <div className="flex h-screen w-full flex-col overflow-hidden font-sans antialiased">
       <Outlet />
     </div>
   );

@@ -1,22 +1,29 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { cn } from '@/lib/utils';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Argument, ArgumentType, Role } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 // Updated role colors for the Card background/border
 const roleCardStyles: Record<Role, string> = {
-  proposer: 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
-  opponent: 'bg-orange-50/50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800',
-  arbitrator: 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800',
+  proposer:
+    'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+  opponent:
+    'bg-orange-50/50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800',
+  arbitrator:
+    'bg-purple-50/50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800',
 };
 
 // Keep badge colors distinct but harmonious
 const roleBadgeStyles: Record<Role, string> = {
-  proposer: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20',
-  opponent: 'bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20',
-  arbitrator: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20',
+  proposer:
+    'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20',
+  opponent:
+    'bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20',
+  arbitrator:
+    'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20',
 };
 
 const roleLabels: Record<Role, string> = {
@@ -34,13 +41,17 @@ const typeColors: Record<ArgumentType, string> = {
   RESOLUTION: 'bg-green-500/20 text-green-700 dark:text-green-300',
 };
 
-function formatTime(dateString: string): { relative: string; absolute: string } {
+function formatTime(dateString: string): {
+  relative: string;
+  absolute: string;
+} {
   // SQLite returns "YYYY-MM-DD HH:MM:SS" which is UTC but missing T/Z
   // Force it to be treated as UTC
-  const normalized = dateString.includes('T') || dateString.includes('Z') 
-    ? dateString 
-    : dateString.replace(' ', 'T') + 'Z';
-    
+  const normalized =
+    dateString.includes('T') || dateString.includes('Z')
+      ? dateString
+      : dateString.replace(' ', 'T') + 'Z';
+
   const date = new Date(normalized);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -79,22 +90,25 @@ export function ArgumentCard({ argument }: ArgumentCardProps) {
 
   return (
     <Card
-      className={cn(
-        'transition-colors border',
-        roleCardStyles[argument.role]
-      )}
+      className={cn('transition-colors border', roleCardStyles[argument.role])}
     >
       <CardHeader className="pb-2 pt-3 px-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className={cn('text-xs', roleBadgeStyles[argument.role])}>
+            <Badge
+              variant="outline"
+              className={cn('text-xs', roleBadgeStyles[argument.role])}
+            >
               {roleLabels[argument.role]}
             </Badge>
-            <Badge variant="secondary" className={cn('text-xs', typeColors[argument.type])}>
+            <Badge
+              variant="secondary"
+              className={cn('text-xs', typeColors[argument.type])}
+            >
               {argument.type}
             </Badge>
           </div>
-          <span 
+          <span
             className="text-xs text-muted-foreground cursor-help"
             title={timeDisplay.absolute}
           >
@@ -112,4 +126,3 @@ export function ArgumentCard({ argument }: ArgumentCardProps) {
     </Card>
   );
 }
-

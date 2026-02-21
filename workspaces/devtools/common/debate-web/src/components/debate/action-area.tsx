@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
-import { StopCircle, Send, Loader2 } from 'lucide-react';
+import { Loader2, Send, StopCircle } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import type { DebateState } from '@/lib/types';
 
 type ActionAreaProps = {
@@ -11,7 +12,11 @@ type ActionAreaProps = {
   onRuling: (content: string, close?: boolean) => void;
 };
 
-export function ActionArea({ state, onIntervention, onRuling }: ActionAreaProps) {
+export function ActionArea({
+  state,
+  onIntervention,
+  onRuling,
+}: ActionAreaProps) {
   const [content, setContent] = useState('');
   const [closeDebate, setCloseDebate] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
