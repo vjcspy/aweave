@@ -165,9 +165,10 @@ class Tick(BaseModel):
 
 ---
 
-#### 3. `tick_candles_by_date()` → `dict[str, list[TickCandle]]` ⭐ **RECOMMENDED**
+#### 3. `tick_candles_by_date(lookback_days: int = 0)` → `dict[str, list[TickCandle]]` ⭐ **RECOMMENDED**
 
 **Purpose:** Build candles from actual tick data. This is the primary data source for feature computation.
+You can optionally pass `lookback_days` to fetch historical days prior to `start_date` for feature rolling windows (e.g., `lookback_days=5`).
 
 **Return Type:**
 
@@ -617,6 +618,7 @@ response = (
 **Goal:** Predict VN30F1M derivative price movement during intraday session.
 
 **Constraints:**
+
 - Hold position only during session (no overnight)
 - Exit when: target profit hit, stop loss hit, or end of session
 - Use 5-minute candles for prediction
