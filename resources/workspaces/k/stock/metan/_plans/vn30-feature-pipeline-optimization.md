@@ -40,25 +40,53 @@ if not self.force_recalculate and existing_vn30_dates >= requested_dates:
     }
 ```
 
-### 3. Narrow `start_date` and `end_date` Window
+### 3. Handle Missing Dates and Execution Window
 
-If some dates are present but others are missing (e.g., pipeline reran for the week but Monday and Tuesday are already there), we shouldn't pre-fetch data for Monday and Tuesday.
+If some dates are present but others are missing, we should only process the missing dates. To avoid fetching data for dates we already have, we will group the `missing_dates` into continuous date segments.
+
+For each continuous segment, we will define local variables `execution_start` and `execution_end`. We will **NOT** mutate `self.start_date` and `self.end_date` during this process to avoid side effects and ensure the final summary correctly reflects the original requested range.
 
 ```python
 missing_dates = requested_dates - existing_vn30_dates if not self.force_recalculate else requested_dates
 if missing_dates:
-    # Optional but highly recommended: Narrow the time boundaries to save fetch cost
-    new_start = min(missing_dates)
-    new_end = max(missing_dates)
-    self.start_date = new_start
-    self.end_date = new_end
+    # Group missing_dates into continuous segments
+    segments = group_into_continuous_segments(sorted(missing_dates))
     
-    self._logger.info(f"[VN30Pipeline] Adjusted processing window to {new_start} -> {new_end}")
+    for segment_start, segment_end in segments:
+        self._logger.info(f"[VN30Pipeline] Processing missing segment: {segment_start} -> {segment_end}")
+        # Execute pipeline for this segment
+        self._prefetch_all_data(segment_start, segment_end)
+        self._calculate_component_features(segment_start, segment_end, existing_dates)
+        index_candles = self._calculate_index_candles(segment_start, segment_end)
+        aggregated_df = self._aggregate_features(segment_start, segment_end)
+        self._persist_vn30(index_candles, aggregated_df)
 ```
 
-### 4. Execute Rest of Pipeline
+### 4. Method Signature Refactoring
 
-After early exits and boundary shrinking, proceed with `_prefetch_all_data()` for the remaining window and continue the normal pipeline steps (`_calculate_component_features`, `_calculate_index_candles`, etc.).
+To ensure downstream methods operate on the correct segment without mutating `self.start_date` and `self.end_date`, we will update the signatures of the following internal methods:
+
+1. `_prefetch_all_data(self, segment_start: str, segment_end: str) -> None`
+2. `_process_single_symbol(self, symbol: str, segment_start: str, segment_end: str) -> dict[str, Any]`
+3. `_calculate_component_features(self, segment_start: str, segment_end: str, existing_dates: dict[str, set[str]]) -> dict[str, int]`
+4. `_calculate_index_candles(self, segment_start: str, segment_end: str) -> list[VN30IndexCandle]`
+5. `_aggregate_features(self, segment_start: str, segment_end: str) -> pd.DataFrame`
+
+Inside these methods, they will use `segment_start` and `segment_end` when initializing calculators or collectors (e.g., `StockDataCollector(start_date=segment_start, end_date=segment_end)`).
+
+### 5. Final Output Summary
+
+The `run()` method will return a modified summary dictionary representing the original requested range and the actual processed segments:
+
+```python
+return {
+    "status": "success",
+    "requested_start_date": self.start_date,
+    "requested_end_date": self.end_date,
+    "processed_segments": segments,
+    # aggregate stats across all segments...
+}
+```
 
 ## Review
 
