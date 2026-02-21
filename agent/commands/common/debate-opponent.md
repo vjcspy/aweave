@@ -4,7 +4,7 @@
 
 > **⚠️ LANGUAGE REQUIREMENT:**
 > - If the user specifies a language (e.g., "debate in Vietnamese"), use that language for all debate communication (CLAIM responses, feedback).
-> - If no language is specified, **default to English**.
+> - If no language is specified, read `user/preferences.yaml` > `debate_language` to determine the default language for debate communication. If `debate_language` is not set, fall back to `language`, then default to English.
 > - **Technical terms MUST ALWAYS remain in English** regardless of chosen language: variable/function/class names, file paths, CLI commands, code snippets, architectural concepts (e.g., dependency injection, event-driven), design patterns, severity labels (Critical/Major/Minor), and industry-standard terminology.
 
 ## CLI Reference
