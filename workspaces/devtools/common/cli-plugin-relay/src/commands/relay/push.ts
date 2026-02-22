@@ -35,7 +35,8 @@ export class RelayPush extends Command {
       description: 'Target branch to push (default: current branch name)',
     }),
     base: Flags.string({
-      description: 'Base branch on remote (default: "main")',
+      description: 'Base branch on remote (default: "master")',
+      default: 'master',
     }),
     'chunk-size': Flags.integer({
       description: 'Chunk size in bytes (default: 3145728, max: 3400000)',
@@ -189,7 +190,7 @@ export class RelayPush extends Command {
 
     // 7. Upload chunks
     const sessionId = randomUUID();
-    const baseBranch = flags.base || /* config.defaultBaseBranch wait removed that */ 'main';
+    const baseBranch = flags.base || 'master';
 
     try {
       for (let i = 0; i < chunks.length; i++) {

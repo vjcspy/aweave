@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-aw relay config set --relay-url XXX
+aw relay config set --relay-url https://learn-nextjs-relay.vercel.app
 aw relay config set --api-key XXX
 aw relay config set --encryption-key "eXYPtfy54J5+yjVdP4A9zeydLbpbGxZE8/9AewcgcHI="
 ```
