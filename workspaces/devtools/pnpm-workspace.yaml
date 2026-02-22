@@ -47,6 +47,7 @@ packages:
   - common/cli-plugin-config
   - common/cli-plugin-server
   - common/cli-plugin-demo-workflow
+  - common/cli-plugin-test
 
 onlyBuiltDependencies:
   - "@nestjs/core"

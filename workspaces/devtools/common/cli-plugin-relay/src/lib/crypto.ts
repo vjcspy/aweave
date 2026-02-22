@@ -9,51 +9,14 @@ import {
 } from 'node:crypto';
 
 import type { RelayConfig } from './config';
-import { getEffectiveTransportMode } from './config';
 
 const FRAME_IV_LENGTH = 12;
-const FRAME_AUTH_TAG_LENGTH = 16;
 const V2_MAGIC = Buffer.from('AWR2', 'ascii');
 const V2_VERSION = 2;
 
 export interface V2EncryptOptions {
   keyId: string;
   serverPublicKeyPem: string;
-}
-
-/**
- * Encrypt metadata + optional binary data into a self-contained base64 blob.
- *
- * Binary frame format:
- * [4B metadataLen (uint32BE)] [JSON metadata bytes] [raw binary data?]
- *
- * Encrypted blob format:
- * [12B iv] [16B authTag] [ciphertext]
- *
- * @param metadata - JSON object metadata
- * @param keyBase64 - Base64-encoded 32-byte AES key
- * @param binaryData - Optional raw bytes to append after metadata
- * @returns base64(iv + authTag + ciphertext)
- */
-export function encryptPayloadV1(
-  metadata: object,
-  keyBase64: string,
-  binaryData?: Buffer,
-): string {
-  const key = Buffer.from(keyBase64, 'base64');
-  if (key.length !== 32) {
-    throw new Error(
-      `Invalid encryption key length: expected 32 bytes, got ${key.length}`,
-    );
-  }
-
-  const plaintext = buildPlaintextFrame(metadata, binaryData);
-  const iv = randomBytes(FRAME_IV_LENGTH);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
-  const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  const authTag = cipher.getAuthTag();
-
-  return Buffer.concat([iv, authTag, encrypted]).toString('base64');
 }
 
 export function encryptPayloadV2(
@@ -85,7 +48,10 @@ export function encryptPayloadV2(
   const plaintext = buildPlaintextFrame(metadata, binaryData);
   const iv = randomBytes(FRAME_IV_LENGTH);
   const contentKey = deriveV2ContentKey(
-    diffieHellman({ privateKey: ephemeralPrivateKey, publicKey: serverPublicKey }),
+    diffieHellman({
+      privateKey: ephemeralPrivateKey,
+      publicKey: serverPublicKey,
+    }),
     iv,
     kidBytes,
     ephemeralPublicKeyDer,
@@ -93,7 +59,13 @@ export function encryptPayloadV2(
   );
 
   const header = Buffer.alloc(
-    V2_MAGIC.length + 1 + 1 + 2 + FRAME_IV_LENGTH + kidBytes.length + ephemeralPublicKeyDer.length,
+    V2_MAGIC.length +
+      1 +
+      1 +
+      2 +
+      FRAME_IV_LENGTH +
+      kidBytes.length +
+      ephemeralPublicKeyDer.length,
   );
   let offset = 0;
   V2_MAGIC.copy(header, offset);
@@ -123,27 +95,20 @@ export function encryptPayload(
   config: RelayConfig,
   binaryData?: Buffer,
 ): string {
-  const mode = getEffectiveTransportMode(config);
-  if (mode === 'v2') {
-    if (!config.serverKeyId || !config.serverPublicKey) {
-      throw new Error('Missing v2 relay transport config: serverKeyId/serverPublicKey');
-    }
-
-    return encryptPayloadV2(
-      metadata,
-      {
-        keyId: config.serverKeyId,
-        serverPublicKeyPem: config.serverPublicKey,
-      },
-      binaryData,
+  if (!config.serverKeyId || !config.serverPublicKey) {
+    throw new Error(
+      'Missing relay v2 transport config: serverKeyId/serverPublicKey',
     );
   }
 
-  if (!config.encryptionKey) {
-    throw new Error('Missing legacy relay encryptionKey');
-  }
-
-  return encryptPayloadV1(metadata, config.encryptionKey, binaryData);
+  return encryptPayloadV2(
+    metadata,
+    {
+      keyId: config.serverKeyId,
+      serverPublicKeyPem: config.serverPublicKey,
+    },
+    binaryData,
+  );
 }
 
 export function normalizePublicKeyPem(publicKeyInput: string): string {

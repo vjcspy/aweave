@@ -19,3 +19,9 @@ services:
     name: "debate-web"
     port: 3457
     healthUrl: "http://127.0.0.1:3457"
+
+test:
+  cursor:
+    # Playwright system browser channel for `aw test cursor *`
+    # Supported values: "msedge" | "chrome"
+    browserChannel: "chrome"

@@ -1,13 +1,7 @@
-import { useRef, useState } from 'react';
-import { ImperativePanelHandle } from 'react-resizable-panels';
+import { useState } from 'react';
 import { Outlet } from 'react-router';
 
 import { Sidebar } from '@/components/layout/sidebar';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@/components/ui/resizable';
 import { cn } from '@/lib/utils';
 
 /**
@@ -16,46 +10,74 @@ import { cn } from '@/lib/utils';
  */
 export function DebatesLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const [isDragging, setIsDragging] = useState(false);
 
   const toggleSidebar = () => {
-    if (sidebarPanelRef.current) {
-      if (isCollapsed) {
-        sidebarPanelRef.current.expand();
-      } else {
-        sidebarPanelRef.current.collapse();
-      }
+    setIsCollapsed((prev) => !prev);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    e.target.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+
+    let newWidth = e.clientX;
+
+    // Handle collapse threshold
+    if (newWidth < 100) {
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(false);
+      // Clamp between min and max sizes
+      newWidth = Math.max(200, Math.min(newWidth, 600));
+      setSidebarWidth(newWidth);
     }
   };
 
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    e.target.releasePointerCapture(e.pointerId);
+  };
+
+  // Determine actual rendered width
+  const currentWidth = isCollapsed ? 64 : sidebarWidth;
+
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="h-screen w-full items-stretch"
-    >
-      <ResizablePanel
-        ref={sidebarPanelRef}
-        defaultSize="240px"
-        collapsedSize="64px"
-        collapsible={true}
-        minSize="200px"
-        maxSize="600px"
-        onResize={(size) => {
-          setIsCollapsed(size.inPixels < 100);
-        }}
+    <div className="flex h-screen w-full items-stretch">
+      <div
+        style={{ width: currentWidth, minWidth: currentWidth }}
         className={cn(
-          'flex',
-          isCollapsed && 'transition-all duration-300 ease-in-out'
+          'flex relative',
+          !isDragging && 'transition-all duration-300 ease-in-out',
         )}
       >
         <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize="100%">
-        <main className="flex h-full w-full flex-col overflow-hidden">
-          <Outlet />
-        </main>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+
+        {/* Resizer Handle */}
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          className={cn(
+            'absolute right-0 top-0 z-10 h-full w-2 translate-x-1/2 cursor-col-resize select-none touch-none',
+            isDragging && 'bg-border/50',
+          )}
+        />
+      </div>
+
+      {/* Separator visual (optional, match previous ResizableHandle look) */}
+      <div className="bg-border w-px h-full relative z-0 flex items-center justify-center">
+        {/* Optional drag grip visual can go here if desired */}
+      </div>
+
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Outlet />
+      </main>
+    </div>
   );
 }

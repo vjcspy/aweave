@@ -5,7 +5,10 @@
  * Cursor navigation highlights the currently focused item.
  */
 
-import type { ExecutionStrategy, StageState } from '@hod/aweave-workflow-engine';
+import type {
+  ExecutionStrategy,
+  StageState,
+} from '@hod/aweave-workflow-engine';
 import { Box, Text } from 'ink';
 
 import { Spinner } from './Spinner.js';

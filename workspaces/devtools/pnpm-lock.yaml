@@ -113,6 +113,9 @@ importers:
       '@hod/aweave-plugin-server':
         specifier: workspace:*
         version: link:../cli-plugin-server
+      '@hod/aweave-plugin-test':
+        specifier: workspace:*
+        version: link:../cli-plugin-test
       '@hod/aweave-server':
         specifier: workspace:*
         version: link:../server
@@ -311,6 +314,31 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  common/cli-plugin-test:
+    dependencies:
+      '@hod/aweave-config-common':
+        specifier: workspace:*
+        version: link:../config
+      '@hod/aweave-config-core':
+        specifier: workspace:*
+        version: link:../config-core
+      '@hod/aweave-playwright':
+        specifier: workspace:*
+        version: link:../playwright
+      '@oclif/core':
+        specifier: 'catalog:'
+        version: 4.8.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.11
+      tsc-alias:
+        specifier: 'catalog:'
+        version: 1.8.16
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   common/cli-shared:
     dependencies:
       '@hod/aweave-config-common':
@@ -428,9 +456,6 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.2.3)
-      react-resizable-panels:
-        specifier: ^4.6.4
-        version: 4.6.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-router:
         specifier: ^7
         version: 7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -5205,6 +5230,7 @@ packages:
   prebuild-install@7.1.3:
     resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
     engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
 
   prelude-ls@1.2.1:
@@ -5317,12 +5343,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  react-resizable-panels@4.6.4:
-    resolution: {integrity: sha512-E7Szs1xyaMZ7xOI2gG4TECNz4r/gmpV1AsXyZRnER6OQnfFf9uclFmrHHZR3h/iF8vQS+nQ1LKyZv9bzwGxPSg==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
 
   react-router@7.13.0:
     resolution: {integrity: sha512-PZgus8ETambRT17BUm/LL8lX3Of+oiLaPuVTRH3l1eLvSPpKO3AvhAEb5N7ihAFZQrYDqkvvWfFh9p0z9VsjLw==}
@@ -11800,11 +11820,6 @@ snapshots:
       use-sidecar: 1.1.3(@types/react@19.2.14)(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.14
-
-  react-resizable-panels@4.6.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
 
   react-router@7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
