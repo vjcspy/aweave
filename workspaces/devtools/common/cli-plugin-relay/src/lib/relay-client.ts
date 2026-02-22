@@ -1,3 +1,6 @@
+import { randomBytes } from 'node:crypto';
+
+import type { RelayConfig } from './config';
 import { encryptPayload } from './crypto';
 
 /** Max retry attempts for failed requests */
@@ -42,14 +45,14 @@ interface StatusResponse {
 export async function uploadChunk(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: ChunkUploadPayload,
   chunkData: Buffer,
 ): Promise<{ success: boolean; received: number }> {
   return fetchWithRetry(
     `${relayUrl}/api/game/chunk`,
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
     chunkData,
   );
@@ -61,13 +64,13 @@ export async function uploadChunk(
 export async function signalComplete(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: CompletePayload,
 ): Promise<void> {
   await fetchWithRetry(
     `${relayUrl}/api/game/chunk/complete`,
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
   );
 }
@@ -78,13 +81,13 @@ export async function signalComplete(
 export async function triggerGR(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: GRPayload,
 ): Promise<void> {
   await fetchWithRetry(
     `${relayUrl}/api/game/gr`, // Actually wait, in original code it was /api/game/gr? I am not changing that.
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
   );
 }
@@ -154,7 +157,7 @@ export async function pollStatus(
 async function fetchWithRetry<T>(
   url: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   metadata: object,
   binaryData?: Buffer,
 ): Promise<T> {
@@ -162,7 +165,12 @@ async function fetchWithRetry<T>(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const gameData = encryptPayload(metadata, encryptionKey, binaryData);
+      const transportMetadata = {
+        ...metadata,
+        timestamp: Date.now(),
+        nonce: randomBytes(16).toString('hex'),
+      };
+      const gameData = encryptPayload(transportMetadata, transportConfig, binaryData);
       return (await fetchJson(url, {
         method: 'POST',
         headers: {
