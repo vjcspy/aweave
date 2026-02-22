@@ -124,7 +124,10 @@ export class NestLoggerService implements LoggerService {
           ) {
             return { stack: metaOrStack[0], context: last };
           }
-          return { meta: metaOrStack.length === 1 ? metaOrStack[0] : metaOrStack, context: last };
+          return {
+            meta: metaOrStack.length === 1 ? metaOrStack[0] : metaOrStack,
+            context: last,
+          };
         }
         return { meta: params };
       }
@@ -136,7 +139,12 @@ export class NestLoggerService implements LoggerService {
       const remaining = params.slice(0, -1);
       return {
         context: last,
-        meta: remaining.length === 1 ? remaining[0] : remaining.length > 0 ? remaining : undefined,
+        meta:
+          remaining.length === 1
+            ? remaining[0]
+            : remaining.length > 0
+              ? remaining
+              : undefined,
       };
     }
 
