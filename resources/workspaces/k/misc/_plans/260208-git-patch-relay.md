@@ -3,10 +3,10 @@
 ## References
 
 - CLI builder skill: `agent/skills/common/devtools-cli-builder/SKILL.md`
-- Devtools monorepo: `devtools/README.md`
-- CLI shared library: `devtools/common/cli-shared/`
-- Existing CLI plugin reference: `devtools/common/cli-plugin-docs/`
-- pnpm workspace: `devtools/pnpm-workspace.yaml`
+- Devtools monorepo: `workspaces/devtools/README.md`
+- CLI shared library: `workspaces/devtools/common/cli-shared/`
+- Existing CLI plugin reference: `workspaces/devtools/common/cli-plugin-docs/`
+- pnpm workspace: `workspaces/devtools/pnpm-workspace.yaml`
 
 ## User Requirements
 
@@ -626,14 +626,14 @@ SERVER_API_KEY=<api-key-to-server>     # Vercel → Server auth
 
 ---
 
-### Phase 3: CLI Plugin (`devtools/common/cli-plugin-relay/`)
+### Phase 3: CLI Plugin (`workspaces/devtools/common/cli-plugin-relay/`)
 
 oclif plugin theo đúng convention của devtools monorepo.
 
 #### File Structure
 
 ```
-devtools/common/cli-plugin-relay/
+workspaces/devtools/common/cli-plugin-relay/
 ├── package.json               # 🚧 @aweave/cli-plugin-relay
 ├── tsconfig.json              # 🚧
 └── src/
@@ -871,12 +871,12 @@ export function splitIntoChunks(data: Buffer, chunkSize: number): Buffer[] {
 
 #### Registration Steps
 
-1. Add to `devtools/pnpm-workspace.yaml`:
+1. Add to `workspaces/devtools/pnpm-workspace.yaml`:
    ```yaml
    - common/cli-plugin-relay
    ```
 
-2. Add to `devtools/common/cli/package.json`:
+2. Add to `workspaces/devtools/common/cli/package.json`:
    ```json
    {
      "dependencies": {
@@ -991,7 +991,7 @@ aw relay push --repo myuser/test-repo --commit HEAD --branch test/relay
 
 ### Step 3: Build CLI Plugin
 
-- [x] Scaffold `devtools/common/cli-plugin-relay/` (package.json, tsconfig, src/index.ts)
+- [x] Scaffold `workspaces/devtools/common/cli-plugin-relay/` (package.json, tsconfig, src/index.ts)
 - [x] Implement `src/lib/config.ts` — config file CRUD
 - [x] Implement `src/lib/crypto.ts` — AES-256-GCM encrypt
 - [x] Implement `src/lib/chunker.ts` — split buffer into chunks
@@ -1137,12 +1137,12 @@ workspaces/k/misc/git-relay-vercel/
 - Error handling: returns 502 if server unreachable
 - Next.js 15 with App Router
 
-### Phase 3: CLI Plugin (`devtools/common/cli-plugin-relay/`)
+### Phase 3: CLI Plugin (`workspaces/devtools/common/cli-plugin-relay/`)
 
 **Files created (10 files):**
 
 ```
-devtools/common/cli-plugin-relay/
+workspaces/devtools/common/cli-plugin-relay/
 ├── package.json
 ├── tsconfig.json
 └── src/
@@ -1172,8 +1172,8 @@ devtools/common/cli-plugin-relay/
 - No external dependencies beyond `@aweave/cli-shared` and `@oclif/core`
 
 **Registration:**
-- Added `common/cli-plugin-relay` to `devtools/pnpm-workspace.yaml`
-- Added `@aweave/cli-plugin-relay` to `devtools/common/cli/package.json` (dependencies + oclif.plugins)
+- Added `common/cli-plugin-relay` to `workspaces/devtools/pnpm-workspace.yaml`
+- Added `@aweave/cli-plugin-relay` to `workspaces/devtools/common/cli/package.json` (dependencies + oclif.plugins)
 - Build verified: `pnpm install && pnpm --filter @aweave/cli-plugin-relay build` — no errors
 - Commands verified: `aw relay --help` shows `relay push`, `relay status`, `relay config` sub-commands
 

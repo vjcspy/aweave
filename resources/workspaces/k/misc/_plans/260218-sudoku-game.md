@@ -4,7 +4,7 @@
 
 - Current homepage: `workspaces/k/misc/git-relay-vercel/src/app/page.tsx`
 - Project root: `workspaces/k/misc/git-relay-vercel/`
-- Git Patch Relay plan: `resources/workspaces/k/misc/plans/260208-git-patch-relay.md`
+- Git Patch Relay plan: `resources/workspaces/k/misc/_plans/260208-git-patch-relay.md`
 
 ## User Requirements
 
