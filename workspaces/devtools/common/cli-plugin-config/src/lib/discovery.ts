@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
+
 // ---------------------------------------------------------------------------
 // Domain defaults discovery
 // ---------------------------------------------------------------------------
@@ -21,7 +23,10 @@ interface DomainDefaults {
 export function discoverDomainDefaults(
   domainFilter?: string,
 ): DomainDefaults[] {
-  const devtoolsRoot = findDevtoolsRoot();
+  const devtoolsRoot = resolveDevtoolsRoot({
+    cwd: process.cwd(),
+    moduleDir: __dirname,
+  });
   if (!devtoolsRoot) return [];
 
   const results: DomainDefaults[] = [];
@@ -46,28 +51,6 @@ export function discoverDomainDefaults(
   }
 
   return results;
-}
-
-/**
- * Find the devtools root by traversing up from the current file location.
- * Works from both source (src/) and compiled (dist/) locations.
- */
-function findDevtoolsRoot(): string | null {
-  // Walk up from this file's directory to find devtools root
-  // This file lives at devtools/common/cli-plugin-config/src/lib/ or dist/lib/
-  let dir = __dirname;
-
-  for (let i = 0; i < 10; i++) {
-    const candidate = path.join(dir, 'pnpm-workspace.yaml');
-    if (fs.existsSync(candidate)) {
-      return dir;
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-
-  return null;
 }
 
 function safeReaddir(dirPath: string): string[] {
