@@ -112,7 +112,8 @@ export const CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
       },
       'test.cursor.browserChannel': {
         type: 'string',
-        description: 'Playwright system browser channel for aw test cursor commands',
+        description:
+          'Playwright system browser channel for aw test cursor commands',
       },
     },
   },

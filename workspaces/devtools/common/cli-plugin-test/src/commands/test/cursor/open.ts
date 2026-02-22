@@ -11,14 +11,6 @@ import { JsonSessionProvider } from '../../../lib/session-provider';
 
 const CURSOR_DASHBOARD_URL = 'https://cursor.com/dashboard';
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-}
-
 export default class TestCursorOpen extends Command {
   static description = 'Open Cursor dashboard using a previously saved session';
 
