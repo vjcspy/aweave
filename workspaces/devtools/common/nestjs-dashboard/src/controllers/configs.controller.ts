@@ -1,7 +1,13 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
+import {
+  GetConfigResponseDto,
+  ListConfigsResponseDto,
+  SaveConfigRequestDto,
+  SaveConfigResponseDto,
+} from '../dtos/configs.dto';
 import { ConfigsService } from '../services/configs.service';
-import { GetConfigResponseDto, ListConfigsResponseDto, SaveConfigRequestDto, SaveConfigResponseDto } from '../dtos/configs.dto';
 
 @ApiTags('configs')
 @Controller('configs')
@@ -15,16 +21,18 @@ export class ConfigsController {
     const data = this.configsService.getAvailableConfigs();
     return {
       success: true,
-      data
+      data,
     };
   }
 
   @Get(':domain/:name')
-  @ApiOperation({ summary: 'Get details (effective, default, user) for a specific config' })
+  @ApiOperation({
+    summary: 'Get details (effective, default, user) for a specific config',
+  })
   @ApiResponse({ status: 200, type: GetConfigResponseDto })
   getConfigDetails(
     @Param('domain') domain: string,
-    @Param('name') name: string
+    @Param('name') name: string,
   ): GetConfigResponseDto {
     return this.configsService.getConfigDetails(domain, name);
   }
@@ -35,7 +43,7 @@ export class ConfigsController {
   saveConfig(
     @Param('domain') domain: string,
     @Param('name') name: string,
-    @Body() body: SaveConfigRequestDto
+    @Body() body: SaveConfigRequestDto,
   ): SaveConfigResponseDto {
     this.configsService.saveUserConfig(domain, name, body.rawContent);
     return { success: true };
