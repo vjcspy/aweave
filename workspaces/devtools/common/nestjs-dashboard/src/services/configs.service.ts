@@ -1,8 +1,13 @@
+import {
+  getDomainConfigDir,
+  getUserConfigPath,
+  loadConfig,
+} from '@hod/aweave-config-core';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getDomainConfigDir, getUserConfigPath, loadConfig } from '@hod/aweave-config-core';
-import { ConfigDomainDto, ConfigFileDto, GetConfigResponseDto } from '../dtos/configs.dto';
+
+import { ConfigDomainDto, GetConfigResponseDto } from '../dtos/configs.dto';
 
 @Injectable()
 export class ConfigsService {
@@ -35,19 +40,25 @@ export class ConfigsService {
     const entries = fs.readdirSync(devtoolsRoot, { withFileTypes: true });
 
     for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === 'node_modules' || entry.name.startsWith('.')) {
+      if (
+        !entry.isDirectory() ||
+        entry.name === 'node_modules' ||
+        entry.name.startsWith('.')
+      ) {
         continue;
       }
 
       const domainDir = path.join(devtoolsRoot, entry.name);
       const defaultsDir = path.join(domainDir, 'config', 'defaults');
       if (fs.existsSync(defaultsDir)) {
-        const files = fs.readdirSync(defaultsDir).filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
+        const files = fs
+          .readdirSync(defaultsDir)
+          .filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
         results.push({
           domain: entry.name,
-          files: files.map(f => ({
+          files: files.map((f) => ({
             name: f.replace(/\.ya?ml$/, ''),
-            path: path.join(defaultsDir, f)
+            path: path.join(defaultsDir, f),
           })),
         });
       }
@@ -65,11 +76,14 @@ export class ConfigsService {
     const defaultsDir = path.join(devtoolsRoot, domain, 'config', 'defaults');
     const defaultFilePathYml = path.join(defaultsDir, `${name}.yml`);
     const defaultFilePathYaml = path.join(defaultsDir, `${name}.yaml`);
-    
+
     let defaultConfigPath = defaultFilePathYaml;
-    if (fs.existsSync(defaultFilePathYml)) defaultConfigPath = defaultFilePathYml;
+    if (fs.existsSync(defaultFilePathYml))
+      defaultConfigPath = defaultFilePathYml;
     else if (!fs.existsSync(defaultFilePathYaml)) {
-      throw new NotFoundException(`Default config for ${domain}/${name} not found`);
+      throw new NotFoundException(
+        `Default config for ${domain}/${name} not found`,
+      );
     }
 
     const userConfigPath = getUserConfigPath(domain, name);
@@ -93,16 +107,18 @@ export class ConfigsService {
     let effectiveConfig = {};
     try {
       // NOTE: loadConfig pattern requires knowing envOverrides or schemas if strict,
-      // but without the specific domain index imports we can do a generic load 
+      // but without the specific domain index imports we can do a generic load
       // which will just merge defaults + user configs + basic env vars.
       // E.g. basic raw merge by passing just dir.
       effectiveConfig = loadConfig({
         domain,
         name,
-        defaultsDir
+        defaultsDir,
       });
     } catch (e) {
-      this.logger.error(`Failed to load effective config for ${domain}/${name}: ${e}`);
+      this.logger.error(
+        `Failed to load effective config for ${domain}/${name}: ${e}`,
+      );
       effectiveConfig = { _error: String(e) };
     }
 
@@ -112,7 +128,7 @@ export class ConfigsService {
       defaultConfigPath,
       rawUserConfig,
       userConfigPath,
-      effectiveConfig
+      effectiveConfig,
     };
   }
 
