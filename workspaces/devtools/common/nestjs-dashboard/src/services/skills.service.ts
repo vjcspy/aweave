@@ -45,7 +45,9 @@ export class SkillsService {
       const projectSkillsDir = path.join(projectRoot, 'agent', 'skills');
       skills.push(...this.scanSkillsDirectory(projectSkillsDir, projectRoot));
     } else {
-      this.logger.warn('Project root with agent/skills not found — skipping project skills scan');
+      this.logger.warn(
+        'Project root with agent/skills not found — skipping project skills scan',
+      );
     }
 
     // Scan ~/.aweave/skills
@@ -57,7 +59,10 @@ export class SkillsService {
     }
 
     this.logger.log(
-      { totalSkills: skills.length, projectSkills: projectRoot ? skills.length : 0 },
+      {
+        totalSkills: skills.length,
+        projectSkills: projectRoot ? skills.length : 0,
+      },
       'Skills scan completed',
     );
 
@@ -73,7 +78,10 @@ export class SkillsService {
       const data = JSON.parse(fileData);
       return Array.isArray(data.active) ? data.active : [];
     } catch (e) {
-      this.logger.error({ path: this.activeSkillsPath, error: String(e) }, 'Failed to read active skills JSON');
+      this.logger.error(
+        { path: this.activeSkillsPath, error: String(e) },
+        'Failed to read active skills JSON',
+      );
       return [];
     }
   }
@@ -154,7 +162,10 @@ export class SkillsService {
         path: skillMdPath,
       };
     } catch (e) {
-      this.logger.error({ skillMdPath, error: String(e) }, 'Error parsing skill frontmatter');
+      this.logger.error(
+        { skillMdPath, error: String(e) },
+        'Error parsing skill frontmatter',
+      );
       return null;
     }
   }

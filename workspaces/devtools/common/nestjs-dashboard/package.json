@@ -19,6 +19,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "catalog:",
     "@eslint/js": "catalog:",
+    "@types/express": "^5.0.0",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
