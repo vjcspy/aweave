@@ -110,6 +110,11 @@ export const CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
         type: 'string',
         description: 'Debate web health check URL',
       },
+      'test.cursor.browserChannel': {
+        type: 'string',
+        description:
+          'Playwright system browser channel for aw test cursor commands',
+      },
     },
   },
 };
@@ -141,4 +146,5 @@ export const CLI_ENV_OVERRIDES: Record<string, string> = {
   'debate.autoStartServices': 'DEBATE_AUTO_START',
   'services.server.port': 'DEBATE_SERVER_PORT',
   'services.debateWeb.port': 'DEBATE_WEB_PORT',
+  'test.cursor.browserChannel': 'AWEAVE_CURSOR_BROWSER_CHANNEL',
 };

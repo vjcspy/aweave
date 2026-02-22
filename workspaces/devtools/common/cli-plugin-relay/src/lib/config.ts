@@ -8,9 +8,15 @@ const CONFIG_FILE = path.join(CONFIG_DIR, 'relay.json');
 export interface RelayConfig {
   relayUrl?: string;
   apiKey?: string;
-  encryptionKey?: string;
+  serverKeyId?: string;
+  serverPublicKey?: string;
+  serverPublicKeyFingerprint?: string;
   chunkSize?: number;
   defaultBaseBranch?: string;
+}
+
+export interface ValidateConfigOptions {
+  requireTransport?: boolean;
 }
 
 /** Load relay config from ~/.aweave/relay.json. Returns empty object if not found. */
@@ -25,8 +31,13 @@ export function loadConfig(): RelayConfig {
 
 /** Save relay config to ~/.aweave/relay.json. Merges with existing config. */
 export function saveConfig(updates: Partial<RelayConfig>): RelayConfig {
-  const existing = loadConfig();
+  const existing = loadConfig() as RelayConfig & {
+    encryptionKey?: unknown;
+    transportMode?: unknown;
+  };
   const merged = { ...existing, ...updates };
+  delete (merged as { encryptionKey?: unknown }).encryptionKey;
+  delete (merged as { transportMode?: unknown }).transportMode;
 
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
   fs.writeFileSync(
@@ -47,10 +58,21 @@ export function getConfigPath(): string {
  * Validate that required config fields are present.
  * Returns array of missing field names.
  */
-export function validateRequiredConfig(config: RelayConfig): string[] {
+export function validateRequiredConfig(
+  config: RelayConfig,
+  options: ValidateConfigOptions = {},
+): string[] {
+  const { requireTransport = true } = options;
   const missing: string[] = [];
   if (!config.relayUrl) missing.push('relayUrl');
   if (!config.apiKey) missing.push('apiKey');
-  if (!config.encryptionKey) missing.push('encryptionKey');
+
+  if (!requireTransport) {
+    return missing;
+  }
+
+  if (!config.serverKeyId) missing.push('serverKeyId');
+  if (!config.serverPublicKey) missing.push('serverPublicKey');
+
   return missing;
 }

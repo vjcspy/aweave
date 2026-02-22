@@ -1,0 +1,61 @@
+name: Auto Merge Master into Workspaces Branches
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge master into all workspaces/* branches
+        run: |
+          # Get all remote branches matching workspaces/*
+          branches=$(git branch -r --list 'origin/workspaces/*' | sed 's|origin/||' | xargs)
+
+          if [ -z "$branches" ]; then
+            echo "No workspaces/* branches found."
+            exit 0
+          fi
+
+          failed_branches=""
+
+          for branch in $branches; do
+            echo ""
+            echo "=========================================="
+            echo "Processing branch: $branch"
+            echo "=========================================="
+
+            git checkout "$branch"
+
+            if git merge origin/master --no-edit; then
+              git push origin "$branch"
+              echo "✅ Successfully merged master into $branch"
+            else
+              echo "❌ Merge conflict on $branch — skipping"
+              git merge --abort
+              failed_branches="$failed_branches $branch"
+            fi
+          done
+
+          if [ -n "$failed_branches" ]; then
+            echo ""
+            echo "=========================================="
+            echo "⚠️  Failed to merge into:$failed_branches"
+            echo "=========================================="
+            exit 1
+          fi

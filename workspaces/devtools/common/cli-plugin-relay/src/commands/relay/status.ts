@@ -32,7 +32,9 @@ export class RelayStatus extends Command {
     const { args, flags } = await this.parse(RelayStatus);
     const config = loadConfig();
 
-    const missingConfig = validateRequiredConfig(config);
+    const missingConfig = validateRequiredConfig(config, {
+      requireTransport: false,
+    });
     if (missingConfig.length > 0) {
       output(
         errorResponse(
@@ -50,11 +52,13 @@ export class RelayStatus extends Command {
         config.relayUrl!,
         config.apiKey!,
         args.sessionId,
+        { successStates: ['pushed', 'stored'] },
       );
 
+      const success = result.status === 'pushed' || result.status === 'stored';
       output(
         new MCPResponse({
-          success: result.status === 'pushed',
+          success,
           content: [
             new MCPContent({
               type: ContentType.JSON,

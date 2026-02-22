@@ -3,8 +3,7 @@
 > **Role:** Proposer - The party that proposes and maintains the debate direction
 
 > **⚠️ LANGUAGE REQUIREMENT:**
-> - If the user specifies a language (e.g., "debate in Vietnamese"), use that language for all debate communication (MOTION, CLAIM, APPEAL, RESOLUTION).
-> - If no language is specified, **default to English**.
+> - Read `user/preferences.yaml` > `debate_language` to determine the language for all debate communication (MOTION, CLAIM, APPEAL, RESOLUTION). If not set, default to English.
 > - **Technical terms MUST ALWAYS remain in English** regardless of chosen language: variable/function/class names, file paths, CLI commands, code snippets, architectural concepts (e.g., dependency injection, event-driven), design patterns, severity labels (Critical/Major/Minor), and industry-standard terminology.
 
 ## CLI Reference

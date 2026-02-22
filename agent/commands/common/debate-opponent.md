@@ -3,8 +3,7 @@
 > **Role:** Opponent - The party responsible for challenging and validating proposal quality
 
 > **⚠️ LANGUAGE REQUIREMENT:**
-> - If the user specifies a language (e.g., "debate in Vietnamese"), use that language for all debate communication (CLAIM responses, feedback).
-> - If no language is specified, **default to English**.
+> - Read `user/preferences.yaml` > `debate_language` to determine the language for all debate communication (CLAIM responses, feedback). If not set, default to English.
 > - **Technical terms MUST ALWAYS remain in English** regardless of chosen language: variable/function/class names, file paths, CLI commands, code snippets, architectural concepts (e.g., dependency injection, event-driven), design patterns, severity labels (Critical/Major/Minor), and industry-standard terminology.
 
 ## CLI Reference

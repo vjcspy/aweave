@@ -14,8 +14,14 @@ export class RelayConfigSet extends Command {
   static flags = {
     'relay-url': Flags.string({ description: 'Vercel relay URL' }),
     'api-key': Flags.string({ description: 'Relay API key' }),
-    'encryption-key': Flags.string({
-      description: 'AES-256 encryption key (base64)',
+    'server-key-id': Flags.string({
+      description: 'Pinned server transport key ID (kid) for v2 encryption',
+    }),
+    'server-public-key': Flags.string({
+      description: 'Pinned server public key (SPKI PEM) for v2 encryption',
+    }),
+    'server-public-key-fingerprint': Flags.string({
+      description: 'Pinned server public key fingerprint (sha256:...)',
     }),
     'chunk-size': Flags.integer({
       description: 'Chunk size in bytes (max: 3400000)',
@@ -34,8 +40,14 @@ export class RelayConfigSet extends Command {
     const updates: Record<string, unknown> = {};
     if (flags['relay-url']) updates.relayUrl = flags['relay-url'];
     if (flags['api-key']) updates.apiKey = flags['api-key'];
-    if (flags['encryption-key'])
-      updates.encryptionKey = flags['encryption-key'];
+    if (flags['server-key-id']) updates.serverKeyId = flags['server-key-id'];
+    if (flags['server-public-key']) {
+      updates.serverPublicKey = flags['server-public-key'];
+    }
+    if (flags['server-public-key-fingerprint']) {
+      updates.serverPublicKeyFingerprint =
+        flags['server-public-key-fingerprint'];
+    }
     if (flags['chunk-size'] != null) updates.chunkSize = flags['chunk-size'];
     if (flags['base-branch']) updates.defaultBaseBranch = flags['base-branch'];
 
@@ -55,6 +67,7 @@ export class RelayConfigSet extends Command {
             data: {
               updated: Object.keys(updates),
               configPath: getConfigPath(),
+              transportMode: 'v2',
             },
           }),
         ],

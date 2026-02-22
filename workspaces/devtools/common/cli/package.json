@@ -28,7 +28,8 @@
       "@hod/aweave-plugin-relay",
       "@hod/aweave-plugin-demo-workflow",
       "@hod/aweave-plugin-config",
-      "@hod/aweave-plugin-server"
+      "@hod/aweave-plugin-server",
+      "@hod/aweave-plugin-test"
     ]
   },
   "dependencies": {
@@ -39,6 +40,7 @@
     "@hod/aweave-plugin-docs": "workspace:*",
     "@hod/aweave-plugin-relay": "workspace:*",
     "@hod/aweave-plugin-server": "workspace:*",
+    "@hod/aweave-plugin-test": "workspace:*",
     "@hod/aweave-cli-shared": "workspace:*",
     "@oclif/core": "catalog:",
     "@oclif/plugin-help": "^6.2.27",

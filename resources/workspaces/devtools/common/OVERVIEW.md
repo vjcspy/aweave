@@ -38,11 +38,11 @@ Use the coverage table to spot missing package overviews quickly.
 
 ### Shared Libraries
 
-- **debate-machine:** Shared xstate v5 state machine for the debate system — single source of truth for debate states (5 states, 5 event types), transitions, and role-based action validation. Consumed by both CLI and NestJS server ([devdocs/misc/devtools/common/debate-machine/OVERVIEW.md](devdocs/misc/devtools/common/debate-machine/OVERVIEW.md))
-- **workflow-engine:** Core workflow execution engine — pure TypeScript `WorkflowEngine` class (EventEmitter-based) with sequential/parallel/race strategies, retry with backoff, stage reducers, human-in-the-loop input, and xstate v5 machine for lifecycle management. Consumed by dashboard and workflow plugins ([devdocs/misc/devtools/common/workflow-engine/OVERVIEW.md](devdocs/misc/devtools/common/workflow-engine/OVERVIEW.md))
-- **playwright:** Shared browser automation library — wraps `playwright-core` with `launchBrowser()` and `launchPersistentBrowser()` helpers. Uses system-installed Chrome/Edge via channel (no 500MB browser download). Consumed by `cli-plugin-auth` for SSO cookie capture ([devdocs/misc/devtools/common/playwright/OVERVIEW.md](devdocs/misc/devtools/common/playwright/OVERVIEW.md))
-- **config-core:** Shared config loader and schema utilities (overview missing)
-- **config:** Shared default configuration package (overview missing)
+- **config-core:** Shared config loader library (Node-only) providing YAML parsing, deep-merging, environment overrides, and Next.js client public projection. Resolves `env vars > user config > defaults` precedence. ([resources/workspaces/devtools/common/config-core/OVERVIEW.md](resources/workspaces/devtools/common/config-core/OVERVIEW.md))
+- **config:** Default configurations, schemas, and environment override maps for the `common` domain devtools packages. ([resources/workspaces/devtools/common/config/OVERVIEW.md](resources/workspaces/devtools/common/config/OVERVIEW.md))
+- **debate-machine:** Shared xstate v5 state machine for the debate system — single source of truth for debate states (5 states, 5 event types), transitions, and role-based action validation. Consumed by both CLI and NestJS server ([resources/workspaces/devtools/common/debate-machine/OVERVIEW.md](resources/workspaces/devtools/common/debate-machine/OVERVIEW.md))
+- **workflow-engine:** Core workflow execution engine — pure TypeScript `WorkflowEngine` class (EventEmitter-based) with sequential/parallel/race strategies, retry with backoff, stage reducers, human-in-the-loop input, and xstate v5 machine for lifecycle management. Consumed by dashboard and workflow plugins ([resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md](resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md))
+- **playwright:** Shared browser automation library — wraps `playwright-core` with `launchBrowser()` and `launchPersistentBrowser()` helpers. Uses system-installed Chrome/Edge via channel (no 500MB browser download). Consumed by `cli-plugin-auth` for SSO cookie capture ([resources/workspaces/devtools/common/playwright/OVERVIEW.md](resources/workspaces/devtools/common/playwright/OVERVIEW.md))
 
 ### Backend Services
 
@@ -54,23 +54,7 @@ Use the coverage table to spot missing package overviews quickly.
 - **debate-web:** React SPA for Arbitrator to monitor debates and submit RULING/INTERVENTION — sidebar debate list, real-time WebSocket updates, argument timeline, typed API client generated from OpenAPI spec. Served via the unified server under `/debate` (same origin with API + WebSocket) ([devdocs/misc/devtools/common/debate-web/OVERVIEW.md](devdocs/misc/devtools/common/debate-web/OVERVIEW.md))
 - **workflow-dashboard:** Ink v6 + React 19 reusable terminal dashboard component for workflow engine — stage/task tree sidebar, live logs, task detail, human input panel, keyboard navigation. Consumed by workflow plugins via `<WorkflowDashboard actor={actor} />` ([devdocs/misc/devtools/common/workflow-dashboard/OVERVIEW.md](devdocs/misc/devtools/common/workflow-dashboard/OVERVIEW.md))
 
-## Cross-Package Data Flows
-
-### Debate System
-
-- AI agents use `aw debate create/submit/appeal/...` (**cli-plugin-debate**) → HTTP requests to **server** (port 3456) → routed to **nestjs-debate** module.
-- **nestjs-debate** validates state transitions using **debate-machine** (xstate), persists to SQLite (`~/.aweave/db/debate.db`), broadcasts via WebSocket.
-- **cli-plugin-debate** enriches responses with `available_actions` computed locally via **debate-machine** — same machine, dual usage.
-- **debate-web** is loaded through **server** (single origin) and connects to WebSocket at `/ws` for real-time updates, using typed API client generated from server's `openapi.json`.
-- `aw debate wait` polls **server** every 2s until opponent responds or deadline reached.
-
-### Workflow System
-
-- Workflow plugins define `WorkflowDefinition` → create xstate actor via **workflow-engine**'s `workflowMachine` → `render(<WorkflowDashboard actor={...} />)`.
-- **workflow-engine** runs stages/tasks, emits events → xstate machine bridges events to context → **workflow-dashboard** subscribes via `@xstate/react` and renders real-time UI.
-- **cli-plugin-demo-workflow** is the reference implementation demonstrating all engine features.
-
-### CLI Infrastructure
+## CLI Infrastructure
 
 - **cli** bootstraps oclif → loads all plugins declared in `oclif.plugins`.
 - Every plugin depends on **cli-shared** for MCP response format, output helpers, HTTP client.
@@ -100,6 +84,13 @@ Use the coverage table to spot missing package overviews quickly.
    Browser automation ──► playwright (wraps playwright-core)
 ```
 
+## AI Agent Skills
+
+To guide AI agents when developing or modifying devtools components, there are specific skill rules that should be loaded. These provide detailed instructions, patterns, and architectural mandates:
+
+- **[devtools-cli-builder](../../../../agent/skills/common/devtools-cli-builder/SKILL.md):** Mandatory guide for building oclif CLI plugins, NextJS backends, configuration definitions, and adhering to the MCP-like output specification.
+- **[workflow-builder](../../../../agent/skills/common/workflow-builder/SKILL.md):** Essential guide for constructing new multi-step tasks natively on top of the workflow execution engine, integrating human-in-the-loop interactions, and implementing reliable retry/recovery strategies.
+
 ## Operational Notes
 
 - **Source Code Location:** `devtools/common/<package>/` — following `devtools/common/<PACKAGE_NAME>/` convention.
@@ -118,22 +109,20 @@ Use the coverage table to spot missing package overviews quickly.
 ## Package Coverage Table
 
 | Package | Package Group | Overview Path | Status |
-| --- | --- | --- | --- |
-| cli | CLI Core | devdocs/misc/devtools/common/cli/OVERVIEW.md | ✅ Present |
-| cli-shared | CLI Core | devdocs/misc/devtools/common/cli-shared/OVERVIEW.md | ✅ Present |
-| cli-plugin-debate | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-debate/OVERVIEW.md | ✅ Present |
-| cli-plugin-docs | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-docs/OVERVIEW.md | ✅ Present |
-| cli-plugin-dashboard | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-dashboard/OVERVIEW.md | ✅ Present |
-| cli-plugin-demo-workflow | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md | ✅ Present |
-| cli-plugin-server | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-server/OVERVIEW.md | ✅ Present |
-| cli-plugin-config | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-config/OVERVIEW.md | ❌ Missing |
-| cli-plugin-relay | CLI Plugins | devdocs/misc/devtools/common/cli-plugin-relay/OVERVIEW.md | ❌ Missing |
-| config-core | Shared Libraries | devdocs/misc/devtools/common/config-core/OVERVIEW.md | ❌ Missing |
-| config | Shared Libraries | devdocs/misc/devtools/common/config/OVERVIEW.md | ❌ Missing |
-| debate-machine | Shared Libraries | devdocs/misc/devtools/common/debate-machine/OVERVIEW.md | ✅ Present |
-| workflow-engine | Shared Libraries | devdocs/misc/devtools/common/workflow-engine/OVERVIEW.md | ✅ Present |
-| playwright | Shared Libraries | devdocs/misc/devtools/common/playwright/OVERVIEW.md | ✅ Present |
-| server | Backend Services | devdocs/misc/devtools/common/server/OVERVIEW.md | ✅ Present |
-| nestjs-debate | Backend Services | devdocs/misc/devtools/common/nestjs-debate/OVERVIEW.md | ✅ Present |
-| debate-web | Frontend Apps | devdocs/misc/devtools/common/debate-web/OVERVIEW.md | ✅ Present |
-| workflow-dashboard | Frontend Apps | devdocs/misc/devtools/common/workflow-dashboard/OVERVIEW.md | ✅ Present |
+|---|---|---|---|
+| cli | CLI Core | resources/workspaces/devtools/common/cli/OVERVIEW.md | ✅ Present |
+| cli-shared | CLI Core | resources/workspaces/devtools/common/cli-shared/OVERVIEW.md | ✅ Present |
+| cli-plugin-debate | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md | ✅ Present |
+| cli-plugin-docs | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md | ✅ Present |
+| cli-plugin-dashboard | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md | ✅ Present |
+| cli-plugin-demo-workflow | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md | ✅ Present |
+| config-core | Shared Libraries | resources/workspaces/devtools/common/config-core/OVERVIEW.md | ✅ Present |
+| config | Shared Libraries | resources/workspaces/devtools/common/config/OVERVIEW.md | ✅ Present |
+| cli-plugin-relay | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-relay/OVERVIEW.md | ❌ Missing |
+| debate-machine | Shared Libraries | resources/workspaces/devtools/common/debate-machine/OVERVIEW.md | ✅ Present |
+| workflow-engine | Shared Libraries | resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md | ✅ Present |
+| playwright | Shared Libraries | resources/workspaces/devtools/common/playwright/OVERVIEW.md | ✅ Present |
+| server | Backend Services | resources/workspaces/devtools/common/server/OVERVIEW.md | ✅ Present |
+| nestjs-debate | Backend Services | resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md | ✅ Present |
+| debate-web | Frontend Apps | resources/workspaces/devtools/common/debate-web/OVERVIEW.md | ✅ Present |
+| workflow-dashboard | Frontend Apps | resources/workspaces/devtools/common/workflow-dashboard/OVERVIEW.md | ✅ Present |
