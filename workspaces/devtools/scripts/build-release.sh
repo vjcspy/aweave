@@ -46,10 +46,17 @@ cd common/cli && pnpm exec oclif manifest && cd "$ROOT_DIR"
 
 echo ""
 echo "=== Bump version ($BUMP) ==="
-pnpm -r exec -- npm version "$BUMP" --no-git-tag-version 2>&1 | grep -E "^v" | while read v; do echo "  $v"; done
-echo ""
+# Bump root package.json (single source of truth)
+npm version "$BUMP" --no-git-tag-version
+VERSION=$(node -e "console.log(require('./package.json').version)")
+echo "  New version: $VERSION"
+
+# Sync same version to ALL workspace packages
+pnpm -r exec -- npm version "$VERSION" --no-git-tag-version --allow-same-version 2>&1 | head -1
+echo "  Synced $VERSION to all packages"
 
 # Show current versions
+echo ""
 echo "=== Package versions ==="
 pnpm -r exec -- node -e "const p=require('./package.json'); process.stdout.write(p.name.padEnd(40) + p.version + '\n')" 2>/dev/null
 

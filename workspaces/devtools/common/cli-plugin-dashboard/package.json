@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-plugin-dashboard",
-  "version": "0.1.2",
+  "version": "0.1.23",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
