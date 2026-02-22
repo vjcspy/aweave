@@ -1,27 +1,48 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@layer utilities {
-    .glass {
-        @apply bg-zinc-900/40 backdrop-blur-md border border-white/5 shadow-xl;
-    }
+@theme inline {
+    --font-sans: "Inter", sans-serif;
+    --font-mono: "Geist Mono", monospace;
+}
 
-    .glass-panel {
-        @apply bg-zinc-950/60 backdrop-blur-xl border border-white/10 shadow-2xl;
-    }
+@utility glass {
+    background-color: rgba(24, 24, 27, 0.4);
+    /* bg-zinc-900/40 */
+    backdrop-filter: blur(12px);
+    /* backdrop-blur-md */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
 
-    .glass-button {
-        @apply bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/5 transition-all duration-300;
-    }
+@utility glass-panel {
+    background-color: rgba(9, 9, 11, 0.6);
+    /* bg-zinc-950/60 */
+    backdrop-filter: blur(24px);
+    /* backdrop-blur-xl */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
 
-    .text-glow {
-        text-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
-    }
+@utility glass-button {
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
 
-    .glow-border {
-        box-shadow: 0 0 15px rgba(96, 165, 250, 0.15), inset 0 0 20px rgba(96, 165, 250, 0.05);
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
     }
+}
+
+@utility text-glow {
+    text-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
+}
+
+@utility glow-border {
+    box-shadow: 0 0 15px rgba(96, 165, 250, 0.15), inset 0 0 20px rgba(96, 165, 250, 0.05);
 }
 
 body {
