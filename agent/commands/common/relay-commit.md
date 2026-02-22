@@ -32,7 +32,8 @@ aw relay config show
 git rev-parse --verify HEAD
 ```
 
-Required relay config fields must exist: `relayUrl`, `apiKey`, `encryptionKey`.
+Required relay config fields must exist: `relayUrl`, `apiKey`, `serverKeyId`, `serverPublicKey`.
+`aw relay config show` should indicate v2 transport is active (`effectiveTransportMode = v2`).
 `HEAD` must be the local commit intended for relay sync.
 
 ### Step 2: Relay latest commits
