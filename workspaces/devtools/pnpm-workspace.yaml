@@ -37,6 +37,7 @@ catalog:
   "xstate": "^5"
 packages:
   - common/server
+  - common/nestjs-core
   - common/nestjs-debate
   - common/debate-machine
   - common/debate-web

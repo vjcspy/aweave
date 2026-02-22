@@ -32,7 +32,7 @@ export class ConfigsService {
   getAvailableConfigs(): ConfigDomainDto[] {
     const devtoolsRoot = this.findDevtoolsRoot();
     if (!devtoolsRoot) {
-      this.logger.warn('Could not find devtools root for config discovery');
+      this.logger.warn('Config discovery failed: devtools root not found');
       return [];
     }
 
@@ -64,6 +64,11 @@ export class ConfigsService {
       }
     }
 
+    this.logger.log(
+      { domainCount: results.length, totalFiles: results.reduce((sum, d) => sum + d.files.length, 0) },
+      'Config discovery completed',
+    );
+
     return results;
   }
 
@@ -92,7 +97,7 @@ export class ConfigsService {
     try {
       rawDefaultConfig = fs.readFileSync(defaultConfigPath, 'utf8');
     } catch (e) {
-      this.logger.warn(`Failed to read default config: ${e}`);
+      this.logger.warn({ domain, name, error: String(e) }, 'Failed to read default config');
     }
 
     let rawUserConfig = '';
@@ -100,7 +105,7 @@ export class ConfigsService {
       try {
         rawUserConfig = fs.readFileSync(userConfigPath, 'utf8');
       } catch (e) {
-        this.logger.warn(`Failed to read user config: ${e}`);
+        this.logger.warn({ domain, name, error: String(e) }, 'Failed to read user config');
       }
     }
 
@@ -117,7 +122,8 @@ export class ConfigsService {
       });
     } catch (e) {
       this.logger.error(
-        `Failed to load effective config for ${domain}/${name}: ${e}`,
+        { domain, name, error: String(e) },
+        'Failed to load effective config',
       );
       effectiveConfig = { _error: String(e) };
     }
@@ -139,5 +145,6 @@ export class ConfigsService {
     }
     const destPath = path.join(userConfigDir, `${name}.yaml`);
     fs.writeFileSync(destPath, rawContent, 'utf8');
+    this.logger.log({ domain, name, path: destPath }, 'User config saved');
   }
 }

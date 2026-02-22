@@ -45,7 +45,7 @@ export class SkillsService {
       const projectSkillsDir = path.join(projectRoot, 'agent', 'skills');
       skills.push(...this.scanSkillsDirectory(projectSkillsDir, projectRoot));
     } else {
-      this.logger.warn(`Project root with agent/skills not found. Skipping.`);
+      this.logger.warn('Project root with agent/skills not found — skipping project skills scan');
     }
 
     // Scan ~/.aweave/skills
@@ -55,6 +55,11 @@ export class SkillsService {
         ...this.scanSkillsDirectory(globalSkillsDir, globalSkillsDir),
       );
     }
+
+    this.logger.log(
+      { totalSkills: skills.length, projectSkills: projectRoot ? skills.length : 0 },
+      'Skills scan completed',
+    );
 
     return skills;
   }
@@ -68,7 +73,7 @@ export class SkillsService {
       const data = JSON.parse(fileData);
       return Array.isArray(data.active) ? data.active : [];
     } catch (e) {
-      this.logger.error(`Failed to read active skills JSON: ${e}`);
+      this.logger.error({ path: this.activeSkillsPath, error: String(e) }, 'Failed to read active skills JSON');
       return [];
     }
   }
@@ -88,6 +93,10 @@ export class SkillsService {
       this.activeSkillsPath,
       JSON.stringify({ active: newActiveArray }, null, 2),
       'utf8',
+    );
+    this.logger.log(
+      { skillId, active, totalActive: newActiveArray.length },
+      'Skill active state updated',
     );
 
     await this.generateLoadedSkillsMd();
@@ -133,7 +142,8 @@ export class SkillsService {
       const parsed = matter(content);
       if (!parsed.data.name || !parsed.data.description) {
         this.logger.warn(
-          `SKILL.md at ${skillMdPath} is missing name or description in frontmatter.`,
+          { skillMdPath },
+          'SKILL.md missing name or description in frontmatter',
         );
         return null; // Must adhere to https://agentskills.io/what-are-skills
       }
@@ -144,7 +154,7 @@ export class SkillsService {
         path: skillMdPath,
       };
     } catch (e) {
-      this.logger.error(`Error parsing frontmatter for ${skillMdPath}: ${e}`);
+      this.logger.error({ skillMdPath, error: String(e) }, 'Error parsing skill frontmatter');
       return null;
     }
   }
@@ -175,10 +185,14 @@ export class SkillsService {
       }
       fs.writeFileSync(this.loadedSkillsMdPath, mdContent, 'utf8');
       this.logger.log(
-        `Generated active skills context at ${this.loadedSkillsMdPath}`,
+        { path: this.loadedSkillsMdPath, activeCount: activeSkillsList.length },
+        'Generated active skills context',
       );
     } catch (e) {
-      this.logger.error(`Failed to write loaded-skills.md: ${e}`);
+      this.logger.error(
+        { path: this.loadedSkillsMdPath, error: String(e) },
+        'Failed to write loaded-skills.md',
+      );
     }
   }
 }

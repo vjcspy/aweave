@@ -78,6 +78,11 @@ export class ArgumentService {
   }) {
     validateContentSize(input.content);
 
+    this.logger.debug(
+      { debateId: input.debate_id, action: input.action_name, role: input.role, type: input.type },
+      'Argument submission started',
+    );
+
     const result = await this.locks.withLock(input.debate_id, async () => {
       return this.db.transaction(() => {
         // 1. Check debate exists
@@ -91,6 +96,10 @@ export class ArgumentService {
             input.client_request_id,
           );
           if (existing) {
+            this.logger.log(
+              { debateId: input.debate_id, clientRequestId: input.client_request_id, argumentId: existing.id },
+              'Idempotency hit — returning existing argument',
+            );
             return { debate, argument: existing, isExisting: true };
           }
         }
@@ -141,6 +150,19 @@ export class ArgumentService {
         const updatedDebate = this.db.updateDebateState(
           input.debate_id,
           nextState,
+        );
+
+        this.logger.log(
+          {
+            debateId: input.debate_id,
+            argumentId: argument.id,
+            type: input.type,
+            role: input.role,
+            seq: nextSeq,
+            prevState: debate.state,
+            nextState,
+          },
+          'Argument submitted',
         );
 
         return { debate: updatedDebate, argument, isExisting: false };
@@ -233,7 +255,8 @@ export class ArgumentService {
         });
       } catch (err) {
         this.logger.warn(
-          `Auto-ruling failed for debate ${input.debate_id}: ${err}`,
+          { debateId: input.debate_id, err },
+          'Auto-ruling failed',
         );
       }
     }

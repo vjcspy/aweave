@@ -1,0 +1,3 @@
+# NestJS Core — Abstract
+
+The NestJS Core module (`@hod/aweave-nestjs-core`) provides shared logging and request context infrastructure for the unified server. It replaces Nest's default console logger with a pino-backed JSON logger that writes structured JSONL to `~/.aweave/logs/server.jsonl` and pretty-prints to the console in development. An AsyncLocalStorage-based context service automatically propagates per-request metadata (starting with `correlationId`) through the async call chain, and an HTTP middleware generates/reads `x-correlation-id` headers for request tracing. The module is `@Global()` so all feature modules can inject `LogContextService` and `NestLoggerService` without explicit imports.
