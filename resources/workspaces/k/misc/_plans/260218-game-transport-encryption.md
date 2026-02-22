@@ -2,10 +2,10 @@
 
 ## References
 
-- Original plan: `resources/workspaces/k/misc/plans/260208-git-patch-relay.md`
+- Original plan: `resources/workspaces/k/misc/_plans/260208-git-patch-relay.md`
 - Server source: `workspaces/k/misc/git-relay-server/`
 - Vercel relay source: `workspaces/k/misc/git-relay-vercel/`
-- CLI plugin source: `devtools/common/cli-plugin-relay/`
+- CLI plugin source: `workspaces/devtools/common/cli-plugin-relay/`
 
 ## User Requirements
 
@@ -174,10 +174,10 @@ Binary frame: `[4B metadataLen] [JSON metadata] [raw binary data]`. Toàn bộ f
 
 ### Phase 2: Implementation Structure
 
-**Changes to CLI Plugin (`devtools/common/cli-plugin-relay/`):**
+**Changes to CLI Plugin (`workspaces/devtools/common/cli-plugin-relay/`):**
 
 ```
-devtools/common/cli-plugin-relay/src/
+workspaces/devtools/common/cli-plugin-relay/src/
 ├── lib/
 │   ├── crypto.ts          # 🔄 Replace encrypt() with encryptPayload()/decryptPayload()
 │   ├── chunker.ts         # ✅ No change (binary framing preserves original chunk sizes)
@@ -239,7 +239,7 @@ workspaces/k/misc/git-relay-server/src/
 
 #### Step 1: Transport Encryption Functions (Binary Framing)
 
-**CLI — `devtools/common/cli-plugin-relay/src/lib/crypto.ts`**
+**CLI — `workspaces/devtools/common/cli-plugin-relay/src/lib/crypto.ts`**
 
 - [x] Replace `encrypt(data, keyBase64)` → `EncryptResult` with `encryptPayload(metadata, keyBase64, binaryData?)` → `string`
 
@@ -419,7 +419,7 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
 
 #### Step 6: CLI Client Updates
 
-**`devtools/common/cli-plugin-relay/src/lib/relay-client.ts`**
+**`workspaces/devtools/common/cli-plugin-relay/src/lib/relay-client.ts`**
 
 - [x] Import `encryptPayload` from `./crypto`
 - [x] Update `fetchWithRetry` to accept `encryptionKey` param and wrap body: `{"gameData": encryptPayload(metadata, encryptionKey, binaryData?)}`
@@ -436,11 +436,11 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
 - [x] Update `uploadChunk` signature: accept raw `Buffer` chunk data (not base64 string), pass as `binaryData` to `encryptPayload`
 - [x] Update `ChunkUploadPayload`: remove `data: string` field (raw data passed separately as binary)
 
-**`devtools/common/cli-plugin-relay/src/lib/chunker.ts`**
+**`workspaces/devtools/common/cli-plugin-relay/src/lib/chunker.ts`**
 
 - [x] No changes needed — chunk size defaults stay the same (3 MB default, 3.4 MB hard cap)
 
-**`devtools/common/cli-plugin-relay/src/commands/relay/push.ts`**
+**`workspaces/devtools/common/cli-plugin-relay/src/commands/relay/push.ts`**
 
 - [x] Remove step 5 (patch-level encryption): no more `encrypt(patch, key)` → `{encrypted, iv, authTag}`
 - [x] Update step 6 (chunk): split raw `patch` buffer directly (not `encrypted` buffer)
@@ -448,7 +448,7 @@ app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
 - [x] Update step 8 (complete): payload = `{sessionId}` only
 - [x] Add step 8.5 (trigger GR): call `triggerGR()` with `{sessionId, repo, branch, baseBranch}`
 
-**`devtools/common/cli-plugin-relay/src/commands/relay/status.ts`**
+**`workspaces/devtools/common/cli-plugin-relay/src/commands/relay/status.ts`**
 
 - [x] Update URL path: `/api/relay/status/` → `/api/game/chunk/status/`
 
@@ -655,4 +655,4 @@ _Pending implementation_
 - Validation executed:
   - `workspaces/k/misc/git-relay-server`: `npm install`, `npm run build` (pass)
   - `workspaces/k/misc/git-relay-vercel`: `npm run build` (pass)
-  - `devtools/common/cli-plugin-relay`: `pnpm lint:fix`, `pnpm lint`, `pnpm build` (pass)
+  - `workspaces/devtools/common/cli-plugin-relay`: `pnpm lint:fix`, `pnpm lint`, `pnpm build` (pass)
