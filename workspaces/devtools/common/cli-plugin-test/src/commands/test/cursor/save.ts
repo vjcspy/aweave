@@ -23,10 +23,10 @@ function isBrowserClosedError(error: unknown): boolean {
   );
 }
 
-function isChromeChannelMissingError(error: unknown): boolean {
+function isEdgeChannelMissingError(error: unknown): boolean {
   const message = getErrorMessage(error).toLowerCase();
   return (
-    message.includes('chrome') &&
+    message.includes('msedge') &&
     (message.includes('not found') ||
       message.includes("executable doesn't exist") ||
       message.includes('cannot find'))
@@ -40,16 +40,16 @@ export default class TestCursorSave extends Command {
   async run(): Promise<void> {
     const provider = new JsonSessionProvider();
 
-    this.log(`Opening Chrome for Cursor login...`);
+    this.log(`Opening Microsoft Edge for Cursor login...`);
     this.log(`Session file: ${provider.getPath()}`);
 
     let session;
     try {
-      session = await launchBrowser({ channel: 'chrome', headless: false });
+      session = await launchBrowser({ channel: 'msedge', headless: false });
     } catch (error) {
-      if (isChromeChannelMissingError(error)) {
+      if (isEdgeChannelMissingError(error)) {
         this.error(
-          'Google Chrome was not found for Playwright channel "chrome". Install Chrome or use a machine with Chrome available.',
+          'Microsoft Edge was not found for Playwright channel "msedge". Install Edge or use a machine with Edge available.',
           { exit: 1 },
         );
       }
