@@ -79,7 +79,12 @@ export class ArgumentService {
     validateContentSize(input.content);
 
     this.logger.debug(
-      { debateId: input.debate_id, action: input.action_name, role: input.role, type: input.type },
+      {
+        debateId: input.debate_id,
+        action: input.action_name,
+        role: input.role,
+        type: input.type,
+      },
       'Argument submission started',
     );
 
@@ -97,7 +102,11 @@ export class ArgumentService {
           );
           if (existing) {
             this.logger.log(
-              { debateId: input.debate_id, clientRequestId: input.client_request_id, argumentId: existing.id },
+              {
+                debateId: input.debate_id,
+                clientRequestId: input.client_request_id,
+                argumentId: existing.id,
+              },
               'Idempotency hit — returning existing argument',
             );
             return { debate, argument: existing, isExisting: true };

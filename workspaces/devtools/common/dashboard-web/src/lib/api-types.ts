@@ -276,6 +276,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/logs/tail': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get last N log entries from server.jsonl */
+    get: operations['LogsController_tailLogs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/logs/stream': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stream new log entries via Server-Sent Events (SSE) */
+    get: operations['LogsController_streamLogs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -491,6 +525,28 @@ export interface components {
     ToggleSkillResponseDto: {
       success: boolean;
       data: components['schemas']['SkillDto'];
+    };
+    LogEntryDto: {
+      /** @description Pino log level number (10=trace, 20=debug, 30=info, 40=warn, 50=error, 60=fatal) */
+      level: number;
+      /** @description Unix timestamp in milliseconds */
+      time: number;
+      /** @description Log message */
+      msg: string;
+      /** @description NestJS context (class/module name) */
+      context?: string;
+      /** @description Correlation ID for request tracing */
+      correlationId?: string;
+      /** @description Service name */
+      service?: string;
+      /** @description Additional metadata */
+      meta?: Record<string, never>;
+    };
+    TailLogsResponseDto: {
+      success: boolean;
+      data: components['schemas']['LogEntryDto'][];
+      /** @description Total lines in the log file */
+      totalLines: number;
     };
   };
   responses: never;
@@ -1129,6 +1185,45 @@ export interface operations {
         content: {
           'application/json': components['schemas']['ToggleSkillResponseDto'];
         };
+      };
+    };
+  };
+  LogsController_tailLogs: {
+    parameters: {
+      query?: {
+        /** @description Number of lines to tail (default: 200, max: 2000) */
+        lines?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TailLogsResponseDto'];
+        };
+      };
+    };
+  };
+  LogsController_streamLogs: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
