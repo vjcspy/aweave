@@ -14,10 +14,10 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function isChromeChannelMissingError(error: unknown): boolean {
+function isEdgeChannelMissingError(error: unknown): boolean {
   const message = getErrorMessage(error).toLowerCase();
   return (
-    message.includes('chrome') &&
+    message.includes('msedge') &&
     (message.includes('not found') ||
       message.includes("executable doesn't exist") ||
       message.includes('cannot find'))
@@ -44,13 +44,13 @@ export default class TestCursorOpen extends Command {
 
     try {
       browser = await chromium.launch({
-        channel: 'chrome',
+        channel: 'msedge',
         headless: false,
       });
     } catch (error) {
-      if (isChromeChannelMissingError(error)) {
+      if (isEdgeChannelMissingError(error)) {
         this.error(
-          'Google Chrome was not found for Playwright channel "chrome". Install Chrome or use a machine with Chrome available.',
+          'Microsoft Edge was not found for Playwright channel "msedge". Install Edge or use a machine with Edge available.',
           { exit: 1 },
         );
       }
