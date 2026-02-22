@@ -170,7 +170,11 @@ async function fetchWithRetry<T>(
         timestamp: Date.now(),
         nonce: randomBytes(16).toString('hex'),
       };
-      const gameData = encryptPayload(transportMetadata, transportConfig, binaryData);
+      const gameData = encryptPayload(
+        transportMetadata,
+        transportConfig,
+        binaryData,
+      );
       return (await fetchJson(url, {
         method: 'POST',
         headers: {

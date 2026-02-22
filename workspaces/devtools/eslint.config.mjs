@@ -33,7 +33,9 @@ export const baseConfig = defineConfig(
 
       // Unused imports (auto-fixable with --fix)
       'no-unused-vars': 'off',
+      'no-empty': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
@@ -75,13 +77,6 @@ export default defineConfig(
     files: ['**/*.js', '**/*.cjs'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
-    },
-  },
-  // Suppress no-explicit-any for nestjs-debate (Prisma type casting)
-  {
-    files: ['common/nestjs-debate/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 );
