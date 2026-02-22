@@ -13,7 +13,10 @@ export class SkillDto {
   @ApiProperty({ description: 'Absolute path to the SKILL.md file' })
   path!: string;
 
-  @ApiProperty({ description: 'Whether the skill is active (based on ~/.aweave/active-skills.json)' })
+  @ApiProperty({
+    description:
+      'Whether the skill is active (based on ~/.aweave/active-skills.json)',
+  })
   active!: boolean;
 }
 

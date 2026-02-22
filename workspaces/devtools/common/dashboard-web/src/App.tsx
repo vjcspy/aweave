@@ -1,7 +1,8 @@
+import { Cpu, Settings } from 'lucide-react';
 import React, { useState } from 'react';
+
 import { ConfigsView } from './components/ConfigsView';
 import { SkillsView } from './components/SkillsView';
-import { Settings, Cpu } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'configs' | 'skills'>('configs');
@@ -21,14 +22,14 @@ export default function App() {
                 DevTools Dashboard
               </h1>
             </div>
-            
+
             <nav className="flex gap-2">
               <button
                 onClick={() => setActiveTab('configs')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === 'configs' 
-                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]' 
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
+                  activeTab === 'configs'
+                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <Settings className="w-4 h-4" />
@@ -37,9 +38,9 @@ export default function App() {
               <button
                 onClick={() => setActiveTab('skills')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === 'skills' 
-                  ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]' 
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
+                  activeTab === 'skills'
+                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <Cpu className="w-4 h-4" />

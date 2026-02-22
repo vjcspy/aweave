@@ -33,8 +33,8 @@ Build a centralized web dashboard to view and edit configuration files and manag
 ### Integration Contract for Active Skills Context
 
 1. **Agent Target:** The target is primarily Cursor's integrated chat/composer agents, plus the overarching aweave agent scaffolding configured by `AGENTS.md`.
-2. **Include Mechanism:** We will update `agent/rules/common/rule.md` (which `AGENTS.md` symlinks to) to instruct the agent to explicitly load `agent/rules/common/dynamic/loaded-skills.md` if the file exists.
-3. **Execution Scope:** Add a discrete step in the `AGENTS.md` context setup workflow (e.g. "Step x: Load Active Skills") referencing the `loaded-skills.md` path. If the file is missing, the agent will gracefully proceed without failure.
+2. **Include Mechanism:** We will update `agent/rules/common/rule.md` (which `AGENTS.md` symlinks to) to instruct the agent to explicitly load `~/.aweave/loaded-skills.md` if the file exists.
+3. **Execution Scope:** Add a discrete step in the `AGENTS.md` context setup workflow (e.g. "Step x: Load Active Skills") referencing the `~/.aweave/loaded-skills.md` path. If the file is missing, the agent will gracefully proceed without failure.
 4. **Verification:** Add an E2E smoke flow that validates the file content generated corresponds correctly to active skills, and verify an AI local session automatically recognizes the skill.
 
 ## Implementation Plan
@@ -80,7 +80,7 @@ workspaces/devtools/common/
   - [ ] Build Skills Manager UI (table view with toggles)
   - [ ] Generate API client types from the NestJS OpenAPI spec
 - [ ] Update Workflows/Rules
-  - [ ] Modify `agent/rules/common/rule.md` (the source of `AGENTS.md`) to append an explicit integration contract step: instructing agents to gracefully load `agent/rules/common/dynamic/loaded-skills.md`.
+  - [ ] Modify `agent/rules/common/rule.md` (the source of `AGENTS.md`) to append an explicit integration contract step: instructing agents to gracefully load `~/.aweave/loaded-skills.md`.
 
 ## Summary of Results
 
