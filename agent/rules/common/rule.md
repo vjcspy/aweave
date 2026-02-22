@@ -30,8 +30,8 @@ Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.
 
 **SKIP ALL steps below.** Load the appropriate command file directly and execute:
 
-| Role | Command File |
-|------|--------------|
+| Role     | Command File                               |
+|----------|--------------------------------------------|
 | Proposer | `agent/commands/common/debate-proposer.md` |
 | Opponent | `agent/commands/common/debate-opponent.md` |
 
@@ -43,34 +43,34 @@ Context loading (ABSTRACT/OVERVIEW, source code, project rules) is handled by th
 
 **MUST do before any task execution.** Analyze user input to detect workspace type.
 
-| User Input Pattern | Workspace | Action |
-|--------------------|-----------|--------|
+| User Input Pattern                         | Workspace              | Action                                                     |
+|--------------------------------------------|------------------------|------------------------------------------------------------|
 | `workspaces/<project>/<domain>/<repo>/...` | **business-workspace** | Load `agent/rules/common/workspaces/business-workspace.md` |
-| `resources/workspaces/<project>/...` | **business-workspace** | Load `agent/rules/common/workspaces/business-workspace.md` |
-| `workspaces/devtools/...` | **devtools** | Load `agent/rules/common/workspaces/devtools.md` |
-| `resources/workspaces/devtools/...` | **devtools** | Load `agent/rules/common/workspaces/devtools.md` |
-| No path mentioned (general question) | **general** | Skip workspace loading → Go to Step 2 |
-| Path mentioned but cannot determine | — | **STOP & ASK** user to clarify |
+| `resources/workspaces/<project>/...`       | **business-workspace** | Load `agent/rules/common/workspaces/business-workspace.md` |
+| `workspaces/devtools/...`                  | **devtools**           | Load `agent/rules/common/workspaces/devtools.md`           |
+| `resources/workspaces/devtools/...`        | **devtools**           | Load `agent/rules/common/workspaces/devtools.md`           |
+| No path mentioned (general question)       | **general**            | Skip workspace loading → Go to Step 2                      |
+| Path mentioned but cannot determine        | —                      | **STOP & ASK** user to clarify                             |
 
 **Examples:**
 
-| User Input | Workspace |
-|------------|-----------|
+| User Input                                                      | Workspace          |
+|-----------------------------------------------------------------|--------------------|
 | "Update `workspaces/nab/hod/ho-omh-customer-loan-mods-web/...`" | business-workspace |
-| "Implement feature in `workspaces/devtools/common/cli/...`" | devtools |
-| "How do I use git rebase?" | general |
+| "Implement feature in `workspaces/devtools/common/cli/...`"     | devtools           |
+| "How do I use git rebase?"                                      | general            |
 
 ## Step 2: Task Detection
 
 Identify task type from user input.
 
-| User Input Signals | Task Type | Load Rule |
-|--------------------|-----------|-----------|
-| "create plan", "write plan", path to `_plans/`, "plan for..." | **Plan** | `agent/rules/common/tasks/create-plan.md` |
+| User Input Signals                                                            | Task Type          | Load Rule                                    |
+|-------------------------------------------------------------------------------|--------------------|----------------------------------------------|
+| "create plan", "write plan", path to `_plans/`, "plan for..."                 | **Plan**           | `agent/rules/common/tasks/create-plan.md`    |
 | "implement", "add", "build", "code", "fix", "update", "change" + code context | **Implementation** | `agent/rules/common/tasks/implementation.md` |
-| "refactor", "restructure", "reorganize", "rename", "move", "extract", "split" | **Refactoring** | `agent/rules/common/tasks/implementation.md` |
-| "what", "how", "why", "explain", "describe", "show me" — no action verb | **Question** | None — answer directly |
-| Does not match above | **Other** | None — follow user instructions |
+| "refactor", "restructure", "reorganize", "rename", "move", "extract", "split" | **Refactoring**    | `agent/rules/common/tasks/implementation.md` |
+| "what", "how", "why", "explain", "describe", "show me" — no action verb       | **Question**       | None — answer directly                       |
+| Does not match above                                                          | **Other**          | None — follow user instructions              |
 
 **Ambiguity Resolution:**
 
@@ -80,10 +80,10 @@ Identify task type from user input.
 
 **Contextual Rules (load lazily to minimize context window):**
 
-| Rule | Load When | Path |
-|------|-----------|------|
-| `project-structure.md` | Need folder structure reference | `agent/rules/common/project-structure.md` |
-| `coding-standard-and-quality.md` | Writing/modifying code | `agent/rules/common/coding/coding-standard-and-quality.md` |
+| Rule                             | Load When                       | Path                                                       |
+|----------------------------------|---------------------------------|------------------------------------------------------------|
+| `project-structure.md`           | Need folder structure reference | `agent/rules/common/project-structure.md`                  |
+| `coding-standard-and-quality.md` | Writing/modifying code          | `agent/rules/common/coding/coding-standard-and-quality.md` |
 
 ## Step 3: Context Resolution — MUST STOP AND WAIT
 
@@ -128,17 +128,28 @@ Flag missing required files with ❌.
 - `OVERVIEW.md` is loaded only if its corresponding `ABSTRACT.md` exists, is non-empty, and is relevant to the user task.
 - If a required `ABSTRACT.md` is missing: skip the corresponding `OVERVIEW.md` (never load it).
 
-## Step 4: Context Loading & Execution
+## Step 4: Context Loading
 
-**Only after user confirms Step 3.** Load context and execute:
+**Only after user confirms Step 3.** Load context:
 
 1. **ABSTRACT chain** (general → specific, based on scope)
 2. **ABSTRACT relevance check** (determine which scope levels are relevant to this task)
 3. **OVERVIEW chain (conditional)** (load only for relevant levels with existing, non-empty ABSTRACT)
 4. **Referenced files** (user-provided: plan, spike, guide, etc.)
 5. **Task rule** (create-plan.md or implementation.md)
-6. **Active Skills Context** (Implicitly read `~/.aweave/loaded-skills.md` to load active context skills)
-7. **Execute task** — follow loaded context and rules
+
+## Step 5: Load Active Skills
+
+Read `~/.aweave/loaded-skills.md` if it exists.
+
+- **Read the skill list only** — do NOT read full `SKILL.md` files yet (save tokens)
+- **Decide per skill** — based on the current task, determine which skills are relevant and load their full `SKILL.md` only when needed
+- **Missing SKILL.md = STOP** — if you decide to load a skill but its `SKILL.md` file does not exist at the referenced path, **STOP immediately** and report the error to the user
+- **File missing = proceed** — if `~/.aweave/loaded-skills.md` itself does not exist, proceed normally without skills
+
+## Step 6: Execute Task
+
+Follow loaded context, rules, and active skills to execute the task.
 
 ## Output Constraints
 
