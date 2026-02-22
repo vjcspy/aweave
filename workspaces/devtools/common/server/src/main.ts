@@ -5,6 +5,7 @@ import {
   SERVER_ENV_OVERRIDES,
 } from '@hod/aweave-config-common';
 import { loadConfig } from '@hod/aweave-config-core';
+import { NestLoggerService } from '@hod/aweave-nestjs-core';
 import {
   ConfigDomainDto,
   ConfigFileDto,
@@ -34,7 +35,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { dirname, join } from 'path';
 
 import { AppModule } from './app.module';
-import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 import { AuthGuard } from './shared/guards/auth.guard';
 
 /**
@@ -59,7 +59,13 @@ function resolveDashboardWebRoot(): string {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+
+  // Use custom pino-backed logger for all Nest logs
+  const logger = app.get(NestLoggerService);
+  app.useLogger(logger);
 
   // WebSocket adapter (ws library)
   app.useWebSocketAdapter(new WsAdapter(app));
@@ -78,7 +84,7 @@ async function bootstrap() {
     app.enableCors({
       origin: '*',
       methods: 'GET,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type,Authorization',
+      allowedHeaders: 'Content-Type,Authorization,x-correlation-id',
     });
   }
 
@@ -119,8 +125,9 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document);
   }
 
-  // Global exception filter (formats errors to { success, error } envelope)
-  app.useGlobalFilters(new AppExceptionFilter());
+  // Global exception filter — DI-based so it can access LogContextService
+  // Note: AppExceptionFilter is now registered as APP_FILTER provider in AppModule
+  // No need for app.useGlobalFilters() here
 
   // Global auth guard (optional bearer token)
   app.useGlobalGuards(new AuthGuard());
@@ -137,7 +144,7 @@ async function bootstrap() {
   const host = (config as any).server?.host ?? '127.0.0.1';
 
   await app.listen(port, host);
-  console.log(`Server listening on http://${host}:${port}`);
+  logger.log(`Server listening on http://${host}:${port}`, 'Bootstrap');
 }
 
 bootstrap();

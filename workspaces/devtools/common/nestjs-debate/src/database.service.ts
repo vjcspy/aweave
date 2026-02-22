@@ -117,20 +117,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const dbPath = join(dbDir, dbName);
 
     this.db = new Database(dbPath);
-    this.logger.log(`Database path: ${dbPath}`);
+    this.logger.log({ dbPath, dbDir, dbName }, 'Database opened');
   }
 
   onModuleInit() {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.initSchema();
+    this.logger.debug('Schema initialized');
     this.runMigrations();
     this.stmts = this.prepareStatements();
-    this.logger.log('Connected to debate database');
+    this.logger.log('Database ready');
   }
 
   onModuleDestroy() {
     this.db.close();
+    this.logger.log('Database connection closed');
   }
 
   // -------------------------------------------------------------------------
@@ -194,8 +196,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     for (const m of migrations) {
       if (currentVersion < m.version) {
-        this.db.exec(m.sql);
-        this.db.pragma(`user_version = ${m.version}`);
+        try {
+          this.db.exec(m.sql);
+          this.db.pragma(`user_version = ${m.version}`);
+          this.logger.log(
+            { fromVersion: currentVersion, toVersion: m.version },
+            'Migration applied',
+          );
+        } catch (err) {
+          this.logger.error(
+            { fromVersion: currentVersion, targetVersion: m.version, err },
+            'Migration failed',
+          );
+          throw err;
+        }
       }
     }
   }

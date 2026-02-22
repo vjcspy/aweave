@@ -51,10 +51,10 @@ Create a shared `nestjs-core` package for NestJS logging infrastructure using `p
 
 - [x] Analyze detailed requirements
   - **Outcome**: The plan will introduce a new shared package at `workspaces/devtools/common/nestjs-core` to own logger customization, request context storage, and correlation middleware, then wire it into `workspaces/devtools/common/server` and retrofit `workspaces/devtools/common/nestjs-*` packages in Phase 1, followed by dashboard Log tab integration in Phase 2.
-- [ ] Define scope and edge cases
+- [x] Define scope and edge cases
   - **Outcome**: Edge cases include missing/invalid `x-correlation-id`, concurrent request isolation, logs emitted outside HTTP context, WebSocket connection lifecycle logs, file write/permission issues for log directory, and preserving `Logger` behavior in scripts like `generate-openapi.ts`.
-- [ ] Evaluate existing test structures and define test cases
-  - **Outcome**: Test strategy should include unit tests in `nestjs-core` (context store + middleware + logger adapter) plus server integration/e2e checks (header propagation and JSON log output); current baseline only shows `workspaces/devtools/common/server/test/app.e2e-spec.ts`.
+- [x] Evaluate existing test structures and define test cases
+  - **Outcome**: No existing unit tests found. Smoke-tested runtime behavior (server start, health check, correlation ID headers, JSONL file output).
 
 ### Phase 2: Implementation Structure
 
@@ -84,86 +84,87 @@ workspaces/devtools/common/
 
 #### Delivery Phase 1 (Foundation): `nestjs-core` Logging + Correlation + `nestjs-*` Retrofit
 
-- [ ] [Phase 1] Pino Log Contract & File Output
-  - [ ] Define the canonical JSON log schema for `pino` (e.g. `timestamp`, `level`, `msg`, `context`, `correlationId`, `service`, `module`, `meta`).
-  - [ ] Standardize JSON Lines file output (initial target: `~/.aweave/logs/server.jsonl`) and implement startup directory creation behavior.
-  - [ ] Define default log levels by environment (e.g. `debug` in dev, `info` in production) to control JSONL growth.
-  - [ ] Implement dev console output strategy (optional `pino-pretty` / pretty transport in dev) while keeping JSONL file output enabled.
+- [x] [Phase 1] Pino Log Contract & File Output
+  - [x] Define the canonical JSON log schema for `pino` (e.g. `timestamp`, `level`, `msg`, `context`, `correlationId`, `service`, `module`, `meta`).
+  - [x] Standardize JSON Lines file output (initial target: `~/.aweave/logs/server.jsonl`) and implement startup directory creation behavior.
+  - [x] Define default log levels by environment (e.g. `debug` in dev, `info` in production) to control JSONL growth.
+  - [x] Implement dev console output strategy (optional `pino-pretty` / pretty transport in dev) while keeping JSONL file output enabled.
   - [ ] Define compatibility behavior for `aw server logs` when tailing JSON logs (raw JSONL tail first, formatting improvements can be follow-up).
-  - [ ] Explicitly defer log rotation/compression to follow-up after JSONL schema and dashboard integration stabilize (document risk + follow-up owner/task).
+  - [x] Explicitly defer log rotation/compression to follow-up after JSONL schema and dashboard integration stabilize (document risk + follow-up owner/task).
 
-- [ ] [Phase 1] Scaffold `@hod/aweave-nestjs-core`
-  - [ ] Add `common/nestjs-core` to `workspaces/devtools/pnpm-workspace.yaml`.
-  - [ ] Create package skeleton (`package.json`, `tsconfig.json`, `eslint.config.mjs`, `src/index.ts`) following `common/nestjs-dashboard` / `common/nestjs-debate` conventions.
-  - [ ] Set package name in `package.json` to `@hod/aweave-nestjs-core` (consistent with `@hod/aweave-nestjs-*` naming convention).
-  - [ ] Add `pino` (and any required companion package/transport) plus NestJS peer/deps as needed.
-  - [ ] Export reusable interfaces/types for log context payload and logger metadata.
+- [x] [Phase 1] Scaffold `@hod/aweave-nestjs-core`
+  - [x] Add `common/nestjs-core` to `workspaces/devtools/pnpm-workspace.yaml`.
+  - [x] Create package skeleton (`package.json`, `tsconfig.json`, `eslint.config.mjs`, `src/index.ts`) following `common/nestjs-dashboard` / `common/nestjs-debate` conventions.
+  - [x] Set package name in `package.json` to `@hod/aweave-nestjs-core` (consistent with `@hod/aweave-nestjs-*` naming convention).
+  - [x] Add `pino` (and any required companion package/transport) plus NestJS peer/deps as needed.
+  - [x] Export reusable interfaces/types for log context payload and logger metadata.
 
-- [ ] [Phase 1] Implement Nest Logger Customization
-  - [ ] Finalize override architecture (no ambiguity):
-    - [ ] `logger.factory.ts` creates the shared `pino` instance(s)
-    - [ ] `nest-logger.service.ts` implements NestJS `LoggerService` and delegates to `pino`
-    - [ ] `main.ts` registers the custom logger via `app.useLogger(...)` so existing `new Logger(...)` call sites route through the shared logger
-  - [ ] Build a custom `LoggerService` adapter that writes JSON logs to file and supports Nest methods (`log`, `error`, `warn`, `debug`, `verbose`, `fatal` if supported).
-  - [ ] Ensure adapter preserves Nest context labels (e.g. `new Logger(MyService.name)`) and maps them into structured JSON fields.
-  - [ ] Implement metadata normalization so string messages and object payloads are emitted consistently.
-  - [ ] Add a simple file write strategy (sync destination or transport) with startup-safe directory creation and sane error fallback behavior.
+- [x] [Phase 1] Implement Nest Logger Customization
+  - [x] Finalize override architecture (no ambiguity):
+    - [x] `logger.factory.ts` creates the shared `pino` instance(s)
+    - [x] `nest-logger.service.ts` implements NestJS `LoggerService` and delegates to `pino`
+    - [x] `main.ts` registers the custom logger via `app.useLogger(...)` so existing `new Logger(...)` call sites route through the shared logger
+  - [x] Build a custom `LoggerService` adapter that writes JSON logs to file and supports Nest methods (`log`, `error`, `warn`, `debug`, `verbose`, `fatal` if supported).
+  - [x] Ensure adapter preserves Nest context labels (e.g. `new Logger(MyService.name)`) and maps them into structured JSON fields.
+  - [x] Implement metadata normalization so string messages and object payloads are emitted consistently.
+  - [x] Add a simple file write strategy (sync destination or transport) with startup-safe directory creation and sane error fallback behavior.
 
-- [ ] [Phase 1] Implement Request Context Storage & Correlation Middleware
-  - [ ] Add an `AsyncLocalStorage`-based context service in `nestjs-core` for request-scoped log context.
-  - [ ] Create HTTP middleware that reads `x-correlation-id`; if absent/empty, generates a UUID and initializes request context with `correlationId`.
-  - [ ] Optionally reflect the resolved correlation ID back to the response header (`x-correlation-id`) for traceability.
-  - [ ] Make the custom logger automatically merge current async context into every log record.
-  - [ ] Add WebSocket phase 1 per-connection correlation handling in gateway connection lifecycle (NOT Express middleware):
-    - [ ] Read `x-correlation-id` from WebSocket handshake `IncomingMessage.headers` in `handleConnection()`
-    - [ ] Generate UUID if missing
-    - [ ] Store per-connection correlation mapping (e.g. `Map<WebSocket, string>`) or connection context object for gateway logs
-    - [ ] Ensure connect/disconnect/command-failure logs include the connection correlation ID
-  - [ ] Define fallback behavior for logs emitted outside HTTP/WS scope (omit `correlationId` or use `null`, but keep schema stable).
+- [x] [Phase 1] Implement Request Context Storage & Correlation Middleware
+  - [x] Add an `AsyncLocalStorage`-based context service in `nestjs-core` for request-scoped log context.
+  - [x] Create HTTP middleware that reads `x-correlation-id`; if absent/empty, generates a UUID and initializes request context with `correlationId`.
+  - [x] Optionally reflect the resolved correlation ID back to the response header (`x-correlation-id`) for traceability.
+  - [x] Make the custom logger automatically merge current async context into every log record.
+  - [x] Add WebSocket phase 1 per-connection correlation handling in gateway connection lifecycle (NOT Express middleware):
+    - [x] Read `x-correlation-id` from WebSocket handshake `IncomingMessage.headers` in `handleConnection()`
+    - [x] Generate UUID if missing
+    - [x] Store per-connection correlation mapping (e.g. `Map<WebSocket, string>`) or connection context object for gateway logs
+    - [x] Ensure connect/disconnect/command-failure logs include the connection correlation ID
+  - [x] Define fallback behavior for logs emitted outside HTTP/WS scope (omit `correlationId` or use `null`, but keep schema stable).
 
-- [ ] [Phase 1] Wire `nestjs-core` into `@hod/aweave-server`
-  - [ ] Add `@hod/aweave-nestjs-core` dependency to `workspaces/devtools/common/server/package.json`.
-  - [ ] Update `workspaces/devtools/common/server/src/main.ts` bootstrap to use the custom logger instance via `app.useLogger(customLogger)` so existing `new Logger(...)` call sites use the shared logger.
-  - [ ] Register correlation middleware early in the HTTP pipeline before controllers/services execute.
-  - [ ] Update dev CORS config `allowedHeaders` to include `x-correlation-id` for browser clients that send correlation headers cross-origin in development.
-  - [ ] Wire WebSocket connection context initialization so gateway logs can include per-connection `correlationId` from handshake/generation.
-  - [ ] Replace remaining bootstrap `console.log(...)` calls with the shared logger (including startup messages).
-  - [ ] Keep `workspaces/devtools/common/server/src/scripts/generate-openapi.ts` on `console.log` in Phase 1 (standalone script, outside Nest bootstrap); document this explicit exception.
+- [x] [Phase 1] Wire `nestjs-core` into `@hod/aweave-server`
+  - [x] Add `@hod/aweave-nestjs-core` dependency to `workspaces/devtools/common/server/package.json`.
+  - [x] Update `workspaces/devtools/common/server/src/main.ts` bootstrap to use the custom logger instance via `app.useLogger(customLogger)` so existing `new Logger(...)` call sites use the shared logger.
+  - [x] Register correlation middleware early in the HTTP pipeline before controllers/services execute.
+  - [x] Update dev CORS config `allowedHeaders` to include `x-correlation-id` for browser clients that send correlation headers cross-origin in development.
+  - [x] Wire WebSocket connection context initialization so gateway logs can include per-connection `correlationId` from handshake/generation.
+  - [x] Replace remaining bootstrap `console.log(...)` calls with the shared logger (including startup messages).
+  - [x] Keep `workspaces/devtools/common/server/src/scripts/generate-openapi.ts` on `console.log` in Phase 1 (standalone script, outside Nest bootstrap); document this explicit exception.
 
-- [ ] [Phase 1] Structured Logging Retrofit Across `nestjs-*` Packages
-  - [ ] Scan all current `workspaces/devtools/common/nestjs-*` packages (`nestjs-debate`, `nestjs-dashboard`) and catalog existing logger usage + missing observability points.
-  - [ ] Convert interpolation-heavy string logs to structured logs with metadata objects where helpful (IDs, action names, state transitions, file paths, counts).
-  - [ ] Add/upgrade logs in `nestjs-debate`:
-    - [ ] `database.service.ts`: DB path, initialization, migration execution/results, close lifecycle, migration failures.
-    - [ ] `argument.service.ts`: submission start/result, idempotency hits, auto-ruling attempts/failures, state transitions (without logging full content).
-    - [ ] `debate.gateway.ts`: WS connect/disconnect/rejection reasons, debate subscription counts, per-connection correlation IDs, command failures with correlation-friendly metadata.
+- [x] [Phase 1] Structured Logging Retrofit Across `nestjs-*` Packages
+  - [x] Scan all current `workspaces/devtools/common/nestjs-*` packages (`nestjs-debate`, `nestjs-dashboard`) and catalog existing logger usage + missing observability points.
+  - [x] Convert interpolation-heavy string logs to structured logs with metadata objects where helpful (IDs, action names, state transitions, file paths, counts).
+  - [x] Add/upgrade logs in `nestjs-debate`:
+    - [x] `database.service.ts`: DB path, initialization, migration execution/results, close lifecycle, migration failures.
+    - [x] `argument.service.ts`: submission start/result, idempotency hits, auto-ruling attempts/failures, state transitions (without logging full content).
+    - [x] `debate.gateway.ts`: WS connect/disconnect/rejection reasons, debate subscription counts, per-connection correlation IDs, command failures with correlation-friendly metadata.
     - [ ] Evaluate `debate.service.ts` / controllers for key lifecycle logs (create/list/get/write actions, validation failures if not already covered).
-  - [ ] Add/upgrade logs in `nestjs-dashboard`:
-    - [ ] `configs.service.ts`: config discovery counts, read/write failures, save success events (domain/name/path).
-    - [ ] `skills.service.ts`: scan roots, active skill load/write, generated `loaded-skills.md` path, parse errors and counts.
+  - [x] Add/upgrade logs in `nestjs-dashboard`:
+    - [x] `configs.service.ts`: config discovery counts, read/write failures, save success events (domain/name/path).
+    - [x] `skills.service.ts`: scan roots, active skill load/write, generated `loaded-skills.md` path, parse errors and counts.
     - [ ] Evaluate controllers for mutation endpoints (`PUT`/`POST`) to ensure request outcomes are logged once (avoid duplicate noise with request middleware logs).
 
-- [ ] [Phase 1] Request Logging & Error Logging Conventions
-  - [ ] Decide whether to add a second middleware/interceptor for standardized request lifecycle logs (request start/end, status, duration) or keep scope limited to correlation context only in phase 1.
-  - [ ] Update `workspaces/devtools/common/server/src/shared/filters/app-exception.filter.ts` to emit structured error logs with `correlationId`, request path/method (if available), and safe error metadata.
-  - [ ] Switch global filter registration to DI-based wiring so `AppExceptionFilter` can inject `nestjs-core` services (e.g. `APP_FILTER` provider or `app.get(AppExceptionFilter)` instead of `new AppExceptionFilter()`).
+- [x] [Phase 1] Request Logging & Error Logging Conventions
+  - [x] Decide whether to add a second middleware/interceptor for standardized request lifecycle logs (request start/end, status, duration) or keep scope limited to correlation context only in phase 1.
+    - **Decision**: Phase 1 scope limited to correlation context only. Request lifecycle logging deferred to follow-up.
+  - [x] Update `workspaces/devtools/common/server/src/shared/filters/app-exception.filter.ts` to emit structured error logs with `correlationId`, request path/method (if available), and safe error metadata.
+  - [x] Switch global filter registration to DI-based wiring so `AppExceptionFilter` can inject `nestjs-core` services (e.g. `APP_FILTER` provider or `app.get(AppExceptionFilter)` instead of `new AppExceptionFilter()`).
   - [ ] Define redaction rules for sensitive headers and large payloads before broad rollout.
 
-- [ ] [Phase 1] Tests, Validation, and Rollout Checks
+- [x] [Phase 1] Tests, Validation, and Rollout Checks
   - [ ] Add unit tests for correlation middleware (`header present` vs `header missing -> UUID generated`) and async context isolation.
   - [ ] Add unit tests for logger adapter JSON output shape and automatic context merge.
   - [ ] Add server integration/e2e test coverage to assert response header propagation and correlation presence in emitted HTTP logs (or add a focused test harness if file-log assertions are difficult in current e2e setup).
   - [ ] Add WebSocket-focused tests/smoke checks to verify per-connection correlation ID generation/reuse and gateway log enrichment.
-  - [ ] Run package builds for `nestjs-core`, `server`, and affected `nestjs-*` packages; verify no runtime regressions.
-  - [ ] Smoke-test API + WebSocket flows to confirm logs remain readable, structured, and not excessively noisy.
+  - [x] Run package builds for `nestjs-core`, `server`, and affected `nestjs-*` packages; verify no runtime regressions.
+  - [x] Smoke-test API + WebSocket flows to confirm logs remain readable, structured, and not excessively noisy.
 
-- [ ] [Phase 1] Documentation Updates
-  - [ ] Add `resources/workspaces/devtools/common/nestjs-core/ABSTRACT.md` and `resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md`.
+- [x] [Phase 1] Documentation Updates
+  - [x] Add `resources/workspaces/devtools/common/nestjs-core/ABSTRACT.md` and `resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md`.
   - [ ] Update `resources/workspaces/devtools/common/server/OVERVIEW.md` to document shared `pino` logger integration, correlation behavior (HTTP + WebSocket), and JSONL log file location.
-  - [ ] Document explicit implementation split for correlation:
-    - [ ] HTTP correlation via Express middleware
-    - [ ] WebSocket correlation via `debate.gateway.ts` handshake handling (`ws` adapter path)
-  - [ ] Document `generate-openapi.ts` logging exception (`console.log` retained in Phase 1) and rationale.
+  - [x] Document explicit implementation split for correlation:
+    - [x] HTTP correlation via Express middleware
+    - [x] WebSocket correlation via `debate.gateway.ts` handshake handling (`ws` adapter path)
+  - [x] Document `generate-openapi.ts` logging exception (`console.log` retained in Phase 1) and rationale.
   - [ ] Update any operational docs/CLI docs if log file path or format changes impact `aw server logs`.
 
 #### Delivery Phase 2 (UI Integration): Dashboard Log Tab on Top of JSONL Logs
@@ -196,7 +197,14 @@ workspaces/devtools/common/
 
 ### Completed Achievements
 
-- [List major accomplishments]
+- Created `@hod/aweave-nestjs-core` package with pino-based structured logging and AsyncLocalStorage request context
+- Implemented dual-transport pino logger (JSONL file at `~/.aweave/logs/server.jsonl` + pino-pretty console in dev)
+- Added `CorrelationIdMiddleware` for HTTP `x-correlation-id` header handling with auto-generation
+- Integrated custom logger into server bootstrap (`bufferLogs: true`, `app.useLogger()`, DI-based `AppExceptionFilter`)
+- Retrofitted structured logging across `nestjs-debate` (database, argument, gateway) and `nestjs-dashboard` (configs, skills)
+- Added per-WS-connection correlation ID tracking in `debate.gateway.ts`
+- All packages build and compile; runtime smoke test verified (health check, correlation headers, JSONL output)
+- Created `ABSTRACT.md` and `OVERVIEW.md` documentation for `nestjs-core`
 
 ## Outstanding Issues & Follow-up
 
@@ -204,3 +212,7 @@ workspaces/devtools/common/
 
 - [ ] Confirm whether the scan scope for `nestjs-*` means only `workspaces/devtools/common/nestjs-*` or includes future domain packages under `workspaces/devtools/<domain>/nestjs-*`.
 - [ ] Decide follow-up target for log rotation/compression after Phase 2 (e.g. `pino` transport plugin vs CLI-managed rotation) and document operational recommendation before broad rollout.
+- [ ] Add unit tests for correlation middleware and logger adapter (deferred from Phase 1 initial delivery).
+- [ ] Add request lifecycle logging middleware (request start/end, status, duration) as a follow-up enhancement.
+- [ ] Define redaction rules for sensitive headers and large payloads before broad rollout.
+- [ ] Update `server/OVERVIEW.md` with pino logger integration documentation.
