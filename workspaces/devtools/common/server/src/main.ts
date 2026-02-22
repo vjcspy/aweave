@@ -10,10 +10,10 @@ import {
   ConfigFileDto,
   GetConfigResponseDto,
   ListConfigsResponseDto,
+  ListSkillsResponseDto,
   SaveConfigRequestDto,
   SaveConfigResponseDto,
   SkillDto,
-  ListSkillsResponseDto,
   ToggleSkillRequestDto,
   ToggleSkillResponseDto,
 } from '@hod/aweave-nestjs-dashboard';
