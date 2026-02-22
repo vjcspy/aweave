@@ -103,6 +103,7 @@ resources/workspaces/devtools/      # Documentation
    - `agent/rules/common/tasks/implementation.md` (Implementation / Refactoring task)
 
 > **CRITICAL:**
+>
 > - `ABSTRACT.md` is mandatory at global/package scope levels (as applicable to detected scope).
 > - If a required `ABSTRACT.md` is missing or empty, skip its corresponding `OVERVIEW.md` (do not load OVERVIEW for that level).
 > - Never load an `OVERVIEW.md` without its corresponding `ABSTRACT.md`.
@@ -116,14 +117,6 @@ Where to search for information, based on detected scope (in priority order):
 |-------|------------------|
 | **package** | 1. Package docs + Package ABSTRACT: `resources/workspaces/devtools/<DOMAIN>/<PACKAGE_NAME>/` 2. Source: `workspaces/devtools/<DOMAIN>/<PACKAGE_NAME>/` 3. Global ABSTRACT (then conditional OVERVIEW where relevant) |
 | **global** | 1. Global docs + Global ABSTRACT: `resources/workspaces/devtools/` (all subfolders) 2. All package ABSTRACT files (then conditional OVERVIEW where relevant) 3. Source: `workspaces/devtools/` |
-
-## Skill Loading
-
-Load skill when task matches trigger. Read **after** context loading above.
-
-| Skill | Trigger | Path |
-|-------|---------|------|
-| `devtools-cli-builder` | Create/modify CLI plugins, oclif commands, NestJS modules, API integration | `agent/skills/common/devtools-cli-builder/SKILL.md` |
 
 ## Path Detection Examples
 
