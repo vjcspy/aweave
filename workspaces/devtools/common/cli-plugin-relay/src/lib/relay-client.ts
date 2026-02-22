@@ -32,11 +32,29 @@ interface GRPayload {
   baseBranch: string;
 }
 
+interface FileStorePayload {
+  sessionId: string;
+  fileName: string;
+  size: number;
+  sha256: string;
+}
+
 interface StatusResponse {
   sessionId: string;
-  status: 'receiving' | 'complete' | 'processing' | 'pushed' | 'failed';
+  status:
+    | 'receiving'
+    | 'complete'
+    | 'processing'
+    | 'pushed'
+    | 'stored'
+    | 'failed';
   message: string;
   details?: Record<string, unknown>;
+}
+
+interface PollOptions {
+  successStates?: string[];
+  failureStates?: string[];
 }
 
 /**
@@ -85,7 +103,24 @@ export async function triggerGR(
   payload: GRPayload,
 ): Promise<void> {
   await fetchWithRetry(
-    `${relayUrl}/api/game/gr`, // Actually wait, in original code it was /api/game/gr? I am not changing that.
+    `${relayUrl}/api/game/gr`,
+    apiKey,
+    transportConfig,
+    payload,
+  );
+}
+
+/**
+ * Trigger file store/finalize for a completed upload session.
+ */
+export async function triggerFileStore(
+  relayUrl: string,
+  apiKey: string,
+  transportConfig: RelayConfig,
+  payload: FileStorePayload,
+): Promise<void> {
+  await fetchWithRetry(
+    `${relayUrl}/api/game/file/store`,
     apiKey,
     transportConfig,
     payload,
@@ -116,13 +151,18 @@ export async function getRemoteInfo(
 }
 
 /**
- * Poll session status until terminal state (pushed/failed) or timeout.
+ * Poll session status until terminal state or timeout.
+ * Configurable terminal states allow both Git (pushed/failed) and file (stored/failed) flows.
  */
 export async function pollStatus(
   relayUrl: string,
   apiKey: string,
   sessionId: string,
+  options?: PollOptions,
 ): Promise<StatusResponse> {
+  const successStates = options?.successStates ?? ['pushed'];
+  const failureStates = options?.failureStates ?? ['failed'];
+  const terminalStates = new Set([...successStates, ...failureStates]);
   const startTime = Date.now();
 
   while (Date.now() - startTime < MAX_POLL_DURATION_MS) {
@@ -138,7 +178,7 @@ export async function pollStatus(
 
     const status = response as StatusResponse;
 
-    if (status.status === 'pushed' || status.status === 'failed') {
+    if (terminalStates.has(status.status)) {
       return status;
     }
 
