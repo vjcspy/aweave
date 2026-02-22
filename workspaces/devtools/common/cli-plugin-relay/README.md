@@ -41,7 +41,7 @@ Get these from the server operator (trusted channel):
 - optional fingerprint (`sha256:...`)
 
 ```bash
-aw relay config import-public-key --key-id <kid> --file ./relay-transport-v2-public.pem
+aw relay config import-public-key --key-id relay-v2-2026-02 --file ./relay-transport-v2-public.pem
 ```
 
 With fingerprint verification:
