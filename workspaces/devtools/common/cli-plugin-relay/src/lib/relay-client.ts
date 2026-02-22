@@ -1,3 +1,6 @@
+import { randomBytes } from 'node:crypto';
+
+import type { RelayConfig } from './config';
 import { encryptPayload } from './crypto';
 
 /** Max retry attempts for failed requests */
@@ -29,11 +32,29 @@ interface GRPayload {
   baseBranch: string;
 }
 
+interface FileStorePayload {
+  sessionId: string;
+  fileName: string;
+  size: number;
+  sha256: string;
+}
+
 interface StatusResponse {
   sessionId: string;
-  status: 'receiving' | 'complete' | 'processing' | 'pushed' | 'failed';
+  status:
+    | 'receiving'
+    | 'complete'
+    | 'processing'
+    | 'pushed'
+    | 'stored'
+    | 'failed';
   message: string;
   details?: Record<string, unknown>;
+}
+
+interface PollOptions {
+  successStates?: string[];
+  failureStates?: string[];
 }
 
 /**
@@ -42,14 +63,14 @@ interface StatusResponse {
 export async function uploadChunk(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: ChunkUploadPayload,
   chunkData: Buffer,
 ): Promise<{ success: boolean; received: number }> {
   return fetchWithRetry(
     `${relayUrl}/api/game/chunk`,
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
     chunkData,
   );
@@ -61,13 +82,13 @@ export async function uploadChunk(
 export async function signalComplete(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: CompletePayload,
 ): Promise<void> {
   await fetchWithRetry(
     `${relayUrl}/api/game/chunk/complete`,
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
   );
 }
@@ -78,25 +99,70 @@ export async function signalComplete(
 export async function triggerGR(
   relayUrl: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   payload: GRPayload,
 ): Promise<void> {
   await fetchWithRetry(
     `${relayUrl}/api/game/gr`,
     apiKey,
-    encryptionKey,
+    transportConfig,
     payload,
   );
 }
 
 /**
- * Poll session status until terminal state (pushed/failed) or timeout.
+ * Trigger file store/finalize for a completed upload session.
+ */
+export async function triggerFileStore(
+  relayUrl: string,
+  apiKey: string,
+  transportConfig: RelayConfig,
+  payload: FileStorePayload,
+): Promise<void> {
+  await fetchWithRetry(
+    `${relayUrl}/api/game/file/store`,
+    apiKey,
+    transportConfig,
+    payload,
+  );
+}
+
+/**
+ * Get the latest commit SHA for a remote branch.
+ */
+export async function getRemoteInfo(
+  relayUrl: string,
+  apiKey: string,
+  repo: string,
+  branch: string,
+): Promise<string> {
+  const url = new URL(`${relayUrl}/api/game/remote-info`);
+  url.searchParams.append('repo', repo);
+  url.searchParams.append('branch', branch);
+
+  const response = await fetchJson(url.toString(), {
+    method: 'GET',
+    headers: {
+      'X-Relay-Key': apiKey,
+    },
+  });
+
+  return (response as { sha: string }).sha;
+}
+
+/**
+ * Poll session status until terminal state or timeout.
+ * Configurable terminal states allow both Git (pushed/failed) and file (stored/failed) flows.
  */
 export async function pollStatus(
   relayUrl: string,
   apiKey: string,
   sessionId: string,
+  options?: PollOptions,
 ): Promise<StatusResponse> {
+  const successStates = options?.successStates ?? ['pushed'];
+  const failureStates = options?.failureStates ?? ['failed'];
+  const terminalStates = new Set([...successStates, ...failureStates]);
   const startTime = Date.now();
 
   while (Date.now() - startTime < MAX_POLL_DURATION_MS) {
@@ -112,7 +178,7 @@ export async function pollStatus(
 
     const status = response as StatusResponse;
 
-    if (status.status === 'pushed' || status.status === 'failed') {
+    if (terminalStates.has(status.status)) {
       return status;
     }
 
@@ -131,7 +197,7 @@ export async function pollStatus(
 async function fetchWithRetry<T>(
   url: string,
   apiKey: string,
-  encryptionKey: string,
+  transportConfig: RelayConfig,
   metadata: object,
   binaryData?: Buffer,
 ): Promise<T> {
@@ -139,7 +205,16 @@ async function fetchWithRetry<T>(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const gameData = encryptPayload(metadata, encryptionKey, binaryData);
+      const transportMetadata = {
+        ...metadata,
+        timestamp: Date.now(),
+        nonce: randomBytes(16).toString('hex'),
+      };
+      const gameData = encryptPayload(
+        transportMetadata,
+        transportConfig,
+        binaryData,
+      );
       return (await fetchJson(url, {
         method: 'POST',
         headers: {

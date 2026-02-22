@@ -35,7 +35,7 @@ Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.
 | Proposer | `agent/commands/common/debate-proposer.md` |
 | Opponent | `agent/commands/common/debate-opponent.md` |
 
-Context loading (OVERVIEWs, source code, project rules) is handled by the debate rule files loaded within the command.
+Context loading (ABSTRACT/OVERVIEW, source code, project rules) is handled by the debate rule files loaded within the command.
 
 ---
 
@@ -105,8 +105,12 @@ After completing Step 1 (Workspace Detection) and Step 2 (Task Detection), you M
 **Context Files (loading order):**
 | # | File | Type | Exists |
 |---|------|------|--------|
-| 1 | resources/.../OVERVIEW.md | Global OVERVIEW | ✅/❌ |
-| 2 | resources/.../OVERVIEW.md | Repo/Package OVERVIEW | ✅/❌ |
+| 1 | resources/.../ABSTRACT.md | Global ABSTRACT (required) | ✅/❌ |
+| 2 | resources/.../OVERVIEW.md | Global OVERVIEW (conditional) | ✅/❌ |
+| 3 | resources/.../ABSTRACT.md | Repo/Package ABSTRACT (required by scope) | ✅/❌ |
+| 4 | resources/.../OVERVIEW.md | Repo/Package OVERVIEW (conditional) | ✅/❌ |
+| 5 | resources/.../_features/.../ABSTRACT.md | Feature ABSTRACT (required by scope) | ✅/❌ |
+| 6 | resources/.../_features/.../OVERVIEW.md | Feature OVERVIEW (conditional) | ✅/❌ |
 | ... | ... | ... | ... |
 
 **Search Scope:** (for Question/investigation tasks)
@@ -118,14 +122,21 @@ Proceed?
 
 Flag missing required files with ❌.
 
+**Conditional Loading Rule (MUST apply):**
+- `ABSTRACT.md` is mandatory at each detected scope level (project/repo/feature).
+- `OVERVIEW.md` is loaded only if its corresponding `ABSTRACT.md` exists, is non-empty, and is relevant to the user task.
+- If a required `ABSTRACT.md` is missing: skip the corresponding `OVERVIEW.md` (never load it).
+
 ## Step 4: Context Loading & Execution
 
 **Only after user confirms Step 3.** Load context and execute:
 
-1. **OVERVIEW chain** (general → specific, based on scope)
-2. **Referenced files** (user-provided: plan, spike, guide, etc.)
-3. **Task rule** (create-plan.md or implementation.md)
-4. **Execute task** — follow loaded context and rules
+1. **ABSTRACT chain** (general → specific, based on scope)
+2. **ABSTRACT relevance check** (determine which scope levels are relevant to this task)
+3. **OVERVIEW chain (conditional)** (load only for relevant levels with existing, non-empty ABSTRACT)
+4. **Referenced files** (user-provided: plan, spike, guide, etc.)
+5. **Task rule** (create-plan.md or implementation.md)
+6. **Execute task** — follow loaded context and rules
 
 ## Output Constraints
 

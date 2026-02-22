@@ -28,27 +28,28 @@ catalog:
   tsc-alias: "^1.8.16"
 
 packages:
-- nab/cli/foo
-- common/server
-- common/nestjs-debate
-- common/debate-machine
-- common/debate-web
-- common/cli-shared
-- common/playwright
-- common/cli
-- common/cli-plugin-debate
-- common/cli-plugin-docs
-- common/cli-plugin-dashboard
-- common/cli-plugin-relay
-- common/workflow-engine
-- common/workflow-dashboard
-- common/config-core
-- common/config
-- common/cli-plugin-config
-- common/cli-plugin-server
-- common/cli-plugin-demo-workflow
-- tinybots/cli-plugin-bitbucket
+  - nab/cli/foo
+  - common/server
+  - common/nestjs-debate
+  - common/debate-machine
+  - common/debate-web
+  - common/cli-shared
+  - common/playwright
+  - common/cli
+  - common/cli-plugin-debate
+  - common/cli-plugin-docs
+  - common/cli-plugin-dashboard
+  - common/cli-plugin-relay
+  - common/workflow-engine
+  - common/workflow-dashboard
+  - common/config-core
+  - common/config
+  - common/cli-plugin-config
+  - common/cli-plugin-server
+  - common/cli-plugin-demo-workflow
+  - common/cli-plugin-test
+  - tinybots/cli-plugin-bitbucket
 
 onlyBuiltDependencies:
-- "@nestjs/core"
-- "better-sqlite3"
+  - "@nestjs/core"
+  - "better-sqlite3"

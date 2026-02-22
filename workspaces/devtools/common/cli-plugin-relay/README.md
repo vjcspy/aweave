@@ -1,72 +1,118 @@
-# CLI Plugin Relay
+# CLI Plugin Relay (v2-only)
 
-## Setup
+Relay flow:
+
+`aw relay push` -> Vercel relay (`X-Relay-Key`) -> `git-relay-server` (`X-Server-Key`)
+
+Transport encryption is **v2 only** (hybrid envelope encryption). The CLI does not support legacy v1 shared-key transport.
+
+Config is stored at `~/.aweave/relay.json`.
+
+## Required CLI Config (v2)
+
+- `relayUrl`
+  - Vercel relay base URL
+- `apiKey`
+  - Sent as `X-Relay-Key` to Vercel relay
+- `serverKeyId`
+  - Pinned server transport key id (`kid`)
+- `serverPublicKey`
+  - Pinned server public key PEM (SPKI PEM)
+
+Optional:
+- `serverPublicKeyFingerprint`
+- `chunkSize` (max `3400000`)
+- `defaultBaseBranch`
+
+## Quick Setup
+
+### 1. Set relay endpoint + relay API key
 
 ```bash
-aw relay config set --relay-url XXX
-aw relay config set --api-key XXX
-aw relay config set --encryption-key "eXYPtfy54J5+yjVdP4A9zeydLbpbGxZE8/9AewcgcHI="
+aw relay config set --relay-url <https://your-relay.vercel.app>
+aw relay config set --api-key <relay-api-key>
 ```
 
-Need Verify config:
+### 2. Import/pin server public key
+
+Get these from the server operator (trusted channel):
+- `kid`
+- server public key PEM
+- optional fingerprint (`sha256:...`)
+
+```bash
+aw relay config import-public-key --key-id relay-v2-2026-02 --file ./relay-transport-v2-public.pem
+```
+
+With fingerprint verification:
+
+```bash
+aw relay config import-public-key \
+  --key-id <kid> \
+  --file ./relay-transport-v2-public.pem \
+  --fingerprint 'sha256:<expected-fingerprint>'
+```
+
+### 3. Verify
 
 ```bash
 aw relay config show
 ```
 
-Config is stored at `~/.aweave/relay.json`.
+Check:
+- `transportMode: "v2"`
+- `serverKeyId` is set
+- `serverPublicKeyFingerprint` is set
+
+## Configuration Commands
+
+```bash
+# Common config
+aw relay config set --relay-url <url>
+aw relay config set --api-key <key>
+aw relay config set --base-branch <branch>
+aw relay config set --chunk-size <bytes>
+
+# v2 transport key material (manual)
+aw relay config set --server-key-id <kid>
+aw relay config set --server-public-key '<PEM>'
+aw relay config set --server-public-key-fingerprint 'sha256:<fp>'
+
+# Recommended v2 pinning workflow
+aw relay config import-public-key --key-id <kid> --file <public-key.pem>
+
+# Show current config (sensitive values masked)
+aw relay config show
+```
 
 ## Usage
 
 ### Push commits
 
 ```bash
-# Push the latest commit
-aw relay push --repo owner/repo --commit HEAD --branch feature/my-branch
+# Auto-detect repo from origin, push current branch to master base
+aw relay push --branch master --format json
 
-# Push a specific commit
-aw relay push --repo owner/repo --commit abc123 --branch hotfix/typo
-
-# Push last 3 commits
-aw relay push --repo owner/repo --commit HEAD --commits 3
-
-# Specify base branch (default: main)
-aw relay push --repo owner/repo --commit HEAD --branch feature/x --base develop
+# Explicit repo / branch
+aw relay push --repo owner/repo --branch feature/my-branch --format json
 ```
 
 ### Check status
+
+`aw relay status` only requires `relayUrl` and `apiKey`.
 
 ```bash
 aw relay status <sessionId>
 ```
 
-### Configuration commands
+## Troubleshooting
 
-```bash
-# Set individual values
-aw relay config set --relay-url <url>
-aw relay config set --api-key <key>
-aw relay config set --encryption-key <key>
-aw relay config set --chunk-size <bytes>
-aw relay config set --base-branch <branch>
+- `Missing relay config: serverKeyId, serverPublicKey`
+  - Import/pin the server public key first (`aw relay config import-public-key ...`)
+- `Unknown transport key id`
+  - CLI pinned `serverKeyId` does not match server `TRANSPORT_KEY_ID`
+- `Decryption failed` / integrity error
+  - Wrong public key, malformed PEM, or server key rotation mismatch
+- `401: UNAUTHORIZED`
+  - Check `apiKey` (`X-Relay-Key`) for Vercel relay auth
 
-# Show current config (sensitive values masked)
-aw relay config show
-
-# Generate a new AES-256 encryption key
-aw relay config generate-key
-```
-
-## Flags Reference
-
-### `aw relay push`
-
-| Flag | Required | Default | Description |
-|------|----------|---------|-------------|
-| `--repo` | Yes | — | GitHub repo (`owner/repo`) |
-| `--commit` | Yes | — | Commit ID (`HEAD`, `abc123`, etc.) |
-| `--branch` | No | current branch | Target branch to push |
-| `--base` | No | `main` | Base branch on remote |
-| `--commits` | No | `1` | Number of commits to include |
-| `--chunk-size` | No | `3145728` (3MB) | Chunk size in bytes (max: 3400000) |
-| `--format` | No | `json` | Output format (`json` or `markdown`) |

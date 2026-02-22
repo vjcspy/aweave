@@ -28,6 +28,8 @@ user/snippets/**
 !user/snippets/.gitkeep
 user/context/**
 !user/context/.gitkeep
+user/_local/**
+!user/_local/.gitkeep
 
 # ========================================
 # Workspaces
@@ -51,6 +53,7 @@ agent/skills/*
 !agent/skills/common/
 agent/templates/*
 !agent/templates/common/
+agent/_local/*
 
 # ========================================
 # Resources — workspace docs excluded on master

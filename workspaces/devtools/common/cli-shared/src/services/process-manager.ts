@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Server process management — replaces PM2 for server daemon lifecycle.
  *
@@ -8,13 +9,13 @@
 
 import { spawn } from 'child_process';
 import {
+  createReadStream,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   unlinkSync,
   writeFileSync,
-  openSync,
-  createReadStream,
 } from 'fs';
 import { createConnection } from 'net';
 import { homedir } from 'os';
@@ -34,9 +35,12 @@ const LOG_FILE = join(LOGS_DIR, 'server.log');
  */
 function loadServerDefaults(): { port: number; host: string } {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { DEFAULT_CONFIG_DIR, DOMAIN, SERVER_ENV_OVERRIDES } = require('@hod/aweave-config-common');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const {
+      DEFAULT_CONFIG_DIR,
+      DOMAIN,
+      SERVER_ENV_OVERRIDES,
+    } = require('@hod/aweave-config-common');
+
     const { loadConfig } = require('@hod/aweave-config-core');
     const config = loadConfig({
       domain: DOMAIN,
@@ -135,7 +139,10 @@ async function checkHealthEndpoint(
   }
 }
 
-async function isPortInUse(port: number, host: string = DEFAULT_HOST): Promise<boolean> {
+async function isPortInUse(
+  port: number,
+  host: string = DEFAULT_HOST,
+): Promise<boolean> {
   return new Promise((resolve) => {
     const socket = createConnection({ port, host });
     socket.once('connect', () => {
@@ -163,7 +170,15 @@ export function resolveServerEntry(): string {
     return require.resolve('@hod/aweave-server/dist/main.js');
   } catch {
     // Fallback: try relative path from this package
-    const fallback = join(__dirname, '..', '..', '..', 'server', 'dist', 'main.js');
+    const fallback = join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'server',
+      'dist',
+      'main.js',
+    );
     if (existsSync(fallback)) return fallback;
     throw new Error(
       'Cannot find @hod/aweave-server entry point. ' +
@@ -219,7 +234,6 @@ export async function startServer(options?: {
   // Check if port is in use by another process — auto-kill and proceed
   if (await isPortInUse(port, host)) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const killPort = require('kill-port');
       await killPort(port);
       // Wait for port to be fully released
@@ -239,7 +253,8 @@ export async function startServer(options?: {
   } catch (err) {
     return {
       success: false,
-      message: err instanceof Error ? err.message : 'Cannot find server entry point',
+      message:
+        err instanceof Error ? err.message : 'Cannot find server entry point',
     };
   }
 
@@ -311,7 +326,10 @@ export async function startServer(options?: {
  * - Send SIGTERM → wait up to 5s → SIGKILL if needed
  * - Verify process gone → clear state file
  */
-export async function stopServer(): Promise<{ success: boolean; message: string }> {
+export async function stopServer(): Promise<{
+  success: boolean;
+  message: string;
+}> {
   const state = readState();
 
   if (!state) {
@@ -320,7 +338,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
 
   if (!isProcessAlive(state.pid)) {
     clearState();
-    return { success: true, message: 'Server was not running (stale state cleaned up)' };
+    return {
+      success: true,
+      message: 'Server was not running (stale state cleaned up)',
+    };
   }
 
   // Send SIGTERM
@@ -328,7 +349,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
     process.kill(state.pid, 'SIGTERM');
   } catch {
     clearState();
-    return { success: true, message: 'Server process not found (state cleaned up)' };
+    return {
+      success: true,
+      message: 'Server process not found (state cleaned up)',
+    };
   }
 
   // Wait for process to exit
@@ -337,7 +361,10 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
     await new Promise((resolve) => setTimeout(resolve, 200));
     if (!isProcessAlive(state.pid)) {
       clearState();
-      return { success: true, message: `Server stopped (was PID ${state.pid})` };
+      return {
+        success: true,
+        message: `Server stopped (was PID ${state.pid})`,
+      };
     }
   }
 
@@ -352,10 +379,16 @@ export async function stopServer(): Promise<{ success: boolean; message: string 
   clearState();
 
   if (isProcessAlive(state.pid)) {
-    return { success: false, message: `Failed to stop server (PID ${state.pid})` };
+    return {
+      success: false,
+      message: `Failed to stop server (PID ${state.pid})`,
+    };
   }
 
-  return { success: true, message: `Server force-stopped (was PID ${state.pid})` };
+  return {
+    success: true,
+    message: `Server force-stopped (was PID ${state.pid})`,
+  };
 }
 
 /**
@@ -415,7 +448,9 @@ export async function ensureServerRunning(
   const status = await getServerStatus();
 
   if (status.running && status.healthy) {
-    log(`Server already running (PID ${status.state!.pid}, port ${status.state!.port})`);
+    log(
+      `Server already running (PID ${status.state!.pid}, port ${status.state!.port})`,
+    );
     return;
   }
 

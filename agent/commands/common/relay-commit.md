@@ -2,26 +2,22 @@
 
 ## Objective
 
-Sync exactly the latest local commit (`HEAD`) to `vjcspy/aweave` on branch `master` via relay, then drop that local commit if relay push succeeds.
+Sync local commits up to `HEAD` to `vjcspy/aweave` on branch `master` via relay using Git Bundles.
 
 ## Workflow Rule
 
-- This flow is for **local-commit-first sync**.
+- This flow is for syncing commits from the local private network to the external remote.
 - Agent must:
   1. Commit changes locally.
-  2. Relay that local `HEAD` commit to `vjcspy/aweave:master`.
-  3. Drop local `HEAD` only when relay status is `pushed`.
+  2. Relay local `HEAD` up to `vjcspy/aweave:master`.
 - Agent must **not** use regular `git push` for this flow.
 
 ## Input Variables
 
 - No runtime input variables.
 - This command is intentionally hard-coded for:
-  - `REPO=vjcspy/aweave`
+  - `REPO=vjcspy/aweave` (or omit to auto-detect from local origin)
   - `TARGET_BRANCH=master`
-  - `BASE_BRANCH=master`
-  - `COMMIT_ID=HEAD`
-  - `COMMITS=1`
 
 ## Execution
 
@@ -36,37 +32,31 @@ aw relay config show
 git rev-parse --verify HEAD
 ```
 
-Required relay config fields must exist: `relayUrl`, `apiKey`, `encryptionKey`.
+Required relay config fields must exist: `relayUrl`, `apiKey`, `serverKeyId`, `serverPublicKey`.
+`aw relay config show` should indicate v2 transport is active (`transportMode = v2`).
 `HEAD` must be the local commit intended for relay sync.
 
-### Step 2: Relay latest commit (hard-coded target)
+### Step 2: Relay latest commits
 
 ```bash
 aw relay push \
   --repo vjcspy/aweave \
-  --commit HEAD \
-  --commits 1 \
   --branch master \
-  --base master \
   --format json
 ```
 
-### Step 3: Check result and drop local commit on success
+### Step 3: Check result on success
 
 - If response status is `"pushed"`:
   - Report `sessionId`, `commitSha`, `commitUrl`.
-  - Drop the local latest commit immediately:
-    ```bash
-    git reset --hard HEAD~1
-    ```
 - If response status is `"failed"`:
-  - Do not drop commit.
   - Report `message` and `details.error` (if available).
 
 ## Implementation-Aligned Notes
 
 - Do not manually construct relay HTTP payloads.
 - Transport encryption (`gameData` envelope), chunk upload, complete signal, and GR trigger are handled internally by `aw relay push`.
+- The CLI automatically performs an ancestry check (`git merge-base --is-ancestor`) and queries the remote SHA automatically.
 - Polling endpoint is now under game transport flow; `aw relay status` already uses the correct API path.
 - Session statuses can include: `receiving`, `complete`, `processing`, `pushed`, `failed`.
 - Do not run `git push origin ...` as part of this command flow.
@@ -76,23 +66,11 @@ aw relay push \
 User says: "relay commit"
 
 ```bash
-aw relay push --repo vjcspy/aweave --commit HEAD --commits 1 --branch master --base master --format json
-# if pushed:
-git reset --hard HEAD~1
+aw relay push --repo vjcspy/aweave --branch master --format json
 ```
 
 User says: "sync last commit via relay"
 
 ```bash
-aw relay push --repo vjcspy/aweave --commit HEAD --commits 1 --branch master --base master --format json
-# if pushed:
-git reset --hard HEAD~1
-```
-
-User says: "relay commit and drop local commit if success"
-
-```bash
-aw relay push --repo vjcspy/aweave --commit HEAD --commits 1 --branch master --base master --format json
-# if pushed:
-git reset --hard HEAD~1
+aw relay push --repo vjcspy/aweave --branch master --format json
 ```
