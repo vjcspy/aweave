@@ -61,13 +61,13 @@ Add a new `cli-plugin-relay` command to upload a single file (under 100 MB) from
 
 ### Phase 1: Analysis & Preparation
 
-- [ ] Confirm and lock the final CLI command naming and UX (recommended: `aw relay file push`)
+- [x] Confirm and lock the final CLI command naming and UX (recommended: `aw relay file push`)
   - **Outcome**: Stable command path (`aw relay file push`) with final flags (`--file`, `--name`, `--wait`, `--chunk-size`, `--format`).
-- [ ] Finalize the server-side file storage contract and lifecycle (based on preselected state model)
+- [x] Finalize the server-side file storage contract and lifecycle (based on preselected state model)
   - **Outcome**: API payload schema plus explicit transition chain `receiving -> complete -> processing -> stored|failed`, processing message text for file flow, and status details fields.
-- [ ] Finalize compatibility rules for shared status handling (`aw relay status`) across Git and file sessions
+- [x] Finalize compatibility rules for shared status handling (`aw relay status`) across Git and file sessions
   - **Outcome**: `aw relay status` success criteria accept `pushed` and `stored`; `relay push` (Git) behavior remains unchanged.
-- [ ] Evaluate test coverage and identify required test levels (CLI unit, server route/service, E2E smoke)
+- [x] Evaluate test coverage and identify required test levels (CLI unit, server route/service, E2E smoke)
   - **Outcome**: Test matrix covering chunk upload, checksum mismatch, invalid inputs, and successful store flow.
 
 ### Phase 2: Implementation Structure
@@ -130,41 +130,41 @@ receiving -> complete -> processing -> stored | failed
 
 ### Phase 3: Detailed Implementation Steps
 
-- [ ] Define and document the file finalize API contract (`POST /api/file/store`)
+- [x] Define and document the file finalize API contract (`POST /api/file/store`)
   - **Outcome**: Request fields include `sessionId`, `fileName`, `size`, `sha256` and response behavior (202 accepted + status polling compatible), with explicit path mapping `CLI /api/game/file/store` -> `Server /api/file/store`.
 
-- [ ] Add server configuration for long-term file storage
+- [x] Add server configuration for long-term file storage
   - **Outcome**: Configurable storage root (for example `FILE_STORAGE_DIR`) with startup validation, `MAX_FILE_SIZE_BYTES` (default `104857600` = 100 MB), and sane defaults for local/dev.
 
-- [ ] Implement a server-side file storage service
+- [x] Implement a server-side file storage service
   - **Outcome**: Service reassembles uploaded chunks, validates byte size, computes SHA256, compares with expected checksum, sanitizes filename, persists file to durable storage, and returns stored metadata.
   - **Outcome**: Storage strategy is explicit: `<FILE_STORAGE_DIR>/<YYYY>/<MM>/<DD>/<sessionId>-<sanitizedFileName>` (or equivalent deterministic layout) with no overwrite of an existing stored file path.
 
-- [ ] Add a new server file route (`/api/file/store`) and integrate with session lifecycle
+- [x] Add a new server file route (`/api/file/store`) and integrate with session lifecycle
   - **Outcome**: Route validates input, starts async processing for a completed session, updates status/messages/details, and marks terminal success as `stored`.
   - **Outcome**: File processing messages are file-specific (for example `Processing file`, `Stored file`) and do not regress Git relay messages.
 
-- [ ] Extend session status model additively for file-upload success
+- [x] Extend session status model additively for file-upload success
   - **Outcome**: `aw relay push` (Git) continues to end in `pushed`, while file uploads end in `stored`; shared status endpoint remains backward-compatible.
   - **Outcome**: Update all affected status unions/checks on both server and CLI sides (including `SessionStatus`, status response interfaces, and terminal-state reject lists such as `storeChunk()`).
 
-- [ ] Add a Vercel forward route for file finalize/store
+- [x] Add a Vercel forward route for file finalize/store
   - **Outcome**: New route forwards authenticated requests from `POST /api/game/file/store` to `POST /api/file/store` using existing `forwardToServer()` helper.
 
-- [ ] Refactor CLI relay transport helpers for reuse
+- [x] Refactor CLI relay transport helpers for reuse
   - **Outcome**: Shared helpers cover chunk upload, complete signal, and polling with configurable terminal success states so both Git and file commands can reuse the same transport flow safely.
   - **Outcome**: `pollStatus()` accepts configurable terminal states (recommended API: `pollStatus(..., { successStates, failureStates })`) to prevent file sessions from timing out when status=`stored`.
 
-- [ ] Implement CLI file-upload command (recommended: `aw relay file push`)
+- [x] Implement CLI file-upload command (recommended: `aw relay file push`)
   - **Outcome**: Command reads a local file, computes SHA256, enforces local max size (100 MB default/configurable), applies existing chunk-size rules, uploads encrypted chunks, signals completion, triggers server file-store finalize API, and returns MCP-style output including `sessionId`.
 
-- [ ] Add CLI wait/poll behavior for file sessions without breaking Git flow
+- [x] Add CLI wait/poll behavior for file sessions without breaking Git flow
   - **Outcome**: File command can optionally wait for `stored|failed`; Git command keeps current `pushed|failed` behavior (or uses generalized polling with default terminal states).
 
-- [ ] Update `aw relay status` for mixed session types
+- [x] Update `aw relay status` for mixed session types
   - **Outcome**: Status command reports success for both Git (`pushed`) and file (`stored`) sessions while preserving existing output shape for current users.
 
-- [ ] Add validation and error handling for common file-upload failures
+- [x] Add validation and error handling for common file-upload failures
   - **Outcome**: Clear errors for missing file, oversized file (if limit configured), SHA256 mismatch, invalid filename, incomplete session, and duplicate/invalid state transitions.
 
 - [ ] Add/refresh documentation
@@ -177,12 +177,44 @@ receiving -> complete -> processing -> stored | failed
 
 ### Completed Achievements
 
-- [To be updated after implementation]
+- Added `stored` as additive terminal state to `SessionStatus` union across server and CLI
+- Created `FileStoreService` with SHA256 verification, size validation, filename sanitization, and date-partitioned durable storage
+- Created `POST /api/file/store` server route with async processing pattern (matching `gr.ts`)
+- Created Vercel forwarder at `POST /api/game/file/store` → `POST /api/file/store`
+- Generalized `pollStatus()` with configurable terminal states for backward-compatible Git + file session support
+- Implemented `aw relay file push` CLI command with full upload flow, SHA256 integrity, and optional wait/poll
+- Updated `aw relay status` to recognize both `pushed` and `stored` as success states
+- Added `fileStorageDir` and `maxFileSizeBytes` to server config with env var overrides
+- All TypeScript compilations pass with zero errors
 
 ## Outstanding Issues & Follow-up
 
 ### Issues/Clarifications
 
-- [ ] Decide the exact terminal success status name for file uploads (`stored` recommended) and confirm whether any downstream tooling depends on the current `SessionStatus` union values.
+- [x] Decide the exact terminal success status name for file uploads (`stored` recommended) and confirm whether any downstream tooling depends on the current `SessionStatus` union values.
 - [ ] Define retention/backup policy for long-term stored files on `git-relay-server` (path layout, overwrite behavior, and cleanup ownership).
-- [ ] Decide whether file-processing helper should reuse `SessionStore.startProcessing()` with an optional message parameter or introduce a file-specific wrapper method to avoid patch-oriented wording.
+- [x] Decide whether file-processing helper should reuse `SessionStore.startProcessing()` with an optional message parameter or introduce a file-specific wrapper method to avoid patch-oriented wording.
+
+## Implementation Notes / As Implemented
+
+### Design Decisions
+
+1. **`startProcessing()` optional message** — Chose the optional message parameter approach (default: `'Processing patch'`) over a file-specific wrapper, keeping the API surface minimal while allowing file flow to use `'Processing file'`.
+2. **No separate `file-upload.ts` helper** — The plan suggested an optional `file-upload.ts` orchestration helper. SHA256 computation and upload orchestration are simple enough to inline directly in the command file, avoiding unnecessary abstraction.
+3. **`pollStatus()` generalization** — Uses `PollOptions` interface with `successStates`/`failureStates` arrays and a `Set` for O(1) lookup. Defaults maintain backward compatibility with Git flow.
+4. **File storage layout** — `<FILE_STORAGE_DIR>/<YYYY>/<MM>/<DD>/<sessionId>-<sanitizedFileName>` with overwrite prevention.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `workspaces/k/misc/git-relay-server/src/lib/types.ts` | Added `stored` to `SessionStatus`, `FileStoreRequest` interface, file details to `StatusResponse` |
+| `workspaces/k/misc/git-relay-server/src/lib/config.ts` | Added `fileStorageDir`, `maxFileSizeBytes` to `AppConfig` |
+| `workspaces/k/misc/git-relay-server/src/services/session-store.ts` | Added `stored` to storeChunk reject list, parameterized `startProcessing` message |
+| `workspaces/k/misc/git-relay-server/src/services/file-store.ts` | **NEW** — `FileStoreService` with reassemble + SHA256 + sanitize + durable write |
+| `workspaces/k/misc/git-relay-server/src/routes/file.ts` | **NEW** — `POST /api/file/store` route handler |
+| `workspaces/k/misc/git-relay-server/src/server.ts` | Mounted `/api/file` route |
+| `workspaces/k/misc/git-relay-vercel/src/app/api/game/file/store/route.ts` | **NEW** — Vercel forwarder |
+| `workspaces/devtools/common/cli-plugin-relay/src/lib/relay-client.ts` | Added `triggerFileStore()`, generalized `pollStatus()`, added `stored` to `StatusResponse` |
+| `workspaces/devtools/common/cli-plugin-relay/src/commands/relay/status.ts` | Updated success check for both `pushed` and `stored` |
+| `workspaces/devtools/common/cli-plugin-relay/src/commands/relay/file/push.ts` | **NEW** — `aw relay file push` command |
