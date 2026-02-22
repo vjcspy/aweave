@@ -91,3 +91,34 @@ return {
 ## Review
 
 Does this approach align with your goal of preventing calculations if the day is already persisted?
+
+## Implementation Notes / As Implemented
+
+- Refactored `VN30FeaturePipeline.run()` order so `_fetch_existing_dates()` executes before any prefetch.
+- Added early-exit for full VN30 coverage:
+  - If `force_recalculate=False` and all requested weekday dates already exist for `VN30`, the pipeline now returns `status="skipped"` before fetching component data.
+- Added date-range filtering path for partial coverage:
+  - Computes `missing_dates` from requested weekdays minus existing VN30 dates (or full requested range when `force_recalculate=True`).
+  - Groups missing dates into continuous calendar segments via `_group_into_continuous_segments(...)`.
+  - Executes prefetch/calculate/index/aggregate/persist per segment.
+- Refactored method signatures to segment-aware execution without mutating `self.start_date` / `self.end_date`:
+  - `_prefetch_all_data(segment_start, segment_end)`
+  - `_process_single_symbol(symbol, segment_start, segment_end)`
+  - `_calculate_component_features(segment_start, segment_end, existing_dates)`
+  - `_calculate_index_candles(segment_start, segment_end)`
+  - `_aggregate_features(segment_start, segment_end)`
+- Updated `_get_requested_dates(...)` to accept optional `start_date` and `end_date` inputs for segment-level weekday calculation.
+- Updated output summary:
+  - Preserves existing keys (`start_date`, `end_date`, counters).
+  - Adds `requested_start_date`, `requested_end_date`, `requested_dates_count`, `vn30_existing_dates_count`, `vn30_missing_dates_count`, and `processed_segments`.
+- Validation:
+  - `ruff check` passed for:
+    - `workspaces/k/stock/metan/packages/stock/metan/stock/trading/domain/feature/persistor/vn30/vn30_feature_pipeline.py`
+
+### Follow-up correction (critical)
+
+- Missing-date detection is now anchored to `prices` trading days:
+  - Added `_fetch_trading_dates_from_prices(start_date, end_date)` in `VN30FeaturePipeline`.
+  - `run()` now computes `dates_to_calculate = requested_weekday_dates ∩ trading_dates_from_prices`.
+  - Early-exit/full-coverage checks and `missing_dates` segmentation are now based on `dates_to_calculate` (not raw weekdays).
+- This prevents false recalculation on holidays/non-trading weekdays where no prices exist.
