@@ -1,5 +1,17 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import {
+  ConfigDomainDto,
+  ConfigFileDto,
+  GetConfigResponseDto,
+  ListConfigsResponseDto,
+  SaveConfigRequestDto,
+  SaveConfigResponseDto,
+  SkillDto,
+  ListSkillsResponseDto,
+  ToggleSkillRequestDto,
+  ToggleSkillResponseDto,
+} from '@hod/aweave-nestjs-dashboard';
+import {
   ArgumentDto,
   DebateDto,
   ErrorResponseDto,
@@ -35,6 +47,16 @@ async function generate() {
       PollResultNewResponseDto,
       PollResultNoNewResponseDto,
       ErrorResponseDto,
+      ConfigDomainDto,
+      ConfigFileDto,
+      GetConfigResponseDto,
+      ListConfigsResponseDto,
+      SaveConfigRequestDto,
+      SaveConfigResponseDto,
+      SkillDto,
+      ListSkillsResponseDto,
+      ToggleSkillRequestDto,
+      ToggleSkillResponseDto,
     ],
   });
   const outputPath = resolve(process.cwd(), 'openapi.json');
