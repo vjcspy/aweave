@@ -1,4 +1,3 @@
-import type { LaunchBrowserOptions } from '@hod/aweave-playwright';
 import {
   CLI_ENV_OVERRIDES,
   DEFAULT_CONFIG_DIR,
@@ -6,6 +5,7 @@ import {
 } from '@hod/aweave-config-common';
 import type { ConfigFile } from '@hod/aweave-config-core';
 import { loadConfig } from '@hod/aweave-config-core';
+import type { LaunchBrowserOptions } from '@hod/aweave-playwright';
 
 export type BrowserChannel = NonNullable<LaunchBrowserOptions['channel']>;
 
@@ -22,7 +22,8 @@ interface BrowserChannelConfig {
  * 2. `~/.aweave/config/common/cli.yaml` -> `test.cursor.browserChannel`
  * 3. default `workspaces/devtools/common/config/defaults/cli.yaml`
  */
-export const CURSOR_BROWSER: BrowserChannelConfig = resolveCursorBrowserConfig();
+export const CURSOR_BROWSER: BrowserChannelConfig =
+  resolveCursorBrowserConfig();
 
 interface CommonCliConfig extends ConfigFile {
   test?: {
