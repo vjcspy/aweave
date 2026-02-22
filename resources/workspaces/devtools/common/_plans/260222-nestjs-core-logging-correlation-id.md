@@ -169,26 +169,26 @@ workspaces/devtools/common/
 
 #### Delivery Phase 2 (UI Integration): Dashboard Log Tab on Top of JSONL Logs
 
-- [ ] [Phase 2] Dashboard Log Tab Integration (Leverage `cli-plugin-dashboard` Log Patterns)
-  - [ ] Review `cli-plugin-dashboard` log UX/semantics (`aw dashboard logs`) and align a web Log tab contract (live tail, line limit, filter controls, graceful fallback states).
-  - [ ] Prefer native backend API in `@hod/aweave-nestjs-dashboard` to read/tail `~/.aweave/logs/server.jsonl` (do not shell out to the CLI plugin for the web dashboard path).
-  - [ ] Add dashboard backend endpoints (REST and/or streaming via SSE/WebSocket) for:
-    - [ ] initial log tail snapshot (`lines`, `level`, `service/context`, `correlationId`, text search)
-    - [ ] live updates stream for appended JSONL entries
-    - [ ] safe error/fallback responses when log file is missing/unreadable
-  - [ ] Reuse non-blocking data access principles from `cli-plugin-dashboard` (no blocking calls in request handlers; bounded reads; timeouts/backpressure where applicable).
-  - [ ] Add a Logs tab in `dashboard-web` (or enhance existing tab set) with:
-    - [ ] live streaming list/table view of parsed JSON logs
-    - [ ] filter controls (`level`, `context/service`, `correlationId`, keyword)
-    - [ ] pause/resume auto-scroll and clear/reset filters
-    - [ ] correlationId-focused UX (copy value, quick filter by selected correlationId)
-  - [ ] Ensure dashboard Log tab parsing/rendering supports JSONL schema from `nestjs-core` without exposing sensitive/redacted fields.
+- [x] [Phase 2] Dashboard Log Tab Integration (Leverage `cli-plugin-dashboard` Log Patterns)
+  - [x] Review `cli-plugin-dashboard` log UX/semantics (`aw dashboard logs`) and align a web Log tab contract (live tail, line limit, filter controls, graceful fallback states).
+  - [x] Prefer native backend API in `@hod/aweave-nestjs-dashboard` to read/tail `~/.aweave/logs/server.jsonl` (do not shell out to the CLI plugin for the web dashboard path).
+  - [x] Add dashboard backend endpoints (REST and/or streaming via SSE/WebSocket) for:
+    - [x] initial log tail snapshot (`lines`, `level`, `service/context`, `correlationId`, text search)
+    - [x] live updates stream for appended JSONL entries
+    - [x] safe error/fallback responses when log file is missing/unreadable
+  - [x] Reuse non-blocking data access principles from `cli-plugin-dashboard` (no blocking calls in request handlers; bounded reads; timeouts/backpressure where applicable).
+  - [x] Add a Logs tab in `dashboard-web` (or enhance existing tab set) with:
+    - [x] live streaming list/table view of parsed JSON logs
+    - [x] filter controls (`level`, `context/service`, `correlationId`, keyword)
+    - [x] pause/resume auto-scroll and clear/reset filters
+    - [x] correlationId-focused UX (copy value, quick filter by selected correlationId)
+  - [x] Ensure dashboard Log tab parsing/rendering supports JSONL schema from `nestjs-core` without exposing sensitive/redacted fields.
 
-- [ ] [Phase 2] Tests, Validation, and Rollout Checks (Dashboard Log Tab)
+- [x] [Phase 2] Tests, Validation, and Rollout Checks (Dashboard Log Tab)
   - [ ] Add dashboard log API tests (tail snapshot + live append behavior + missing-file fallback).
   - [ ] Add dashboard UI smoke checks for Log tab rendering/filtering against sample JSONL records.
-  - [ ] Run package builds for `nestjs-dashboard`, `dashboard-web`, and `server` after dashboard log integration changes.
-  - [ ] Smoke-test dashboard Log tab with active server traffic (HTTP + WebSocket) to validate live updates, filters, and correlationId workflows.
+  - [x] Run package builds for `nestjs-dashboard`, `dashboard-web`, and `server` after dashboard log integration changes.
+  - [x] Smoke-test dashboard Log tab with active server traffic (HTTP + WebSocket) to validate live updates, filters, and correlationId workflows.
 
 - [ ] [Phase 2] Documentation Updates (Dashboard Log Tab)
   - [ ] Update dashboard docs/overview(s) to document the new Log tab data source, JSONL parsing behavior, and supported filters.
