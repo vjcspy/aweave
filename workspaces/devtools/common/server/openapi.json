@@ -1,6 +1,48 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/debate": {
+      "get": {
+        "operationId": "DebateSpaController_serveDebateSpa[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DebateSpa"
+        ]
+      }
+    },
+    "/debate/{path}": {
+      "get": {
+        "operationId": "DebateSpaController_serveDebateSpa[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DebateSpa"
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "operationId": "RootRedirectController_redirectToDebate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "RootRedirect"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "DebateController_healthCheck",
@@ -659,6 +701,177 @@
           "Debate"
         ]
       }
+    },
+    "/configs": {
+      "get": {
+        "operationId": "ConfigsController_listConfigs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListConfigsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all available config domains and files",
+        "tags": [
+          "configs"
+        ]
+      }
+    },
+    "/configs/{domain}/{name}": {
+      "get": {
+        "operationId": "ConfigsController_getConfigDetails",
+        "parameters": [
+          {
+            "name": "domain",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get details (effective, default, user) for a specific config",
+        "tags": [
+          "configs"
+        ]
+      },
+      "put": {
+        "operationId": "ConfigsController_saveConfig",
+        "parameters": [
+          {
+            "name": "domain",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveConfigRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveConfigResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Save override yaml for a specific config",
+        "tags": [
+          "configs"
+        ]
+      }
+    },
+    "/skills": {
+      "get": {
+        "operationId": "SkillsController_listSkills",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSkillsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all available skills and their active status",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/skills/{skillId}/toggle": {
+      "post": {
+        "operationId": "SkillsController_toggleSkill",
+        "parameters": [
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleSkillRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToggleSkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Toggle active status of a skill",
+        "tags": [
+          "skills"
+        ]
+      }
     }
   },
   "info": {
@@ -1179,6 +1392,189 @@
         },
         "required": [
           "content"
+        ]
+      },
+      "ConfigFileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ]
+      },
+      "ConfigDomainDto": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigFileDto"
+            }
+          }
+        },
+        "required": [
+          "domain",
+          "files"
+        ]
+      },
+      "ListConfigsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigDomainDto"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "GetConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "rawUserConfig": {
+            "type": "string",
+            "description": "The raw YAML content from the user override file"
+          },
+          "userConfigPath": {
+            "type": "string",
+            "description": "The absolute path to the user override file"
+          },
+          "rawDefaultConfig": {
+            "type": "string",
+            "description": "The raw YAML content from the default file"
+          },
+          "defaultConfigPath": {
+            "type": "string",
+            "description": "The absolute path to the default file"
+          },
+          "effectiveConfig": {
+            "type": "object",
+            "description": "The effective parsed configuration object"
+          }
+        },
+        "required": [
+          "success",
+          "rawUserConfig",
+          "userConfigPath",
+          "rawDefaultConfig",
+          "defaultConfigPath",
+          "effectiveConfig"
+        ]
+      },
+      "SaveConfigRequestDto": {
+        "type": "object",
+        "properties": {
+          "rawContent": {
+            "type": "string",
+            "description": "The raw YAML content to save as user override"
+          }
+        },
+        "required": [
+          "rawContent"
+        ]
+      },
+      "SaveConfigResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "SkillDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the SKILL.md file"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the skill is active (based on ~/.aweave/active-skills.json)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "path",
+          "active"
+        ]
+      },
+      "ListSkillsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillDto"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "ToggleSkillRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active"
+        ]
+      },
+      "ToggleSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SkillDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       }
     }
