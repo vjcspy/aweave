@@ -77,6 +77,7 @@ workspaces/devtools/
 │   ├── cli-plugin-server/           # @hod/aweave-plugin-server — aw server * (start/stop/status)
 │   ├── cli-plugin-config/           # @hod/aweave-plugin-config — aw config *
 │   ├── cli-plugin-relay/            # @hod/aweave-plugin-relay — aw relay *
+│   ├── node-shared/                 # @hod/aweave-node-shared — shared Node runtime helpers (e.g. root discovery)
 │   ├── server/                      # @hod/aweave-server — unified NestJS server (API + WS + static SPA)
 │   ├── nestjs-debate/               # @hod/aweave-nestjs-debate — debate backend module
 │   ├── debate-web/                  # @hod/aweave-debate-web — React SPA (Rsbuild, served at /debate)
@@ -101,6 +102,7 @@ workspaces/devtools/
 
 - **oclif application** (`common/cli/`): Bootstraps oclif, declares plugins, provides `aw` binary
 - **Shared library** (`common/cli-shared/`): MCP response format, HTTP client, output helpers, process manager — used by all plugins
+- **Node runtime helpers** (`common/node-shared/`): neutral Node-only utilities shared across CLI plugins and NestJS modules (e.g. DevTools root discovery)
 - **Domain plugins** (`cli-plugin-*`): Each plugin registers commands under its own topic (e.g. `aw debate *`)
 - **Plugin loading:** oclif reads `oclif.plugins` from `package.json`, auto-discovers command classes from each plugin's `dist/commands/`
 - **Global install:** `pnpm link --global` in `common/cli/` → `aw` command available system-wide
@@ -214,9 +216,9 @@ For plugins with interactive terminal UI using Ink v6 + React 19, the plugin **m
   ├── @hod/aweave-cli-shared
   ├── @hod/aweave-plugin-debate ──► @hod/aweave-cli-shared + @hod/aweave-debate-machine
   ├── @hod/aweave-plugin-docs ──► @hod/aweave-cli-shared
-  ├── @hod/aweave-plugin-dashboard ──► @hod/aweave-cli-shared + ink + react (ESM)
+  ├── @hod/aweave-plugin-dashboard ──► @hod/aweave-cli-shared + @hod/aweave-node-shared + ink + react (ESM)
   ├── @hod/aweave-plugin-server ──► @hod/aweave-cli-shared + @hod/aweave-server
-  ├── @hod/aweave-plugin-config ──► @hod/aweave-cli-shared + @hod/aweave-config-core
+  ├── @hod/aweave-plugin-config ──► @hod/aweave-cli-shared + @hod/aweave-config-core + @hod/aweave-node-shared
   └── @hod/aweave-plugin-<name> ──► @hod/aweave-cli-shared
 
 @hod/aweave-server

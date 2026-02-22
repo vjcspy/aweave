@@ -7,10 +7,17 @@
  */
 
 import { access, readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Command, Flags } from '@oclif/core';
+
+const require = createRequire(import.meta.url);
+const nodeShared = require(
+  '@hod/aweave-node-shared',
+) as typeof import('@hod/aweave-node-shared');
+const { resolveDevtoolsRoot } = nodeShared;
 
 export class DashboardWorkspace extends Command {
   static description = 'Show workspace packages and build status';
@@ -45,9 +52,13 @@ export class DashboardWorkspace extends Command {
   }
 
   private async outputJson(): Promise<void> {
-    const filePath = fileURLToPath(import.meta.url);
-    // dist/commands/dashboard/workspace.js → up 6 levels → devtools/
-    const devtoolsRoot = resolve(filePath, '..', '..', '..', '..', '..', '..');
+    const devtoolsRoot = resolveDevtoolsRoot({
+      cwd: process.cwd(),
+      moduleDir: fileURLToPath(new URL('.', import.meta.url)),
+    });
+    if (!devtoolsRoot) {
+      throw new Error('Could not find devtools root');
+    }
     const workspaceYaml = resolve(devtoolsRoot, 'pnpm-workspace.yaml');
 
     try {
