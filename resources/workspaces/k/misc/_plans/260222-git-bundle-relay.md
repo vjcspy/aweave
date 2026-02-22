@@ -122,3 +122,9 @@ Hệ thống hoàn toàn là "data agnostic" với tên branch, đáp ứng mọ
 ---
 **Plan Status**: Ready for Implementation.
 Vui lòng kiểm tra plan trên, nếu không còn vướng mắc gì, chúng ta có thể chuyển sang chế độ EXECUTION.
+
+## Implementation Notes / As Implemented
+
+- **`git-relay-server`**: Implemented `GET /api/gr/remote-info` to query GitHub viat `git ls-remote`. Replaced patching logic in `processSession` with `applyBundle`, which downloads the bundle, verifies it, fetches it into `refs/relay/<session_id>`, and directly pushes to origin branch. Removed `pushBranch`.
+- **`git-relay-vercel`**: Added `src/app/api/game/remote-info/route.ts` to proxy requests and pass along query parameters (`?repo=...&branch=...`) transparently using `req.nextUrl.search`.
+- **`cli-plugin-relay`**: Updated `aw relay push` to detect the remote origin repo automatically if omitted. `commit` and `commits` flags have been removed. The CLI now queries the remote SHA safely, generates a `HEAD` bundle if nonexistent, or runs `git merge-base --is-ancestor` and then generates the bundle dynamically preventing divergence. Replaced `git format-patch` with `git bundle create`.
