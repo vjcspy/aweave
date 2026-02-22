@@ -11,7 +11,6 @@ import {
 import type { RelayConfig } from './config';
 
 const FRAME_IV_LENGTH = 12;
-const FRAME_AUTH_TAG_LENGTH = 16;
 const V2_MAGIC = Buffer.from('AWR2', 'ascii');
 const V2_VERSION = 2;
 
@@ -49,7 +48,10 @@ export function encryptPayloadV2(
   const plaintext = buildPlaintextFrame(metadata, binaryData);
   const iv = randomBytes(FRAME_IV_LENGTH);
   const contentKey = deriveV2ContentKey(
-    diffieHellman({ privateKey: ephemeralPrivateKey, publicKey: serverPublicKey }),
+    diffieHellman({
+      privateKey: ephemeralPrivateKey,
+      publicKey: serverPublicKey,
+    }),
     iv,
     kidBytes,
     ephemeralPublicKeyDer,
@@ -57,7 +59,13 @@ export function encryptPayloadV2(
   );
 
   const header = Buffer.alloc(
-    V2_MAGIC.length + 1 + 1 + 2 + FRAME_IV_LENGTH + kidBytes.length + ephemeralPublicKeyDer.length,
+    V2_MAGIC.length +
+      1 +
+      1 +
+      2 +
+      FRAME_IV_LENGTH +
+      kidBytes.length +
+      ephemeralPublicKeyDer.length,
   );
   let offset = 0;
   V2_MAGIC.copy(header, offset);
@@ -88,7 +96,9 @@ export function encryptPayload(
   binaryData?: Buffer,
 ): string {
   if (!config.serverKeyId || !config.serverPublicKey) {
-    throw new Error('Missing relay v2 transport config: serverKeyId/serverPublicKey');
+    throw new Error(
+      'Missing relay v2 transport config: serverKeyId/serverPublicKey',
+    );
   }
 
   return encryptPayloadV2(

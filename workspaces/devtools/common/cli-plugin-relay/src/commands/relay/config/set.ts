@@ -45,7 +45,8 @@ export class RelayConfigSet extends Command {
       updates.serverPublicKey = flags['server-public-key'];
     }
     if (flags['server-public-key-fingerprint']) {
-      updates.serverPublicKeyFingerprint = flags['server-public-key-fingerprint'];
+      updates.serverPublicKeyFingerprint =
+        flags['server-public-key-fingerprint'];
     }
     if (flags['chunk-size'] != null) updates.chunkSize = flags['chunk-size'];
     if (flags['base-branch']) updates.defaultBaseBranch = flags['base-branch'];
