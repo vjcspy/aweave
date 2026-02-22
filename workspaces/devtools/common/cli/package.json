@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave",
-  "version": "0.1.8",
+  "version": "0.1.23",
   "bin": {
     "aw": "./bin/run.js"
   },
