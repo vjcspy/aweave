@@ -6,9 +6,17 @@
  */
 
 import { access, readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { useCallback, useEffect, useState } from 'react';
+
+const require = createRequire(import.meta.url);
+const nodeShared = require(
+  '@hod/aweave-node-shared',
+) as typeof import('@hod/aweave-node-shared');
+const { resolveDevtoolsRoot } = nodeShared;
 
 export interface WorkspacePackage {
   /** Package name from package.json (or folder name if no package.json) */
@@ -27,16 +35,20 @@ export interface WorkspaceData {
 }
 
 /**
- * Resolve devtools root from this file's location.
- * At runtime: cli-plugin-dashboard/dist/hooks/useWorkspace.js
- * → up 3 levels → devtools/
+ * Resolve devtools root using shared marker-based discovery.
+ * ESM call sites pass moduleDir derived from import.meta.url.
  */
 function getDevtoolsRoot(): string {
-  // import.meta.url → file:///.../.../dist/hooks/useWorkspace.js
-  const fileUrl = new URL(import.meta.url);
-  const filePath = fileUrl.pathname;
-  // Go up: hooks → dist → cli-plugin-dashboard → common → devtools
-  return resolve(filePath, '..', '..', '..', '..', '..');
+  const devtoolsRoot = resolveDevtoolsRoot({
+    cwd: process.cwd(),
+    moduleDir: fileURLToPath(new URL('.', import.meta.url)),
+  });
+
+  if (!devtoolsRoot) {
+    throw new Error('Could not find devtools root');
+  }
+
+  return devtoolsRoot;
 }
 
 async function fileExists(path: string): Promise<boolean> {

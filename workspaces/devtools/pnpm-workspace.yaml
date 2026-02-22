@@ -42,6 +42,7 @@ packages:
   - common/debate-machine
   - common/debate-web
   - common/cli-shared
+  - common/node-shared
   - common/playwright
   - common/cli
   - common/cli-plugin-debate
