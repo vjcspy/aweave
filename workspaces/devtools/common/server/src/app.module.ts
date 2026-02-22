@@ -8,6 +8,10 @@ import { RootRedirectController } from './root-redirect.controller';
 
 @Module({
   imports: [DebateModule, DashboardModule],
-  controllers: [DebateSpaController, DashboardSpaController, RootRedirectController],
+  controllers: [
+    DebateSpaController,
+    DashboardSpaController,
+    RootRedirectController,
+  ],
 })
 export class AppModule {}

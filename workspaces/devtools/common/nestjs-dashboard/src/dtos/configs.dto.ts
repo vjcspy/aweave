@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ConfigFileDto {
   @ApiProperty()
@@ -28,7 +28,9 @@ export class GetConfigResponseDto {
   @ApiProperty()
   success!: boolean;
 
-  @ApiProperty({ description: 'The raw YAML content from the user override file' })
+  @ApiProperty({
+    description: 'The raw YAML content from the user override file',
+  })
   rawUserConfig!: string;
 
   @ApiProperty({ description: 'The absolute path to the user override file' })
