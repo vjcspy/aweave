@@ -15,18 +15,37 @@ export interface SkillItem {
 export class SkillsService {
   private readonly logger = new Logger(SkillsService.name);
   private readonly activeSkillsPath = path.join(os.homedir(), '.aweave', 'active-skills.json');
-  private readonly loadedSkillsMdPath = path.resolve(process.cwd(), 'agent/rules/common/dynamic/loaded-skills.md');
+  private get loadedSkillsMdPath(): string {
+    const root = this.findProjectRoot();
+    if (root) {
+      return path.resolve(root, 'agent/rules/common/dynamic/loaded-skills.md');
+    }
+    return path.resolve(os.homedir(), '.aweave/loaded-skills.md');
+  }
+
+  private findProjectRoot(): string | null {
+    let dir = __dirname;
+    for (let i = 0; i < 15; i++) {
+      if (fs.existsSync(path.join(dir, 'agent', 'skills'))) {
+        return dir;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+    return null;
+  }
 
   async getAllSkills(): Promise<SkillItem[]> {
-    const cwd = process.cwd();
+    const projectRoot = this.findProjectRoot();
     const skills: SkillItem[] = [];
 
     // Scan agent/skills in project root
-    const projectSkillsDir = path.join(cwd, 'agent', 'skills');
-    if (fs.existsSync(projectSkillsDir)) {
-      skills.push(...this.scanSkillsDirectory(projectSkillsDir, cwd));
+    if (projectRoot) {
+      const projectSkillsDir = path.join(projectRoot, 'agent', 'skills');
+      skills.push(...this.scanSkillsDirectory(projectSkillsDir, projectRoot));
     } else {
-      this.logger.warn(`Project skills dir not found: ${projectSkillsDir}. Skipping.`);
+      this.logger.warn(`Project root with agent/skills not found. Skipping.`);
     }
 
     // Scan ~/.aweave/skills
