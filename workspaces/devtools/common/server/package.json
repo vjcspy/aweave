@@ -29,6 +29,7 @@
     "@hod/aweave-config-core": "workspace:*",
     "@hod/aweave-dashboard-web": "workspace:*",
     "@hod/aweave-debate-web": "workspace:*",
+    "@hod/aweave-nestjs-core": "workspace:*",
     "@hod/aweave-nestjs-dashboard": "workspace:*",
     "@hod/aweave-nestjs-debate": "workspace:*",
     "@nestjs/common": "catalog:",

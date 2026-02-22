@@ -6,6 +6,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { randomUUID } from 'crypto';
 import type { IncomingMessage } from 'http';
 import type { Server } from 'ws';
 import type WebSocket from 'ws';
@@ -44,6 +45,8 @@ export class DebateGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Track which clients are subscribed to which debate
   private readonly clientsByDebateId = new Map<string, Set<WebSocket>>();
   private readonly debateIdByClient = new Map<WebSocket, string>();
+  // Per-connection correlation ID tracking
+  private readonly correlationByClient = new Map<WebSocket, string>();
 
   // These will be injected after module init via setServices()
   private getInitialState?: (debateId: string) => Promise<{
@@ -92,25 +95,41 @@ export class DebateGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
     const debateId = url.searchParams.get('debate_id');
 
+    // Correlation ID from handshake headers or generate
+    const incomingCorrelation = req?.headers?.['x-correlation-id'];
+    const correlationId =
+      (typeof incomingCorrelation === 'string' && incomingCorrelation.trim()) ||
+      randomUUID();
+    this.correlationByClient.set(client, correlationId);
+
     // Auth check
     const authToken = process.env.AUTH_TOKEN;
     if (authToken) {
       const token = url.searchParams.get('token');
       if (!token || token !== authToken) {
-        this.logger.warn('WebSocket connection rejected: invalid token');
+        this.logger.warn(
+          { correlationId, reason: 'invalid_token' },
+          'WebSocket connection rejected',
+        );
+        this.correlationByClient.delete(client);
         client.close();
         return;
       }
     }
 
     if (!debateId) {
-      this.logger.warn('WebSocket connection rejected: no debate_id');
+      this.logger.warn(
+        { correlationId, reason: 'no_debate_id' },
+        'WebSocket connection rejected',
+      );
+      this.correlationByClient.delete(client);
       client.close();
       return;
     }
 
     // Subscribe to debate room
     this.subscribe(debateId, client);
+    const subscriberCount = this.clientsByDebateId.get(debateId)?.size ?? 0;
 
     // Send initial state
     if (this.getInitialState) {
@@ -118,21 +137,34 @@ export class DebateGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const initial = await this.getInitialState(debateId);
         this.send(client, { event: 'initial_state', data: initial });
       } catch {
-        this.logger.warn(`Failed to get initial state for debate ${debateId}`);
+        this.logger.warn(
+          { debateId, correlationId },
+          'Failed to get initial state',
+        );
+        this.correlationByClient.delete(client);
         client.close();
         return;
       }
     }
 
-    this.logger.debug(`Client connected to debate ${debateId}`);
+    this.logger.log(
+      { debateId, correlationId, subscriberCount },
+      'WebSocket client connected',
+    );
   }
 
   handleDisconnect(client: WebSocket) {
     const debateId = this.debateIdByClient.get(client);
+    const correlationId = this.correlationByClient.get(client);
     if (debateId) {
       this.unsubscribe(debateId, client);
-      this.logger.debug(`Client disconnected from debate ${debateId}`);
+      const remainingCount = this.clientsByDebateId.get(debateId)?.size ?? 0;
+      this.logger.log(
+        { debateId, correlationId, remainingSubscribers: remainingCount },
+        'WebSocket client disconnected',
+      );
     }
+    this.correlationByClient.delete(client);
   }
 
   @SubscribeMessage('submit_intervention')
@@ -144,7 +176,11 @@ export class DebateGateway implements OnGatewayConnection, OnGatewayDisconnect {
       try {
         await this.onSubmitIntervention(data);
       } catch (err) {
-        this.logger.error(`Intervention failed: ${err}`);
+        const correlationId = this.correlationByClient.get(client);
+        this.logger.error(
+          { debateId: data.debate_id, correlationId, err },
+          'WebSocket intervention failed',
+        );
       }
     }
   }
@@ -158,7 +194,11 @@ export class DebateGateway implements OnGatewayConnection, OnGatewayDisconnect {
       try {
         await this.onSubmitRuling(data);
       } catch (err) {
-        this.logger.error(`Ruling failed: ${err}`);
+        const correlationId = this.correlationByClient.get(client);
+        this.logger.error(
+          { debateId: data.debate_id, correlationId, close: data.close, err },
+          'WebSocket ruling failed',
+        );
       }
     }
   }
