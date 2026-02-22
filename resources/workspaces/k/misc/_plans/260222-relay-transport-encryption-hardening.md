@@ -36,15 +36,17 @@ Improve relay transport encryption so that the private-network CLI no longer rel
 - The design must preserve Vercel body size safety (4.5 MB limit) and keep chunk sizing compatible with current bundle relay behavior.
 - Backward-compatible rollout is required because CLI, Vercel, and server may be deployed at different times.
 - Public-key distribution reduces risk of decryption if the distributed key leaks, but server private key compromise remains a critical event and requires rotation.
+- Replay protection is a separate control from encryption integrity (AES-GCM auth tag is not anti-replay by itself); v2 must define a transport-level anti-replay mechanism.
+- This phase targets request payload confidentiality/integrity for `CLI -> Vercel -> server`; API response encryption is out of scope unless a concrete sensitive-response requirement is identified.
 
 ## Implementation Plan
 
 ### Phase 1: Analysis & Preparation
 
 - [ ] Analyze the current transport encryption flow (`CLI encrypt -> Vercel forward -> server decrypt`) and document exact leakage/attack scenarios of the shared symmetric key model
-  - **Outcome**: Clear threat model covering passive capture, replay, forged requests, and secret exposure impact.
+  - **Outcome**: Clear threat model covering passive capture, replay, forged requests, secret exposure impact, and trust bootstrap/MITM assumptions.
 - [ ] Define the target cryptography model and compatibility strategy
-  - **Outcome**: Selected v2 scheme (hybrid envelope encryption using server public key + per-request AES-256-GCM content key), versioning strategy, and v1 fallback policy.
+  - **Outcome**: Selected v2 scheme (hybrid envelope encryption using `X25519` + per-request AES-256-GCM content key), versioning strategy, key distribution trust model (manual pinning), and v1 fallback policy.
 - [ ] Recalculate transport envelope overhead and validate chunk-size safety under Vercel limits
   - **Outcome**: Updated max payload math and confirmed default/hard-cap chunk size settings.
 - [ ] Evaluate existing test structure and define new crypto/interoperability test cases
@@ -60,64 +62,65 @@ workspaces/k/misc/git-relay-server/src/
 ├── lib/
 │   └── config.ts            # 🚧 Add asymmetric key config + rollout flags (retain legacy v1 support during migration)
 ├── services/
-│   └── crypto.ts            # 🚧 Add versioned decrypt dispatcher (v1 shared-key + v2 hybrid envelope)
+│   └── crypto.ts            # 🚧 Add versioned decrypt dispatcher (v1 shared-key + v2 hybrid envelope + anti-replay metadata validation hooks)
 ├── routes/
-│   ├── data.ts              # 🚧 Optional: expose crypto metadata endpoint (or mount via dedicated route)
+│   ├── data.ts              # ✅ No transport-surface change expected (anti-replay enforced before route handler)
 │   └── gr.ts                # ✅ No functional change expected (transport decrypt remains upstream)
-└── server.ts                # 🚧 Wire v2 decrypt support + optional crypto metadata route
+└── server.ts                # 🚧 Wire v2 decrypt support + pre-route anti-replay checks in decrypt middleware
 
 workspaces/k/misc/git-relay-vercel/src/
 ├── lib/
-│   └── forward.ts           # 🚧 Ensure GET proxy supports crypto metadata fetch and preserves headers/query
+│   └── forward.ts           # ✅ Existing opaque forwarding model retained (no trust bootstrap via Vercel)
 └── app/api/game/
-    ├── crypto-meta/
-    │   └── route.ts         # 🚧 New proxy route for server public key metadata (if API bootstrap is chosen)
-    └── (existing relay routes) # ✅ No payload decryption changes; continues opaque forwarding
+    └── (existing relay routes) # ✅ No payload decryption changes; continues opaque forwarding (no `crypto-meta` bootstrap route in v2)
 
 workspaces/devtools/common/cli-plugin-relay/src/
 ├── lib/
-│   ├── config.ts            # 🚧 Add server public key config fields + migration compatibility for legacy encryptionKey
-│   ├── crypto.ts            # 🚧 Add v2 hybrid envelope encryptor (per-request content key) and keep v1 path during rollout
-│   └── relay-client.ts      # 🚧 Add crypto metadata fetch and v2 gameData envelope transmission
+│   ├── config.ts            # 🚧 Add pinned server public key / fingerprint config fields + migration compatibility for legacy encryptionKey
+│   ├── crypto.ts            # 🚧 Add v2 hybrid envelope encryptor (`X25519` + per-request content key) and keep v1 path during rollout
+│   └── relay-client.ts      # 🚧 Send v2 gameData envelope (no dynamic key bootstrap through Vercel)
 ├── commands/relay/
 │   ├── push.ts              # 🚧 Use v2 encryption path by default (with controlled fallback)
 │   ├── status.ts            # 🚧 Relax config validation if status does not require encryption key material
 │   └── config/
-│       ├── set.ts           # 🚧 Add flags for public-key config and legacy deprecation messaging
+│       ├── set.ts           # 🚧 Add flags for pinned public-key/fingerprint config and legacy deprecation messaging
 │       ├── show.ts          # 🚧 Display key mode, key id/fingerprint, and mask legacy secrets
 │       ├── generate-key.ts  # 🚧 Deprecate/rename legacy symmetric key generation command
-│       └── fetch-public-key.ts # 🚧 New command to bootstrap/pin server public key (if API bootstrap is chosen)
+│       └── import-public-key.ts # 🚧 New command to import/pin server public key material (out-of-band)
 └── index.ts                 # 🚧 Register new config command(s)
 ```
 
 ### Phase 3: Detailed Implementation Steps
 
-- [ ] Define a versioned transport crypto envelope (`v2`) that still fits inside `gameData`
-  - **Outcome**: Binary envelope spec (version byte, key id, wrapped content key, IV, auth tag, ciphertext) documented and implemented.
+- [x] Define a versioned transport crypto envelope (`v2`) that still fits inside `gameData`
+  - **Outcome**: Binary envelope spec (version byte, `kid`, ephemeral public key, wrapped/derived content key material, IV, auth tag, ciphertext) documented and implemented with overhead math for Vercel limits.
 
-- [ ] Implement hybrid envelope encryption on the CLI (public-key wrap + per-request AES-256-GCM payload encryption)
-  - **Outcome**: Each request uses a fresh random content encryption key; only the server private key can unwrap/decrypt the payload.
+- [x] Implement hybrid envelope encryption on the CLI (`X25519` + per-request AES-256-GCM payload encryption)
+  - **Outcome**: Each request uses a fresh ephemeral key agreement + content encryption key; only the server private key can derive the decrypt key and read the payload.
 
-- [ ] Implement versioned decryption on the server with legacy support
+- [x] Implement versioned decryption on the server with legacy support
   - **Outcome**: Server can decrypt both current v1 shared-key payloads and new v2 envelope payloads during rollout.
 
-- [ ] Add server key configuration and startup validation for asymmetric mode
+- [x] Add server key configuration and startup validation for asymmetric mode
   - **Outcome**: New env vars for server private key, key id, and rollout mode are validated at startup; legacy `ENCRYPTION_KEY` can be optional when v1 is disabled.
 
-- [ ] Add public key metadata exposure path (if automatic bootstrap is adopted)
-  - **Outcome**: CLI can fetch current public key metadata (`kid`, algorithm, PEM/public material, fingerprint, supported versions) via Vercel without exposing private material.
+- [x] Add out-of-band public key provisioning and pinning flow for CLI
+  - **Outcome**: CLI can import/pin server public key material and fingerprint manually (copy/paste or file import), without trusting key delivery via Vercel runtime.
 
-- [ ] Add CLI config migration path from `encryptionKey` (shared secret) to public-key-based config
+- [x] Add CLI config migration path from `encryptionKey` (shared secret) to public-key-based config
   - **Outcome**: CLI supports new config fields, preserves existing config file compatibility, and provides clear deprecation messaging for legacy keys.
 
-- [ ] Update CLI command UX for key management
-  - **Outcome**: `aw relay config set/show` supports public-key mode, legacy `generate-key` is deprecated (or clearly marked legacy), and a bootstrap command is available if selected.
+- [x] Update CLI command UX for key management
+  - **Outcome**: `aw relay config set/show` supports pinned public-key mode, legacy `generate-key` is deprecated (or clearly marked legacy), and `import-public-key` supports safe local pinning UX.
 
 - [ ] Ensure relay/Vercel proxy behavior remains opaque and compatible
-  - **Outcome**: Vercel continues forwarding `{"gameData":"..."}` without decrypting, and only gains optional key-metadata proxy routing.
+  - **Outcome**: Vercel continues forwarding `{"gameData":"..."}` without decrypting, and gains no trust-sensitive key bootstrap responsibility.
 
-- [ ] Add anti-replay and request-integrity hardening checks at the transport boundary
-  - **Outcome**: Server validates envelope version, optional timestamp/nonce fields, and rejects malformed/duplicate payloads beyond current session constraints.
+- [x] Add anti-replay and request-integrity hardening checks at the transport boundary
+  - **Outcome**: CLI embeds mandatory `timestamp` + `nonce` in encrypted metadata; server decrypt middleware validates TTL, caches short-lived nonces before route dispatch, and rejects malformed/duplicate payloads before application logic runs.
+
+- [ ] Define v2 API response encryption scope explicitly (non-goal for this phase)
+  - **Outcome**: Plan and implementation keep server responses as HTTPS plain JSON unless a future endpoint returns sensitive metadata requiring response-side encryption.
 
 - [ ] Expand test coverage for cryptographic interoperability and rollout safety
   - **Outcome**: Tests cover v1 decrypt, v2 decrypt, tamper failures, wrong-key failures, unknown key id, malformed envelope parsing, and CLI/server version mismatch.
@@ -139,6 +142,22 @@ workspaces/devtools/common/cli-plugin-relay/src/
 
 ### Issues/Clarifications
 
-- [ ] Choose the asymmetric wrapper primitive for v2 (`RSA-OAEP` with built-in Node crypto vs `X25519`-based design). This impacts envelope size, implementation complexity, and future key rotation ergonomics.
-- [ ] Decide public-key bootstrap mode: manual key pinning in CLI config only, or API fetch through Vercel plus fingerprint verification.
+- [ ] Define exact nonce-cache storage strategy for anti-replay in server middleware (in-memory TTL map vs filesystem-backed cache) and failure behavior on process restart.
 - [ ] Define rollout policy for legacy fallback (`v1`): allow automatic fallback temporarily, or require explicit opt-in to avoid silent downgrade behavior.
+
+## Implementation Notes / As Implemented
+
+- Implemented v2 hybrid request transport encryption in CLI and server using `X25519` key agreement + per-request AES-256-GCM content encryption, while retaining legacy v1 AES-256-GCM support for rollout compatibility.
+- `gameData` remains the only transport field (`{"gameData":"..."}`); Vercel relay forwarding remains opaque and unchanged.
+- CLI now supports v2 pinned-key config fields in `~/.aweave/relay.json`: `transportMode` (`auto|v1|v2`), `serverKeyId`, `serverPublicKey`, and `serverPublicKeyFingerprint`. Existing `encryptionKey` remains supported for legacy v1.
+- New CLI command added: `aw relay config import-public-key` (file or PEM input, optional fingerprint verification) to pin server public key material out-of-band.
+- CLI `aw relay config set/show` now exposes transport mode / key id / fingerprint and marks `encryptionKey` usage as legacy. `aw relay config generate-key` is explicitly labeled legacy v1.
+- `aw relay push` now encrypts with v2 by default when pinned public-key config is present (or when `transportMode=v2`); otherwise it uses legacy v1. No automatic downgrade retry is implemented.
+- `aw relay status` validation was relaxed to require only `relayUrl` and `apiKey` (no transport key material required for status polling).
+- Server config now supports rollout modes via `TRANSPORT_CRYPTO_MODE` (`v1`, `compat`, `v2`; default `compat`), plus v2 key env vars `TRANSPORT_KEY_ID` and `TRANSPORT_PRIVATE_KEY_PEM` (supports escaped `\\n` in env strings).
+- Legacy `ENCRYPTION_KEY` is optional only when `TRANSPORT_CRYPTO_MODE=v2`; otherwise it is still required and validated at startup.
+- Anti-replay checks are enforced in server decrypt middleware before route handlers: CLI embeds encrypted `timestamp`/`nonce`; server validates TTL/skew (`TRANSPORT_REPLAY_TTL_MS`, `TRANSPORT_CLOCK_SKEW_MS`) and rejects duplicate nonces using an in-memory TTL cache.
+- Current nonce cache is process-local and in-memory (resets on process restart), matching the open issue still tracked above.
+- Verified compilation after changes with `npm run build` in:
+  - `workspaces/k/misc/git-relay-server`
+  - `workspaces/devtools/common/cli-plugin-relay`
