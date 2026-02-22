@@ -82,11 +82,34 @@ export async function triggerGR(
   payload: GRPayload,
 ): Promise<void> {
   await fetchWithRetry(
-    `${relayUrl}/api/game/gr`,
+    `${relayUrl}/api/game/gr`, // Actually wait, in original code it was /api/game/gr? I am not changing that.
     apiKey,
     encryptionKey,
     payload,
   );
+}
+
+/**
+ * Get the latest commit SHA for a remote branch.
+ */
+export async function getRemoteInfo(
+  relayUrl: string,
+  apiKey: string,
+  repo: string,
+  branch: string,
+): Promise<string> {
+  const url = new URL(`${relayUrl}/api/game/remote-info`);
+  url.searchParams.append('repo', repo);
+  url.searchParams.append('branch', branch);
+
+  const response = await fetchJson(url.toString(), {
+    method: 'GET',
+    headers: {
+      'X-Relay-Key': apiKey,
+    },
+  });
+
+  return (response as { sha: string }).sha;
 }
 
 /**
