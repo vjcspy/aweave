@@ -210,6 +210,9 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@oclif/core':
         specifier: 'catalog:'
         version: 4.8.0
@@ -229,6 +232,9 @@ importers:
       '@hod/aweave-cli-shared':
         specifier: workspace:*
         version: link:../cli-shared
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@oclif/core':
         specifier: 'catalog:'
         version: 4.8.0
@@ -687,6 +693,9 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -767,6 +776,18 @@ importers:
       '@types/ws':
         specifier: ^8.5.12
         version: 8.18.1
+      tsc-alias:
+        specifier: 'catalog:'
+        version: 1.8.16
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  common/node-shared:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.11
       tsc-alias:
         specifier: 'catalog:'
         version: 1.8.16
