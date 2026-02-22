@@ -123,6 +123,7 @@ Proceed?
 Flag missing required files with ❌.
 
 **Conditional Loading Rule (MUST apply):**
+
 - `ABSTRACT.md` is mandatory at each detected scope level (project/repo/feature).
 - `OVERVIEW.md` is loaded only if its corresponding `ABSTRACT.md` exists, is non-empty, and is relevant to the user task.
 - If a required `ABSTRACT.md` is missing: skip the corresponding `OVERVIEW.md` (never load it).
@@ -136,7 +137,8 @@ Flag missing required files with ❌.
 3. **OVERVIEW chain (conditional)** (load only for relevant levels with existing, non-empty ABSTRACT)
 4. **Referenced files** (user-provided: plan, spike, guide, etc.)
 5. **Task rule** (create-plan.md or implementation.md)
-6. **Execute task** — follow loaded context and rules
+6. **Active Skills Context** (Implicitly read `agent/rules/common/dynamic/loaded-skills.md` to load active context skills)
+7. **Execute task** — follow loaded context and rules
 
 ## Output Constraints
 
