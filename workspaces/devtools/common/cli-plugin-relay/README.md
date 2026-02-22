@@ -115,3 +115,4 @@ aw relay status <sessionId>
   - Wrong public key, malformed PEM, or server key rotation mismatch
 - `401: UNAUTHORIZED`
   - Check `apiKey` (`X-Relay-Key`) for Vercel relay auth
+
