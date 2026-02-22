@@ -111,26 +111,21 @@ devtools/
 
 ### Publishing to Artifactory
 
-All workspace packages are published to Artifactory under `@hod/` scope. pnpm handles dependency order and rewrites `workspace:*` to actual versions automatically.
+All workspace packages are published to Artifactory under `@hod/` scope with a **unified version** (set in root `package.json`). The release script handles build, version bump, and publish automatically.
 
 ```bash
-# 1. Build all packages
-pnpm -r build
+# Bump patch + publish (default)
+pnpm run release
 
-# 2. Generate oclif manifest
-cd common/cli && pnpm exec oclif manifest && cd ../..
+# Bump minor / major
+pnpm run release:minor
+pnpm run release:major
 
-# 3. Bump versions (all packages at once)
-pnpm -r exec -- npm version patch --no-git-tag-version
-
-# 4. Publish (pnpm resolves dependency order)
-pnpm -r publish --no-git-checks
-
-# Or use the release script:
-bash scripts/build-release.sh
+# Dry-run (build + bump, no publish)
+pnpm run release:dry-run
 ```
 
-**Version bump chain:** If you change a leaf package (e.g. `cli-shared`), you must also bump all packages that depend on it (e.g. `cli-plugin-debate`, `cli`). pnpm rewrites `workspace:*` to the exact version at publish time.
+**Version strategy:** All packages share a single version. The release script bumps root `package.json` and syncs to all workspace packages before publishing.
 
 ### Architecture
 
