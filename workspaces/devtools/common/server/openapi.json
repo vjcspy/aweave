@@ -872,6 +872,53 @@
           "skills"
         ]
       }
+    },
+    "/logs/tail": {
+      "get": {
+        "operationId": "LogsController_tailLogs",
+        "parameters": [
+          {
+            "name": "lines",
+            "required": false,
+            "in": "query",
+            "description": "Number of lines to tail (default: 200, max: 2000)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TailLogsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get last N log entries from server.jsonl",
+        "tags": [
+          "logs"
+        ]
+      }
+    },
+    "/logs/stream": {
+      "get": {
+        "operationId": "LogsController_streamLogs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Stream new log entries via Server-Sent Events (SSE)",
+        "tags": [
+          "logs"
+        ]
+      }
     }
   },
   "info": {
@@ -1575,6 +1622,67 @@
         "required": [
           "success",
           "data"
+        ]
+      },
+      "LogEntryDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "number",
+            "description": "Pino log level number (10=trace, 20=debug, 30=info, 40=warn, 50=error, 60=fatal)"
+          },
+          "time": {
+            "type": "number",
+            "description": "Unix timestamp in milliseconds"
+          },
+          "msg": {
+            "type": "string",
+            "description": "Log message"
+          },
+          "context": {
+            "type": "string",
+            "description": "NestJS context (class/module name)"
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Correlation ID for request tracing"
+          },
+          "service": {
+            "type": "string",
+            "description": "Service name"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Additional metadata"
+          }
+        },
+        "required": [
+          "level",
+          "time",
+          "msg"
+        ]
+      },
+      "TailLogsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogEntryDto"
+            }
+          },
+          "totalLines": {
+            "type": "number",
+            "description": "Total lines in the log file"
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "totalLines"
         ]
       }
     }

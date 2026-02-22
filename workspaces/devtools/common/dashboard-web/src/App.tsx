@@ -1,11 +1,47 @@
-import { Cpu, Settings } from 'lucide-react';
+import { Cpu, ScrollText, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 
 import { ConfigsView } from './components/ConfigsView';
+import { LogsView } from './components/LogsView';
 import { SkillsView } from './components/SkillsView';
 
+type Tab = 'configs' | 'skills' | 'logs';
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'configs' | 'skills'>('configs');
+  const [activeTab, setActiveTab] = useState<Tab>('configs');
+
+  const tabs: {
+    key: Tab;
+    label: string;
+    icon: React.ReactNode;
+    color: string;
+    activeClass: string;
+  }[] = [
+    {
+      key: 'configs',
+      label: 'Configs',
+      icon: <Settings className="w-4 h-4" />,
+      color: 'blue',
+      activeClass:
+        'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]',
+    },
+    {
+      key: 'skills',
+      label: 'Agent Skills',
+      icon: <Cpu className="w-4 h-4" />,
+      color: 'purple',
+      activeClass:
+        'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]',
+    },
+    {
+      key: 'logs',
+      label: 'Server Logs',
+      icon: <ScrollText className="w-4 h-4" />,
+      color: 'emerald',
+      activeClass:
+        'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]',
+    },
+  ];
 
   return (
     <div className="flex flex-col h-screen font-sans overflow-hidden">
@@ -24,28 +60,20 @@ export default function App() {
             </div>
 
             <nav className="flex gap-2">
-              <button
-                onClick={() => setActiveTab('configs')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === 'configs'
-                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                Configs
-              </button>
-              <button
-                onClick={() => setActiveTab('skills')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === 'skills'
-                    ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <Cpu className="w-4 h-4" />
-                Agent Skills
-              </button>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    activeTab === tab.key
+                      ? `${tab.activeClass} border`
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
             </nav>
           </div>
         </div>
@@ -54,7 +82,9 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden p-6 max-w-7xl w-full mx-auto relative z-0">
         <div className="h-full w-full animate-in fade-in duration-500 ease-out">
-          {activeTab === 'configs' ? <ConfigsView /> : <SkillsView />}
+          {activeTab === 'configs' && <ConfigsView />}
+          {activeTab === 'skills' && <SkillsView />}
+          {activeTab === 'logs' && <LogsView />}
         </div>
       </main>
     </div>
