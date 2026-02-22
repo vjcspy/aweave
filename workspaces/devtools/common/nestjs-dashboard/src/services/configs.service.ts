@@ -65,7 +65,10 @@ export class ConfigsService {
     }
 
     this.logger.log(
-      { domainCount: results.length, totalFiles: results.reduce((sum, d) => sum + d.files.length, 0) },
+      {
+        domainCount: results.length,
+        totalFiles: results.reduce((sum, d) => sum + d.files.length, 0),
+      },
       'Config discovery completed',
     );
 
@@ -97,7 +100,10 @@ export class ConfigsService {
     try {
       rawDefaultConfig = fs.readFileSync(defaultConfigPath, 'utf8');
     } catch (e) {
-      this.logger.warn({ domain, name, error: String(e) }, 'Failed to read default config');
+      this.logger.warn(
+        { domain, name, error: String(e) },
+        'Failed to read default config',
+      );
     }
 
     let rawUserConfig = '';
@@ -105,7 +111,10 @@ export class ConfigsService {
       try {
         rawUserConfig = fs.readFileSync(userConfigPath, 'utf8');
       } catch (e) {
-        this.logger.warn({ domain, name, error: String(e) }, 'Failed to read user config');
+        this.logger.warn(
+          { domain, name, error: String(e) },
+          'Failed to read user config',
+        );
       }
     }
 

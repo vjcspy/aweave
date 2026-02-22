@@ -706,6 +706,9 @@ importers:
       '@eslint/js':
         specifier: 'catalog:'
         version: 9.39.2
+      '@types/express':
+        specifier: ^5.0.0
+        version: 5.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.11
