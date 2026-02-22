@@ -12,19 +12,19 @@
   "dependencies": {
     "@hod/aweave-config-core": "workspace:*",
     "@nestjs/common": "catalog:",
-    "@nestjs/core": "^11.0.1",
+    "@nestjs/core": "catalog:",
     "@nestjs/swagger": "catalog:",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
+    "@eslint/eslintrc": "catalog:",
+    "@eslint/js": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "prettier": "^3.4.2",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "prettier": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "catalog:"
   }
 }

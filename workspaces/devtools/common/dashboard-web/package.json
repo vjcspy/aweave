@@ -14,29 +14,29 @@
   },
   "dependencies": {
     "react": "catalog:",
-    "@radix-ui/react-slot": "^1.1.1",
-    "class-variance-authority": "^0.7.1",
-    "openapi-fetch": "^0.15.0",
-    "react-dom": "^19.0.0",
-    "lucide-react": "^0.473.0",
-    "tailwind-merge": "^2.6.0",
+    "@radix-ui/react-slot": "catalog:",
+    "class-variance-authority": "catalog:",
+    "openapi-fetch": "catalog:",
+    "react-dom": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwind-merge": "catalog:",
     "tailwindcss-animate": "^1.0.7",
-    "clsx": "^2.1.1"
+    "clsx": "catalog:"
   },
   "devDependencies": {
-    "@rsbuild/core": "^1.1.9",
-    "@rsbuild/plugin-react": "^1.1.0",
+    "@rsbuild/core": "catalog:",
+    "@rsbuild/plugin-react": "catalog:",
     "@types/react": "catalog:",
-    "@types/react-dom": "^19.0.0",
-    "openapi-typescript": "^7.10.1",
+    "@types/react-dom": "catalog:",
+    "openapi-typescript": "catalog:",
     "typescript": "catalog:",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "catalog:",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "prettier": "^3.4.2",
-    "typescript-eslint": "^8.20.0"
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "prettier": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }
