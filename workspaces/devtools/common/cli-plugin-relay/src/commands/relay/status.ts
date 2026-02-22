@@ -32,7 +32,9 @@ export class RelayStatus extends Command {
     const { args, flags } = await this.parse(RelayStatus);
     const config = loadConfig();
 
-    const missingConfig = validateRequiredConfig(config);
+    const missingConfig = validateRequiredConfig(config, {
+      requireTransport: false,
+    });
     if (missingConfig.length > 0) {
       output(
         errorResponse(

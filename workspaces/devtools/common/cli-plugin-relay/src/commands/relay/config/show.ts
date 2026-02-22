@@ -28,8 +28,12 @@ export class RelayConfigShow extends Command {
     const masked = {
       relayUrl: config.relayUrl || '(not set)',
       apiKey: config.apiKey ? maskValue(config.apiKey) : '(not set)',
-      encryptionKey: config.encryptionKey
-        ? maskValue(config.encryptionKey)
+      transportMode: 'v2',
+      serverKeyId: config.serverKeyId || '(not set)',
+      serverPublicKeyFingerprint:
+        config.serverPublicKeyFingerprint || '(not set)',
+      serverPublicKey: config.serverPublicKey
+        ? summarizePem(config.serverPublicKey)
         : '(not set)',
       chunkSize: config.chunkSize || 3_145_728,
       defaultBaseBranch: config.defaultBaseBranch || 'main',
@@ -59,4 +63,18 @@ export class RelayConfigShow extends Command {
 function maskValue(value: string): string {
   if (value.length <= 8) return '****';
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function summarizePem(value: string): string {
+  const lines = value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) {
+    return maskValue(value);
+  }
+
+  const body = lines.slice(1, -1).join('');
+  return `${lines[0]} ${maskValue(body)} ${lines.at(-1)}`;
 }

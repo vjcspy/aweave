@@ -197,7 +197,7 @@ export class RelayPush extends Command {
         await uploadChunk(
           config.relayUrl!,
           config.apiKey!,
-          config.encryptionKey!,
+          config,
           {
             sessionId,
             chunkIndex: i,
@@ -211,14 +211,14 @@ export class RelayPush extends Command {
       await signalComplete(
         config.relayUrl!,
         config.apiKey!,
-        config.encryptionKey!,
+        config,
         {
           sessionId,
         },
       );
 
       // 9. Trigger GR processing
-      await triggerGR(config.relayUrl!, config.apiKey!, config.encryptionKey!, {
+      await triggerGR(config.relayUrl!, config.apiKey!, config, {
         sessionId,
         repo,
         branch,
