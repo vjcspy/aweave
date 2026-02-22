@@ -13,6 +13,8 @@
     "topicSeparator": " "
   },
   "dependencies": {
+    "@hod/aweave-config-common": "workspace:*",
+    "@hod/aweave-config-core": "workspace:*",
     "@hod/aweave-playwright": "workspace:*",
     "@oclif/core": "catalog:"
   },

@@ -1,6 +1,11 @@
 import { launchBrowser } from '@hod/aweave-playwright';
 import { Command } from '@oclif/core';
 
+import {
+  CURSOR_BROWSER,
+  getConfiguredBrowserMissingMessage,
+  isConfiguredBrowserMissingError,
+} from '../../../lib/browser-config';
 import { JsonSessionProvider } from '../../../lib/session-provider';
 
 const CURSOR_DASHBOARD_URL = 'https://cursor.com/dashboard';
@@ -23,16 +28,6 @@ function isBrowserClosedError(error: unknown): boolean {
   );
 }
 
-function isEdgeChannelMissingError(error: unknown): boolean {
-  const message = getErrorMessage(error).toLowerCase();
-  return (
-    message.includes('msedge') &&
-    (message.includes('not found') ||
-      message.includes("executable doesn't exist") ||
-      message.includes('cannot find'))
-  );
-}
-
 export default class TestCursorSave extends Command {
   static description =
     'Open Cursor dashboard, wait for login completion, and save browser storage state';
@@ -40,18 +35,18 @@ export default class TestCursorSave extends Command {
   async run(): Promise<void> {
     const provider = new JsonSessionProvider();
 
-    this.log(`Opening Microsoft Edge for Cursor login...`);
+    this.log(`Opening ${CURSOR_BROWSER.displayName} for Cursor login...`);
     this.log(`Session file: ${provider.getPath()}`);
 
     let session;
     try {
-      session = await launchBrowser({ channel: 'msedge', headless: false });
+      session = await launchBrowser({
+        channel: CURSOR_BROWSER.channel,
+        headless: false,
+      });
     } catch (error) {
-      if (isEdgeChannelMissingError(error)) {
-        this.error(
-          'Microsoft Edge was not found for Playwright channel "msedge". Install Edge or use a machine with Edge available.',
-          { exit: 1 },
-        );
+      if (isConfiguredBrowserMissingError(error)) {
+        this.error(getConfiguredBrowserMissingMessage(), { exit: 1 });
       }
       throw error;
     }
