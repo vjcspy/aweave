@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-debate-machine",
-  "version": "0.1.2",
+  "version": "0.1.23",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
