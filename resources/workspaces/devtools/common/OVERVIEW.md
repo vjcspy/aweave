@@ -77,13 +77,6 @@ Use the coverage table to spot missing package overviews quickly.
    Browser automation ──► playwright (wraps playwright-core)
 ```
 
-## AI Agent Skills
-
-To guide AI agents when developing or modifying devtools components, there are specific skill rules that should be loaded. These provide detailed instructions, patterns, and architectural mandates:
-
-- **[devtools-cli-builder](../../../../agent/skills/common/devtools-cli-builder/SKILL.md):** Mandatory guide for building oclif CLI plugins, NextJS backends, configuration definitions, and adhering to the MCP-like output specification.
-- **[workflow-builder](../../../../agent/skills/common/workflow-builder/SKILL.md):** Essential guide for constructing new multi-step tasks natively on top of the workflow execution engine, integrating human-in-the-loop interactions, and implementing reliable retry/recovery strategies.
-
 ## Operational Notes
 
 - **Source Code Location:** `workspaces/devtools/common/<package>/` — following `workspaces/devtools/common/<PACKAGE_NAME>/` convention.
