@@ -152,6 +152,7 @@ export class LogsService {
       if (service) entry.service = String(service);
 
       // Bundle remaining fields as meta (excluding internal pino fields)
+      // eslint-disable-next-line unused-imports/no-unused-vars
       const { pid, hostname, ...extraMeta } = rest;
       if (Object.keys(extraMeta).length > 0) {
         entry.meta = extraMeta;
