@@ -28,7 +28,6 @@ catalog:
   tsc-alias: "^1.8.16"
 
 packages:
-  - nab/cli/foo
   - common/server
   - common/nestjs-debate
   - common/debate-machine
