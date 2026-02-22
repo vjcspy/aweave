@@ -2,15 +2,14 @@
 
 ## Objective
 
-Sync local commits up to `HEAD` to `vjcspy/aweave` on branch `master` via relay using Git Bundles, then optionally drop the local commit if relay push succeeds.
+Sync local commits up to `HEAD` to `vjcspy/aweave` on branch `master` via relay using Git Bundles.
 
 ## Workflow Rule
 
-- This flow is for **local-commit-first sync**.
+- This flow is for syncing commits from the local private network to the external remote.
 - Agent must:
   1. Commit changes locally.
   2. Relay local `HEAD` up to `vjcspy/aweave:master`.
-  3. Drop local `HEAD` only when relay status is `pushed` (if preserving clean history is intended).
 - Agent must **not** use regular `git push` for this flow.
 
 ## Input Variables
@@ -45,18 +44,11 @@ aw relay push \
   --format json
 ```
 
-### Step 3: Check result and drop local commit on success
+### Step 3: Check result on success
 
 - If response status is `"pushed"`:
   - Report `sessionId`, `commitSha`, `commitUrl`.
-  - Drop the local latest commit immediately (if requested):
-
-    ```bash
-    git reset --hard HEAD~1
-    ```
-
 - If response status is `"failed"`:
-  - Do not drop commit.
   - Report `message` and `details.error` (if available).
 
 ## Implementation-Aligned Notes
@@ -74,22 +66,10 @@ User says: "relay commit"
 
 ```bash
 aw relay push --repo vjcspy/aweave --branch master --format json
-# if pushed:
-git reset --hard HEAD~1
 ```
 
 User says: "sync last commit via relay"
 
 ```bash
 aw relay push --repo vjcspy/aweave --branch master --format json
-# if pushed:
-git reset --hard HEAD~1
-```
-
-User says: "relay commit and drop local commit if success"
-
-```bash
-aw relay push --repo vjcspy/aweave --branch master --format json
-# if pushed:
-git reset --hard HEAD~1
 ```
