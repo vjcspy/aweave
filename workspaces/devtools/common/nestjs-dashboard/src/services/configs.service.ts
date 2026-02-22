@@ -3,6 +3,7 @@ import {
   getUserConfigPath,
   loadConfig,
 } from '@hod/aweave-config-core';
+import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -17,16 +18,10 @@ export class ConfigsService {
    * Discovers domains by scanning the workspaces/devtools folder (up to root).
    */
   private findDevtoolsRoot(): string | null {
-    let dir = process.cwd();
-    for (let i = 0; i < 10; i++) {
-      if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) {
-        return dir;
-      }
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-    return null;
+    return resolveDevtoolsRoot({
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+    });
   }
 
   getAvailableConfigs(): ConfigDomainDto[] {

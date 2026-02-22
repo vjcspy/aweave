@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@hod/aweave-cli-shared": "workspace:*",
+    "@hod/aweave-node-shared": "workspace:*",
     "@oclif/core": "catalog:",
     "ink": "catalog:",
     "open": "^11.0.0",

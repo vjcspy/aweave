@@ -40,6 +40,7 @@ Use the coverage table to spot missing package overviews quickly.
 
 - **config-core:** Shared config loader library (Node-only) providing YAML parsing, deep-merging, environment overrides, and Next.js client public projection. Resolves `env vars > user config > defaults` precedence. ([resources/workspaces/devtools/common/config-core/OVERVIEW.md](resources/workspaces/devtools/common/config-core/OVERVIEW.md))
 - **config:** Default configurations, schemas, and environment override maps for the `common` domain devtools packages. ([resources/workspaces/devtools/common/config/OVERVIEW.md](resources/workspaces/devtools/common/config/OVERVIEW.md))
+- **node-shared:** Neutral Node.js runtime helpers shared across CLI plugins and NestJS modules. Currently provides standardized DevTools root discovery (`env -> cwd -> moduleDir`) via marker-based walk-up. ([resources/workspaces/devtools/common/node-shared/OVERVIEW.md](resources/workspaces/devtools/common/node-shared/OVERVIEW.md))
 - **debate-machine:** Shared xstate v5 state machine for the debate system — single source of truth for debate states (5 states, 5 event types), transitions, and role-based action validation. Consumed by both CLI and NestJS server ([resources/workspaces/devtools/common/debate-machine/OVERVIEW.md](resources/workspaces/devtools/common/debate-machine/OVERVIEW.md))
 - **workflow-engine:** Core workflow execution engine — pure TypeScript `WorkflowEngine` class (EventEmitter-based) with sequential/parallel/race strategies, retry with backoff, stage reducers, human-in-the-loop input, and xstate v5 machine for lifecycle management. Consumed by dashboard and workflow plugins ([resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md](resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md))
 - **playwright:** Shared browser automation library — wraps `playwright-core` with `launchBrowser()` and `launchPersistentBrowser()` helpers. Uses system-installed Chrome/Edge via channel (no 500MB browser download). Consumed by `cli-plugin-auth` for SSO cookie capture ([resources/workspaces/devtools/common/playwright/OVERVIEW.md](resources/workspaces/devtools/common/playwright/OVERVIEW.md))
@@ -110,6 +111,7 @@ Use the coverage table to spot missing package overviews quickly.
 | cli-plugin-dashboard | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md | ✅ Present |
 | cli-plugin-demo-workflow | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md | ✅ Present |
 | config-core | Shared Libraries | resources/workspaces/devtools/common/config-core/OVERVIEW.md | ✅ Present |
+| node-shared | Shared Libraries | resources/workspaces/devtools/common/node-shared/OVERVIEW.md | ✅ Present |
 | config | Shared Libraries | resources/workspaces/devtools/common/config/OVERVIEW.md | ✅ Present |
 | cli-plugin-relay | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-relay/OVERVIEW.md | ❌ Missing |
 | debate-machine | Shared Libraries | resources/workspaces/devtools/common/debate-machine/OVERVIEW.md | ✅ Present |

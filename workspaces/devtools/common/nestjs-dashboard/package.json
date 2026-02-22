@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hod/aweave-config-core": "workspace:*",
+    "@hod/aweave-node-shared": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/swagger": "catalog:",
