@@ -29,7 +29,8 @@ export class RelayPush extends Command {
   static flags = {
     repo: Flags.string({
       required: false,
-      description: 'GitHub repo (format: owner/repo). Auto-detects from remote origin if omitted.',
+      description:
+        'GitHub repo (format: owner/repo). Auto-detects from remote origin if omitted.',
     }),
     branch: Flags.string({
       description: 'Target branch to push (default: current branch name)',
@@ -89,7 +90,9 @@ export class RelayPush extends Command {
     let repo = flags.repo; // config.defaultRepo not in types/config but we can rely on flag
     if (!repo) {
       try {
-        const originUrl = execSync('git remote get-url origin', { encoding: 'utf-8' }).trim();
+        const originUrl = execSync('git remote get-url origin', {
+          encoding: 'utf-8',
+        }).trim();
         const match = originUrl.match(/github\.com[/:](.+?\/.+?)(?:\.git)?$/);
         if (match) repo = match[1];
       } catch {}
@@ -97,7 +100,10 @@ export class RelayPush extends Command {
 
     if (!repo) {
       output(
-        errorResponse('INVALID_INPUT', '--repo flag is required if cannot detect from git origin remote'),
+        errorResponse(
+          'INVALID_INPUT',
+          '--repo flag is required if cannot detect from git origin remote',
+        ),
         flags.format,
       );
       return this.exit(4);
@@ -133,27 +139,39 @@ export class RelayPush extends Command {
         // Check if remote-sha exists locally
         execSync(`git cat-file -t ${remoteSha}`, { stdio: 'pipe' });
         // Check ancestry
-        execSync(`git merge-base --is-ancestor ${remoteSha} HEAD`, { stdio: 'pipe' });
+        execSync(`git merge-base --is-ancestor ${remoteSha} HEAD`, {
+          stdio: 'pipe',
+        });
       } catch {
         output(
           errorResponse(
             'ERR_OUT_OF_SYNC',
-            `[ERR_OUT_OF_SYNC]: Branch bị diverge hoặc local của bạn bị cũ. Yêu cầu update/pull từ external repo về private network trước.\n(Remote SHA: ${remoteSha.substring(0, 8)})`
+            `[ERR_OUT_OF_SYNC]: Branch bị diverge hoặc local của bạn bị cũ. Yêu cầu update/pull từ external repo về private network trước.\n(Remote SHA: ${remoteSha.substring(0, 8)})`,
           ),
           flags.format,
         );
         return this.exit(4);
       }
 
-      const localHead = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
+      const localHead = execSync('git rev-parse HEAD', {
+        encoding: 'utf-8',
+      }).trim();
       if (remoteSha === localHead) {
         output(
           new MCPResponse({
             success: true,
-            content: [new MCPContent({ type: ContentType.TEXT, text: 'Branch is already up-to-date.' })],
-            metadata: { resource_type: 'relay_push', message: 'Everything up-to-date' },
+            content: [
+              new MCPContent({
+                type: ContentType.TEXT,
+                text: 'Branch is already up-to-date.',
+              }),
+            ],
+            metadata: {
+              resource_type: 'relay_push',
+              message: 'Everything up-to-date',
+            },
           }),
-          flags.format
+          flags.format,
         );
         return this.exit(0);
       }
@@ -197,7 +215,7 @@ export class RelayPush extends Command {
         await uploadChunk(
           config.relayUrl!,
           config.apiKey!,
-          config.encryptionKey!,
+          config,
           {
             sessionId,
             chunkIndex: i,
@@ -208,17 +226,12 @@ export class RelayPush extends Command {
       }
 
       // 8. Signal complete
-      await signalComplete(
-        config.relayUrl!,
-        config.apiKey!,
-        config.encryptionKey!,
-        {
-          sessionId,
-        },
-      );
+      await signalComplete(config.relayUrl!, config.apiKey!, config, {
+        sessionId,
+      });
 
       // 9. Trigger GR processing
-      await triggerGR(config.relayUrl!, config.apiKey!, config.encryptionKey!, {
+      await triggerGR(config.relayUrl!, config.apiKey!, config, {
         sessionId,
         repo,
         branch,

@@ -82,7 +82,6 @@ export class RelayConfigImportPublicKey extends Command {
       }
 
       saveConfig({
-        transportMode: 'auto',
         serverKeyId: flags['key-id'],
         serverPublicKey: normalizedPem,
         serverPublicKeyFingerprint: computedFingerprint,
@@ -97,7 +96,7 @@ export class RelayConfigImportPublicKey extends Command {
               data: {
                 keyId: flags['key-id'],
                 fingerprint: computedFingerprint,
-                transportMode: 'auto',
+                transportMode: 'v2',
                 configPath: getConfigPath(),
               },
             }),
