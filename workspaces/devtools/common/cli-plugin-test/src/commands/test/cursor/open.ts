@@ -1,5 +1,5 @@
-import { chromium } from '@hod/aweave-playwright';
 import type { Browser, BrowserContext, Page } from '@hod/aweave-playwright';
+import { chromium } from '@hod/aweave-playwright';
 import { Command } from '@oclif/core';
 
 import { JsonSessionProvider } from '../../../lib/session-provider';

@@ -63,7 +63,9 @@ export default class TestCursorSave extends Command {
 
     try {
       await session.page.goto(CURSOR_DASHBOARD_URL);
-      this.log('Complete login/SSO in the opened browser window. Waiting for Cursor dashboard...');
+      this.log(
+        'Complete login/SSO in the opened browser window. Waiting for Cursor dashboard...',
+      );
       await session.page.waitForURL(CURSOR_DASHBOARD_PATTERN, { timeout: 0 });
 
       const storageState = await session.context.storageState();
@@ -72,7 +74,9 @@ export default class TestCursorSave extends Command {
       this.log(`Saved Cursor session state to ${provider.getPath()}`);
     } catch (error) {
       if (browserDisconnected || isBrowserClosedError(error)) {
-        this.log('Browser was closed before login completed. Session was not saved.');
+        this.log(
+          'Browser was closed before login completed. Session was not saved.',
+        );
         this.exit(1);
       }
 
