@@ -6,6 +6,18 @@ import {
 } from '@hod/aweave-config-common';
 import { loadConfig } from '@hod/aweave-config-core';
 import {
+  ConfigDomainDto,
+  ConfigFileDto,
+  GetConfigResponseDto,
+  ListConfigsResponseDto,
+  SaveConfigRequestDto,
+  SaveConfigResponseDto,
+  SkillDto,
+  ListSkillsResponseDto,
+  ToggleSkillRequestDto,
+  ToggleSkillResponseDto,
+} from '@hod/aweave-nestjs-dashboard';
+import {
   ArgumentDto,
   DebateDto,
   ErrorResponseDto,
@@ -37,6 +49,15 @@ function resolveDebateWebRoot(): string {
   }
 }
 
+function resolveDashboardWebRoot(): string {
+  try {
+    const pkgPath = require.resolve('@hod/aweave-dashboard-web/package.json');
+    return join(dirname(pkgPath), 'dist');
+  } catch {
+    return join(__dirname, '..', 'public', 'dashboard');
+  }
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -46,6 +67,10 @@ async function bootstrap() {
   // Serve debate-web SPA static files under /debate
   const debateWebRoot = resolveDebateWebRoot();
   app.useStaticAssets(debateWebRoot, { prefix: '/debate' });
+
+  // Serve dashboard-web SPA static files under /dashboard
+  const dashboardWebRoot = resolveDashboardWebRoot();
+  app.useStaticAssets(dashboardWebRoot, { prefix: '/dashboard' });
 
   // CORS config — disabled in production (frontend is same-origin via ServeStaticModule).
   // In dev mode, Rsbuild proxy handles cross-origin requests, so CORS is optional.
@@ -76,6 +101,16 @@ async function bootstrap() {
       PollResultNewResponseDto,
       PollResultNoNewResponseDto,
       ErrorResponseDto,
+      ConfigDomainDto,
+      ConfigFileDto,
+      GetConfigResponseDto,
+      ListConfigsResponseDto,
+      SaveConfigRequestDto,
+      SaveConfigResponseDto,
+      SkillDto,
+      ListSkillsResponseDto,
+      ToggleSkillRequestDto,
+      ToggleSkillResponseDto,
     ],
   });
 

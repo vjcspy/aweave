@@ -39,6 +39,8 @@ packages:
   - common/cli-plugin-docs
   - common/cli-plugin-dashboard
   - common/cli-plugin-relay
+  - common/nestjs-dashboard
+  - common/dashboard-web
   - common/workflow-engine
   - common/workflow-dashboard
   - common/config-core

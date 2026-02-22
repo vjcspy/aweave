@@ -1,0 +1,30 @@
+{
+  "name": "@hod/aweave-nestjs-dashboard",
+  "version": "0.1.0",
+  "description": "DevTools Dashboard backend module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@hod/aweave-config-core": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/swagger": "catalog:",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "@types/node": "catalog:",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "prettier": "^3.4.2",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.20.0"
+  }
+}
