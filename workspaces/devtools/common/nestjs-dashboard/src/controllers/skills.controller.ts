@@ -1,13 +1,25 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import {
   ListSkillsResponseDto,
+  SkillDto,
   ToggleSkillRequestDto,
   ToggleSkillResponseDto,
 } from '../dtos/skills.dto';
 import { SkillsService } from '../services/skills.service';
 
+@ApiExtraModels(
+  SkillDto,
+  ListSkillsResponseDto,
+  ToggleSkillRequestDto,
+  ToggleSkillResponseDto,
+)
 @ApiTags('skills')
 @Controller('skills')
 export class SkillsController {

@@ -85,7 +85,8 @@ export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
           <Text bold> Managed Services </Text>
           {servicesStale && (
             <Text dimColor>
-              {' '}(stale{servicesError ? `: ${servicesError}` : ''})
+              {' '}
+              (stale{servicesError ? `: ${servicesError}` : ''})
             </Text>
           )}
           {servicesLoading && <Spinner label="Loading..." />}

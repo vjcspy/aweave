@@ -1,26 +1,4 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import {
-  ConfigDomainDto,
-  ConfigFileDto,
-  GetConfigResponseDto,
-  ListConfigsResponseDto,
-  ListSkillsResponseDto,
-  SaveConfigRequestDto,
-  SaveConfigResponseDto,
-  SkillDto,
-  ToggleSkillRequestDto,
-  ToggleSkillResponseDto,
-} from '@hod/aweave-nestjs-dashboard';
-import {
-  ArgumentDto,
-  DebateDto,
-  ErrorResponseDto,
-  GetDebateResponseDto,
-  ListDebatesResponseDto,
-  PollResultNewResponseDto,
-  PollResultNoNewResponseDto,
-  WriteResultResponseDto,
-} from '@hod/aweave-nestjs-debate';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
@@ -36,29 +14,9 @@ async function generate() {
     .setVersion('1.0')
     .build();
 
-  // Pass the same extraModels as main.ts to guarantee all $ref targets are emitted
-  const document = SwaggerModule.createDocument(app, config, {
-    extraModels: [
-      DebateDto,
-      ArgumentDto,
-      ListDebatesResponseDto,
-      GetDebateResponseDto,
-      WriteResultResponseDto,
-      PollResultNewResponseDto,
-      PollResultNoNewResponseDto,
-      ErrorResponseDto,
-      ConfigDomainDto,
-      ConfigFileDto,
-      GetConfigResponseDto,
-      ListConfigsResponseDto,
-      SaveConfigRequestDto,
-      SaveConfigResponseDto,
-      SkillDto,
-      ListSkillsResponseDto,
-      ToggleSkillRequestDto,
-      ToggleSkillResponseDto,
-    ],
-  });
+  // Schemas are discovered automatically via @ApiExtraModels() decorators
+  // on feature controllers (DebateController, ConfigsController, etc.)
+  const document = SwaggerModule.createDocument(app, config);
   const outputPath = resolve(process.cwd(), 'openapi.json');
   writeFileSync(outputPath, JSON.stringify(document, null, 2));
   console.log(`Generated ${outputPath}`);

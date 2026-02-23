@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@hod/aweave-debate-machine": "workspace:*",
+    "@hod/aweave-debate-web": "workspace:*",
+    "@hod/aweave-nestjs-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/platform-ws": "catalog:",
     "@nestjs/swagger": "catalog:",
