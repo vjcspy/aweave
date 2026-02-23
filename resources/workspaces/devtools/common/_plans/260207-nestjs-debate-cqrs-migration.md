@@ -1,3 +1,8 @@
+---
+name: NestJS Debate CQRS Migration
+description: Apply CQRS pattern to the NestJS Debate module to separate read and write flows, improving performance and scalability.
+---
+
 # 260207 - Migrate nestjs-debate to CQRS (@nestjs/cqrs)
 
 ## References
