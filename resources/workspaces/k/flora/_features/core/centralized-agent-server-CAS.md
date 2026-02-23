@@ -1,10 +1,6 @@
 # Centralized agent server
 
-
-
 Trước chúng ta đã build 1 con git relay frontend and git relay server nhưng nó quá specific và để sửa thì phải change khá nhiều vì achitecture không support general.
-
-
 
 ## Idea
 
@@ -25,10 +21,6 @@ Trước chúng ta đã build 1 con git relay frontend and git relay server như
   }
   ```
 
-  
-
 ### Long term memory
 
-Mục đích chính của con server này là nơi centralized toàn bộ data của agent.
-
-- long-term memory
+Mục đích chính của con server này là nơi centralized toàn bộ data của agent (detail: resources/workspaces/k/flora/_features/core/long-term-memory.md)
