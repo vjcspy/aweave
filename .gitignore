@@ -61,6 +61,7 @@ agent/_local/*
 resources/workspaces/*
 !resources/workspaces/.gitkeep
 !resources/workspaces/devtools/
+resources/_local
 
 # Resources — devtools docs, only common/ on master
 resources/workspaces/devtools/*/
