@@ -1,3 +1,8 @@
+---
+name: CLI Typescript Migration
+description: Fully migrate the CLI codebase to TypeScript for type safety and better maintainability.
+---
+
 # 📋 [CLI-TS-MIGRATION: 2026-02-07] - Migrate CLI Toolset from Python to TypeScript
 
 > **SUPERSEDED**: The Commander.js approach in this plan has been replaced by oclif.

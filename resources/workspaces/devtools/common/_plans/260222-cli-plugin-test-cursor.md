@@ -1,3 +1,8 @@
+---
+name: CLI Plugin Test Cursor
+description: Plan to create a CLI plugin integrating Playwright to automate saving and restoring session cookies for Cursor Dashboard.
+---
+
 # 260222-cli-plugin-test-cursor - Implement cli-plugin-test for Cursor Session Management
 
 ## References

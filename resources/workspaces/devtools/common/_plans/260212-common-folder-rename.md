@@ -1,3 +1,8 @@
+---
+name: Common Folder Rename
+description: Rename package folders to follow standard patterns by removing the @hod/aweave- prefix.
+---
+
 # 📋 [FOLDER-RENAME: 2026-02-12] - Common Folder Rename to Match Package Names
 
 ## References
