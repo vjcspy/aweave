@@ -9,7 +9,10 @@
 import { Command, Flags } from '@oclif/core';
 
 import { checkAllEndpoints, DEFAULT_ENDPOINTS } from '../../lib/health.js';
-import { formatUptimeMs, getDashboardServices } from '../../lib/server-daemon.js';
+import {
+  formatUptimeMs,
+  getDashboardServices,
+} from '../../lib/server-daemon.js';
 
 export class DashboardServices extends Command {
   static description = 'Show native daemon service status and health checks';

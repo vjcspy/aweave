@@ -650,6 +650,9 @@ importers:
       '@nestjs/core':
         specifier: 'catalog:'
         version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.13)(@nestjs/websockets@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      express:
+        specifier: ^4.18.0 || ^5.0.0
+        version: 5.2.1
       pino:
         specifier: ^9.6.0
         version: 9.14.0
@@ -693,6 +696,12 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
+      '@hod/aweave-dashboard-web':
+        specifier: workspace:*
+        version: link:../dashboard-web
+      '@hod/aweave-nestjs-core':
+        specifier: workspace:*
+        version: link:../nestjs-core
       '@hod/aweave-node-shared':
         specifier: workspace:*
         version: link:../node-shared
@@ -745,6 +754,12 @@ importers:
       '@hod/aweave-debate-machine':
         specifier: workspace:*
         version: link:../debate-machine
+      '@hod/aweave-debate-web':
+        specifier: workspace:*
+        version: link:../debate-web
+      '@hod/aweave-nestjs-core':
+        specifier: workspace:*
+        version: link:../nestjs-core
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -819,12 +834,6 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
-      '@hod/aweave-dashboard-web':
-        specifier: workspace:*
-        version: link:../dashboard-web
-      '@hod/aweave-debate-web':
-        specifier: workspace:*
-        version: link:../debate-web
       '@hod/aweave-nestjs-core':
         specifier: workspace:*
         version: link:../nestjs-core
