@@ -1,3 +1,8 @@
+---
+name: Node Shared DevTools Root Discovery
+description: Extract DevTools root discovery logic into the shared @hod/aweave-node-shared package to eliminate code duplication.
+---
+
 # [260222-NODE-SHARED-DEVTOOLS-ROOT-DISCOVERY] - Extract DevTools Root Discovery to `@hod/aweave-node-shared`
 
 ## References
