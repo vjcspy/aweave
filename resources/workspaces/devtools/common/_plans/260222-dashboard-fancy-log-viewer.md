@@ -1,3 +1,8 @@
+---
+name: Dashboard Fancy Log Viewer
+description: Plan to integrate an interactive, stable, and fully functional log viewer interface into the CLI dashboard.
+---
+
 # 260222-Dashboard-Fancy-Log-Viewer - Dashboard Fancy Log Viewer Integration (CLI)
 
 ## References

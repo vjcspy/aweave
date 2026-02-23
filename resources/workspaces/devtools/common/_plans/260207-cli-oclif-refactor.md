@@ -1,3 +1,8 @@
+---
+name: CLI Oclif Refactor
+description: Refactor the CLI framework to Oclif to better leverage plugin architecture and command generators.
+---
+
 # 📋 [CLI-OCLIF: 2026-02-07] - Refactor CLI from Commander.js to oclif Plugin Architecture
 
 ## References
