@@ -1,3 +1,8 @@
+---
+name: NestJS Core Logging & Correlation ID
+description: Implement logging with Correlation IDs in the NestJS core to easily trace requests across services.
+---
+
 # 260222-Nestjs-Core-Logging-Correlation-Id - NestJS Core Logging & Correlation Context
 
 ## References

@@ -1,3 +1,8 @@
+---
+name: DevTools Dashboard
+description: Create a Web Dashboard UI to visually manage centralized configuration files and toggle agent skills.
+---
+
 # 260222-DevTools-Dashboard - DevTools Dashboard & Skill Management
 
 ## References
