@@ -1,5 +1,5 @@
 /**
- * aw dashboard services — PM2 processes + health checks.
+ * aw dashboard services — Native daemon service status + health checks.
  *
  * Standalone panel: renders ServicesPanel only (no tab nav).
  * Supports --format json for non-interactive output.
@@ -9,10 +9,10 @@
 import { Command, Flags } from '@oclif/core';
 
 import { checkAllEndpoints, DEFAULT_ENDPOINTS } from '../../lib/health.js';
-import { formatBytes, formatUptime, getPm2Processes } from '../../lib/pm2.js';
+import { formatUptimeMs, getDashboardServices } from '../../lib/server-daemon.js';
 
 export class DashboardServices extends Command {
-  static description = 'Show PM2 processes and health check status';
+  static description = 'Show native daemon service status and health checks';
 
   static flags = {
     watch: Flags.boolean({
@@ -61,21 +61,25 @@ export class DashboardServices extends Command {
 
   private async outputJson(watch: boolean, intervalSec: number): Promise<void> {
     const collectData = async () => {
-      const [pm2, health] = await Promise.all([
-        getPm2Processes(),
+      const [servicesResult, health] = await Promise.all([
+        getDashboardServices(),
         checkAllEndpoints(DEFAULT_ENDPOINTS),
       ]);
 
       const data = {
         timestamp: new Date().toISOString(),
-        processes: pm2.processes.map((p) => ({
-          name: p.name,
-          status: p.status,
-          cpu: p.cpu,
-          memory: formatBytes(p.memory),
-          uptime: formatUptime(p.uptime),
+        services: servicesResult.services.map((s) => ({
+          name: s.name,
+          runtimeStatus: s.runtimeStatus,
+          healthy: s.healthy,
+          pid: s.pid,
+          port: s.port,
+          startedAt: s.startedAt,
+          version: s.version,
+          uptime: formatUptimeMs(s.uptimeMs),
         })),
-        stale: pm2.stale,
+        stale: servicesResult.stale,
+        error: servicesResult.error,
         health: health.map((h) => ({
           name: h.name,
           url: h.url,
