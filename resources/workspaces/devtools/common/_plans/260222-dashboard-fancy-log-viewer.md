@@ -1,166 +1,160 @@
-# 260222-Dashboard-Fancy-Log-Viewer - Dashboard Fancy Log Viewer Integration
+# 260222-Dashboard-Fancy-Log-Viewer - Dashboard Fancy Log Viewer Integration (CLI)
 
 ## References
 
 - `resources/workspaces/devtools/common/_plans/260222-nestjs-core-logging-correlation-id.md`
 - `resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
-- `resources/workspaces/devtools/common/dashboard-web/OVERVIEW.md`
-- `resources/workspaces/devtools/common/nestjs-dashboard/OVERVIEW.md`
-- `workspaces/devtools/common/dashboard-web/src/components/LogsView.tsx`
-- `workspaces/devtools/common/dashboard-web/rsbuild.config.ts`
-- `workspaces/devtools/common/nestjs-dashboard/src/controllers/logs.controller.ts`
-- `workspaces/devtools/common/nestjs-dashboard/src/services/logs.service.ts`
+- `resources/workspaces/devtools/common/cli-plugin-server/OVERVIEW.md`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/commands/dashboard/logs.ts`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/commands/dashboard/services.ts`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/components/panels/ServicesPanel.tsx`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/components/panels/LogsPanel.tsx`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/lib/pm2.ts`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/hooks/useLogs.ts`
+- `workspaces/devtools/common/cli-plugin-dashboard/src/hooks/useServices.ts`
 
 ## User Requirements
 
-previously, we have implemented log follow this plan `resources/workspaces/devtools/common/_plans/260222-nestjs-core-logging-correlation-id.md`
-now, I want to integrate it with `resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md`
-dashboard cli we have a tab for show log, but now it's not showing anything.
-Give me a plan to integrate a fancy log viewer
+Previously, we have implemented structured logging (Pino, Correlation ID) following `resources/workspaces/devtools/common/_plans/260222-nestjs-core-logging-correlation-id.md`.
+Now, I want to upgrade the `aw dashboard logs` command in the `cli-plugin-dashboard` workspace to be a **fancy log viewer**.
+The current `LogsPanel.tsx` is very basic. It uses Ink's `<Static>` component to append raw log strings to the terminal. We need to upgrade this into a premium, interactive TUI (Terminal User Interface) log viewer.
+
+Additionally, the dashboard still contains PM2 remnants that must be removed from the implementation plan:
+- `workspaces/devtools/common/cli-plugin-dashboard/src/lib/pm2.ts` contains PM2 process list and log stream logic
+- `workspaces/devtools/common/cli-plugin-dashboard/src/hooks/useLogs.ts` still depends on PM2 log streaming
+- `workspaces/devtools/common/cli-plugin-dashboard/src/hooks/useServices.ts` still depends on PM2 process listing
+
+`cli-plugin-server` has replaced PM2 with native `child_process.spawn(..., { detached: true })` process management and server logs written to `~/.aweave/logs/server.jsonl`, so the dashboard plan must migrate to that data source and remove PM2-specific assumptions.
 
 ## Objective
 
-Fix the broken log tab in the dashboard-web and upgrade the log viewer into a premium, fancy log viewer with modern UX patterns — expanding beyond the current basic table layout to include an expandable detail row, JSON syntax highlighting, level-based visual indicators, real-time statistics, and smoother interactions.
+Transform the `LogsPanel.tsx` in the CLI into an interactive, feature-rich log viewer using Ink (React for CLI).
+The new CLI log viewer should support interactive row selection, expandable JSON details, filtering, pause/resume streaming, and color-coded parsed pino logs.
+At the same time, remove PM2-specific dashboard data plumbing (`src/lib/pm2.ts`, `useLogs`, `useServices`) and align the dashboard with the native `cli-plugin-server` daemon + log file architecture.
 
 ### Key Considerations
 
-- **Root cause of "not showing anything":** The `rsbuild.config.ts` dev proxy is **missing the `/logs` route**. The frontend fetches `/logs/tail` and connects to SSE at `/logs/stream`, but in dev mode (Rsbuild on port 3458), these requests are not proxied to the NestJS backend (port 3456). This is a 1-line config fix.
-- **Production mode works:** In production, the dashboard SPA is served from the same origin `/dashboard/` on port 3456, so `/logs/*` requests reach the NestJS controllers directly.
-- **Backend functionality:** `LogsController` (REST tail + SSE stream) and `LogsService` (JSONL reader/watcher) are functionally complete for the MVP UI. However, the initial tail read implementation may block the event loop on very large files, so it should be monitored and optimized as a follow-up.
-- **Current frontend `LogsView.tsx` is functional but basic:** 523-line component with table layout, filter bar, SSE streaming, pause/resume, and correlation ID copy/filter. It works once the proxy is fixed, but lack premium visual experience.
-- **Design system:** Dashboard uses TailwindCSS v4 with custom `@utility` classes (`glass`, `glass-panel`, `glass-button`, `text-glow`, `glow-border`). Must use existing design tokens.
-- **Existing patterns:** Follow the aesthetic patterns from `ConfigsView.tsx` and `SkillsView.tsx` for consistency (glassmorphism, smooth transitions, `lucide-react` icons).
+- **Current PM2 Remnants:** `src/lib/pm2.ts` is currently a mixed module that serves both the Logs tab (`pm2 logs --raw`) and Services tab (`pm2 jlist`). This coupling must be removed, not just patched for logs.
+- **Server Runtime Source of Truth:** PM2 is deprecated in favor of the native daemon (`cli-plugin-server`). Dashboard runtime/service state should come from the server daemon state file (`~/.aweave/server.json`) plus health checks, and logs should come from `~/.aweave/logs/server.jsonl` (with compatibility fallback if needed).
+- **Limitation of `<Static>`:** `<Static>` permanently prints to stdout and doesn't allow interactive re-rendering of previous lines (e.g., selecting a row to expand it). To make the log viewer interactive, we must switch to a full-screen or bounded `Box` rendering approach where we control the viewport and only render the visible slice of logs based on terminal height (`useStdout`).
+- **Data Format:** The terminal will receive raw strings from `server.jsonl`. We need to parse these JSON lines to extract `level`, `time`, `msg`, `context`, and `correlationId` for rich formatting.
+- **Services Tab Scope Change:** The old PM2 process table assumed multiple PM2-managed processes with CPU/memory/restarts fields. The new daemon model may require a revised Services panel data contract (single `aweave-server` daemon status row and health-centric metadata) rather than a PM2-shaped process list.
+- **Dependencies:** `cli-plugin-dashboard` uses **Ink v6** and **React 19**. We CANNOT use community Ink packages like `ink-text-input` or `ink-table` because they are largely incompatible with v6. We must build custom primitives using `Box`, `Text`, `useInput`, etc.
+- **Performance:** Rendering too many lines in a single React tree in Ink can be slow. We must implement virtual scrolling/slicing: keeping a large array in memory (e.g., 1000 lines) but only rendering the `terminalHeight - headerHeight` slice of items.
 
 ## Implementation Plan
 
 ### Phase 1: Analysis & Preparation
 
 - [x] Analyze detailed requirements
-  - **Outcome**: Root cause identified (missing `/logs` proxy in rsbuild config). Frontend `LogsView.tsx` exists and is functional but needs a premium visual upgrade. Backend is functionally complete for MVP (tail read needs monitoring/optimization).
+  - **Outcome**: The target is the `cli-plugin-dashboard` Ink UI, not the web dashboard.
 - [x] Define scope and edge cases
-  - **Outcome**: Edge cases include empty log file, SSE reconnection, large log volumes (2000+ entries), long messages/metadata wrapping, rapid log emission (backpressure), and filter state persistence across tab switches.
-- [x] Evaluate existing test structures and define test cases
-  - **Outcome**: No unit tests exist in `dashboard-web` or `nestjs-dashboard`. Verification will be manual browser testing.
+  - **Outcome**: Must handle parsing failures gracefully (fallback to raw string). Must manage terminal resizing. Must handle keyboard input without blocking the event loop.
 
 ### Phase 2: Implementation Structure
 
 ```
-workspaces/devtools/common/
-├── dashboard-web/
-│   ├── rsbuild.config.ts            # 🚧 TODO – Add /logs proxy route (1-line fix)
-│   └── src/
-│       ├── App.tsx                  # 🚧 TODO – Implement keep-mounted tabs / state preservation
-│       ├── index.css                # 🚧 TODO – Add log-viewer-specific utilities
-│       └── components/
-│           └── LogsView.tsx         # 🚧 TODO – Rewrite with fancy log viewer UI
-└── nestjs-dashboard/src/            # ✅ DONE – No changes needed
+workspaces/devtools/common/cli-plugin-dashboard/
+└── src/
+    ├── lib/
+    │   ├── file-tail.ts             # 🆕 Robust file tailer for `~/.aweave/logs/server.jsonl`
+    │   ├── server-daemon.ts         # 🆕 Read/normalize daemon state from `~/.aweave/server.json`
+    │   └── pm2.ts                   # ❌ Remove after hooks/panels are migrated
+    ├── hooks/
+    │   ├── useLogs.ts               # 🚧 Migrate to file-tail + parsed JSONL + interactive buffer contract
+    │   └── useServices.ts           # 🚧 Migrate from PM2 process list to server daemon status model
+    └── components/
+        └── panels/
+            ├── LogsPanel.tsx        # 🚧 Rewrite to interactive UI
+            ├── ServicesPanel.tsx    # 🚧 Update for non-PM2 daemon/service data shape
+            └── log-viewer/          # 🆕 New inner components
+                ├── LogRow.tsx       # 🆕 Renders single log line
+                ├── LogDetails.tsx   # 🆕 Renders expanded JSON metadata
+                └── LogHeader.tsx    # 🆕 Renders stats and filter indicators
 ```
 
 ### Phase 3: Detailed Implementation Steps
 
-#### Step 1: Fix Dev Proxy (Critical Bug Fix)
+#### Step 1: Remove PM2 Data Layer Coupling
 
-- [ ] Add `/logs` proxy route to `workspaces/devtools/common/dashboard-web/rsbuild.config.ts`
-  - Add entry under `server.proxy`:
+- **Delete/Replace `src/lib/pm2.ts`:** Split PM2-era responsibilities into server-native modules:
+  - `server-daemon.ts` for daemon state/status normalization (read `~/.aweave/server.json`, detect stale PID, derive running/stopped state)
+  - `file-tail.ts` for log streaming (`~/.aweave/logs/server.jsonl`)
+- **No PM2 Binary Dependency:** Dashboard must not require `pm2` to be installed for either Services or Logs tabs.
+- **Type Model Reset:** Introduce server-native types (for example `ServerDaemonStatus`, `ServerLogLine`) instead of reusing `Pm2Process` semantics.
 
-    ```typescript
-    '/logs': {
-      target: 'http://127.0.0.1:3456',
-      changeOrigin: true,
-    },
-    ```
+#### Step 2: Migrate Hooks (`useLogs`, `useServices`)
 
-  - This immediately fixes "not showing anything" in dev mode.
+- **File Tailing (`file-tail.ts`):** Implement a file watcher (`fs.watch` or tail equivalent) that reads `~/.aweave/logs/server.jsonl`. Handle file-not-created-yet and rotation/truncation gracefully. Emit completely framed log lines only.
+- **Enhance `useLogs.ts`:**
+  - Consume the new file tail stream instead of `createPm2LogStream()`.
+  - Create a stable identity for each ingested line (e.g., a local incrementing `lineId`) to prevent index shifting bugs during streaming or filtering.
+  - Attempt parsing JSON (Pino format) silently on the fully framed lines, falling back to plain text. The parsed structure should be `ParsedLogLine` extending the new server-native log type with `lineId`.
+  - **The `--lines` Flag Contract:** Redefine the `maxLines` parameter (derived from `--lines` flag) explicitly as the `bufferLimit` (memory cap, overriding the 50 default to e.g. 1000 for interactive view, while preserving output count for `--format json`).
+- **Refactor `useServices.ts`:**
+  - Replace `getPm2Processes()` polling with server-daemon status polling + existing health checks.
+  - Return a dashboard-friendly server service model (single daemon row or normalized list) that does not expose PM2 fields (`restarts`, PM2 status strings) unless explicitly synthesized.
+  - Preserve existing stale/loading/error patterns so the Services panel remains resilient when the daemon is stopped or state file is missing.
 
-#### Step 2: Upgrade LogsView to Fancy Log Viewer
+#### Step 3: Build Interactive `LogsPanel`
 
-- [ ] Rewrite `workspaces/devtools/common/dashboard-web/src/components/LogsView.tsx` with:
+- **Replace `<Static>`**: Drop `<Static>`. Use `useStdout` to get `stdout.rows`.
+- **State Management**:
+  - `selectedLineId`: The stable ID of the currently focused log row (for viewing details). Default: `null` (auto-scroll mode). Do NOT use array index.
+  - `isPaused`: Boolean. If false, auto-scroll to bottom when new logs arrive. If true, keep viewport static.
+  - `filterLevel`: Filter by `info`, `warn`, `error`, or `all`.
+- **Keyboard Controls (`useInput`)**:
+  - **Ownership:** `Dashboard.tsx` owns global navigation (tabs, quit, refresh). `LogsPanel` should only consume keys when active, avoiding overlaps.
+  - `Up/k`, `Down/j`: Change `selectedLineId` up/down relative to the currently filtered dataset. (Automatically pauses auto-scroll).
+  - `Space`: Toggle pause/resume auto-scroll.
+  - `Esc`: Clear `selectedLineId` and resume auto-scroll.
+  - `l`: Cycle through level filters (All -> Error -> Warn -> Info).
+  - `Enter`: Toggle expansion of the selected row's JSON details.
 
-  **A. Stats Header Bar**
-  - Real-time counters: total lines, error count, warn count, info rate
-  - Animated pulse indicator for live stream status
-  - Connection status badge with auto-reconnect indicator
-  - Time range display (first log → latest log)
+#### Step 4: UI Components Construction
 
-  **B. Enhanced Filter Bar**
-  - Level selector with colored pills/badges (not dropdown)
-  - Context filter with autocomplete/suggestions from observed contexts
-  - Correlation ID filter with paste-friendly UX
-  - Full-text search with highlight matching in results
-  - Quick-filter presets: "Errors Only", "Last 5 min"
-  - Active filter chips with individual dismiss
+- **Header (`LogHeader.tsx`)**:
+  - Show connection status: `[LIVE]` (green) or `[PAUSED]` (yellow).
+  - Show current filters, total logs in buffer, and keyboard hints (e.g., `[↑↓] Navigate | [Space] Pause | [L] Filter Level | [Enter] Details`).
+- **List View**:
+  - Calculate `visibleLines = stdout.rows - headerHeight - detailHeight`.
+  - Slice the logs array to only render what's visible.
+  - **LogRow (`LogRow.tsx`)**:
+    - If selected, add an `>` cursor or inverse background color (`backgroundColor="white"` `color="black"`).
+    - Format: `[TIME] [LEVEL] [CONTEXT] MESSAGE`. Colorize `LEVEL` (Cyan for Info, Yellow for Warn, Red for Error).
+- **Details View (`LogDetails.tsx`)**:
+  - If a row is selected and expanded, reserve the bottom ~10 lines of the terminal to show a pretty-printed JSON representation of the extra properties in the log (excluding msg, level, time). Use `JSON.stringify(..., null, 2)` inside a bordered `Box`.
 
-  **C. Log Entries — Expandable Row Design**
-  - Compact row: `[time] [level-badge] [context] [message-preview] [correlation-short]`
-  - Click to expand → full detail panel showing:
-    - Full message text
-    - JSON-formatted metadata with syntax highlighting. **Crucially: Ensure safe rendering!** Do not use `dangerouslySetInnerHTML` directly with raw log content. Either use tokenized React nodes or sanitize the output before rendering to prevent XSS.
-    - Correlation ID with copy button
-    - All pino fields in a key-value grid
-  - Row background tinting: subtle red for errors, amber for warns
-  - Hover reveal: correlation quick-actions (copy, filter)
-  - Smooth max-height transition for expand/collapse
+#### Step 5: Services Panel/Command Alignment + Polish & Performance
 
-  **D. Visual Polish**
-  - Level badges with glow effects (error badge pulses subtly)
-  - Glassmorphism design matching existing dashboard panels
-  - Smooth scroll-to-bottom animation
-  - Keyboard shortcuts: `Esc` = clear filters, `Space` = pause/resume (Ensure focus-safety: ignore if focus is in `input`, `textarea`, `select`, or `[contenteditable]`)
-
-  **E. Performance**
-  - Virtual scrolling awareness: keep DOM render bounded at MAX_VISIBLE_LOGS (2000)
-  - Debounced search input
-  - `React.memo` on individual log rows
-  - **Stable keys for list items:** Since backend `LogEntryDto` doesn't have an ID, the frontend must generate a stable internal `clientId` (e.g., UUID or local monotonic counter) during initial ingest to use as a stable key for `React.memo` and expandable rows.
-
-#### Step 3: CSS Enhancements
-
-- [ ] Add log-viewer-specific `@utility` classes in `workspaces/devtools/common/dashboard-web/src/index.css`:
-  - `log-row-error` / `log-row-warn` background tints
-  - `level-badge-glow` for error/warn level badges
-  - Replace/manage the global `::-webkit-scrollbar*` selectors in `index.css`. If class-scoped styling is needed for `LogsView`, define a specific `@utility custom-scrollbar` class.
-
-#### Step 4: Polish & Integration
-
-- [ ] **Tab State Preservation:** Update `App.tsx` to implement a keep-mounted UI (e.g., hiding inactive tabs via CSS) or state lifting so that `LogsView` maintains its filter and connection state when switching between tabs.
-- [ ] Test responsive layout (narrow viewport log row wrap)
-- [ ] Ensure the SSE connection is managed properly with the chosen tab persistence strategy.
+- Update `ServicesPanel.tsx` copy/columns/status badges to remove PM2-specific language ("pm2 process", PM2 statuses, PM2 restarts) and reflect daemon/native server semantics.
+- Update `aw dashboard services` command output/labels (if PM2 wording leaks into JSON or text descriptions).
+- Ensure the slice recalculation is fast.
+- Ensure that parsing JSON on thousands of rapid file logs doesn't lag the dashboard (e.g. catch JSON.parse quietly).
+- Ensure all error messages/fallbacks mention server daemon/log file availability instead of PM2 availability.
 
 ## Verification Plan
 
 ### Manual Verification
 
-1. **Fix verification (dev mode):**
-   - Run `pnpm dev` in `workspaces/devtools/common/dashboard-web/`
-   - Open `http://localhost:3458` in browser
-   - Navigate to "Server Logs" tab
-   - Verify logs load from backend (should show log entries from `~/.aweave/logs/server.jsonl`)
-   - Verify live SSE streaming works (trigger an API call on the server, e.g. open `/health` in another tab, and watch new log entries appear)
-
-2. **Fancy UI verification:**
-   - Verify level badges display with correct colors and glow effects
-   - Click a log row → verify expansion animation and JSON metadata display
-   - Test all filter controls (level pills, context, correlation ID, search)
-   - Test pause/resume button stops auto-scroll
-   - Verify error/warn count badges update in real-time
-   - Test keyboard shortcuts (Esc to clear filters, Space to pause)
-
-3. **Edge cases:**
-   - Stop the NestJS server → verify graceful "Disconnected" state in log viewer
-   - Clear all logs → verify empty state message
-   - Apply filter that matches nothing → verify "No logs match filters" message
-   - Rapidly switch tabs → verify no SSE connection leaks
-
-## Summary of Results
-
-### Completed Achievements
-
-- [Placeholder — to be filled after implementation]
+1. **Interactive Mode**:
+   - Run `aw dashboard` or `aw dashboard logs` directly.
+   - Verify logs continue to work on a machine where `pm2` is not installed.
+   - Verify that new logs append at the bottom and the view auto-scrolls.
+   - Press `Up` arrow → verify that auto-scroll pauses (Header changing from LIVE to PAUSED), a cursor appears, and you can scroll back in history.
+   - Press `Enter` on a selected log → verify the JSON details panel appears at the bottom.
+   - Press `Space` → verify pause/resume toggles.
+   - Press `l` → verify logs are filtered by level correctly.
+   - Press `Esc` → verify the selection is cleared, details panel hides, and it snaps to the latest log (LIVE mode).
+2. **Services Tab (PM2 Removal)**:
+   - Run `aw dashboard services` and verify the tab/command renders without invoking `pm2`.
+   - Stop the server daemon (`aw server stop`) and verify Services shows a clear stopped/offline state (not a PM2 error).
+   - Start the server daemon (`aw server start`) and verify daemon status + health check become healthy.
+3. **Formatting**:
+   - Verify Pino logs have correct color coding based on level.
+   - Verify non-JSON legacy logs still render gracefully as raw text.
 
 ## Outstanding Issues & Follow-up
 
-### Issues/Clarifications
-
-- [ ] Consider adding virtual scrolling library (e.g. `@tanstack/react-virtual`) if 2000-entry DOM rendering causes performance issues on lower-end devices.
-- [ ] Consider log export feature (download filtered logs as JSON/CSV) as follow-up.
-- [ ] Consider adding persistent filter state to localStorage.
+- Full-text search (pressing `/` and typing a query) would require building a custom `TextInput` component from scratch natively in Ink v6, because `ink-text-input` is unsupported. Decided to leave this for a follow-up PR to keep this implementation scope manageable.
+- If the dashboard later needs multi-service monitoring again, define a generic "managed services" abstraction that can aggregate multiple native daemons without reintroducing PM2-specific data models.

@@ -1,7 +1,7 @@
 /**
- * Services Panel — PM2 process list + health checks.
+ * Services Panel — Native daemon status + health checks.
  *
- * Displays pm2 processes in a table with status badges,
+ * Displays the managed server daemon lifecycle status
  * plus health check results with latency measurements.
  */
 
@@ -9,7 +9,7 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { useServices } from '../../hooks/useServices.js';
-import { formatBytes, formatUptime } from '../../lib/pm2.js';
+import { formatUptimeMs } from '../../lib/server-daemon.js';
 import { Spinner } from '../shared/Spinner.js';
 import { StatusBadge } from '../shared/StatusBadge.js';
 import { type Column, Table } from '../shared/Table.js';
@@ -18,11 +18,12 @@ interface ServicesPanelProps {
   refreshInterval?: number;
 }
 
-const PROCESS_COLUMNS: Column[] = [
+const SERVICE_COLUMNS: Column[] = [
   { label: 'Name', key: 'name', width: 20 },
-  { label: 'Status', key: 'status', width: 14 },
-  { label: 'CPU', key: 'cpu', width: 10 },
-  { label: 'Memory', key: 'memory', width: 14 },
+  { label: 'Runtime', key: 'runtime', width: 14 },
+  { label: 'Health', key: 'health', width: 14 },
+  { label: 'PID', key: 'pid', width: 10 },
+  { label: 'Port', key: 'port', width: 8 },
   { label: 'Uptime', key: 'uptime', width: 12 },
 ];
 
@@ -35,27 +36,32 @@ const HEALTH_COLUMNS: Column[] = [
 
 export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
   const {
-    processes,
-    processesLoading,
-    processesStale,
-    processesError,
+    services,
+    servicesLoading,
+    servicesStale,
+    servicesError,
     healthResults,
     healthLoading,
     lastUpdated,
   } = useServices(refreshInterval);
 
-  // Map pm2 processes to table rows
-  const processRows = processes.map((proc) => ({
-    name: proc.name,
-    status: (
+  const serviceRows = services.map((svc) => ({
+    name: svc.name,
+    runtime: (
       <StatusBadge
-        status={proc.status === 'online' ? 'online' : 'offline'}
-        label={proc.status}
+        status={svc.runtimeStatus === 'running' ? 'online' : 'offline'}
+        label={svc.runtimeStatus}
       />
     ),
-    cpu: `${proc.cpu.toFixed(1)}%`,
-    memory: formatBytes(proc.memory),
-    uptime: formatUptime(proc.uptime),
+    health: (
+      <StatusBadge
+        status={svc.healthy ? 'online' : 'offline'}
+        label={svc.healthy ? 'healthy' : 'offline'}
+      />
+    ),
+    pid: svc.pid ?? '-',
+    port: svc.port ?? '-',
+    uptime: formatUptimeMs(svc.uptimeMs),
   }));
 
   // Map health results to table rows
@@ -73,19 +79,23 @@ export function ServicesPanel({ refreshInterval }: ServicesPanelProps) {
 
   return (
     <Box flexDirection="column" paddingX={1}>
-      {/* PM2 Processes */}
+      {/* Managed services (native daemon) */}
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text bold> PM2 Processes </Text>
-          {processesStale && (
+          <Text bold> Managed Services </Text>
+          {servicesStale && (
             <Text dimColor>
-              {' '}
-              (stale{processesError ? `: ${processesError}` : ''})
+              {' '}(stale{servicesError ? `: ${servicesError}` : ''})
             </Text>
           )}
-          {processesLoading && <Spinner label="Loading..." />}
+          {servicesLoading && <Spinner label="Loading..." />}
         </Box>
-        <Table columns={PROCESS_COLUMNS} rows={processRows} />
+        <Table columns={SERVICE_COLUMNS} rows={serviceRows} />
+        <Box marginTop={1}>
+          <Text dimColor>
+            Native daemon source: ~/.aweave/server.json + process health checks
+          </Text>
+        </Box>
       </Box>
 
       <Box marginY={1}>
