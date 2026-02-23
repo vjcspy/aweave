@@ -1,3 +1,8 @@
+---
+name: CLI Plugin Dashboard Ink
+description: Build a terminal dashboard using Ink React to monitor processes and logs directly via CLI.
+---
+
 # 260207 - CLI Plugin Dashboard (Ink v6)
 
 ## References

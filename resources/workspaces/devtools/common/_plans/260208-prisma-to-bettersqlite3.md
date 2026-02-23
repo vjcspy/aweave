@@ -1,3 +1,8 @@
+---
+name: Prisma to BetterSqlite3
+description: Migrate ORM from Prisma to BetterSqlite3 driver directly to improve speed and remove bulky dependencies.
+---
+
 # 📋 [PRISMA-MIGRATION: 2026-02-08] - Migrate Prisma ORM → better-sqlite3
 
 ## References

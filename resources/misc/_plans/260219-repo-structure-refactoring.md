@@ -1,3 +1,8 @@
+---
+name: Repo Structure Refactoring
+description: Plan to refactor the repository structure to enhance modularity, ease of source code and dependency management.
+---
+
 # 260219 — Repo Structure Refactoring
 
 ## References
