@@ -7,11 +7,13 @@ Use the coverage table to spot missing package overviews quickly.
 ## Platform Purpose & Landscape
 
 - The `aw` CLI is an oclif-based platform CLI — a single binary that auto-loads domain plugins. The main entrypoint contains no business logic, only plugin composition.
-- Shared utilities (`cli-shared`) provide the MCP response format (contract with AI agents), HTTP client, output helpers, content reading, and pm2 service management — consumed by every plugin.
+- Shared utilities (`cli-shared`) provide the MCP response format (contract with AI agents), HTTP client, output helpers, content reading, pm2 service management, and native process management for the server daemon — consumed by every plugin.
 - A debate system enables structured argumentation between AI agents — with CLI commands, state machine validation (xstate v5), NestJS backend (REST + WebSocket), SQLite persistence, and a Next.js arbitrator UI.
 - A workflow engine provides multi-step task execution (sequential/parallel/race) with retry, human-in-the-loop, streaming, and an Ink v6 terminal dashboard.
 - A document storage system provides versioned document management with direct SQLite access for AI agents.
-- A unified NestJS server hosts all backend feature modules in a single process with shared auth, error handling, and OpenAPI/Swagger.
+- A unified NestJS server hosts all backend feature modules in a single process with shared auth, error handling, structured pino logging with correlation ID tracking, and OpenAPI/Swagger.
+- A shared NestJS core module (`nestjs-core`) provides structured JSON logging via pino (JSONL file + dev pretty console), AsyncLocalStorage-based request context, and HTTP/WebSocket correlation ID middleware — consumed by all NestJS feature modules.
+- A DevTools dashboard system with NestJS backend (`nestjs-dashboard`) and React SPA frontend (`dashboard-web`) providing workspace config management, AI agent skill toggling, and server log viewing.
 - Shared Playwright wraps `playwright-core` for browser automation (SSO cookie capture, testing).
 - An interactive terminal dashboard (Ink v6) provides real-time pm2 monitoring, health checks, and system info.
 
@@ -20,7 +22,7 @@ Use the coverage table to spot missing package overviews quickly.
 ### CLI Core
 
 - **cli:** oclif-based main CLI application — provides the global `aw` command. Contains no business logic — only bootstraps oclif, declares plugins, and auto-loads domain commands. Installed globally via `pnpm link --global` ([resources/workspaces/devtools/common/cli/OVERVIEW.md](resources/workspaces/devtools/common/cli/OVERVIEW.md))
-- **cli-shared:** Pure utility library for the entire `aw` CLI ecosystem — MCP response format (AI agent contract), HTTP client (native fetch), output helpers, content reading (`--file`/`--content`/`--stdin`), and pm2 service management. Zero external dependencies. Leaf dependency consumed by all plugins ([resources/workspaces/devtools/common/cli-shared/OVERVIEW.md](resources/workspaces/devtools/common/cli-shared/OVERVIEW.md))
+- **cli-shared:** Pure utility library for the entire `aw` CLI ecosystem — MCP response format (AI agent contract), HTTP client (native fetch), output helpers, content reading (`--file`/`--content`/`--stdin`), pm2 service management, and native process manager for server daemon lifecycle. Zero external dependencies. Leaf dependency consumed by all plugins ([resources/workspaces/devtools/common/cli-shared/OVERVIEW.md](resources/workspaces/devtools/common/cli-shared/OVERVIEW.md))
 
 ### CLI Plugins
 
@@ -28,6 +30,7 @@ Use the coverage table to spot missing package overviews quickly.
 - **cli-plugin-docs:** oclif plugin providing `aw docs` topic — document storage and versioning with direct SQLite access (better-sqlite3). Supports create, submit, get, list, history, export, delete with version history and soft-delete ([resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md](resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md))
 - **cli-plugin-dashboard:** ESM oclif plugin using Ink v6 + React 19 for interactive terminal dashboard — real-time pm2 monitoring, health checks, CPU/memory/disk stats, workspace status. Reference implementation for Ink v6 + oclif integration ([resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md](resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md))
 - **cli-plugin-demo-workflow:** ESM oclif plugin running a 7-stage demo workflow showcasing all engine features (parallel, race, dynamic tasks, reducers, human-in-the-loop, retry, streaming, timeout). Reference implementation for new workflow plugins ([resources/workspaces/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md](resources/workspaces/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md))
+- **cli-plugin-server:** oclif plugin providing `aw server` topic — server daemon lifecycle management (start, stop, restart, status, logs). Replaces PM2 with native Node.js `child_process.spawn` detached mode. Writes state to `~/.aweave/server.json`, polls health endpoint, manages PID lifecycle ([resources/workspaces/devtools/common/cli-plugin-server/OVERVIEW.md](resources/workspaces/devtools/common/cli-plugin-server/OVERVIEW.md))
 - **cli-plugin-relay:** oclif plugin providing `aw relay` topic — push data with chunking and encryption. Commands: `push`, `status`, `config set`, `config show`, `config generate-key`
 
 ### Shared Libraries
@@ -41,12 +44,15 @@ Use the coverage table to spot missing package overviews quickly.
 
 ### Backend Services
 
-- **server:** Unified NestJS server — single process hosting all feature modules (DebateModule, LogModule, future modules). Provides shared infrastructure: AuthGuard (Bearer token), AppExceptionFilter, CORS, WebSocket adapter, OpenAPI/Swagger. Runs on port 3456 via PM2 ([resources/workspaces/devtools/common/server/OVERVIEW.md](resources/workspaces/devtools/common/server/OVERVIEW.md))
-- **nestjs-debate:** NestJS module for the debate system — REST API (CRUD debates + arguments), WebSocket gateway (real-time updates), interval polling, state machine validation, idempotency, per-debate mutex locking, better-sqlite3 persistence. Imported by unified server ([resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md](resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md))
+- **server:** Unified NestJS server — single process hosting all feature modules (NestjsCoreModule, DebateModule, DashboardModule, future modules). Provides shared infrastructure: AuthGuard (Bearer token), AppExceptionFilter, CORS, WebSocket adapter, OpenAPI/Swagger, SPA middleware. Integrates `nestjs-core` for structured pino logging and correlation ID tracking. Runs on port 3456 ([resources/workspaces/devtools/common/server/OVERVIEW.md](resources/workspaces/devtools/common/server/OVERVIEW.md))
+- **nestjs-core:** Shared NestJS infrastructure module (`@Global`) — structured JSON logging via pino (dual transport: JSONL file at `~/.aweave/logs/server.jsonl` + pino-pretty console in dev), AsyncLocalStorage-based request context propagation, HTTP `x-correlation-id` middleware with auto-generation. Consumed by all feature modules without explicit imports ([resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md](resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md))
+- **nestjs-debate:** NestJS module for the debate system — REST API (CRUD debates + arguments), WebSocket gateway (real-time updates), interval polling, state machine validation, idempotency, per-debate mutex locking, better-sqlite3 persistence. Per-connection WebSocket correlation ID tracking. Imported by unified server ([resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md](resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md))
+- **nestjs-dashboard:** NestJS module for the DevTools dashboard — REST APIs for workspace YAML config management (via `@hod/aweave-config-core`), AI agent skill management (scan/parse `SKILL.md` files, toggle active state), and server log tailing (JSONL snapshot + SSE live stream). Imported by unified server ([resources/workspaces/devtools/common/nestjs-dashboard/OVERVIEW.md](resources/workspaces/devtools/common/nestjs-dashboard/OVERVIEW.md))
 
 ### Frontend Apps
 
-- **debate-web:** Next.js 16 web application for Arbitrator to monitor debates and submit RULING/INTERVENTION — sidebar debate list, real-time WebSocket updates, argument timeline, typed API client generated from OpenAPI spec. Runs on port 3457 via PM2 ([resources/workspaces/devtools/common/debate-web/OVERVIEW.md](resources/workspaces/devtools/common/debate-web/OVERVIEW.md))
+- **debate-web:** Next.js 16 web application for Arbitrator to monitor debates and submit RULING/INTERVENTION — sidebar debate list, real-time WebSocket updates, argument timeline, typed API client generated from OpenAPI spec. Served via `@hod/aweave-server` SPA middleware on port 3456 at `/debate` ([resources/workspaces/devtools/common/debate-web/OVERVIEW.md](resources/workspaces/devtools/common/debate-web/OVERVIEW.md))
+- **dashboard-web:** React SPA built with Rsbuild + TailwindCSS v4 for DevTools dashboard — workspace config editing, AI agent skill toggling, server log viewing with live streaming and filtering. Uses `openapi-fetch` with generated TypeScript types from backend OpenAPI schema. Served via `@hod/aweave-server` SPA middleware at `/dashboard` ([resources/workspaces/devtools/common/dashboard-web/OVERVIEW.md](resources/workspaces/devtools/common/dashboard-web/OVERVIEW.md))
 - **workflow-dashboard:** Ink v6 + React 19 reusable terminal dashboard component for workflow engine — stage/task tree sidebar, live logs, task detail, human input panel, keyboard navigation. Consumed by workflow plugins via `<WorkflowDashboard actor={actor} />` ([resources/workspaces/devtools/common/workflow-dashboard/OVERVIEW.md](resources/workspaces/devtools/common/workflow-dashboard/OVERVIEW.md))
 
 ## CLI Infrastructure
@@ -63,15 +69,27 @@ Use the coverage table to spot missing package overviews quickly.
                        │   │   │   │   │   │   │
         ┌──────────────┘   │   │   │   │   │   └──────────────┐
         ▼                  ▼   ▼   ▼   ▼   ▼                  ▼
-   cli-plugin-        debate docs dashboard demo-wf  relay  (nab plugins)
-                         │                    │
-                         │                    ▼
-                         │            workflow-engine ◄── workflow-dashboard
+   cli-plugin-        debate docs dashboard demo-wf  relay  server
+                         │                                     │
+                         │                                     ▼
+                         ▼                              process-manager
+                    debate-machine                      (cli-shared)
                          │
-                         ▼
-                    debate-machine ◄── nestjs-debate ◄── server (:3456)
-                                                              │
-                                                         debate-web (:3457)
+  ┌──────────────────────┼──────────────────────┐
+  ▼                      ▼                      ▼
+nestjs-core ◄──── nestjs-debate ◄────┐    nestjs-dashboard
+  (logging,         (debate API,     │      (config/skills/
+   context)          WebSocket)      │       log APIs)
+                                     │          │
+                                     ├──────────┤
+                                     ▼          │
+                                   server ◄─────┘
+                                  (:3456)
+                                  /  |  \
+                                 /   |   \
+                                ▼    ▼    ▼
+                         debate-web  dashboard-web
+                         (/debate)   (/dashboard)
 
    ═══════════════════════════════════════════════════════════════
    All plugins ──► cli-shared (MCP response, HTTP, output, pm2)
@@ -83,10 +101,10 @@ Use the coverage table to spot missing package overviews quickly.
 - **Source Code Location:** `workspaces/devtools/common/<package>/` — following `workspaces/devtools/common/<PACKAGE_NAME>/` convention.
 - All packages are **TypeScript** managed via pnpm workspaces.
 - **CJS vs ESM:** Most packages are CJS. ESM-only packages: `cli-plugin-dashboard`, `cli-plugin-demo-workflow`, `workflow-dashboard` (required by Ink v6 + React 19).
-- **Build order:** `cli-shared` → shared libraries (`debate-machine`, `workflow-engine`, `playwright`) → plugins/modules → `cli` (last).
-- **PM2** manages long-running services via `devtools/ecosystem.config.cjs`:
-  - `aweave-server` (port 3456) — unified NestJS server
-  - `debate-web` (port 3457) — debate arbitrator UI
+- **Build order:** `cli-shared` → shared libraries (`debate-machine`, `workflow-engine`, `playwright`, `node-shared`, `config-core`) → `nestjs-core` → NestJS feature modules (`nestjs-debate`, `nestjs-dashboard`) → `server` → plugins → `cli` (last).
+- **Server management:** `aw server start/stop/restart/status/logs` via `cli-plugin-server` (native process manager, no PM2).
+- **SPA serving:** Both `debate-web` and `dashboard-web` are served as SPAs by the unified server via SPA middleware on port 3456.
+- **Structured logging:** All NestJS modules use pino-based structured JSON logging via `nestjs-core`. Logs written to `~/.aweave/logs/server.jsonl` with correlation ID tracking across HTTP and WebSocket requests.
 - **SQLite databases:**
   - `~/.aweave/db/debate.db` — debate data (managed by nestjs-debate)
   - `~/.aweave/docstore.db` — document versions (managed by cli-plugin-docs)
@@ -105,14 +123,18 @@ Use the coverage table to spot missing package overviews quickly.
 | cli-plugin-docs | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md | ✅ Present |
 | cli-plugin-dashboard | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-dashboard/OVERVIEW.md | ✅ Present |
 | cli-plugin-demo-workflow | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-demo-workflow/OVERVIEW.md | ✅ Present |
-| config-core | Shared Libraries | resources/workspaces/devtools/common/config-core/OVERVIEW.md | ✅ Present |
-| node-shared | Shared Libraries | resources/workspaces/devtools/common/node-shared/OVERVIEW.md | ✅ Present |
-| config | Shared Libraries | resources/workspaces/devtools/common/config/OVERVIEW.md | ✅ Present |
+| cli-plugin-server | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-server/OVERVIEW.md | ✅ Present |
 | cli-plugin-relay | CLI Plugins | resources/workspaces/devtools/common/cli-plugin-relay/OVERVIEW.md | ❌ Missing |
+| config-core | Shared Libraries | resources/workspaces/devtools/common/config-core/OVERVIEW.md | ✅ Present |
+| config | Shared Libraries | resources/workspaces/devtools/common/config/OVERVIEW.md | ✅ Present |
+| node-shared | Shared Libraries | resources/workspaces/devtools/common/node-shared/OVERVIEW.md | ✅ Present |
 | debate-machine | Shared Libraries | resources/workspaces/devtools/common/debate-machine/OVERVIEW.md | ✅ Present |
 | workflow-engine | Shared Libraries | resources/workspaces/devtools/common/workflow-engine/OVERVIEW.md | ✅ Present |
 | playwright | Shared Libraries | resources/workspaces/devtools/common/playwright/OVERVIEW.md | ✅ Present |
 | server | Backend Services | resources/workspaces/devtools/common/server/OVERVIEW.md | ✅ Present |
+| nestjs-core | Backend Services | resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md | ✅ Present |
 | nestjs-debate | Backend Services | resources/workspaces/devtools/common/nestjs-debate/OVERVIEW.md | ✅ Present |
+| nestjs-dashboard | Backend Services | resources/workspaces/devtools/common/nestjs-dashboard/OVERVIEW.md | ✅ Present |
 | debate-web | Frontend Apps | resources/workspaces/devtools/common/debate-web/OVERVIEW.md | ✅ Present |
+| dashboard-web | Frontend Apps | resources/workspaces/devtools/common/dashboard-web/OVERVIEW.md | ✅ Present |
 | workflow-dashboard | Frontend Apps | resources/workspaces/devtools/common/workflow-dashboard/OVERVIEW.md | ✅ Present |
