@@ -1,7 +1,7 @@
 /**
- * Hook: pm2 process list + health check data.
+ * Hook: native daemon service status + health check data.
  *
- * Polls pm2 and health endpoints on interval.
+ * Polls server daemon state and health endpoints on interval.
  * Tracks loading/stale state per data source.
  */
 
@@ -13,14 +13,17 @@ import {
   type HealthEndpoint,
   type HealthResult,
 } from '../lib/health.js';
-import { getPm2Processes, type Pm2Process } from '../lib/pm2.js';
+import {
+  getDashboardServices,
+  type DashboardService,
+} from '../lib/server-daemon.js';
 import { useInterval } from './useInterval.js';
 
 export interface ServicesData {
-  processes: Pm2Process[];
-  processesLoading: boolean;
-  processesStale: boolean;
-  processesError?: string;
+  services: DashboardService[];
+  servicesLoading: boolean;
+  servicesStale: boolean;
+  servicesError?: string;
   healthResults: Array<HealthEndpoint & HealthResult>;
   healthLoading: boolean;
   lastUpdated: Date | null;
@@ -29,10 +32,10 @@ export interface ServicesData {
 const POLL_INTERVAL = 5000;
 
 export function useServices(intervalMs: number = POLL_INTERVAL): ServicesData {
-  const [processes, setProcesses] = useState<Pm2Process[]>([]);
-  const [processesLoading, setProcessesLoading] = useState(true);
-  const [processesStale, setProcessesStale] = useState(false);
-  const [processesError, setProcessesError] = useState<string | undefined>();
+  const [services, setServices] = useState<DashboardService[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesStale, setServicesStale] = useState(false);
+  const [servicesError, setServicesError] = useState<string | undefined>();
   const [healthResults, setHealthResults] = useState<
     Array<HealthEndpoint & HealthResult>
   >([]);
@@ -40,16 +43,16 @@ export function useServices(intervalMs: number = POLL_INTERVAL): ServicesData {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
-    // Fetch pm2 + health in parallel
-    const [pm2Result, healthResult] = await Promise.all([
-      getPm2Processes(),
+    // Fetch daemon status + health in parallel
+    const [servicesResult, healthResult] = await Promise.all([
+      getDashboardServices(),
       checkAllEndpoints(DEFAULT_ENDPOINTS),
     ]);
 
-    setProcesses(pm2Result.processes);
-    setProcessesStale(pm2Result.stale);
-    setProcessesError(pm2Result.error);
-    setProcessesLoading(false);
+    setServices(servicesResult.services);
+    setServicesStale(servicesResult.stale);
+    setServicesError(servicesResult.error);
+    setServicesLoading(false);
 
     setHealthResults(healthResult);
     setHealthLoading(false);
@@ -68,10 +71,10 @@ export function useServices(intervalMs: number = POLL_INTERVAL): ServicesData {
   }, intervalMs);
 
   return {
-    processes,
-    processesLoading,
-    processesStale,
-    processesError,
+    services,
+    servicesLoading,
+    servicesStale,
+    servicesError,
     healthResults,
     healthLoading,
     lastUpdated,
