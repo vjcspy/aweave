@@ -198,9 +198,12 @@ export function createFileTailStream({
     await initialize();
     if (stopped) return;
 
-    pollTimer = setInterval(() => {
-      void poll();
-    }, Math.max(100, pollIntervalMs));
+    pollTimer = setInterval(
+      () => {
+        void poll();
+      },
+      Math.max(100, pollIntervalMs),
+    );
 
     // Trigger an immediate read to capture writes that happened after initialization.
     void poll();

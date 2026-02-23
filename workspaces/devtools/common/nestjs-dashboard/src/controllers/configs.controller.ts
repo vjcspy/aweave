@@ -1,7 +1,14 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import {
+  ConfigDomainDto,
+  ConfigFileDto,
   GetConfigResponseDto,
   ListConfigsResponseDto,
   SaveConfigRequestDto,
@@ -9,6 +16,14 @@ import {
 } from '../dtos/configs.dto';
 import { ConfigsService } from '../services/configs.service';
 
+@ApiExtraModels(
+  ConfigDomainDto,
+  ConfigFileDto,
+  GetConfigResponseDto,
+  ListConfigsResponseDto,
+  SaveConfigRequestDto,
+  SaveConfigResponseDto,
+)
 @ApiTags('configs')
 @Controller('configs')
 export class ConfigsController {

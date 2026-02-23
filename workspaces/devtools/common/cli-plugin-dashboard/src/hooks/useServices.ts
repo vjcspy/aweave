@@ -14,8 +14,8 @@ import {
   type HealthResult,
 } from '../lib/health.js';
 import {
-  getDashboardServices,
   type DashboardService,
+  getDashboardServices,
 } from '../lib/server-daemon.js';
 import { useInterval } from './useInterval.js';
 

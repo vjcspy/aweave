@@ -12,7 +12,12 @@
 import { Box, Text, useInput, useStdout } from 'ink';
 import React, { useEffect, useState } from 'react';
 
-import { type LogLevel, type LogLine, type LogsData, useLogs } from '../../hooks/useLogs.js';
+import {
+  type LogLevel,
+  type LogLine,
+  type LogsData,
+  useLogs,
+} from '../../hooks/useLogs.js';
 import { Spinner } from '../shared/Spinner.js';
 
 interface LogsPanelProps {
@@ -46,7 +51,9 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
   const [filterLevel, setFilterLevel] = useState<LevelFilter>('all');
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
-  const filteredLines = lines.filter((line) => matchesLevelFilter(line, filterLevel));
+  const filteredLines = lines.filter((line) =>
+    matchesLevelFilter(line, filterLevel),
+  );
   const selectedIndex = filteredLines.findIndex(
     (line) => line.lineId === selectedLineId,
   );
@@ -161,7 +168,10 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
     }
   }
 
-  const visibleLines = filteredLines.slice(listStart, listStart + visibleRowCount);
+  const visibleLines = filteredLines.slice(
+    listStart,
+    listStart + visibleRowCount,
+  );
   const selectedDetails = selectedLine ? buildDetailsLines(selectedLine) : [];
   const visibleDetails =
     detailsExpanded && selectedLine
@@ -177,7 +187,7 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
         </Text>
         <Text dimColor>
           {' '}
-          filter={filterLevel}  buffer={lines.length}/{maxLines}  visible=
+          filter={filterLevel} buffer={lines.length}/{maxLines} visible=
           {filteredLines.length}
         </Text>
       </Box>
@@ -188,7 +198,7 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
 
       <Box marginBottom={1}>
         <Text dimColor>
-          [↑↓/j/k] navigate  [Space] pause/live  [l] level  [Enter] details
+          [↑↓/j/k] navigate [Space] pause/live [l] level [Enter] details
           {'  '}[Esc] follow tail
         </Text>
       </Box>
@@ -218,15 +228,15 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
                 <Text color={isSelected ? 'green' : 'gray'} bold={isSelected}>
                   {isSelected ? '>' : ' '}
                 </Text>
-                <Text>{' '}</Text>
+                <Text> </Text>
                 <Text color="gray">{row.time}</Text>
-                <Text>{' '}</Text>
+                <Text> </Text>
                 <Text color={getLevelColor(line.level)} bold>
                   {row.level}
                 </Text>
-                <Text>{' '}</Text>
+                <Text> </Text>
                 <Text color="blue">{row.context}</Text>
-                <Text>{' '}</Text>
+                <Text> </Text>
                 <Text inverse={isSelected}>{row.message}</Text>
               </Box>
             );
@@ -270,8 +280,8 @@ export function LogsPanel({ maxLines = 1000, serviceName }: LogsPanelProps) {
         ) : (
           <Text dimColor>
             Showing {visibleLines.length} rows (offset {listStart + 1}-
-            {Math.min(listStart + visibleLines.length, filteredLines.length)}) of{' '}
-            {filteredLines.length} filtered ·{' '}
+            {Math.min(listStart + visibleLines.length, filteredLines.length)})
+            of {filteredLines.length} filtered ·{' '}
             {streaming ? 'watching file' : 'stream stopped'}
             {isPaused ? ' · paused' : ' · following tail'}
           </Text>
@@ -287,10 +297,7 @@ function formatLogRow(
 ): { time: string; level: string; context: string; message: string } {
   const time = formatTimestamp(line.timestamp);
   const level = padRight(line.level.toUpperCase(), 5);
-  const context = padRight(
-    truncateText(line.context ?? line.service, 16),
-    16,
-  );
+  const context = padRight(truncateText(line.context ?? line.service, 16), 16);
 
   const reservedWidth = 1 + 1 + 8 + 1 + 5 + 1 + 16 + 1;
   const messageWidth = Math.max(12, panelWidth - reservedWidth);
@@ -348,7 +355,8 @@ function buildDetailsLines(line: LogLine): string[] {
 
 function matchesLevelFilter(line: LogLine, filter: LevelFilter): boolean {
   if (filter === 'all') return true;
-  if (filter === 'error') return line.level === 'error' || line.level === 'fatal';
+  if (filter === 'error')
+    return line.level === 'error' || line.level === 'fatal';
   return line.level === filter;
 }
 

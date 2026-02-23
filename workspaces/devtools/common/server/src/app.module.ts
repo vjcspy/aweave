@@ -7,18 +7,12 @@ import { DebateModule } from '@hod/aweave-nestjs-debate';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
-import { DashboardSpaController } from './dashboard-spa.controller';
-import { DebateSpaController } from './debate-spa.controller';
 import { RootRedirectController } from './root-redirect.controller';
 import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 
 @Module({
   imports: [NestjsCoreModule, DebateModule, DashboardModule],
-  controllers: [
-    DebateSpaController,
-    DashboardSpaController,
-    RootRedirectController,
-  ],
+  controllers: [RootRedirectController],
   providers: [
     {
       provide: APP_FILTER,
