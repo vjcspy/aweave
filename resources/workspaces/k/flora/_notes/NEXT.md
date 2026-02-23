@@ -7,9 +7,9 @@ description: Là nơi chứa các tính năng sẽ được phát triển trong 
 
 - [ ] check if cursor cli support agent mode
 
-- [ ] build agent provider MCP, code: `APM`
+- [ ] build agent provider **MCP**, code: `APM`
 
-  > Mục đích
+  > Là 1 MCP server chạy trên local kết nối vào -> `CAP` -> `CAS`
   >
   > 1. lấy các agent resources qua mcp, để AI agent không cần phải quét folder cụ thể nào cả. Nhưng mà làm sao để nó có cảm giác là đang lấy trên folder ví dụ: aweave://agent/skills/DOMAIN/SKILL_NAME, aweave://agent/skills/SKILL_NAME/references/*
 
@@ -28,3 +28,5 @@ description: Là nơi chứa các tính năng sẽ được phát triển trong 
     > - mỗi máy client có `APM` sẽ query tới `CAS` để lấy data, có cơ chế caching data trên local để tối ưu performance.
     >   - Cái này cần phải suy nghĩ thêm, nếu có cơ chế caching thì phải có cơ chế validate cache, sync...
     >   - `APM` sẽ làm nhiệm vụ encrypt/decrypt và fetch data từ APM (tất nhiên mình sẽ làm API nhiều layer, viết riêng layer làm nhiệm vụ communicate với `CAS` riêng, sau đó expose API để layer phía trên sử dụng (mục đích là sau này có thể host được `CAS` trên local trong những usecase khác))
+
+- [ ] Build long-term memory cho AI Agent (detail: `resources/workspaces/k/flora/_features/core/long-term-memory.md`)
