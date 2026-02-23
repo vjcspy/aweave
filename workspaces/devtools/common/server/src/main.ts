@@ -6,59 +6,13 @@ import {
 } from '@hod/aweave-config-common';
 import { loadConfig } from '@hod/aweave-config-core';
 import { NestLoggerService } from '@hod/aweave-nestjs-core';
-import {
-  ConfigDomainDto,
-  ConfigFileDto,
-  GetConfigResponseDto,
-  ListConfigsResponseDto,
-  ListSkillsResponseDto,
-  LogEntryDto,
-  SaveConfigRequestDto,
-  SaveConfigResponseDto,
-  SkillDto,
-  TailLogsResponseDto,
-  ToggleSkillRequestDto,
-  ToggleSkillResponseDto,
-} from '@hod/aweave-nestjs-dashboard';
-import {
-  ArgumentDto,
-  DebateDto,
-  ErrorResponseDto,
-  GetDebateResponseDto,
-  ListDebatesResponseDto,
-  PollResultNewResponseDto,
-  PollResultNoNewResponseDto,
-  WriteResultResponseDto,
-} from '@hod/aweave-nestjs-debate';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { dirname, join } from 'path';
 
 import { AppModule } from './app.module';
 import { AuthGuard } from './shared/guards/auth.guard';
-
-/**
- * Resolve debate-web SPA static files directory.
- */
-function resolveDebateWebRoot(): string {
-  try {
-    const pkgPath = require.resolve('@hod/aweave-debate-web/package.json');
-    return join(dirname(pkgPath), 'dist');
-  } catch {
-    return join(__dirname, '..', 'public', 'debate');
-  }
-}
-
-function resolveDashboardWebRoot(): string {
-  try {
-    const pkgPath = require.resolve('@hod/aweave-dashboard-web/package.json');
-    return join(dirname(pkgPath), 'dist');
-  } catch {
-    return join(__dirname, '..', 'public', 'dashboard');
-  }
-}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -71,14 +25,6 @@ async function bootstrap() {
 
   // WebSocket adapter (ws library)
   app.useWebSocketAdapter(new WsAdapter(app));
-
-  // Serve debate-web SPA static files under /debate
-  const debateWebRoot = resolveDebateWebRoot();
-  app.useStaticAssets(debateWebRoot, { prefix: '/debate' });
-
-  // Serve dashboard-web SPA static files under /dashboard
-  const dashboardWebRoot = resolveDashboardWebRoot();
-  app.useStaticAssets(dashboardWebRoot, { prefix: '/dashboard' });
 
   // CORS config — disabled in production (frontend is same-origin via ServeStaticModule).
   // In dev mode, Rsbuild proxy handles cross-origin requests, so CORS is optional.
@@ -93,36 +39,14 @@ async function bootstrap() {
   // Increase JSON body limit for log import (default ~100KB is too small)
   app.useBodyParser('json', { limit: '50mb' });
 
-  // Swagger setup (registers schemas for spec generation)
+  // Swagger setup — schemas are discovered automatically via @ApiExtraModels()
+  // decorators on feature controllers (DebateController, ConfigsController, etc.)
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Aweave Server API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig, {
-    extraModels: [
-      DebateDto,
-      ArgumentDto,
-      ListDebatesResponseDto,
-      GetDebateResponseDto,
-      WriteResultResponseDto,
-      PollResultNewResponseDto,
-      PollResultNoNewResponseDto,
-      ErrorResponseDto,
-      ConfigDomainDto,
-      ConfigFileDto,
-      GetConfigResponseDto,
-      ListConfigsResponseDto,
-      LogEntryDto,
-      TailLogsResponseDto,
-      SaveConfigRequestDto,
-      SaveConfigResponseDto,
-      SkillDto,
-      ListSkillsResponseDto,
-      ToggleSkillRequestDto,
-      ToggleSkillResponseDto,
-    ],
-  });
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
 
   // Serve Swagger UI in dev
   if (process.env.NODE_ENV !== 'production') {

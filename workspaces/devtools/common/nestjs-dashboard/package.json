@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@hod/aweave-config-core": "workspace:*",
+    "@hod/aweave-dashboard-web": "workspace:*",
+    "@hod/aweave-nestjs-core": "workspace:*",
     "@hod/aweave-node-shared": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",

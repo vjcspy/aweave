@@ -13,9 +13,8 @@ import { fileURLToPath } from 'node:url';
 import { useCallback, useEffect, useState } from 'react';
 
 const require = createRequire(import.meta.url);
-const nodeShared = require(
-  '@hod/aweave-node-shared',
-) as typeof import('@hod/aweave-node-shared');
+const nodeShared =
+  require('@hod/aweave-node-shared') as typeof import('@hod/aweave-node-shared');
 const { resolveDevtoolsRoot } = nodeShared;
 
 export interface WorkspacePackage {

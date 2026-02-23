@@ -14,9 +14,8 @@ import { fileURLToPath } from 'node:url';
 import { Command, Flags } from '@oclif/core';
 
 const require = createRequire(import.meta.url);
-const nodeShared = require(
-  '@hod/aweave-node-shared',
-) as typeof import('@hod/aweave-node-shared');
+const nodeShared =
+  require('@hod/aweave-node-shared') as typeof import('@hod/aweave-node-shared');
 const { resolveDevtoolsRoot } = nodeShared;
 
 export class DashboardWorkspace extends Command {
