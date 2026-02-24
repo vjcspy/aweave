@@ -107,7 +107,7 @@ nestjs-core ◄──── nestjs-debate ◄────┐    nestjs-dashboard
 - **Structured logging:** All NestJS modules use pino-based structured JSON logging via `nestjs-core`. Logs written to `~/.aweave/logs/server.jsonl` with correlation ID tracking across HTTP and WebSocket requests.
 - **SQLite databases:**
   - `~/.aweave/db/debate.db` — debate data (managed by nestjs-debate)
-  - `~/.aweave/docstore.db` — document versions (managed by cli-plugin-docs)
+  - `~/.aweave/db/docstore.db` — document versions (managed by cli-plugin-docs)
 - **State machines:** `debate-machine` and `workflow-engine` both use xstate v5 — shared between CLI and server/dashboard respectively.
 - **MCP response format** is the contract between CLI commands and AI agents — changes must be backward-compatible.
 - **Global CLI installation:** `cd workspaces/devtools/common/cli && pnpm link --global` → `aw` available system-wide.

@@ -2,7 +2,7 @@
  * SQLite database operations for document store.
  *
  * Port of Python docs/db.py using better-sqlite3.
- * Database location: ~/.aweave/docstore.db (override via AWEAVE_DB_PATH)
+ * Database location: ~/.aweave/db/docstore.db (override via AWEAVE_DB_PATH)
  */
 
 import Database from 'better-sqlite3';
@@ -17,7 +17,7 @@ function getDbPath(): string {
   const envPath = process.env.AWEAVE_DB_PATH;
   if (envPath) return envPath;
 
-  const dbDir = join(homedir(), '.aweave');
+  const dbDir = join(homedir(), '.aweave', 'db');
   mkdirSync(dbDir, { recursive: true });
   return join(dbDir, 'docstore.db');
 }
