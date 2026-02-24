@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-dashboard-web",
-  "version": "0.1.0",
+  "version": "0.1.24",
   "description": "DevTools Dashboard frontend SPA",
   "private": true,
   "type": "module",

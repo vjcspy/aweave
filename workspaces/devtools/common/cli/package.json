@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "bin": {
     "aw": "./bin/run.js"
   },
@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "build": "tsc && tsc-alias -p tsconfig.json",
+    "oclif:manifest": "oclif manifest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "bin/dev.js",

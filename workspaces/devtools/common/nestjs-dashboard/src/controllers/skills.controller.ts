@@ -1,13 +1,25 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import {
   ListSkillsResponseDto,
+  SkillDto,
   ToggleSkillRequestDto,
   ToggleSkillResponseDto,
 } from '../dtos/skills.dto';
 import { SkillsService } from '../services/skills.service';
 
+@ApiExtraModels(
+  SkillDto,
+  ListSkillsResponseDto,
+  ToggleSkillRequestDto,
+  ToggleSkillResponseDto,
+)
 @ApiTags('skills')
 @Controller('skills')
 export class SkillsController {
@@ -20,11 +32,13 @@ export class SkillsController {
   @ApiResponse({ status: 200, type: ListSkillsResponseDto })
   async listSkills(): Promise<ListSkillsResponseDto> {
     const allSkills = await this.skillsService.getAllSkills();
-    const activeIds = new Set(this.skillsService.getActiveSkillIds());
 
     const data = allSkills.map((skill) => ({
-      ...skill,
-      active: activeIds.has(skill.id),
+      id: skill.id,
+      name: skill.name,
+      description: skill.description,
+      path: skill.path,
+      active: skill.active === true,
     }));
 
     return {
@@ -55,7 +69,10 @@ export class SkillsController {
     return {
       success: true,
       data: {
-        ...skill,
+        id: skill.id,
+        name: skill.name,
+        description: skill.description,
+        path: skill.path,
         active: body.active,
       },
     };

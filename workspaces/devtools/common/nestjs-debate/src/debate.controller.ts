@@ -22,7 +22,9 @@ import {
 import { ArgumentService } from './argument.service';
 import { DebateService } from './debate.service';
 import {
+  ArgumentDto,
   CreateDebateBodyDto,
+  DebateDto,
   ErrorResponseDto,
   GetDebateResponseDto,
   ListDebatesResponseDto,
@@ -52,6 +54,11 @@ function serializeWriteResult(result: { debate: any; argument: any }) {
 }
 
 @ApiExtraModels(
+  DebateDto,
+  ArgumentDto,
+  ListDebatesResponseDto,
+  GetDebateResponseDto,
+  WriteResultResponseDto,
   PollResultNewResponseDto,
   PollResultNoNewResponseDto,
   ErrorResponseDto,

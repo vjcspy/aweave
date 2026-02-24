@@ -14,7 +14,8 @@ import {
 } from '../../lib/file-tail.js';
 
 export class DashboardLogs extends Command {
-  static description = 'Show live server log stream from ~/.aweave/logs/server.jsonl';
+  static description =
+    'Show live server log stream from ~/.aweave/logs/server.jsonl';
 
   static flags = {
     lines: Flags.integer({
@@ -144,7 +145,8 @@ function normalizeJsonOutput(rawLine: string): {
     };
   }
 
-  const timestamp = parseTimestamp(parsed.time)?.toISOString() ?? new Date().toISOString();
+  const timestamp =
+    parseTimestamp(parsed.time)?.toISOString() ?? new Date().toISOString();
   const service =
     typeof parsed.service === 'string' ? parsed.service : 'aweave-server';
   const message =

@@ -1,10 +1,17 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 
-import { TailLogsResponseDto } from '../dtos/logs.dto';
+import { LogEntryDto, TailLogsResponseDto } from '../dtos/logs.dto';
 import { LogsService } from '../services/logs.service';
 
+@ApiExtraModels(LogEntryDto, TailLogsResponseDto)
 @ApiTags('logs')
 @Controller('logs')
 export class LogsController {

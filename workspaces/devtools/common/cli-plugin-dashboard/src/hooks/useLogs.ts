@@ -52,7 +52,9 @@ export function useLogs(
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const sourcePath = getDefaultServerJsonlPath();
-  const streamRef = useRef<ReturnType<typeof createFileTailStream> | null>(null);
+  const streamRef = useRef<ReturnType<typeof createFileTailStream> | null>(
+    null,
+  );
   const lineIdRef = useRef(0);
 
   useEffect(() => {
@@ -130,7 +132,9 @@ function parseLogLine(rawLine: string, lineId: number): LogLine {
     raw: rawLine,
     context: typeof parsed.context === 'string' ? parsed.context : undefined,
     correlationId:
-      typeof parsed.correlationId === 'string' ? parsed.correlationId : undefined,
+      typeof parsed.correlationId === 'string'
+        ? parsed.correlationId
+        : undefined,
     parsed,
   };
 }

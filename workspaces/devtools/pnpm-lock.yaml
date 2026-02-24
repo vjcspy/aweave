@@ -650,6 +650,9 @@ importers:
       '@nestjs/core':
         specifier: 'catalog:'
         version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.13)(@nestjs/websockets@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      express:
+        specifier: ^4.18.0 || ^5.0.0
+        version: 5.2.1
       pino:
         specifier: ^9.6.0
         version: 9.14.0
@@ -693,6 +696,12 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
+      '@hod/aweave-dashboard-web':
+        specifier: workspace:*
+        version: link:../dashboard-web
+      '@hod/aweave-nestjs-core':
+        specifier: workspace:*
+        version: link:../nestjs-core
       '@hod/aweave-node-shared':
         specifier: workspace:*
         version: link:../node-shared
@@ -708,6 +717,9 @@ importers:
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.1
     devDependencies:
       '@eslint/eslintrc':
         specifier: 'catalog:'
@@ -718,6 +730,9 @@ importers:
       '@types/express':
         specifier: ^5.0.0
         version: 5.0.6
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.11
@@ -745,6 +760,12 @@ importers:
       '@hod/aweave-debate-machine':
         specifier: workspace:*
         version: link:../debate-machine
+      '@hod/aweave-debate-web':
+        specifier: workspace:*
+        version: link:../debate-web
+      '@hod/aweave-nestjs-core':
+        specifier: workspace:*
+        version: link:../nestjs-core
       '@nestjs/common':
         specifier: 'catalog:'
         version: 11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -819,12 +840,6 @@ importers:
       '@hod/aweave-config-core':
         specifier: workspace:*
         version: link:../config-core
-      '@hod/aweave-dashboard-web':
-        specifier: workspace:*
-        version: link:../dashboard-web
-      '@hod/aweave-debate-web':
-        specifier: workspace:*
-        version: link:../debate-web
       '@hod/aweave-nestjs-core':
         specifier: workspace:*
         version: link:../nestjs-core
@@ -3020,6 +3035,9 @@ packages:
 
   '@types/jest@30.0.0':
     resolution: {integrity: sha512-XTYugzhuwqWjws0CVz8QpM36+T+Dz5mTEBKhNs/esGLnCIlGdRy+Dq78NRjd7ls7r8BC8ZRMOrKlkO1hU0JOwA==}
+
+  '@types/js-yaml@4.0.9':
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -9236,6 +9254,8 @@ snapshots:
     dependencies:
       expect: 30.2.0
       pretty-format: 30.2.0
+
+  '@types/js-yaml@4.0.9': {}
 
   '@types/json-schema@7.0.15': {}
 
