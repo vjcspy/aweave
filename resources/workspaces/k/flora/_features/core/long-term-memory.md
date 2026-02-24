@@ -2,8 +2,6 @@
 
 ## Objective
 
-Phải luôn suy nghĩ bài toán rộng
-
 Trí nhớ dài hạn cho agent(không chỉ 1 agent mà là cho mỗi agent)
 
 - Đối với mỗi sub-agent:
@@ -24,7 +22,7 @@ Trí nhớ dài hạn cho agent(không chỉ 1 agent mà là cho mỗi agent)
 
 ### Phân loại memory
 
-Memory được chia thành nhiều layer(là nói đến cách load)
+Memory được chia thành nhiều layer(loading strategy)
 
 - Layer 1: Hot Memory (auto-loaded, always available)
 Phần này sẽ để trong `agent/rules/common/hot-memory` và dùng symlink để tạo cho cursor, codex, antigravity...
