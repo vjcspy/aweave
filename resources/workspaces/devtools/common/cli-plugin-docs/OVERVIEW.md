@@ -1,7 +1,7 @@
 # Docs CLI Plugin (`@hod/aweave-plugin-docs`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-docs/`
-> **Last Updated:** 2026-02-07
+> **Last Updated:** 2026-02-24
 
 oclif plugin cung cấp topic `aw docs` — document storage và versioning cho AI agents. Plugin này access **SQLite database trực tiếp** qua `better-sqlite3` — không thông qua server.
 
@@ -15,7 +15,8 @@ Lưu trữ và quản lý documents (chủ yếu markdown) với version history
 - **AI-Friendly Output:** `aw docs get` trả raw content mặc định (plain), `--format json/markdown` cho MCPResponse wrapper
 
 **Cách tiếp cận:** Direct SQLite access (không qua server) vì docs là local-first tool:
-- Database: `~/.aweave/docstore.db` (shared across projects)
+
+- Database: `~/.aweave/db/docstore.db` (shared across projects)
 - Concurrency: WAL mode + transaction retry cho version allocation
 - Override: `AWEAVE_DB_PATH` env var cho testing
 
@@ -44,7 +45,7 @@ Lưu trữ và quản lý documents (chủ yếu markdown) với version history
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  ~/.aweave/docstore.db   (SQLite, WAL mode)                  │
+│  ~/.aweave/db/docstore.db (SQLite, WAL mode)                 │
 │                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -104,16 +105,18 @@ Single table `document_versions` + `schema_meta`:
 ### Version Allocation
 
 Version numbers assigned within transaction + retry:
+
 ```
 BEGIN IMMEDIATE → SELECT MAX(version)+1 → INSERT → COMMIT
 ```
+
 Retry on UNIQUE constraint violation (concurrent writers).
 
 ## Configuration
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `AWEAVE_DB_PATH` | `~/.aweave/docstore.db` | Database file path (override for testing) |
+| `AWEAVE_DB_PATH` | `~/.aweave/db/docstore.db` | Database file path (override for testing) |
 
 ## Project Structure
 
