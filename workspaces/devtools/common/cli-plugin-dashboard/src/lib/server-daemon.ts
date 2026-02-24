@@ -64,7 +64,8 @@ export async function getDashboardServices(): Promise<{
         },
       ],
       stale: true,
-      error: error instanceof Error ? error.message : 'Failed to read daemon status',
+      error:
+        error instanceof Error ? error.message : 'Failed to read daemon status',
     };
   }
 }

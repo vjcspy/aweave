@@ -1,34 +1,6 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/debate": {
-      "get": {
-        "operationId": "DebateSpaController_serveDebateSpa[0]",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "DebateSpa"
-        ]
-      }
-    },
-    "/debate/{path}": {
-      "get": {
-        "operationId": "DebateSpaController_serveDebateSpa[1]",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "DebateSpa"
-        ]
-      }
-    },
     "/": {
       "get": {
         "operationId": "RootRedirectController_redirectToDebate",
@@ -931,6 +903,218 @@
   "servers": [],
   "components": {
     "schemas": {
+      "DebateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID"
+          },
+          "title": {
+            "type": "string"
+          },
+          "debate_type": {
+            "type": "string",
+            "enum": [
+              "coding_plan_debate",
+              "general_debate"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "AWAITING_OPPONENT",
+              "AWAITING_PROPOSER",
+              "AWAITING_ARBITRATOR",
+              "INTERVENTION_PENDING",
+              "CLOSED"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "debate_type",
+          "state",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "ArgumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "debate_id": {
+            "type": "string"
+          },
+          "parent_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "MOTION",
+              "CLAIM",
+              "APPEAL",
+              "RULING",
+              "INTERVENTION",
+              "RESOLUTION"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "proposer",
+              "opponent",
+              "arbitrator"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "client_request_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "seq": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO datetime"
+          }
+        },
+        "required": [
+          "id",
+          "debate_id",
+          "parent_id",
+          "type",
+          "role",
+          "content",
+          "client_request_id",
+          "seq",
+          "created_at"
+        ]
+      },
+      "ListDebatesDataDto": {
+        "type": "object",
+        "properties": {
+          "debates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DebateDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "debates",
+          "total"
+        ]
+      },
+      "ListDebatesResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ListDebatesDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "GetDebateDataDto": {
+        "type": "object",
+        "properties": {
+          "debate": {
+            "$ref": "#/components/schemas/DebateDto"
+          },
+          "motion": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArgumentDto"
+              }
+            ]
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArgumentDto"
+            }
+          }
+        },
+        "required": [
+          "debate",
+          "motion",
+          "arguments"
+        ]
+      },
+      "GetDebateResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/GetDebateDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "WriteResultDataDto": {
+        "type": "object",
+        "properties": {
+          "debate": {
+            "$ref": "#/components/schemas/DebateDto"
+          },
+          "argument": {
+            "$ref": "#/components/schemas/ArgumentDto"
+          }
+        },
+        "required": [
+          "debate",
+          "argument"
+        ]
+      },
+      "WriteResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/WriteResultDataDto"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
       "PollArgumentDataDto": {
         "type": "object",
         "properties": {
@@ -1105,85 +1289,6 @@
           "error"
         ]
       },
-      "DebateDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "UUID"
-          },
-          "title": {
-            "type": "string"
-          },
-          "debate_type": {
-            "type": "string",
-            "enum": [
-              "coding_plan_debate",
-              "general_debate"
-            ]
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "AWAITING_OPPONENT",
-              "AWAITING_PROPOSER",
-              "AWAITING_ARBITRATOR",
-              "INTERVENTION_PENDING",
-              "CLOSED"
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "description": "ISO datetime"
-          },
-          "updated_at": {
-            "type": "string",
-            "description": "ISO datetime"
-          }
-        },
-        "required": [
-          "id",
-          "title",
-          "debate_type",
-          "state",
-          "created_at",
-          "updated_at"
-        ]
-      },
-      "ListDebatesDataDto": {
-        "type": "object",
-        "properties": {
-          "debates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DebateDto"
-            }
-          },
-          "total": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "debates",
-          "total"
-        ]
-      },
-      "ListDebatesResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/ListDebatesDataDto"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "CreateDebateBodyDto": {
         "type": "object",
         "properties": {
@@ -1213,139 +1318,6 @@
           "debate_type",
           "motion_content",
           "client_request_id"
-        ]
-      },
-      "ArgumentDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "debate_id": {
-            "type": "string"
-          },
-          "parent_id": {
-            "type": "string",
-            "nullable": true
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "MOTION",
-              "CLAIM",
-              "APPEAL",
-              "RULING",
-              "INTERVENTION",
-              "RESOLUTION"
-            ]
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "proposer",
-              "opponent",
-              "arbitrator"
-            ]
-          },
-          "content": {
-            "type": "string"
-          },
-          "client_request_id": {
-            "type": "string",
-            "nullable": true
-          },
-          "seq": {
-            "type": "number"
-          },
-          "created_at": {
-            "type": "string",
-            "description": "ISO datetime"
-          }
-        },
-        "required": [
-          "id",
-          "debate_id",
-          "parent_id",
-          "type",
-          "role",
-          "content",
-          "client_request_id",
-          "seq",
-          "created_at"
-        ]
-      },
-      "WriteResultDataDto": {
-        "type": "object",
-        "properties": {
-          "debate": {
-            "$ref": "#/components/schemas/DebateDto"
-          },
-          "argument": {
-            "$ref": "#/components/schemas/ArgumentDto"
-          }
-        },
-        "required": [
-          "debate",
-          "argument"
-        ]
-      },
-      "WriteResultResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/WriteResultDataDto"
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
-      "GetDebateDataDto": {
-        "type": "object",
-        "properties": {
-          "debate": {
-            "$ref": "#/components/schemas/DebateDto"
-          },
-          "motion": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ArgumentDto"
-              }
-            ]
-          },
-          "arguments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArgumentDto"
-            }
-          }
-        },
-        "required": [
-          "debate",
-          "motion",
-          "arguments"
-        ]
-      },
-      "GetDebateResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "$ref": "#/components/schemas/GetDebateDataDto"
-          }
-        },
-        "required": [
-          "success",
-          "data"
         ]
       },
       "SubmitArgumentBodyDto": {
@@ -1474,24 +1446,6 @@
           "files"
         ]
       },
-      "ListConfigsResponseDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConfigDomainDto"
-            }
-          }
-        },
-        "required": [
-          "success",
-          "data"
-        ]
-      },
       "GetConfigResponseDto": {
         "type": "object",
         "properties": {
@@ -1526,6 +1480,24 @@
           "rawDefaultConfig",
           "defaultConfigPath",
           "effectiveConfig"
+        ]
+      },
+      "ListConfigsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigDomainDto"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       },
       "SaveConfigRequestDto": {
@@ -1569,7 +1541,7 @@
           },
           "active": {
             "type": "boolean",
-            "description": "Whether the skill is active (based on ~/.aweave/active-skills.json)"
+            "description": "Whether the skill is active (based on .aweave/loaded-skills.yaml)"
           }
         },
         "required": [

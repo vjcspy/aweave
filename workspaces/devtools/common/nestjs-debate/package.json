@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-nestjs-debate",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "files": [
     "dist"
   ],
@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@hod/aweave-debate-machine": "workspace:*",
+    "@hod/aweave-debate-web": "workspace:*",
+    "@hod/aweave-nestjs-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/platform-ws": "catalog:",
     "@nestjs/swagger": "catalog:",
