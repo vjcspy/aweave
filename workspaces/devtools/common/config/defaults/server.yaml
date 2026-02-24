@@ -13,4 +13,4 @@ database:
     dir: "~/.aweave/db"
     name: "debate.db"
   docstore:
-    path: "~/.aweave/docstore.db"
+    path: "~/.aweave/db/docstore.db"
