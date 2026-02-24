@@ -140,12 +140,12 @@ Flag missing required files with ❌.
 
 ## Step 5: Load Active Skills
 
-Read `~/.aweave/loaded-skills.md` if it exists.
+Read `.aweave/loaded-skills.yaml`
 
-- **Read the skill list only** — do NOT read full `SKILL.md` files yet (save tokens)
+- **Parse YAML only** — read the YAML list of active skills only (do NOT read full `SKILL.md` files yet; save tokens)
+- **Read all listed skills** — load all entries under `skills[]`, using `skill_path` to locate each `SKILL.md`
 - **Decide per skill** — based on the current task, determine which skills are relevant and load their full `SKILL.md` only when needed
 - **Missing SKILL.md = STOP** — if you decide to load a skill but its `SKILL.md` file does not exist at the referenced path, **STOP immediately** and report the error to the user
-- **File missing = proceed** — if `~/.aweave/loaded-skills.md` itself does not exist, proceed normally without skills
 
 ## Step 6: Execute Task
 

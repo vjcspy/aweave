@@ -30,9 +30,9 @@ NestJS backend module that exposes REST APIs to read/write workspace YAML config
 ## Core Services & Logic (Internal)
 
 - **ConfigsService:** Interacts with the local file system and dependencies (`@hod/aweave-config-core`) to fetch domain variables and enforce validation when saving data to `aweave.config.yaml`.
-- **SkillsService:** Scans directories (`agent/skills/` and `~/.aweave/skills/`) to parse `SKILL.md` frontmatter using `gray-matter`. Validates and maintains active skill UUIDs in `~/.aweave/active-skills.json` and auto-generates `~/.aweave/loaded-skills.md` as context for AI Agent workflows.
+- **SkillsService:** Scans directories (`agent/skills/` and `~/.aweave/skills/`) to parse `SKILL.md` frontmatter using `gray-matter`. Persists active skills for the current workspace in `<PROJECT_ROOT>/.aweave/loaded-skills.yaml` (single source of truth, YAML with absolute `skill_path` values) for AI Agent workflows.
 
 ## External Dependencies & Cross-Service Contracts (Outbound)
 
-- **Databases/Persistence:** Uses the local filesystem directly to persist JSON states and Markdown files.
+- **Databases/Persistence:** Uses the local filesystem directly to persist workspace YAML config and skill activation state.
 - **Internal Workspace Packages:** Relies heavily on `@hod/aweave-config-core` for evaluating the effective configuration states.

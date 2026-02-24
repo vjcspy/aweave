@@ -15,7 +15,7 @@ export class SkillDto {
 
   @ApiProperty({
     description:
-      'Whether the skill is active (based on ~/.aweave/active-skills.json)',
+      'Whether the skill is active (based on .aweave/loaded-skills.yaml)',
   })
   active!: boolean;
 }
