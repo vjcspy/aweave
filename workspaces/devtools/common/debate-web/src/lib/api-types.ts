@@ -4,38 +4,6 @@
  */
 
 export interface paths {
-  '/debate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['DebateSpaController_serveDebateSpa[0]'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/debate/{path}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['DebateSpaController_serveDebateSpa[1]'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/': {
     parameters: {
       query?: never;
@@ -314,6 +282,72 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    DebateDto: {
+      /** @description UUID */
+      id: string;
+      title: string;
+      /** @enum {string} */
+      debate_type: 'coding_plan_debate' | 'general_debate';
+      /** @enum {string} */
+      state:
+        | 'AWAITING_OPPONENT'
+        | 'AWAITING_PROPOSER'
+        | 'AWAITING_ARBITRATOR'
+        | 'INTERVENTION_PENDING'
+        | 'CLOSED';
+      /** @description ISO datetime */
+      created_at: string;
+      /** @description ISO datetime */
+      updated_at: string;
+    };
+    ArgumentDto: {
+      id: string;
+      debate_id: string;
+      parent_id: string | null;
+      /** @enum {string} */
+      type:
+        | 'MOTION'
+        | 'CLAIM'
+        | 'APPEAL'
+        | 'RULING'
+        | 'INTERVENTION'
+        | 'RESOLUTION';
+      /** @enum {string} */
+      role: 'proposer' | 'opponent' | 'arbitrator';
+      content: string;
+      client_request_id: string | null;
+      seq: number;
+      /** @description ISO datetime */
+      created_at: string;
+    };
+    ListDebatesDataDto: {
+      debates: components['schemas']['DebateDto'][];
+      total: number;
+    };
+    ListDebatesResponseDto: {
+      /** @example true */
+      success: boolean;
+      data: components['schemas']['ListDebatesDataDto'];
+    };
+    GetDebateDataDto: {
+      debate: components['schemas']['DebateDto'];
+      motion: components['schemas']['ArgumentDto'] | null;
+      arguments: components['schemas']['ArgumentDto'][];
+    };
+    GetDebateResponseDto: {
+      /** @example true */
+      success: boolean;
+      data: components['schemas']['GetDebateDataDto'];
+    };
+    WriteResultDataDto: {
+      debate: components['schemas']['DebateDto'];
+      argument: components['schemas']['ArgumentDto'];
+    };
+    WriteResultResponseDto: {
+      /** @example true */
+      success: boolean;
+      data: components['schemas']['WriteResultDataDto'];
+    };
     PollArgumentDataDto: {
       id: string;
       seq: number;
@@ -374,33 +408,6 @@ export interface components {
       success: boolean;
       error: components['schemas']['ErrorDetailDto'];
     };
-    DebateDto: {
-      /** @description UUID */
-      id: string;
-      title: string;
-      /** @enum {string} */
-      debate_type: 'coding_plan_debate' | 'general_debate';
-      /** @enum {string} */
-      state:
-        | 'AWAITING_OPPONENT'
-        | 'AWAITING_PROPOSER'
-        | 'AWAITING_ARBITRATOR'
-        | 'INTERVENTION_PENDING'
-        | 'CLOSED';
-      /** @description ISO datetime */
-      created_at: string;
-      /** @description ISO datetime */
-      updated_at: string;
-    };
-    ListDebatesDataDto: {
-      debates: components['schemas']['DebateDto'][];
-      total: number;
-    };
-    ListDebatesResponseDto: {
-      /** @example true */
-      success: boolean;
-      data: components['schemas']['ListDebatesDataDto'];
-    };
     CreateDebateBodyDto: {
       debate_id: string;
       title: string;
@@ -408,45 +415,6 @@ export interface components {
       debate_type: 'coding_plan_debate' | 'general_debate';
       motion_content: string;
       client_request_id: string;
-    };
-    ArgumentDto: {
-      id: string;
-      debate_id: string;
-      parent_id: string | null;
-      /** @enum {string} */
-      type:
-        | 'MOTION'
-        | 'CLAIM'
-        | 'APPEAL'
-        | 'RULING'
-        | 'INTERVENTION'
-        | 'RESOLUTION';
-      /** @enum {string} */
-      role: 'proposer' | 'opponent' | 'arbitrator';
-      content: string;
-      client_request_id: string | null;
-      seq: number;
-      /** @description ISO datetime */
-      created_at: string;
-    };
-    WriteResultDataDto: {
-      debate: components['schemas']['DebateDto'];
-      argument: components['schemas']['ArgumentDto'];
-    };
-    WriteResultResponseDto: {
-      /** @example true */
-      success: boolean;
-      data: components['schemas']['WriteResultDataDto'];
-    };
-    GetDebateDataDto: {
-      debate: components['schemas']['DebateDto'];
-      motion: components['schemas']['ArgumentDto'] | null;
-      arguments: components['schemas']['ArgumentDto'][];
-    };
-    GetDebateResponseDto: {
-      /** @example true */
-      success: boolean;
-      data: components['schemas']['GetDebateDataDto'];
     };
     SubmitArgumentBodyDto: {
       /** @enum {string} */
@@ -482,10 +450,6 @@ export interface components {
       domain: string;
       files: components['schemas']['ConfigFileDto'][];
     };
-    ListConfigsResponseDto: {
-      success: boolean;
-      data: components['schemas']['ConfigDomainDto'][];
-    };
     GetConfigResponseDto: {
       success: boolean;
       /** @description The raw YAML content from the user override file */
@@ -498,6 +462,10 @@ export interface components {
       defaultConfigPath: string;
       /** @description The effective parsed configuration object */
       effectiveConfig: Record<string, never>;
+    };
+    ListConfigsResponseDto: {
+      success: boolean;
+      data: components['schemas']['ConfigDomainDto'][];
     };
     SaveConfigRequestDto: {
       /** @description The raw YAML content to save as user override */
@@ -512,7 +480,7 @@ export interface components {
       description: string;
       /** @description Absolute path to the SKILL.md file */
       path: string;
-      /** @description Whether the skill is active (based on ~/.aweave/active-skills.json) */
+      /** @description Whether the skill is active (based on .aweave/loaded-skills.yaml) */
       active: boolean;
     };
     ListSkillsResponseDto: {
@@ -557,40 +525,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  'DebateSpaController_serveDebateSpa[0]': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  'DebateSpaController_serveDebateSpa[1]': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
   RootRedirectController_redirectToDebate: {
     parameters: {
       query?: never;
