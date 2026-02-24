@@ -1,4 +1,112 @@
+---
+confluence_sync:
+  page:
+    id: "4587782156"
+    url: "https://tinybots.atlassian.net/wiki/spaces/~712020e960f9fdcdbd471a860cb5e759b69588/pages/4587782156"
+    space_key: "~712020e960f9fdcdbd471a860cb5e759b69588"
+    title: "PROD-1223: soft delete"
+
+  sync:
+    direction_default: "up"
+    include_only_listed_sections: true
+    preserve_unmanaged_remote_content: true
+
+  approval:
+    require_for_down: false
+    source: "manual"
+    any_of_labels: []
+
+  sections:
+    - key: "requirement"
+      local_heading: "## Requirement"
+      remote_heading: "Requirement"
+      direction: "up"
+      status: "approved"
+      transform: "po_qe_readable"
+      last_sync:
+        page_version: 3
+        synced_at: "2026-02-24T03:20:42Z"
+        local_hash: "c069b34b2387cfe33d0231a5d555ce3e5cf0bb41e21bd9eb7561e89de5a34f35"
+        remote_hash: "c069b34b2387cfe33d0231a5d555ce3e5cf0bb41e21bd9eb7561e89de5a34f35"
+
+    - key: "objective"
+      local_heading: "## Objective"
+      remote_heading: "Objective"
+      direction: "up"
+      status: "approved"
+      transform: "po_qe_readable"
+      last_sync:
+        page_version: 3
+        synced_at: "2026-02-24T03:20:42Z"
+        local_hash: "c09564ee859dfad317846cf52361f2629978a0868f21b8ae7f937ce6d8e4f118"
+        remote_hash: "c09564ee859dfad317846cf52361f2629978a0868f21b8ae7f937ce6d8e4f118"
+
+    - key: "new_api_spec"
+      local_heading: "## New API Spec"
+      remote_heading: "New API Spec"
+      direction: "up"
+      status: "approved"
+      transform: "po_qe_readable"
+      last_sync:
+        page_version: 3
+        synced_at: "2026-02-24T03:20:42Z"
+        local_hash: "35918dade4c1f5eeaee50a070b883ce91e22c6e2c906b768da8b1a647aa2564d"
+        remote_hash: "35918dade4c1f5eeaee50a070b883ce91e22c6e2c906b768da8b1a647aa2564d"
+---
+
 # 📋 [PROD-XXX: 2026-01-21] - Soft Delete Recurring Schedule Series
+
+## Requirement
+
+- When a user deletes a recurring schedule series, past executions must remain visible in history and reporting.
+- Deleting the series “from a date” must stop only future occurrences from that date onward.
+- If the chosen date is in the past, the request must be rejected to protect historical records.
+
+### Frontend Verification
+
+1. Ensure a script is planned every day.
+2. Delete the script starting today (today and upcoming days).
+3. Verify past executions remain visible in the calendar; past items must not disappear after deployment.
+
+## Objective
+
+- Prevent accidental loss of historical execution information when managing recurring schedules.
+- Provide a predictable “delete from date” behaviour for recurring schedules while keeping past data intact.
+
+## New API Spec
+
+### Endpoint
+
+`DELETE https://api.tinybots.academy/v4/schedules/{robotId}`
+
+### Parameters
+
+**Body**
+
+- `id` (required): schedule item identifier.
+- `fromDate` (optional): ISO-8601 datetime with offset. If omitted, defaults to “now”.
+
+**Query parameter (optional alternative)**
+
+- `fromDate` (optional): same format, for clients that cannot send a DELETE body.
+
+### Expected Results
+
+- If the schedule is recurring:
+  - Keep occurrences strictly before `fromDate`.
+  - Remove/stop occurrences at `fromDate` and after.
+- If `fromDate` is in the past: return `400 Bad Request`.
+- If the schedule is not found for the robot: return `404 Not Found`.
+- Success: return `204 No Content` (also returned when the series was already ended before `fromDate`).
+
+### Example
+
+```http
+DELETE /v4/schedules/123?fromDate=2026-05-05T00:00:00%2B02:00
+Content-Type: application/json
+
+{"id": 456}
+```
 
 ## References
 
