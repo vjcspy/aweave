@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-nestjs-dashboard",
-  "version": "0.1.0",
+  "version": "0.1.24",
   "description": "DevTools Dashboard backend module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
