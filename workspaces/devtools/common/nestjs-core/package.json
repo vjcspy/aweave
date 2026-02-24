@@ -1,6 +1,6 @@
 {
   "name": "@hod/aweave-nestjs-core",
-  "version": "0.1.0",
+  "version": "0.1.24",
   "description": "Shared NestJS core infrastructure: pino logging, request context, correlation ID",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
