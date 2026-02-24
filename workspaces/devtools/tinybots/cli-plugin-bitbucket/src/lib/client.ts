@@ -13,7 +13,7 @@ import {
   MCPContent,
   MCPError,
   MCPResponse,
-} from '@aweave/cli-shared';
+} from '@hod/aweave-cli-shared';
 
 import {
   parsePRComment,

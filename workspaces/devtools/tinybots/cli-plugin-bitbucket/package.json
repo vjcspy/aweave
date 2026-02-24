@@ -12,7 +12,7 @@
     "topicSeparator": " "
   },
   "dependencies": {
-    "@aweave/cli-shared": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
     "@oclif/core": "^4.2.8"
   },
   "devDependencies": {
