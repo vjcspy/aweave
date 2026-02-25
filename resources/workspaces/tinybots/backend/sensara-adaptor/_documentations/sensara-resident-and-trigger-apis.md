@@ -27,15 +27,20 @@ confluence_sync:
 
 # Sensara Resident & Trigger APIs
 
-Base path: `/v1/ext/sensara`
+Endpoints are split into two groups:
 
-All endpoints require authentication via Kong headers and the `SENSARA_RESIDENT_WRITE_ALL` permission.
+| Group | Base Path | Authentication |
+|-------|-----------|---------------|
+| 🔒 Internal (Rosa admin) | `/v1/sensara` | Kong headers + `SENSARA_RESIDENT_WRITE_ALL` permission |
+| 🌐 External (Sensara) | `/ext/v1/sensara` | `x-relation-id` header (org token via gateway) |
 
 ---
 
 ## Authentication
 
-Every request must include the following headers (provided by Kong gateway after JWT validation):
+### Internal Endpoints (Rosa admin)
+
+Requires Kong gateway headers and the `SENSARA_RESIDENT_WRITE_ALL` permission:
 
 | Header | Description |
 |--------|-------------|
@@ -43,14 +48,24 @@ Every request must include the following headers (provided by Kong gateway after
 | `x-consumer-username` | Kong consumer username |
 | `x-consumer-custom-id` | Custom consumer identifier |
 
+### External Endpoints (Sensara)
+
+Sensara authenticates via an **org token**. The gateway injects the `x-relation-id` header which identifies the calling organization. All external endpoints require this header:
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric, positive integer) | yes | Organization relation ID, injected by gateway from org token |
+
+No Kong auth headers or permissions are needed for external endpoints.
+
 In curl examples below, `$BASE_URL` refers to the service host (e.g. `https://api.example.com`).
-`$TOKEN` refers to a valid JWT Bearer token.
+`$TOKEN` refers to a valid JWT Bearer token (internal endpoints only).
 
 ---
 
-## Resident Endpoints
+## Internal Resident Endpoints
 
-### 1. PUT /v1/ext/sensara/residents
+### 1. PUT /v1/sensara/residents
 
 Register or reactivate a resident-robot mapping with hearable locations. If the resident was previously soft-deleted, this endpoint reactivates the record instead of creating a duplicate.
 
@@ -76,7 +91,7 @@ Register or reactivate a resident-robot mapping with hearable locations. If the 
 #### Test
 
 ```bash
-curl -X PUT "$BASE_URL/v1/ext/sensara/residents" \
+curl -X PUT "$BASE_URL/v1/sensara/residents" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -88,9 +103,43 @@ curl -X PUT "$BASE_URL/v1/ext/sensara/residents" \
 
 ---
 
-### 2. GET /v1/ext/sensara/residents
+### 2. DELETE /v1/sensara/residents/{residentId}
 
-List all active residents and their linked robots for a given organization. Requires the `x-relation-id` header to scope results to the organization.
+Soft-delete a resident. The resident will no longer appear in any GET or trigger endpoint. The record can be reactivated by calling PUT with the same resident/robot combination.
+
+#### Request
+
+| Parameter | Location | Type | Required | Description |
+|-----------|----------|------|----------|-------------|
+| `residentId` | path | `string` | yes | Sensara resident identifier (min 1 char) |
+
+#### Response (204)
+
+No content.
+
+#### Error Responses
+
+| Status | Condition |
+|--------|-----------|
+| 404 | Resident not found |
+| 403 | Missing permission |
+
+#### Test
+
+```bash
+curl -X DELETE "$BASE_URL/v1/sensara/residents/resident-abc-123" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## External Resident Endpoints
+
+All external endpoints require the `x-relation-id` header.
+
+### 3. GET /ext/v1/sensara/residents
+
+List all active residents and their linked robots for a given organization. The `x-relation-id` header scopes results to the organization's robots.
 
 #### Request
 
@@ -123,14 +172,13 @@ List all active residents and their linked robots for a given organization. Requ
 #### Test
 
 ```bash
-curl -X GET "$BASE_URL/v1/ext/sensara/residents" \
-  -H "Authorization: Bearer $TOKEN" \
+curl -X GET "$BASE_URL/ext/v1/sensara/residents" \
   -H "x-relation-id: 5"
 ```
 
 ---
 
-### 3. GET /v1/ext/sensara/residents/{residentId}
+### 4. GET /ext/v1/sensara/residents/{residentId}
 
 Retrieve a single active resident by their Sensara resident ID, including robot serial and hearable locations. Returns 404 if the resident does not exist or has been soft-deleted.
 
@@ -139,6 +187,10 @@ Retrieve a single active resident by their Sensara resident ID, including robot 
 | Parameter | Location | Type | Required | Description |
 |-----------|----------|------|----------|-------------|
 | `residentId` | path | `string` | yes | Sensara resident identifier (min 1 char) |
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric) | yes | Organization relation ID |
 
 #### Response (200)
 
@@ -156,19 +208,19 @@ Retrieve a single active resident by their Sensara resident ID, including robot 
 
 | Status | Condition |
 |--------|-----------|
+| 400 | Missing or invalid `x-relation-id` header |
 | 404 | Resident not found or soft-deleted |
-| 403 | Missing permission |
 
 #### Test
 
 ```bash
-curl -X GET "$BASE_URL/v1/ext/sensara/residents/resident-abc-123" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X GET "$BASE_URL/ext/v1/sensara/residents/resident-abc-123" \
+  -H "x-relation-id: 5"
 ```
 
 ---
 
-### 4. PATCH /v1/ext/sensara/residents/{residentId}
+### 5. PATCH /ext/v1/sensara/residents/{residentId}
 
 Update the hearable locations for an existing resident. Replaces all current locations with the provided list. Returns 404 if the resident does not exist or has been soft-deleted.
 
@@ -177,6 +229,10 @@ Update the hearable locations for an existing resident. Replaces all current loc
 | Parameter | Location | Type | Required | Description |
 |-----------|----------|------|----------|-------------|
 | `residentId` | path | `string` | yes | Sensara resident identifier (min 1 char) |
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric) | yes | Organization relation ID |
 
 **Body:**
 
@@ -199,15 +255,14 @@ Update the hearable locations for an existing resident. Replaces all current loc
 
 | Status | Condition |
 |--------|-----------|
-| 400 | Invalid body (missing or wrong type for `hearableLocations`) |
+| 400 | Invalid body (missing or wrong type for `hearableLocations`) or invalid `x-relation-id` |
 | 404 | Resident not found or soft-deleted |
-| 403 | Missing permission |
 
 #### Test
 
 ```bash
-curl -X PATCH "$BASE_URL/v1/ext/sensara/residents/resident-abc-123" \
-  -H "Authorization: Bearer $TOKEN" \
+curl -X PATCH "$BASE_URL/ext/v1/sensara/residents/resident-abc-123" \
+  -H "x-relation-id: 5" \
   -H "Content-Type: application/json" \
   -d '{
     "hearableLocations": ["kitchen", "hallway"]
@@ -216,43 +271,15 @@ curl -X PATCH "$BASE_URL/v1/ext/sensara/residents/resident-abc-123" \
 
 ---
 
-### 5. DELETE /v1/ext/sensara/residents/{residentId}
-
-Soft-delete a resident. The resident will no longer appear in any GET or trigger endpoint. The record can be reactivated by calling PUT with the same resident/robot combination.
-
-#### Request
-
-| Parameter | Location | Type | Required | Description |
-|-----------|----------|------|----------|-------------|
-| `residentId` | path | `string` | yes | Sensara resident identifier (min 1 char) |
-
-#### Response (204)
-
-No content.
-
-#### Error Responses
-
-| Status | Condition |
-|--------|-----------|
-| 404 | Resident not found |
-| 403 | Missing permission |
-
-#### Test
-
-```bash
-curl -X DELETE "$BASE_URL/v1/ext/sensara/residents/resident-abc-123" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
----
-
-## Trigger Subscription Endpoints
+## External Trigger Subscription Endpoints
 
 Trigger subscriptions allow Sensara to receive notifications when a robot detects a specific event type. Each subscription is scoped to an event name per robot.
 
 The `residentId` path parameter is resolved to a `robotId` internally — the caller does not need to know the robot ID.
 
-### 6. POST /v1/ext/sensara/residents/{residentId}/events/subscriptions/triggers
+All trigger endpoints require the `x-relation-id` header.
+
+### 6. POST /ext/v1/sensara/residents/{residentId}/events/subscriptions/triggers
 
 Create a trigger subscription for a specific event on the resident's robot. Only one subscription per event name is allowed — duplicates return 409 Conflict.
 
@@ -261,6 +288,10 @@ Create a trigger subscription for a specific event on the resident's robot. Only
 | Parameter | Location | Type | Required | Description |
 |-----------|----------|------|----------|-------------|
 | `residentId` | path | `string` | yes | Sensara resident identifier |
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric) | yes | Organization relation ID |
 
 **Body:**
 
@@ -286,15 +317,15 @@ Create a trigger subscription for a specific event on the resident's robot. Only
 
 | Status | Condition |
 |--------|-----------|
+| 400 | Missing or invalid `x-relation-id` header |
 | 404 | Resident not found or soft-deleted |
 | 409 | Subscription for this event already exists |
-| 403 | Missing permission |
 
 #### Test
 
 ```bash
-curl -X POST "$BASE_URL/v1/ext/sensara/residents/resident-abc-123/events/subscriptions/triggers" \
-  -H "Authorization: Bearer $TOKEN" \
+curl -X POST "$BASE_URL/ext/v1/sensara/residents/resident-abc-123/events/subscriptions/triggers" \
+  -H "x-relation-id: 5" \
   -H "Content-Type: application/json" \
   -d '{
     "eventName": "fall_detected"
@@ -303,7 +334,7 @@ curl -X POST "$BASE_URL/v1/ext/sensara/residents/resident-abc-123/events/subscri
 
 ---
 
-### 7. GET /v1/ext/sensara/residents/{residentId}/events/subscriptions/triggers
+### 7. GET /ext/v1/sensara/residents/{residentId}/events/subscriptions/triggers
 
 Retrieve all trigger subscriptions for a resident's robot.
 
@@ -312,6 +343,10 @@ Retrieve all trigger subscriptions for a resident's robot.
 | Parameter | Location | Type | Required | Description |
 |-----------|----------|------|----------|-------------|
 | `residentId` | path | `string` | yes | Sensara resident identifier |
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric) | yes | Organization relation ID |
 
 #### Response (200)
 
@@ -352,19 +387,19 @@ Retrieve all trigger subscriptions for a resident's robot.
 
 | Status | Condition |
 |--------|-----------|
+| 400 | Missing or invalid `x-relation-id` header |
 | 404 | Resident not found, soft-deleted, or no subscriptions exist |
-| 403 | Missing permission |
 
 #### Test
 
 ```bash
-curl -X GET "$BASE_URL/v1/ext/sensara/residents/resident-abc-123/events/subscriptions/triggers" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X GET "$BASE_URL/ext/v1/sensara/residents/resident-abc-123/events/subscriptions/triggers" \
+  -H "x-relation-id: 5"
 ```
 
 ---
 
-### 8. DELETE /v1/ext/sensara/residents/{residentId}/events/subscriptions/triggers/{subscriptionId}
+### 8. DELETE /ext/v1/sensara/residents/{residentId}/events/subscriptions/triggers/{subscriptionId}
 
 Delete a specific trigger subscription by its numeric ID.
 
@@ -375,6 +410,10 @@ Delete a specific trigger subscription by its numeric ID.
 | `residentId` | path | `string` | yes | Sensara resident identifier |
 | `subscriptionId` | path | `string` (numeric) | yes | Subscription ID to delete |
 
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-relation-id` | `string` (numeric) | yes | Organization relation ID |
+
 #### Response (204)
 
 No content.
@@ -383,13 +422,12 @@ No content.
 
 | Status | Condition |
 |--------|-----------|
-| 400 | `subscriptionId` is not a valid number |
+| 400 | `subscriptionId` is not a valid number, or invalid `x-relation-id` |
 | 404 | Resident not found or soft-deleted |
-| 403 | Missing permission |
 
 #### Test
 
 ```bash
-curl -X DELETE "$BASE_URL/v1/ext/sensara/residents/resident-abc-123/events/subscriptions/triggers/7" \
-  -H "Authorization: Bearer $TOKEN"
+curl -X DELETE "$BASE_URL/ext/v1/sensara/residents/resident-abc-123/events/subscriptions/triggers/7" \
+  -H "x-relation-id: 5"
 ```
