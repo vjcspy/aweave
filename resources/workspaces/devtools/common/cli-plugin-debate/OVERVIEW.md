@@ -85,7 +85,7 @@ Plugin này cung cấp CLI interface cho hệ thống debate giữa AI agents:
 | `aw debate request-completion` | Submit RESOLUTION | `POST /debates/:id/resolution` |
 | `aw debate ruling` | Submit RULING (DEV-ONLY) | `POST /debates/:id/ruling` |
 | `aw debate intervention` | Submit INTERVENTION (DEV-ONLY) | `POST /debates/:id/intervention` |
-| `aw debate list` | List debates | `GET /debates` |
+| `aw debate list` | List debates (supports `--pending-first-opponent`) | `GET /debates` |
 | `aw debate services start` | Start server + web via pm2 | (local) |
 | `aw debate services stop` | Stop services | (local) |
 | `aw debate services status` | Check service health | (local) |
