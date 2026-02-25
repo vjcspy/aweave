@@ -19,7 +19,7 @@ services:
       DB_RW_PASSWORD: ICgVcbpYW731vY3UjexgAnuQ69Wv2DdN
     volumes:
       - typ-e-maven-cache:/root/.m2
-      # - ../../../projects/tinybots/backend/typ-e/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql:/usr/src/app/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql
+      # - ../../../../workspaces/tinybots/backend/typ-e/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql:/usr/src/app/src/main/resources/db/migration/V101__grant_micro_manager_event_tables.sql
     depends_on:
       - mysql-typ-e-db
 
@@ -41,7 +41,7 @@ services:
       DB_RW_PASSWORD: ICgVcbpYW731vY3UjexgAnuQ69Wv2DdN
     volumes:
       - wonkers-db-maven-cache:/root/.m2
-      - ../../../projects/tinybots/backend/wonkers-db/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql:/usr/src/app/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql
+      - ../../../../workspaces/tinybots/backend/wonkers-db/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql:/usr/src/app/src/main/resources/db/migration/V62__make_hardware_type_id_nullable_in_taas_concept_order.sql
     depends_on:
       - mysql-wonkers-db
 
@@ -228,7 +228,7 @@ services:
   megazord-events:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/megazord-events:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/megazord-events:/usr/src/app
     ports:
       - 8881:8080
     labels:
@@ -263,7 +263,7 @@ services:
     ports:
       - 8882:8080
     volumes:
-      - ../../../projects/tinybots/backend/wonkers-graphql:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/wonkers-graphql:/usr/src/app
     labels:
       - wonkers-graphql
     environment:
@@ -299,7 +299,7 @@ services:
       - 8883:8080
       - 9229:9229
     volumes:
-      - ../../../projects/tinybots/backend/azi-3-status-check-jobs:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/azi-3-status-check-jobs:/usr/src/app
     labels:
       - azi-3-status-check-jobs
     environment:
@@ -317,7 +317,7 @@ services:
   m-o-triggers:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/m-o-triggers:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/m-o-triggers:/usr/src/app
     labels:
       - m-o-triggers
     environment:
@@ -339,7 +339,7 @@ services:
   wonkers-ecd:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/wonkers-ecd:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/wonkers-ecd:/usr/src/app
     labels:
       - "wonkers-ecd"
     environment:
@@ -368,8 +368,8 @@ services:
   wonkers-nedap:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/wonkers-nedap:/usr/src/app
-      - ../../../projects/tinybots/backend/wonkers-nedap/ci/ssh.config:/root/.ssh/config
+      - ../../../../workspaces/tinybots/backend/wonkers-nedap:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/wonkers-nedap/ci/ssh.config:/root/.ssh/config
       - ${DEPLOYMENT_KEY}:/root/.ssh/id_rsa
     labels:
       - wonkers-nedap
@@ -401,7 +401,7 @@ services:
     image: maven:3-jdk-12
     platform: linux/amd64
     volumes:
-      - ../../../projects/tinybots/backend/eve:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/eve:/usr/src/app
       - eve-maven-cache:/root/.m2
       - ${HOME}/.aws:/root/.aws:ro
     environment:
@@ -429,7 +429,7 @@ services:
   micro-manager:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/micro-manager:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/micro-manager:/usr/src/app
     ports:
       - "18080:8080"
     labels:
@@ -457,7 +457,7 @@ services:
   atlas:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/atlas:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/atlas:/usr/src/app
     labels:
       - atlas-service
     environment:
@@ -476,7 +476,7 @@ services:
   sensara-adaptor:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/sensara-adaptor:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/sensara-adaptor:/usr/src/app
     labels:
       - sensara-adaptor
     environment:
@@ -517,8 +517,8 @@ services:
   wonkers-taas-orders:
     image: node:22-alpine
     volumes:
-      - ../../../projects/tinybots/backend/wonkers-taas-orders:/usr/src/app
-      - ../../../projects/tinybots/backend/wonkers-taas-orders/ci/ssh.config:/root/.ssh/config
+      - ../../../../workspaces/tinybots/backend/wonkers-taas-orders:/usr/src/app
+      - ../../../../workspaces/tinybots/backend/wonkers-taas-orders/ci/ssh.config:/root/.ssh/config
       - ${DEPLOYMENT_KEY}:/root/.ssh/id_rsa
     labels:
       - wonkers-taas-orders
