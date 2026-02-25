@@ -44,7 +44,7 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - AI agents already have tools to read/write files
 - Workspace structure IS the index — no separate indexing needed
 
-**Git tracking note:** Not all memory data is git-tracked. `resources/` files are tracked and get full git versioning/diff/conflict resolution. `user/memory/` is gitignored (personal/workspace-specific data) — see §2.13 for persistence model.
+**Git tracking:** Both `resources/` and `user/memory/workspaces/{W}/` are git-tracked per workspace branch. Git provides versioning, diff, and conflict resolution for all memory data. See §2.13 for `user/memory/` branching model.
 
 ### 2.3 Write path: dual model by data location
 
@@ -154,18 +154,18 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - Workspace file structure IS the index — no additional infrastructure needed
 - `agent-transcripts/` kept as archive; search/index deferred to Phase 2
 
-### 2.13 `user/memory/` persistence model (not git-tracked)
+### 2.13 `user/memory/` persistence model (git-tracked per workspace branch)
 
-**Decision:** `user/memory/` content is gitignored — no git versioning. Persistence relies on append-only writes with tool-level dedup and `_index.yaml` as integrity check.
+**Decision:** `user/memory/workspaces/{workspace}/` is git-tracked per workspace branch. Each workspace branch adds `!user/memory/workspaces/{W}/` to `.gitignore`, making all files within (including `_index.yaml`, `decisions.md`, `lessons.md`) version-controlled.
 
 **Rationale:**
 
-- `user/memory/` is personal/workspace-specific data, intentionally excluded from git (`.gitignore:29` = `user/memory/**`, only `.gitkeep` tracked)
-- For Phase 1, append-only is sufficient: entries are small, human-reviewable, and `workspace_save_memory` handles dedup before writing
-- `_index.yaml` serves as a lightweight integrity/summary layer — if corrupted, can be rebuilt by scanning `decisions.md`/`lessons.md`
-- No rollback needed: entries are concise enough to manually edit or remove
+- Each workspace branch has different memory — switching branches via git automatically switches memory context
+- `_index.yaml` MUST be in git: without it, switching workspace branches would lose the memory metadata that tools depend on
+- Git provides versioning, diff, and conflict resolution for workspace memory — same benefits as `resources/` files
+- `workspace_save_memory` tool handles formatting, dedup, and `_index.yaml` maintenance; git handles persistence and branching
 
-**When to reconsider:** If memory volume grows large enough that accidental corruption or data loss becomes a real risk. Phase 2 may introduce backup snapshots or a centralized store.
+**Current `.gitignore` pattern:** Base rule ignores `user/memory/**`, each workspace branch adds an exception (e.g., `!user/memory/workspaces/k/` on branch `workspaces/k`).
 
 ## 3. Architecture
 
@@ -256,7 +256,7 @@ Memory is classified along two orthogonal axes:
 
 **Token budget management:**
 
-- **Total budget: ~300 lines / ~3000 tokens** across all hot memory files (including agent-specific rules like `gitignore-tool-behavior.mdc`)
+- **Total budget: ~500 lines / ~5000 tokens** across all hot memory files (including agent-specific rules like `gitignore-tool-behavior.mdc`)
 - **Content criteria:** Only include items needed in >80% of conversations. Workspace-specific knowledge belongs in warm memory, not hot.
 - **Promotion/demotion:** When hot memory is full and a new critical item needs to be added, review existing items and demote the least-universal one to warm memory (`user/memory/` or `resources/`).
 - **Quarterly review:** Human reviews all hot memory files to prune stale entries and consolidate similar ones.
@@ -303,22 +303,21 @@ filters:
   status: string[]?      # for plans: ["done", "in_progress"]
   tags: string[]?        # for any topic
   category: string?      # for decisions/lessons: "architecture", "debugging", etc.
-limit: number?           # max items per topic (default: 20)
-sort_by: string?         # "updated" | "created" | "path" (default: "updated")
-structure_depth: number? # folder structure depth (default: 2 — top-level + immediate children)
 ```
+
+> **No pagination/limit/sort params:** Response size optimization is handled internally by the tool implementation, not exposed as parameters. The tool owner controls what data is returned and how to keep it efficient. AI agents use `scope` to narrow results.
 
 **Default response (no topics, `include_defaults: true`):**
 
 Always returned to give AI structural orientation without needing to decide what to ask for:
 
-1. **Folder structure** of `resources/workspaces/{scope}/` — bounded by `structure_depth` (default 2)
-2. **T0 summaries** (front-matter: name, description, tags) of OVERVIEW.md files within scope — bounded by `limit`
-3. **Memory metadata** from `user/memory/workspaces/{workspace}/_index.yaml` — available tags, categories, summary stats
+1. **Folder structure** of `resources/workspaces/{scope}/`
+2. **T0 summaries** (front-matter: name, description, tags) of all OVERVIEW.md files within scope
+3. **Memory metadata** from `user/memory/workspaces/{workspace}/_index.yaml` — available tags, categories
 
 > **Design note (subject to change):** Defaults currently include only structure + T0 + memory metadata. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
-**Scaling note:** At workspace level without domain filter, T0 summaries can be numerous (e.g., 29 OVERVIEW.md files across devtools). The `limit` and `structure_depth` params prevent token bloat. For deep exploration, AI narrows scope (add domain/repository) or requests specific topics.
+**`include_defaults` rationale:** For Phase 1, explicit client-side control is simplest — stateless, portable across all MCP transports. Future optimization: MCP server can auto-track per-session state (stdio process = one session, SSE = persistent connection) and auto-skip defaults on subsequent calls, replacing this param with a `refresh: bool?` for explicit re-fetch.
 
 **Topic-specific data (when topics are specified):**
 
@@ -366,26 +365,20 @@ defaults:
     workspace: devtools
     last_updated: "2026-02-25"
     tags:
-      - { name: "nestjs", description: "NestJS framework", used_in: [decisions, lessons], count: 3 }
-      - { name: "pnpm", description: "Package manager issues", used_in: [lessons], count: 2 }
+      - { name: "nestjs", description: "NestJS framework", used_in: [decisions, lessons] }
+      - { name: "pnpm", description: "Package manager issues", used_in: [lessons] }
     categories:
-      - { name: "architecture", used_in: [decisions], count: 5 }
-      - { name: "debugging", used_in: [lessons], count: 3 }
-    summary:
-      total_decisions: 12
-      total_lessons: 8
-      domains_with_memory: [common]
+      - { name: "architecture", used_in: [decisions] }
+      - { name: "debugging", used_in: [lessons] }
 
 plans:
   - name: "Workflow Engine"
     description: "Build a workflow execution engine for sequential and parallel task graphs"
     status: done
     created: "2026-02-08"
-    updated: "2026-02-09"
     tags: [workflow, engine, xstate]
     _meta:
       document_path: "resources/workspaces/devtools/common/_plans/260208-workflow-engine.md"
-      document_id: "260208-workflow-engine"
 
   - name: "SPA Self-Serve from Feature Modules"
     description: "Eliminate per-SPA boilerplate in server package"
@@ -394,7 +387,6 @@ plans:
     tags: [nestjs, spa, architecture]
     _meta:
       document_path: "resources/workspaces/devtools/common/_plans/260223-spa-self-serve.md"
-      document_id: "260223-spa-self-serve"
 ```
 
 ### 4.3 Warm Memory — Write Path
@@ -547,20 +539,13 @@ tags:
   - name: string
     description: string?       # Human-readable meaning of this tag
     used_in: string[]          # Which files use this tag: ["decisions", "lessons"]
-    count: number
 
 categories:
   - name: string
     used_in: string[]
-    count: number
-
-summary:
-  total_decisions: number
-  total_lessons: number
-  domains_with_memory: string[]   # Which domains have their own memory files
 ```
 
-This file is auto-maintained by `workspace_save_memory`. When a new entry is saved with a tag/category not yet tracked, the tool adds it. Loaded as part of defaults in `workspace_get_context` — gives AI awareness of what's queryable without extra tool calls.
+This file is git-tracked per workspace branch (see §2.13). Auto-maintained by `workspace_save_memory` — when a new entry is saved with a tag/category not yet tracked, the tool adds it. Loaded as part of defaults in `workspace_get_context` — gives AI awareness of what's queryable without extra tool calls.
 
 **First-run / recovery behavior:**
 
@@ -657,9 +642,10 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 | 12 | Plan status via tool vs direct edit | Direct file edit. All `resources/` file edits are direct, not via tools. See §2.11. |
 | 13 | Learnings bundling | Decisions and lessons are separate topics in `workspace_get_context`, not grouped under "learnings". Each maps to one data source for consistency. |
 | 14 | Write path boundary (C1 fix) | `resources/` = direct file edit, `user/memory/` = `workspace_save_memory` tool. See §2.3 rewrite. |
-| 15 | `user/memory/` persistence model (C2 fix) | Not git-tracked. Append-only + tool-level dedup + `_index.yaml` as integrity layer. See §2.13. |
+| 15 | `user/memory/` persistence model | Git-tracked per workspace branch. Each branch adds gitignore exception. See §2.13. |
 | 16 | `_index.yaml` first-run behavior | Auto-bootstrap from source files if missing/malformed. `schema_version` field for future migration. See §4.5. |
-| 17 | `workspace_get_context` scaling | Added `limit`, `sort_by`, `structure_depth` params to prevent token bloat on large workspaces. See §4.2.2. |
+| 17 | `workspace_get_context` no pagination params | No `limit`/`sort_by`/`structure_depth` exposed. Tool owner optimizes internally. AI uses `scope` to narrow. |
+| 18 | Hot memory budget | Increased to ~500 lines / ~5000 tokens. Allows adequate guidance without being too restrictive. |
 
 ## 7. Open Questions
 
@@ -671,6 +657,8 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 - [ ] **Memory metadata bootstrap (task):** Create initial `_index.yaml` files for existing workspaces with their current tags/categories.
 - [ ] **AGENTS.md workflow migration (task):** Rewrite AGENTS.md to use optional workspace loading flow instead of 6-step ceremony. See §2.9.
 - [ ] **Default data tuning:** Monitor if structure + T0 + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
+- [ ] **`rule.md` rename (task):** Current `agent/rules/common/rule.md` is symlinked as `AGENTS.md`. After rewriting for optional workspace loading (§2.9), rename to a more descriptive name and update symlink.
+- [ ] **`create-overview.md` update (task):** Rewrite `agent/commands/common/create-overview.md` to differentiate workspace/domain/repo overview guidelines. Workspace overview MUST NOT list individual packages (T0 defaults already include all OVERVIEW front-matters → listing causes duplication). Remove Phase 4 (ABSTRACT.md generation per §2.4). Add OVERVIEW.md front-matter requirement.
 - [ ] **ABSTRACT.md → OVERVIEW.md front-matter migration (phased cutover):**
   1. Introduce dual-read support in rules/tooling: accept both `ABSTRACT.md` and `OVERVIEW.md` front-matter as T0 source
   2. Update generators (`create-overview.md`) to write front-matter format (configurable or both temporarily)
