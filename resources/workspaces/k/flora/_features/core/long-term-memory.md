@@ -167,6 +167,52 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 **Current `.gitignore` pattern:** Base rule ignores `user/memory/**`, each workspace branch adds an exception (e.g., `!user/memory/workspaces/k/` on branch `workspaces/k`).
 
+### 2.14 APM integrated into NestJS server
+
+**Decision:** APM (Agent Provider MCP) is integrated into `@hod/aweave-server` (NestJS), not a standalone process. Single server handles HTTP REST + SSE/MCP on one port.
+
+**Rationale:**
+
+- Single process = simpler ops. One `aw server start`, one port (3456), one log stream
+- Session tracking for `include_defaults` optimization lives naturally in NestJS middleware — no cross-process communication needed
+- Existing infrastructure (pino logging, SQLite config store, bearer token auth) reused directly
+- Follows existing pattern: server already serves REST + WebSocket + static SPA. Adding MCP/SSE is another transport on the same process
+- NestJS ecosystem has MCP integration options (e.g., `@rekog/mcp-nest`) if useful, but can also implement directly with MCP SDK
+
+### 2.15 Multi-layer architecture for workspace memory tools
+
+**Decision:** Workspace memory tools are built as 4 layers. Core business logic is a standalone package; NestJS, CLI, and MCP layers import core and add their transport concerns.
+
+**Rationale:**
+
+- Core logic (filesystem scanning, front-matter parsing, `_index.yaml` maintenance) must be reusable across all access methods
+- CLI needs direct filesystem access without server dependency (workspace memory is local data — no shared state requiring a server intermediary)
+- NestJS provides REST API for web UIs, session tracking for `include_defaults`, pino logging, SQLite stats
+- MCP tools (inside NestJS/APM) provide AI agent access via SSE transport
+- Consistent with DevTools pattern: `debate-machine` (core) → `nestjs-debate` (NestJS) → `cli-plugin-debate` (CLI)
+
+**Package structure:**
+
+| Layer | Package | Path | Imports |
+|-------|---------|------|---------|
+| **Core** | `@hod/aweave-workspace-memory` | `common/workspace-memory/` | No framework deps |
+| **NestJS** | `@hod/aweave-nestjs-workspace-memory` | `common/nestjs-workspace-memory/` | core + NestJS + pino + better-sqlite3 |
+| **CLI** | `@hod/aweave-plugin-workspace` | `common/cli-plugin-workspace/` | core + cli-shared |
+| **MCP** | Integrated in NestJS (APM) | Part of `nestjs-workspace-memory` or server | core + MCP SDK |
+
+**Key difference from debate pattern:** CLI calls core directly (not via HTTP → NestJS). Workspace memory is local filesystem — no shared state requires a server intermediary. This makes CLI faster and independent of server lifecycle.
+
+### 2.16 `include_defaults` dual mechanism
+
+**Decision:** Keep `include_defaults` as client param AND implement server-side per-session tracking. When both signals are available, server logs divergence for data-driven optimization.
+
+**Rationale:**
+
+- Client param (`include_defaults`): explicit, stateless, portable across transports. AI agent controls when to skip defaults.
+- Server session tracking: NestJS middleware detects per-session whether defaults have been sent. Leverages existing infra (pino for logging, SQLite for stats).
+- **Divergence logging:** When agent sends `include_defaults: true` but server detects this is a repeat call in the same session → log warning via pino, increment `defaults_redundant_count` in SQLite.
+- **Decision point:** When ratio `redundant / total` consistently >90% over time → data proves AI agents always handle correctly → can deprecate `include_defaults` in favor of server-only session tracking + `refresh: bool?` for explicit re-fetch.
+
 ## 3. Architecture
 
 ### 3.1 Memory Classification
@@ -266,7 +312,13 @@ Memory is classified along two orthogonal axes:
 
 #### 4.2.1 Tool Design
 
-All warm memory retrieval is handled by a single MCP tool: `workspace_get_context`. This tool is part of APM (Agent Provider MCP). Each call accepts scope parameters plus optional topics, and returns structured YAML with metadata.
+All warm memory retrieval is handled by a single tool: `workspace_get_context`. Available via 3 access layers (see §2.15):
+
+- **MCP** (AI agents): `workspace_get_context` tool via APM, integrated in `@hod/aweave-server` (§2.14)
+- **CLI** (terminal): `aw workspace get-context --workspace <W> [--topics plans,features]`
+- **REST** (web/services): `GET /workspace/context?workspace=<W>&topics=plans,features`
+
+All layers delegate to core package `@hod/aweave-workspace-memory` for business logic. Each call accepts scope parameters plus optional topics, and returns structured data with metadata.
 
 **Common scope parameters:**
 
@@ -317,7 +369,7 @@ Always returned to give AI structural orientation without needing to decide what
 
 > **Design note (subject to change):** Defaults currently include only structure + T0 + memory metadata. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
-**`include_defaults` rationale:** For Phase 1, explicit client-side control is simplest — stateless, portable across all MCP transports. Future optimization: MCP server can auto-track per-session state (stdio process = one session, SSE = persistent connection) and auto-skip defaults on subsequent calls, replacing this param with a `refresh: bool?` for explicit re-fetch.
+**`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
 **Topic-specific data (when topics are specified):**
 
@@ -393,7 +445,11 @@ plans:
 
 #### 4.3.1 Tool: `workspace_save_memory`
 
-MCP tool for saving experiential knowledge (decisions, lessons) to `user/memory/` workspace files.
+Tool for saving experiential knowledge (decisions, lessons) to `user/memory/` workspace files. Available via same 3 access layers as `workspace_get_context` (§2.15):
+
+- **MCP** (AI agents): `workspace_save_memory` tool via APM
+- **CLI** (terminal): `aw workspace save-memory --workspace <W> --type decision --title "..." --content "..."`
+- **REST** (web/services): `POST /workspace/memory`
 
 **Scope:** `user/memory/workspaces/{scope}/` only. All edits to `resources/` files (plan status updates, OVERVIEW changes, etc.) are done via direct file tools (StrReplace, Write) — not through this tool.
 
@@ -646,10 +702,14 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 | 16 | `_index.yaml` first-run behavior | Auto-bootstrap from source files if missing/malformed. `schema_version` field for future migration. See §4.5. |
 | 17 | `workspace_get_context` no pagination params | No `limit`/`sort_by`/`structure_depth` exposed. Tool owner optimizes internally. AI uses `scope` to narrow. |
 | 18 | Hot memory budget | Increased to ~500 lines / ~5000 tokens. Allows adequate guidance without being too restrictive. |
+| 19 | APM location | Integrated into `@hod/aweave-server` (NestJS). Single server, single port. See §2.14. |
+| 20 | Multi-layer architecture | Core + NestJS + CLI + MCP. Core is standalone package; CLI calls core directly (no server roundtrip). See §2.15. |
+| 21 | `include_defaults` dual mechanism | Client param + server session tracking + divergence logging. Data-driven path to simplification. See §2.16. |
 
 ## 7. Open Questions
 
-- [x] **Relationship to APM:** `workspace_*` tools will be part of APM (Agent Provider MCP), not a standalone MCP.
+- [x] **Relationship to APM:** `workspace_*` tools are part of APM, integrated into `@hod/aweave-server` (NestJS). Not a standalone MCP process.
+- [ ] **Workspace memory packages (task):** Create the 4 packages: `workspace-memory` (core), `nestjs-workspace-memory` (NestJS), `cli-plugin-workspace` (CLI), MCP integration in server. See §2.15 for structure.
 - [ ] **Plan front-matter migration (task):** Scan existing plans in `resources/*/_plans/` and add missing `status`, `tags`, `created` fields. Similarly, add front-matter to OVERVIEW.md files that lack it.
 - [ ] **OVERVIEW.md front-matter migration (task):** Scan existing OVERVIEW.md files and add `name`, `description`, `tags` front-matter. Migrate any standalone ABSTRACT.md content into the corresponding OVERVIEW.md front-matter.
 - [ ] **Learning file review cadence:** When per-domain `decisions.md` or `lessons.md` grows beyond ~50 entries, consider splitting or archiving older entries. No automated solution yet — human reviews.
