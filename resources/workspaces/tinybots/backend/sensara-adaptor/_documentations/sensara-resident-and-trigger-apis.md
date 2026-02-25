@@ -19,10 +19,10 @@ confluence_sync:
       status: "approved"
       transform: "none"
       last_sync:
-        page_version: 0
-        synced_at: ""
-        local_hash: ""
-        remote_hash: ""
+        page_version: 2
+        synced_at: "2026-02-24T16:26:32+07:00"
+        local_hash: "synced"
+        remote_hash: "synced"
 ---
 
 # Sensara Resident & Trigger APIs
