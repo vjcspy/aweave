@@ -3,8 +3,8 @@
 ## Role & Objective
 
 Act as a **Senior Polyglot Software Architect** and **Technical Writer**.
-Your goal is to generate or update the "State of the Repo" Onboarding Document (Context Overview).
-This document serves as the primary context source for other AI Agents or Developers working on this repository.
+Your goal is to generate or update an OVERVIEW.md document.
+This document serves as the primary context source for other AI Agents or Developers working on this scope.
 
 **Input Variables:**
 
@@ -20,24 +20,34 @@ This document serves as the primary context source for other AI Agents or Develo
 
 | User Input | Resolved TARGET_PATH |
 |------------|---------------------|
-| `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>` | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` |
-| `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md` | Use as-is |
-| `resources/workspaces/<PROJECT_NAME>/OVERVIEW.md` | Use as-is (Global Project Overview) |
+| `workspaces/<PROJECT>/<DOMAIN>/<REPO>` | `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md` |
+| `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md` | Use as-is |
+| `resources/workspaces/<PROJECT>/<DOMAIN>/OVERVIEW.md` | Use as-is (Domain Overview) |
+| `resources/workspaces/<PROJECT>/OVERVIEW.md` | Use as-is (Workspace Overview) |
+
+**Scope Detection:**
+
+| TARGET_PATH Pattern | Scope |
+|---------------------|-------|
+| `resources/workspaces/<PROJECT>/OVERVIEW.md` | **workspace** |
+| `resources/workspaces/<PROJECT>/<DOMAIN>/OVERVIEW.md` | **domain** |
+| `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md` | **repo** |
 
 **Resolution Logic:**
 
 1. **IF** user provides a source path starting with `workspaces/`:
-   - Extract: `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>`
-   - Derive: `TARGET_PATH` = `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/OVERVIEW.md`
+   - Extract: `workspaces/<PROJECT>/<DOMAIN>/<REPO>`
+   - Derive: `TARGET_PATH` = `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md`
    - Set: `SOURCE_PATH` = user input (for code scanning)
 
 2. **IF** user provides a path starting with `resources/workspaces/`:
    - Use the provided path as `TARGET_PATH`
-   - Derive: `SOURCE_PATH` = `workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/` (extracted from TARGET_PATH)
+   - Derive: `SOURCE_PATH` from TARGET_PATH (if repo scope)
 
 3. **Confirm** both paths with user before proceeding:
-   - "📁 Source: `{SOURCE_PATH}`"
-   - "📄 Output: `{TARGET_PATH}`"
+   - "Source: `{SOURCE_PATH}`" (if applicable)
+   - "Output: `{TARGET_PATH}`"
+   - "Scope: `{SCOPE}`"
 
 ---
 
@@ -53,7 +63,7 @@ This document serves as the primary context source for other AI Agents or Develo
 2. **Branch Allow-list Check:**
     - IF `{CURRENT_BRANCH}` is NOT `develop` OR `master`:
       - **STOP IMMEDIATELY.**
-      - Output: "⚠️ **Aborted:** Documentation can only be generated from 'develop' or 'master'. Current branch is '{CURRENT_BRANCH}'."
+      - Output: "**Aborted:** Documentation can only be generated from 'develop' or 'master'. Current branch is '{CURRENT_BRANCH}'."
 
 3. **Existing File Consistency Check:**
     - Check if `{TARGET_PATH}` exists.
@@ -61,7 +71,7 @@ This document serves as the primary context source for other AI Agents or Develo
       - Read the file content. Look for the metadata line: `> **Branch:** [Old_Branch_Name]`.
       - **Consistency Rule:** IF `[Old_Branch_Name]` != `{CURRENT_BRANCH}`:
         - **STOP IMMEDIATELY.**
-        - Output: "⚠️ **Aborted:** Branch Mismatch. The existing documentation belongs to branch '{Old_Branch_Name}', but you are currently on '{CURRENT_BRANCH}'. Please handle the merge or delete the old file manually."
+        - Output: "**Aborted:** Branch Mismatch. The existing documentation belongs to branch '{Old_Branch_Name}', but you are currently on '{CURRENT_BRANCH}'."
     - **Scenario B (File Missing):**
       - Proceed to Phase 1 (Status: NEW GENERATION).
 
@@ -76,118 +86,193 @@ This document serves as the primary context source for other AI Agents or Develo
 
 2. **Compare Hashes:**
     - IF `[Old_Hash]` == `{CURRENT_HASH}`:
-      - **STOP.** Output: "✅ Documentation is up to date. No changes detected."
+      - **STOP.** Output: "Documentation is up to date. No changes detected."
     - IF `[Old_Hash]` != `{CURRENT_HASH}`:
       - Set Status: **[UPDATE REQUIRED]**
       - **Delta Analysis:** Execute `git diff --name-only [Old_Hash] HEAD`.
-      - **Instruction:** Keep this file list. You must analyze these specific files to write the "Recent Changes Log". Focus on *structural* changes (new modules, renamed services, changed signatures), not just trivial code edits.
+      - Keep this file list for "Recent Changes Log" section.
 
 ---
 
-## Phase 2: Architectural Deep Scan (Language-Agnostic)
+## Phase 2: Scope-Aware Content Generation
 
-**Action:** Scan the codebase to identify architectural patterns. Auto-detect the language (Java/Node/Python/etc.) to use correct terminology, but map them to the following universal concepts:
+**Action:** Generate content based on detected scope. Each scope level has different content guidelines.
 
-1. **Project Structure:**
-    - Map the directory tree. Identify where logic, configs, and tests live.
+### ALL Scopes: Required Front-matter
 
-2. **Public Surface (Entry Points):**
-    - *For API Repos:* Identify Controllers, Route Handlers, gRPC definitions, or GraphQL Resolvers.
-    - *For CLI/Scripts:* Identify main execution entry points and arguments.
-    - *For Workers:* Identify Event Listeners (Kafka/RabbitMQ consumers) or Cron jobs.
+Every OVERVIEW.md MUST include YAML front-matter:
 
-3. **Core Services & Domain Logic:**
-    - Identify the "How". Where is the business logic isolated? (e.g., Service classes in Java/NestJS, Use Cases in Clean Arch, utils/logic folders in Python).
-    - Map data flow: Entry Point -> Service -> Data Access.
-
-4. **External Dependencies (Crucial):**
-    - **Scan imports and config files (package.json, pom.xml, requirements.txt, .env.example)**.
-    - List ALL external systems the code communicates with:
-      - Databases (Postgres, Mongo, Redis).
-      - Message Brokers (SQS, Kafka, RabbitMQ).
-      - Downsteam APIs(External APIs like: 3rd party vendors, other internal microservices).
-
+```yaml
 ---
+name: string                # Scope name (e.g., "DevTools", "DevTools Common", "CLI Plugin Debate")
+description: string         # 1-2 sentence abstract — this IS the T0 summary
+tags: string[]              # For filtering (optional)
+updated: YYYY-MM-DD        # Last meaningful update (optional)
+---
+```
 
-## Phase 3: Synthesis & Output Generation
+The `description` field is extracted by `workspace_get_context` as T0 data. It must be self-contained — a reader should understand the scope's purpose from this field alone.
 
-**Action:** Overwrite `{TARGET_PATH}` with the content below.
-**Constraint:** DO NOT use tables. Use Hierarchical Headings (H2, H3, H4) and Bullet points.
-
-### Output Template
+### ALL Scopes: Metadata Header (after front-matter)
 
 ```markdown
-## Metadata Header
 > **Branch:** {CURRENT_BRANCH}
-> **Last Commit:** {CURRENT_HASH} (Updated from [Old_Hash] if applicable)
+> **Last Commit:** {CURRENT_HASH}
+> **Last Updated:** {CURRENT_DATE}
+```
+
+---
+
+### Scope: Workspace Overview
+
+**Purpose:** High-level orientation for the entire workspace. Answers: "What is this workspace? How is it organized? How do things connect?"
+
+**CRITICAL — What workspace overview MUST NOT contain:**
+
+- **Individual package/repo listings with descriptions** — T0 summaries of all child OVERVIEW.md files are already returned by `workspace_get_context` defaults. Listing them in the workspace overview creates duplication.
+- **Per-package documentation links** — T0 responses include `_meta.document_path` for each OVERVIEW. No need to duplicate.
+- **Detailed dependency graphs between packages** — belongs in repo-level or architecture docs.
+
+**Content structure:**
+
+```markdown
+---
+name: "<Workspace Name>"
+description: "<1-2 sentences: what this workspace is and its primary purpose>"
+tags: [<relevant tags>]
+---
+
+> **Branch:** {CURRENT_BRANCH}
+> **Last Commit:** {CURRENT_HASH}
 > **Last Updated:** {CURRENT_DATE}
 
-## Title & TL;DR
-[A concise summary of what this repository does in 1-2 sentences]
+## TL;DR
+[1-3 sentences: what this workspace does, key technology choices, how it's organized]
+
+## Purpose & Bounded Context
+- **Role:** [High-level architectural role]
+- **Domain:** [Business/technical domain]
+
+## Design Philosophy
+[Core principles that guide all repos in this workspace. Architecture-level decisions.]
+
+## Architecture Overview
+[High-level diagram showing how domains/major components interact.
+Focus on CONNECTIONS and DATA FLOW, not listing individual packages.]
+
+## Development Approach
+[How to add new components, common patterns, workspace-level workflows]
+
+## Quick Reference
+[Common commands, entry points, useful links — workspace-level only]
+```
+
+**Anti-pattern example:** The workspace overview should NOT have sections like "Package Documentation" that list every package with links — this is exactly what the T0 defaults provide.
+
+---
+
+### Scope: Domain Overview
+
+**Purpose:** Context for a specific domain within the workspace. Answers: "What does this domain handle? What cross-repo patterns exist?"
+
+**Content structure:**
+
+```markdown
+---
+name: "<Domain Name>"
+description: "<1-2 sentences: what this domain covers>"
+tags: [<relevant tags>]
+---
+
+> **Branch:** {CURRENT_BRANCH}
+> **Last Commit:** {CURRENT_HASH}
+> **Last Updated:** {CURRENT_DATE}
+
+## TL;DR
+[What this domain is responsible for]
+
+## Domain Context
+- **Business Context:** [What business problem this domain solves]
+- **Relationship to Other Domains:** [How it connects to sibling domains]
+
+## Cross-Repo Patterns
+[Conventions, shared patterns, or architectural decisions that span multiple repos in this domain]
+
+## Domain-Specific Development
+[Any domain-specific setup, tooling, or conventions not covered at workspace level]
+```
+
+---
+
+### Scope: Repo/Package Overview
+
+**Purpose:** Detailed context for a specific repository or package. Answers: "How does this repo work? What does it expose? What does it depend on?"
+
+**Content structure:**
+
+```markdown
+---
+name: "<Repo/Package Name>"
+description: "<1-2 sentences: what this repo does>"
+tags: [<relevant tags>]
+---
+
+> **Branch:** {CURRENT_BRANCH}
+> **Last Commit:** {CURRENT_HASH}
+> **Last Updated:** {CURRENT_DATE}
+
+## TL;DR
+[Concise summary of what this repository does]
 
 ## Recent Changes Log (Only if Updating)
-[Based on the git diff analysis, briefly explain STRUCTURAL changes. e.g., "Added PaymentService", "Modified User Schema", "Refactored Auth Controller". If New Generation, leave blank or state "Initial Documentation".]
+[Structural changes from git diff analysis. If new generation, state "Initial Documentation".]
 
 ## Repo Purpose & Bounded Context
-- **Role:** [High-level architectural role, e.g., "Manages Order Lifecycle"]
-- **Domain:** [The specific business domain it belongs to]
+- **Role:** [Architectural role, e.g., "Manages Order Lifecycle"]
+- **Domain:** [Business domain it belongs to]
 
 ## Project Structure
 [Tree view or bullet list of KEY top-level directories and their purposes]
 
-## Controllers & Public Surface (Inbound)
-[Group by functionality. List endpoints/commands exposed to the world]
-- **[Group Name]:**
-  - [Description of key endpoints/commands]
+## Public Surface (Inbound)
+[Group by functionality. List endpoints/commands exposed]
+- **[Group Name]:** [Description of key endpoints/commands]
 
 ## Core Services & Logic (Internal)
-[Detail the "How". List key services/modules and their responsibilities]
+[Key services/modules and their responsibilities]
 - **[Service Name]:** [What logic does it handle?]
 
-## External Dependencies & Cross-Service Contracts (Outbound)
-**Crucial:** Explicitly list all external connections found in source code.
+## External Dependencies & Contracts (Outbound)
 - **Databases:** [List DBs]
-- **Message Queues:** [List Queues/Topics produced or consumed]
-- **External APIs:** [List downstream services called]
+- **Message Queues:** [List Queues/Topics]
+- **External APIs:** [List downstream services]
 ```
 
 ---
 
-## Phase 4: ABSTRACT.md Generation
+## Phase 3: Architectural Deep Scan (Repo Scope Only)
 
-**Action:** Create or update `ABSTRACT.md` in the same directory as `{TARGET_PATH}`.
+**Action:** For repo-scope overviews, scan the codebase to identify architectural patterns. Auto-detect the language to use correct terminology.
 
-**ABSTRACT Path:** Replace `OVERVIEW.md` with `ABSTRACT.md` in `{TARGET_PATH}`.
+1. **Project Structure:** Map the directory tree. Identify where logic, configs, and tests live.
+2. **Public Surface (Entry Points):** Controllers, route handlers, CLI commands, event listeners.
+3. **Core Services & Domain Logic:** Where business logic is isolated. Map data flow.
+4. **External Dependencies:** Scan imports and config files. List ALL external systems.
 
-### When ABSTRACT.md Does Not Exist
+> **For workspace/domain scopes:** Skip deep code scanning. These overviews are based on understanding the overall structure and reading existing child OVERVIEW.md files, not scanning individual source files.
 
-Generate from the OVERVIEW.md content just created:
-
-1. Extract the TL;DR and Repo Purpose sections
-2. Synthesize into a single paragraph of 100-200 tokens
-3. Write to ABSTRACT.md with YAML frontmatter including `overview_path: {TARGET_PATH}`
-
-### When ABSTRACT.md Exists
-
-Update it to reflect any significant changes in the OVERVIEW.md update.
-Always update YAML frontmatter `overview_path` to match `{TARGET_PATH}`.
-
-### Output Template
-
-```markdown
----
-overview_path: {TARGET_PATH}
 ---
 
-# <Repository/Project Name> — Abstract
+## Phase 4: Output & Validation
 
-<One paragraph, target 100-200 tokens (hard maximum 500 tokens). Describe: what this is, its primary purpose, key technologies, domain context, and relationship to other components in the workspace.>
-```
+**Action:** Write the generated content to `{TARGET_PATH}`.
 
-### Constraints
+**Validation checklist:**
 
-- Target 100-200 tokens (hard maximum 500 tokens)
-- YAML frontmatter is required and must include only `overview_path`
-- Single paragraph (no headings, no bullet points in the body)
-- Must be self-contained — reader should understand what this repo does without reading OVERVIEW.md
-- Technical terms allowed, but no deep implementation details
+- [ ] Front-matter includes `name`, `description` (and optionally `tags`, `updated`)
+- [ ] `description` field is self-contained (understandable without reading the full document)
+- [ ] Metadata header has correct branch, commit hash, date
+- [ ] Content follows scope-appropriate template
+- [ ] **Workspace scope:** Does NOT list individual packages/repos with descriptions
+- [ ] **All scopes:** No tables used in main content (use headings + bullets)
+- [ ] Constraint: DO NOT use tables in main content. Use Hierarchical Headings (H2, H3, H4) and Bullet points.
