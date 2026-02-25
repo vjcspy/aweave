@@ -239,6 +239,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       countDebatesByState: this.db.prepare<[string], { count: number }>(
         'SELECT COUNT(*) as count FROM debates WHERE state = ?',
       ),
+      findDebatesPendingFirstOpponent: this.db.prepare<
+        [number, number],
+        DbDebateRow
+      >(
+        `SELECT d.* FROM debates d
+         WHERE d.state = 'AWAITING_OPPONENT'
+         AND (SELECT COUNT(*) FROM arguments a WHERE a.debate_id = d.id) = 1
+         ORDER BY d.created_at DESC LIMIT ? OFFSET ?`,
+      ),
+      countDebatesPendingFirstOpponent: this.db.prepare<[], { count: number }>(
+        `SELECT COUNT(*) as count FROM debates d
+         WHERE d.state = 'AWAITING_OPPONENT'
+         AND (SELECT COUNT(*) FROM arguments a WHERE a.debate_id = d.id) = 1`,
+      ),
       insertDebate: this.db.prepare(
         'INSERT INTO debates (id, title, debate_type, state, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
       ),
@@ -315,6 +329,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       ? this.stmts.countDebatesByState.get(state)
       : this.stmts.countDebatesAll.get();
     return result?.count ?? 0;
+  }
+
+  findDebatesPendingFirstOpponent(limit: number, offset: number): Debate[] {
+    return this.stmts.findDebatesPendingFirstOpponent
+      .all(limit, offset)
+      .map(mapDebateRow);
+  }
+
+  countDebatesPendingFirstOpponent(): number {
+    return this.stmts.countDebatesPendingFirstOpponent.get()?.count ?? 0;
   }
 
   insertDebate(data: {
