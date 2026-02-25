@@ -77,19 +77,39 @@
 
 ## 1. Initialization
 
-### 1.1 Determine Context
+### 1.1 Determine `debate_id`
 
 When requested to act as **Opponent** in a debate:
 
-1. **MUST have `debate_id`** - Opponent does not create new debates
-2. **Determine `debateType`** from context:
-   - `coding_plan_debate` → Load rule: `agent/rules/common/debate/opponent/coding-plan.md`
-   - `general_debate` → Load rule: `agent/rules/common/debate/opponent/general.md`
+**IF user provides `debate_id`:** Use it directly → skip to Step 1.2.
 
-### 1.2 Permitted CLI Tools
+**IF `debate_id` is NOT provided:** Auto-detect by running:
+
+```bash
+aw debate list --pending-first-opponent --limit 10
+```
+
+This returns debates in `AWAITING_OPPONENT` state that only have MOTION (no CLAIM yet) — i.e., debates waiting for an Opponent to join for the first time.
+
+**Process the result:**
+
+| Result | Action |
+|--------|--------|
+| **Exactly 1 debate** | Use its `id` as `debate_id` — proceed automatically |
+| **Multiple debates** | Present the list to user (show `id`, `title`, `created_at`) and ask which one to join |
+| **No debates found** | Inform user: "No debates pending first opponent response. Please provide a `debate_id` to join an existing debate." — then STOP |
+
+### 1.2 Determine `debateType`
+
+After obtaining `debate_id`, determine `debateType` from context (via `get-context` response in Step 2):
+- `coding_plan_debate` → Load rule: `agent/rules/common/debate/opponent/coding-plan.md`
+- `general_debate` → Load rule: `agent/rules/common/debate/opponent/general.md`
+
+### 1.3 Permitted CLI Tools
 
 | Tool | Purpose |
 |------|---------|
+| `aw debate list` | List debates (used for auto-detecting debate_id) |
 | `aw debate generate-id` | Generate UUID for client_request_id |
 | `aw debate get-context` | Get debate context |
 | `aw debate submit` | Submit challenge CLAIM |
@@ -607,6 +627,7 @@ WHILE TRUE:
 
 | Command | Description | Response contains |
 |---------|-------------|-------------------|
+| `aw debate list --pending-first-opponent --limit 10` | Find debates awaiting first opponent | `debates[]` (id, title, created_at) |
 | `aw debate generate-id` | Generate new UUID | `id` |
 | `aw debate get-context --debate-id <id> --limit 20` | Get debate context | `debate.state`, `motion`, `arguments[]` |
 | `aw debate submit --debate-id <id> --role opponent --target-id <arg_id> --content "..." --client-request-id <id>` | Submit CLAIM | `argument_id` |
