@@ -85,6 +85,13 @@ export class DebateController {
     description: 'Filter by debate state',
   })
   @ApiQuery({
+    name: 'pending_first_opponent',
+    required: false,
+    type: Boolean,
+    description:
+      'When true, return only AWAITING_OPPONENT debates with no opponent CLAIM yet (only MOTION). Overrides state filter.',
+  })
+  @ApiQuery({
     name: 'limit',
     required: false,
     type: Number,
@@ -104,11 +111,13 @@ export class DebateController {
   @Get('debates')
   async listDebates(
     @Query('state') state?: string,
+    @Query('pending_first_opponent') pendingFirstOpponentRaw?: string,
     @Query('limit') limitRaw?: string,
     @Query('offset') offsetRaw?: string,
   ) {
     const limit = limitRaw ? parseInt(limitRaw, 10) : undefined;
     const offset = offsetRaw ? parseInt(offsetRaw, 10) : undefined;
+    const pendingFirstOpponent = pendingFirstOpponentRaw === 'true';
 
     if (limitRaw && (!Number.isFinite(limit) || (limit as number) < 0)) {
       throw new InvalidInputError('Invalid limit parameter');
@@ -118,9 +127,10 @@ export class DebateController {
     }
 
     const result = await this.debateService.listDebates({
-      state,
+      state: pendingFirstOpponent ? undefined : state,
       limit,
       offset,
+      pendingFirstOpponent,
     });
     return ok({
       debates: result.debates.map(serializeDebate),

@@ -15,6 +15,11 @@ export class DebateList extends Command {
 
   static flags = {
     state: Flags.string({ description: 'Filter by state' }),
+    'pending-first-opponent': Flags.boolean({
+      description:
+        'Show only debates awaiting first opponent response (MOTION only, no CLAIM yet)',
+      default: false,
+    }),
     limit: Flags.integer({ description: 'Max results' }),
     offset: Flags.integer({ description: 'Pagination offset' }),
     format: Flags.string({
@@ -30,7 +35,11 @@ export class DebateList extends Command {
     try {
       const client = getClient();
       const params: Record<string, string> = {};
-      if (flags.state) params.state = flags.state;
+      if (flags['pending-first-opponent']) {
+        params.pending_first_opponent = 'true';
+      } else if (flags.state) {
+        params.state = flags.state;
+      }
       if (flags.limit !== undefined) params.limit = String(flags.limit);
       if (flags.offset !== undefined) params.offset = String(flags.offset);
 

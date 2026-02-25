@@ -152,9 +152,16 @@ export class DebateService {
     state?: string;
     limit?: number;
     offset?: number;
+    pendingFirstOpponent?: boolean;
   }) {
     const take = opts?.limit ?? 50;
     const skip = opts?.offset ?? 0;
+
+    if (opts?.pendingFirstOpponent) {
+      const debates = this.db.findDebatesPendingFirstOpponent(take, skip);
+      const total = this.db.countDebatesPendingFirstOpponent();
+      return { debates, total };
+    }
 
     const debates = this.db.findDebates(opts?.state, take, skip);
     const total = this.db.countDebates(opts?.state);
