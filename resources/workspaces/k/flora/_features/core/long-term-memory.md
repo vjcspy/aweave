@@ -28,34 +28,36 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - Custom filtering requirements: beyond category, we need tag-based filtering. Data includes `_meta` fields (document_path, document_id) that must be returned on retrieval but NOT included in search
 - All data already exists in the workspace filesystem, organized by workspace/domain/repo. Only need to build retrieval tools on top of existing structure
 - Data is already optimized for workspace-scoped access — when an AI agent (or human) works with a workspace, they only care about data within that workspace
-- Data lives in git → scope-based query already provides sufficient context
+- `resources/` data lives in git → scope-based query already provides sufficient context. `user/memory/` is local workspace-scoped data (gitignored, see §2.13)
 - External memory servers are more suitable for cross-workspace / general-purpose scenarios (e.g., orchestrator assistant) — deferred to Phase 2
 
 **When to reconsider:** If the workspace grows to a scale where file-based aggregation becomes slow, or when cross-workspace semantic search becomes a concrete need. Phase 2 may introduce a custom-built centralized memory platform for orchestrator use.
 
 ### 2.2 File-based memory vs. database
 
-**Decision:** File-based (markdown + YAML front-matter), synced via git.
+**Decision:** File-based (markdown + YAML front-matter).
 
 **Rationale:**
 
 - Simplicity — no additional infrastructure (no vector DB, no graph DB)
 - Human-readable and human-editable
-- Git provides versioning, diff, and implicit conflict resolution
 - AI agents already have tools to read/write files
 - Workspace structure IS the index — no separate indexing needed
 
-### 2.3 Write path: direct file access vs. MCP write tools
+**Git tracking note:** Not all memory data is git-tracked. `resources/` files are tracked and get full git versioning/diff/conflict resolution. `user/memory/` is gitignored (personal/workspace-specific data) — see §2.13 for persistence model.
 
-**Decision:** AI agents write directly to memory files using native file tools (Write, StrReplace). No MCP write tools for Phase 1.
+### 2.3 Write path: dual model by data location
+
+**Decision:** Write path depends on data location:
+- **`resources/` files** (plans, OVERVIEWs, features): AI agents write directly using native file tools (Write, StrReplace). No MCP write tools needed.
+- **`user/memory/` files** (decisions, lessons, `_index.yaml`): AI agents use `workspace_save_memory` MCP tool, which handles formatting, dedup checking, and metadata index maintenance.
 
 **Rationale:**
 
-- Data is local, file-based, git-tracked
-- AI agents already have write capabilities
-- A rule/convention is sufficient to guide format and location
+- `resources/` files have diverse formats and are edited in-context (plan status, OVERVIEW content) — direct edit is simpler and more flexible
+- `user/memory/` files follow strict entry formats (§4.5) and require coordinated updates (append entry + update `_index.yaml`) — a tool ensures consistency and prevents drift
 - MCP read tools serve dual purpose: provide context during work AND check duplicates during save
-- Simplest possible approach that works
+- This boundary is clean: `resources/` = project knowledge (direct), `user/memory/` = experiential knowledge (tool-mediated)
 
 ### 2.4 No separate ABSTRACT.md files
 
@@ -151,6 +153,19 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - For unsurfaced context, AI searches `resources/workspaces/{scope}/` using Grep/SemanticSearch
 - Workspace file structure IS the index — no additional infrastructure needed
 - `agent-transcripts/` kept as archive; search/index deferred to Phase 2
+
+### 2.13 `user/memory/` persistence model (not git-tracked)
+
+**Decision:** `user/memory/` content is gitignored — no git versioning. Persistence relies on append-only writes with tool-level dedup and `_index.yaml` as integrity check.
+
+**Rationale:**
+
+- `user/memory/` is personal/workspace-specific data, intentionally excluded from git (`.gitignore:29` = `user/memory/**`, only `.gitkeep` tracked)
+- For Phase 1, append-only is sufficient: entries are small, human-reviewable, and `workspace_save_memory` handles dedup before writing
+- `_index.yaml` serves as a lightweight integrity/summary layer — if corrupted, can be rebuilt by scanning `decisions.md`/`lessons.md`
+- No rollback needed: entries are concise enough to manually edit or remove
+
+**When to reconsider:** If memory volume grows large enough that accidental corruption or data loss becomes a real risk. Phase 2 may introduce backup snapshots or a centralized store.
 
 ## 3. Architecture
 
@@ -288,17 +303,22 @@ filters:
   status: string[]?      # for plans: ["done", "in_progress"]
   tags: string[]?        # for any topic
   category: string?      # for decisions/lessons: "architecture", "debugging", etc.
+limit: number?           # max items per topic (default: 20)
+sort_by: string?         # "updated" | "created" | "path" (default: "updated")
+structure_depth: number? # folder structure depth (default: 2 — top-level + immediate children)
 ```
 
 **Default response (no topics, `include_defaults: true`):**
 
 Always returned to give AI structural orientation without needing to decide what to ask for:
 
-1. **Folder structure** of `resources/workspaces/{scope}/` — shows what exists
-2. **T0 summaries** (front-matter: name, description, tags) of all OVERVIEW.md files within scope
+1. **Folder structure** of `resources/workspaces/{scope}/` — bounded by `structure_depth` (default 2)
+2. **T0 summaries** (front-matter: name, description, tags) of OVERVIEW.md files within scope — bounded by `limit`
 3. **Memory metadata** from `user/memory/workspaces/{workspace}/_index.yaml` — available tags, categories, summary stats
 
 > **Design note (subject to change):** Defaults currently include only structure + T0 + memory metadata. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+
+**Scaling note:** At workspace level without domain filter, T0 summaries can be numerous (e.g., 29 OVERVIEW.md files across devtools). The `limit` and `structure_depth` params prevent token bloat. For deep exploration, AI narrows scope (add domain/repository) or requests specific topics.
 
 **Topic-specific data (when topics are specified):**
 
@@ -542,6 +562,16 @@ summary:
 
 This file is auto-maintained by `workspace_save_memory`. When a new entry is saved with a tag/category not yet tracked, the tool adds it. Loaded as part of defaults in `workspace_get_context` — gives AI awareness of what's queryable without extra tool calls.
 
+**First-run / recovery behavior:**
+
+- **`_index.yaml` missing:** Tool auto-bootstraps by scanning `decisions.md` and `lessons.md` in the same workspace directory. Extracts tags, categories, and counts. Creates `_index.yaml` with `schema_version: 1`. Returns the bootstrapped metadata in response + emits a `_warning: "metadata_bootstrapped"` field.
+- **`_index.yaml` malformed:** Tool rebuilds from source files (same as missing). Emits `_warning: "metadata_rebuilt"`.
+- **Source files missing (no `decisions.md`/`lessons.md`):** Returns empty metadata with zero counts. No error — this is a valid initial state.
+
+```yaml
+schema_version: 1          # for future migration support
+```
+
 ### 4.6 Context Memory Rule (Hot Memory)
 
 A hot memory rule file (`agent/rules/common/context-memory-rule.md`) that guides AI agents on when and how to use workspace memory tools.
@@ -626,6 +656,10 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 | 11 | `topics` vs `category` naming | `topics` for retrieval params, `category` for entry classification. See §2.7. |
 | 12 | Plan status via tool vs direct edit | Direct file edit. All `resources/` file edits are direct, not via tools. See §2.11. |
 | 13 | Learnings bundling | Decisions and lessons are separate topics in `workspace_get_context`, not grouped under "learnings". Each maps to one data source for consistency. |
+| 14 | Write path boundary (C1 fix) | `resources/` = direct file edit, `user/memory/` = `workspace_save_memory` tool. See §2.3 rewrite. |
+| 15 | `user/memory/` persistence model (C2 fix) | Not git-tracked. Append-only + tool-level dedup + `_index.yaml` as integrity layer. See §2.13. |
+| 16 | `_index.yaml` first-run behavior | Auto-bootstrap from source files if missing/malformed. `schema_version` field for future migration. See §4.5. |
+| 17 | `workspace_get_context` scaling | Added `limit`, `sort_by`, `structure_depth` params to prevent token bloat on large workspaces. See §4.2.2. |
 
 ## 7. Open Questions
 
@@ -637,3 +671,12 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 - [ ] **Memory metadata bootstrap (task):** Create initial `_index.yaml` files for existing workspaces with their current tags/categories.
 - [ ] **AGENTS.md workflow migration (task):** Rewrite AGENTS.md to use optional workspace loading flow instead of 6-step ceremony. See §2.9.
 - [ ] **Default data tuning:** Monitor if structure + T0 + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
+- [ ] **ABSTRACT.md → OVERVIEW.md front-matter migration (phased cutover):**
+  1. Introduce dual-read support in rules/tooling: accept both `ABSTRACT.md` and `OVERVIEW.md` front-matter as T0 source
+  2. Update generators (`create-overview.md`) to write front-matter format (configurable or both temporarily)
+  3. Migrate existing docs: copy ABSTRACT.md content into corresponding OVERVIEW.md front-matter `description` field
+  4. Validate coverage: ensure all scopes that had ABSTRACT.md now have OVERVIEW.md with front-matter
+  5. Update rule files that hardcode ABSTRACT.md paths (`rule.md`, `devtools.md`, `business-workspace.md`, `project-structure.md`) to use OVERVIEW.md front-matter
+  6. Flip defaults: new docs use front-matter only, stop generating ABSTRACT.md
+  7. Remove ABSTRACT.md hard requirement after compatibility checks pass
+  8. Clean up: remove orphaned ABSTRACT.md files
