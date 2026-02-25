@@ -8,6 +8,7 @@
 - Flow documentation: `resources/workspaces/tinybots/backend/wonkers-nedap/Nedap-retrieve-concepts-flow.md`
 
 Code references (current bug location):
+
 - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptOrderMapper.ts`
 - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptReturnMapper.ts`
 - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/mapSurvey.ts`
@@ -39,13 +40,13 @@ Fix triệt để crash khi mapper đọc `configAnswer.answer.text` trong trư�
 
 ### Phase 1: Analysis & Preparation
 
-- [ ] Confirm failure path from production stack trace to source code
+- [x] Confirm failure path from production stack trace to source code
   - **Outcome**: Chốt chính xác điểm crash tại `canUseClientLocation` của `ConceptOrderMapper`.
 - [ ] Define edge-case matrix cho `useClientAddress`
   - **Outcome**: Bảng case cho `answer` missing, empty text, `yes/ja`, `no/nee`, khác giá trị.
-- [ ] Identify all duplicated risk points
+- [x] Identify all duplicated risk points
   - **Outcome**: Danh sách tất cả mapper/hàm có pattern `.answer.text` không null guard.
-- [ ] Review existing tests and decide minimal regression coverage
+- [x] Review existing tests and decide minimal regression coverage
   - **Outcome**: Test cases mới cho order mapper và return mapper.
 
 ### Phase 2: Implementation (File/Code/Test Structure)
@@ -76,6 +77,11 @@ workspaces/tinybots/backend/wonkers-nedap/
   - `yes`, `ja` => `true`
   - others or missing => `false`
 
+#### 3.1.5 Harden `ConceptOrderMapper.getDeliveryAddress`
+
+- Protect `addressProperties[0].groupId` with null-safe guard (e.g., `addressProperties[0]?.groupId`) or early return when `addressProperties.length === 0`.
+- This prevents a related crash on the same path if the delivery address questions are entirely missing or filtered out.
+
 #### 3.2 Harden `ConceptReturnMapper.canUseClientLocation`
 
 - Apply same null-safe fix to maintain consistency and prevent future crash in return flow.
@@ -92,6 +98,7 @@ workspaces/tinybots/backend/wonkers-nedap/
   - Case A: `useClientAddress` question present, `answer` missing => no throw, returns `false`.
   - Case B: `useClientAddress` question present, `answer.text = 'Ja'` => `true`.
   - Case C: `useClientAddress` question present, `answer.text = ''` => `false`.
+  - Case D: `addressProperties` array is empty => no throw, address handling fails gracefully.
 - `ConceptReturnMapper` tests:
   - Mirror case A/B/C.
 
@@ -120,3 +127,18 @@ workspaces/tinybots/backend/wonkers-nedap/
 
 - [ ] Confirm whether unknown localized values beyond `yes/ja/no/nee` are expected from ONS for `useClientAddress`.
 - [ ] Decide whether to add a warning log when `useClientAddress` question exists but answer is missing.
+
+## Implementation Notes / As Implemented
+
+- Implemented null-safe access for `useClientAddress` answer parsing in both mappers:
+  - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptOrderMapper.ts`
+  - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptReturnMapper.ts`
+- `ConceptOrderMapper.getDeliveryAddress` now guards `addressProperties[0]` with optional chaining to prevent crashes when no delivery-address questions are present.
+- Added regression tests for `useClientAddress` parsing in:
+  - `workspaces/tinybots/backend/wonkers-nedap/test/mappers/ConceptOrderMapperTest.ts`
+  - `workspaces/tinybots/backend/wonkers-nedap/test/mappers/ConceptReturnMapperTest.ts`
+- Added order mapper regression coverage for missing delivery-address questions (`addressProperties` empty) to verify no throw and fallback `false`.
+- Validation:
+  - Source diff reviewed locally.
+  - Attempted TypeScript check with `yarn run tsc --noEmit`, but local Yarn workspace lockfile state blocked execution (`package doesn't seem to be present in your lockfile`).
+  - No test suite executed in this run.
