@@ -16,8 +16,8 @@ AGENTS.md
 !resources/
 !workspaces/
 !user/
-!.cursor/
-!.trae/
+.cursor/
+.trae/
 !/.aweave/
 
 /.aweave/*
