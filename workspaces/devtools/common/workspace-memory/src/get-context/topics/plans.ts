@@ -42,7 +42,9 @@ export async function getPlans(
     entries.push(entry);
   }
 
-  return entries.sort((a, b) => (b.created ?? '').localeCompare(a.created ?? ''));
+  return entries.sort((a, b) =>
+    (b.created ?? '').localeCompare(a.created ?? ''),
+  );
 }
 
 function extractDate(filename: string): string | undefined {

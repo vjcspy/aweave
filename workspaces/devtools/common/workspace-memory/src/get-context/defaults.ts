@@ -1,11 +1,11 @@
-import { existsSync, readFileSync } from 'fs';
 import fg from 'fast-glob';
+import { existsSync, readFileSync } from 'fs';
 import { relative } from 'path';
 import { parse as parseYaml } from 'yaml';
 
 import { getOrBootstrapIndex } from '../metadata/index-manager';
-import { parseFrontMatter } from '../parsers/front-matter';
 import { generateFolderStructure } from '../parsers/folder-structure';
+import { parseFrontMatter } from '../parsers/front-matter';
 import { getSkillsPath } from '../shared/paths';
 import type { DefaultsResponse, OverviewT0, SkillEntry } from './types';
 

@@ -1,8 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'fs';
 import { dirname, join } from 'path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
-import { parseFrontMatter } from '../parsers/front-matter';
 import { getIndexPath, getMemoryPath } from '../shared/paths';
 import type { CategoryEntry, IndexSchema, TagEntry } from './types';
 
@@ -132,9 +137,7 @@ function extractMetadataFromEntries(
   const entryBlocks = content.split(/^---$/m);
 
   for (const block of entryBlocks) {
-    const categoryMatch = block.match(
-      /\*\*Category:\*\*\s*(.+)/i,
-    );
+    const categoryMatch = block.match(/\*\*Category:\*\*\s*(.+)/i);
     if (categoryMatch) {
       const category = categoryMatch[1].trim();
       if (!categoriesMap.has(category)) categoriesMap.set(category, new Set());

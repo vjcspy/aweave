@@ -15,7 +15,13 @@ export async function getFeatures(
     const relPath = relative(projectRoot, file);
     const parts = relPath.split('/');
     const featureIdx = parts.indexOf('_features');
-    const name = featureIdx >= 0 ? parts.slice(featureIdx + 1).join('/').replace(/\.md$/, '') : relPath;
+    const name =
+      featureIdx >= 0
+        ? parts
+            .slice(featureIdx + 1)
+            .join('/')
+            .replace(/\.md$/, '')
+        : relPath;
 
     entries.push({
       name,

@@ -16,21 +16,35 @@ const TOOLS = [
     inputSchema: {
       type: 'object' as const,
       properties: {
-        workspace: { type: 'string', description: 'Workspace name (e.g. "devtools")' },
+        workspace: {
+          type: 'string',
+          description: 'Workspace name (e.g. "devtools")',
+        },
         domain: { type: 'string', description: 'Domain within workspace' },
         repository: { type: 'string', description: 'Repository within domain' },
         topics: {
           type: 'string',
-          description: 'Comma-separated: plans,features,architecture,overview,decisions,lessons',
+          description:
+            'Comma-separated: plans,features,architecture,overview,decisions,lessons',
         },
         include_defaults: {
           type: 'boolean',
-          description: 'Include defaults (folder structure, T0, metadata, skills)',
+          description:
+            'Include defaults (folder structure, T0, metadata, skills)',
           default: true,
         },
-        filter_status: { type: 'string', description: 'Comma-separated status filter for plans' },
-        filter_tags: { type: 'string', description: 'Comma-separated tag filter' },
-        filter_category: { type: 'string', description: 'Category filter for decisions/lessons' },
+        filter_status: {
+          type: 'string',
+          description: 'Comma-separated status filter for plans',
+        },
+        filter_tags: {
+          type: 'string',
+          description: 'Comma-separated tag filter',
+        },
+        filter_category: {
+          type: 'string',
+          description: 'Category filter for decisions/lessons',
+        },
       },
       required: ['workspace'],
     },
@@ -43,7 +57,11 @@ const TOOLS = [
       properties: {
         workspace: { type: 'string', description: 'Workspace name' },
         domain: { type: 'string', description: 'Domain within workspace' },
-        type: { type: 'string', enum: ['decision', 'lesson'], description: 'Entry type' },
+        type: {
+          type: 'string',
+          enum: ['decision', 'lesson'],
+          description: 'Entry type',
+        },
         title: { type: 'string', description: 'Entry title' },
         content: { type: 'string', description: 'Entry content' },
         category: { type: 'string', description: 'Category classification' },
@@ -71,25 +89,22 @@ export class McpToolsService implements OnModuleInit {
       tools: TOOLS,
     }));
 
-    this.server.setRequestHandler(
-      CallToolRequestSchema,
-      async (request) => {
-        const { name, arguments: args } = request.params;
-        const params = (args ?? {}) as Record<string, unknown>;
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+      const params = (args ?? {}) as Record<string, unknown>;
 
-        switch (name) {
-          case 'workspace_get_context':
-            return this.handleGetContext(params);
-          case 'workspace_save_memory':
-            return this.handleSaveMemory(params);
-          default:
-            return {
-              content: [{ type: 'text' as const, text: `Unknown tool: ${name}` }],
-              isError: true,
-            };
-        }
-      },
-    );
+      switch (name) {
+        case 'workspace_get_context':
+          return this.handleGetContext(params);
+        case 'workspace_save_memory':
+          return this.handleSaveMemory(params);
+        default:
+          return {
+            content: [{ type: 'text' as const, text: `Unknown tool: ${name}` }],
+            isError: true,
+          };
+      }
+    });
   }
 
   private async handleGetContext(params: Record<string, unknown>) {
@@ -119,7 +134,9 @@ export class McpToolsService implements OnModuleInit {
     });
 
     return {
-      content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      content: [
+        { type: 'text' as const, text: JSON.stringify(result, null, 2) },
+      ],
     };
   }
 
@@ -133,13 +150,13 @@ export class McpToolsService implements OnModuleInit {
       title: params.title as string,
       content: params.content as string,
       category: params.category as string | undefined,
-      tags: (params.tags as string)
-        ?.split(',')
-        .map((t: string) => t.trim()),
+      tags: (params.tags as string)?.split(',').map((t: string) => t.trim()),
     });
 
     return {
-      content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      content: [
+        { type: 'text' as const, text: JSON.stringify(result, null, 2) },
+      ],
     };
   }
 

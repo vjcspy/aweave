@@ -4,9 +4,21 @@ import {
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
+import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { getContext, Topic } from '@hod/aweave-workspace-memory';
 import { Command, Flags } from '@oclif/core';
 import { resolve } from 'path';
+
+function resolveProjectRoot(): string {
+  const devtoolsRoot = resolveDevtoolsRoot({
+    cwd: process.cwd(),
+    moduleDir: __dirname,
+  });
+  if (!devtoolsRoot) {
+    throw new Error('Could not resolve devtools root.');
+  }
+  return resolve(devtoolsRoot, '..', '..');
+}
 
 export class WorkspaceGetContext extends Command {
   static description = 'Get workspace context (calls core directly, no server)';
@@ -52,7 +64,7 @@ export class WorkspaceGetContext extends Command {
 
   async run() {
     const { flags } = await this.parse(WorkspaceGetContext);
-    const projectRoot = resolve(process.cwd(), '..', '..', '..');
+    const projectRoot = resolveProjectRoot();
 
     const topics = flags.topics
       ? (flags.topics.split(',').map((t) => t.trim()) as Topic[])
@@ -76,7 +88,12 @@ export class WorkspaceGetContext extends Command {
     output(
       new MCPResponse({
         success: true,
-        content: [new MCPContent({ type: ContentType.JSON, data: result as unknown as Record<string, unknown> })],
+        content: [
+          new MCPContent({
+            type: ContentType.JSON,
+            data: result as unknown as Record<string, unknown>,
+          }),
+        ],
         metadata: { resource_type: 'workspace_context' },
       }),
       flags.format,
