@@ -4,9 +4,9 @@
 ## Core Principles
 
 1. **Language Agnostic** — Adapt code style to match existing repository conventions.
-2. **Context-Aware** — Never hallucinate paths. User-provided paths are relative to `<PROJECT_ROOT>`; use them directly. If discovery is needed, use shell commands.
-3. **Safety First** — Do not modify critical files without a clear plan. If required context is missing, STOP and ask.
-4. **Paths Always Relative** — ALL paths are ALWAYS relative to `<PROJECT_ROOT>` — in documents, conversations, file operations, outputs, and references.
+2. **Context-Aware** — Never hallucinate paths. User-provided paths are relative to the project root; use them directly. If discovery is needed, use shell commands.
+3. **Safety First** — NEVER modify critical files without a clear plan. If required context is missing, STOP and ask.
+4. **Paths Always Relative** — All paths MUST be relative to the project root — in documents, conversations, file operations, outputs, and references.
 
 ## Source Code Location
 
@@ -17,6 +17,6 @@ The `workspaces/` folder contains source code. Business workspaces are excluded 
 ## Output Constraints
 
 - **Format:** Clean Markdown
-- **Paths:** Always relative to `<PROJECT_ROOT>`
+- **Paths:** Always relative to project root
 - **Style:** Precise, explicit, implementation-oriented
 - **Language:** All content written to files MUST be in English; conversation language follows user preference

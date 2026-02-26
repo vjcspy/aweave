@@ -667,6 +667,22 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
+  common/mcp-workspace-memory:
+    dependencies:
+      '@hod/aweave-workspace-memory':
+        specifier: workspace:*
+        version: link:../workspace-memory
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.12.1
+        version: 1.27.1(zod@3.25.76)
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.11
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   common/nestjs-core:
     dependencies:
       '@nestjs/common':
@@ -831,6 +847,9 @@ importers:
 
   common/nestjs-workspace-memory:
     dependencies:
+      '@hod/aweave-mcp-workspace-memory':
+        specifier: workspace:*
+        version: link:../mcp-workspace-memory
       '@hod/aweave-nestjs-core':
         specifier: workspace:*
         version: link:../nestjs-core
@@ -849,9 +868,6 @@ importers:
       '@nestjs/swagger':
         specifier: 'catalog:'
         version: 11.2.6(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(reflect-metadata@0.2.2)
-      zod:
-        specifier: ^3.24.0
-        version: 3.25.76
     devDependencies:
       '@types/express':
         specifier: ^5.0.0

@@ -20,7 +20,7 @@ Call `workspace_get_context` when the task involves:
 
 - Request topics as needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`, or any `_{topicName}/` folder
 - Set `include_defaults: false` on follow-up calls to skip redundant data
-- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries
+- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries — available values are visible in T0 summaries from previous topic responses
 
 **Scope narrowing:**
 
@@ -41,11 +41,11 @@ Decisions and lessons are regular files in `resources/workspaces/{scope}/_{decis
 | Architectural/design choice (made or confirmed) | Decision file in `_decisions/` with rationale |
 | End of session | Determine what's worth saving, write files, report summary |
 
-**File format:** `YYMMDD-name.md` with front-matter (`name`, `description`, `tags`, `category`). Same pattern as plans.
+**File format MUST follow:** `YYMMDD-name.md` with front-matter (`name`, `description`, `tags`, `category`). Same pattern as plans.
 
-## Cold Memory Access
+## Finding Additional Context
 
-When warm tools don't surface needed context:
+When `workspace_get_context` doesn't surface needed information:
 
 - Use `document_path` from tool responses → read full document directly
 - Search `resources/workspaces/{scope}/` with keywords via Grep or SemanticSearch
