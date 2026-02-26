@@ -15,15 +15,14 @@ const SOURCE_FILES = [
   'agent/rules/common/context-memory-rule.md',
 ];
 
-const OUTPUT_FILE = 'agent/rules/common/agent-entry-point.md';
+const OUTPUT_FILE = 'AGENTS.md';
 
 const FRONT_MATTER = `---
-source_of: AGENTS.md
 generated_from:
 ${SOURCE_FILES.map((f) => `  - ${f}`).join('\n')}
 note: >
-  Combined from individual source files listed above.
-  Edit the source files, then regenerate with \`aw workspace build-rules\`.
+  AUTO-GENERATED — do not edit directly.
+  Edit the source files listed above, then run: aw workspace build-rules
 ---`;
 
 export class WorkspaceBuildRules extends Command {

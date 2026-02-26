@@ -14,7 +14,7 @@ Call `workspace_get_context` when the task involves:
 
 ## How to Use `workspace_get_context`
 
-1. **First call** — Use defaults (no topics). Returns folder structure + T0 summaries + memory metadata.
+1. **First call** — Use defaults (no topics). Returns folder structure + T0 summaries + memory metadata + available skills.
 2. **Decide topics** — Based on defaults, request what's needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`.
 3. **Follow-up calls** — Set `include_defaults: false` to skip redundant data.
 4. **Filter** — Use tags/categories from memory metadata for targeted queries.
