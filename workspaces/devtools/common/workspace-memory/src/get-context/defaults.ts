@@ -3,7 +3,6 @@ import { existsSync, readFileSync } from 'fs';
 import { relative } from 'path';
 import { parse as parseYaml } from 'yaml';
 
-import { getOrBootstrapIndex } from '../metadata/index-manager';
 import { generateFolderStructure } from '../parsers/folder-structure';
 import { parseFrontMatter } from '../parsers/front-matter';
 import { getSkillsPath } from '../shared/paths';
@@ -12,7 +11,6 @@ import type { DefaultsResponse, OverviewT0, SkillEntry } from './types';
 export async function getDefaults(
   resourcesDir: string,
   projectRoot: string,
-  workspace: string,
 ): Promise<DefaultsResponse> {
   const folderStructure = generateFolderStructure(resourcesDir, {
     maxDepth: 4,
@@ -20,23 +18,11 @@ export async function getDefaults(
   });
 
   const overviewsT0 = await scanOverviewT0(resourcesDir, projectRoot);
-
-  const { index } = getOrBootstrapIndex(projectRoot, workspace);
-  const memoryMetadata: Record<string, unknown> | null = index
-    ? {
-        workspace: index.workspace,
-        last_updated: index.last_updated,
-        tags: index.tags,
-        categories: index.categories,
-      }
-    : null;
-
   const loadedSkills = loadSkills(projectRoot);
 
   return {
     folder_structure: folderStructure,
     overviews_t0: overviewsT0,
-    memory_metadata: memoryMetadata,
     loaded_skills: loadedSkills,
   };
 }

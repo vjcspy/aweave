@@ -1,6 +1,6 @@
 export { getContext } from './get-context/get-context';
+export type { ResourceEntry } from './get-context/topics/resource';
 export type {
-  ArchitectureEntry,
   DefaultsResponse,
   EntryMeta,
   FeatureEntry,
@@ -10,22 +10,10 @@ export type {
   Scope,
   SkillEntry,
   Topic,
+  TopicContext,
 } from './get-context/types';
-export {
-  bootstrapIndex,
-  getOrBootstrapIndex,
-  readIndex,
-  updateIndex,
-} from './metadata/index-manager';
-export type { CategoryEntry, IndexSchema, TagEntry } from './metadata/types';
 export { generateFolderStructure } from './parsers/folder-structure';
 export type { ParsedFrontMatter } from './parsers/front-matter';
 export { parseFrontMatter } from './parsers/front-matter';
-export { saveMemory } from './save-memory/save-memory';
-export type {
-  MemoryType,
-  SaveMemoryParams,
-  SaveMemoryResult,
-} from './save-memory/types';
 export type { ResolvedScope } from './shared/scope';
 export { resolveScope, validateResourcesDir } from './shared/scope';

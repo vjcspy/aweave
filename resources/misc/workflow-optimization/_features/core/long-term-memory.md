@@ -46,18 +46,17 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 **Git tracking:** Both `resources/` and `user/memory/workspaces/{W}/` are git-tracked per workspace branch. Git provides versioning, diff, and conflict resolution for all memory data. See §2.13 for `user/memory/` branching model.
 
-### 2.3 Write path: dual model by data location
+### 2.3 Write path: direct file access
 
-**Decision:** Write path depends on data location:
-- **`resources/` files** (plans, OVERVIEWs, features): AI agents write directly using native file tools (Write, StrReplace). No MCP write tools needed.
-- **`user/memory/` files** (decisions, lessons, `_index.yaml`): AI agents use `workspace_save_memory` MCP tool, which handles formatting, dedup checking, and metadata index maintenance.
+**Decision:** All knowledge (plans, OVERVIEWs, features, decisions, lessons) lives in `resources/`. AI agents write directly to local files.
 
 **Rationale:**
 
-- `resources/` files have diverse formats and are edited in-context (plan status, OVERVIEW content) — direct edit is simpler and more flexible
-- `user/memory/` files follow strict entry formats (§4.5) and require coordinated updates (append entry + update `_index.yaml`) — a tool ensures consistency and prevents drift
-- MCP read tools serve dual purpose: provide context during work AND check duplicates during save
-- This boundary is clean: `resources/` = project knowledge (direct), `user/memory/` = experiential knowledge (tool-mediated)
+- All data follows the same pattern: `_{topicName}/YYMMDD-name.md` with front-matter
+- Direct file edit is simpler and more flexible — no tool abstraction layer needed
+- Decisions and lessons are just another topic type, same as plans or architecture docs
+- No `user/memory/` directory, no `_index.yaml`, no `workspace_save_memory` tool — significantly simpler architecture
+- `resources/` is already git-tracked — no special `.gitignore` gymnastics needed
 
 ### 2.4 No separate ABSTRACT.md files
 
@@ -79,14 +78,15 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 ### 2.6 Tool consolidation: Single retrieval tool
 
-**Decision:** Consolidate `retrieve_plans`, `retrieve_overview`, `retrieve_learnings` into one tool: `workspace_get_context`.
+**Decision:** Consolidate all retrieval into one tool: `workspace_get_context`.
 
 **Rationale:**
 
-- 3 separate tools = 3 round trips minimum. AI must wait for each response before deciding next action — wasteful in latency and token cost
-- From AI agent's perspective, it just needs "context to work with" — doesn't matter if data comes from `resources/` or `user/memory/`
+- Multiple separate tools = multiple round trips. AI must wait for each response before deciding next action — wasteful in latency and token cost
+- From AI agent's perspective, it just needs "context to work with" — all data comes from `resources/`
 - One tool with `topics[]` parameter gives AI flexibility to request exactly what it needs in a single call
-- Default response (no topics) provides structural overview + memory metadata — AI can then make informed decisions about what else to load
+- Default response (no topics) provides structural overview — AI can then make informed decisions about what else to load
+- Topics are auto-discovered from `_{topicName}/` folders — adding a new topic requires no code changes
 
 ### 2.7 Naming: `topics` vs `category`
 
@@ -100,7 +100,7 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 ### 2.8 `workspace_` prefix
 
-**Decision:** All workspace memory tools use `workspace_` prefix (e.g., `workspace_get_context`, `workspace_save_memory`).
+**Decision:** Workspace memory tools use `workspace_` prefix (e.g., `workspace_get_context`).
 
 **Rationale:**
 
@@ -122,16 +122,11 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 **Action required:** Rewrite `AGENTS.md` / `workspace-workflow.md` to remove 6-step ceremony. Replace with lightweight guidance on when to call `workspace_get_context`. See §4.6.
 
-### 2.10 Memory metadata index
+### 2.10 ~~Memory metadata index~~ — REMOVED
 
-**Decision:** Maintain a metadata/index file per workspace (`user/memory/workspaces/{workspace}/_index.yaml`) that tracks available tags, categories, and summary statistics.
+**Decision:** Removed. No `_index.yaml` metadata index.
 
-**Rationale:**
-
-- AI agent needs to know what tags/categories exist BEFORE making queries — can't construct meaningful filters without this knowledge
-- Hardcoding available tags/categories in rules = maintenance burden + stale data over time
-- Auto-maintained by `workspace_save_memory` tool — always current, zero manual upkeep
-- Loaded as part of defaults in `workspace_get_context` — zero extra tool calls needed
+**Rationale:** With decisions/lessons moved to `resources/` as individual files with front-matter (same pattern as plans), the metadata index is unnecessary. The `scanResourceTopic` handler already extracts tags/categories from front-matter during scanning. The folder structure IS the index.
 
 ### 2.11 Plan status updates — direct edit
 
@@ -154,18 +149,11 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - Workspace file structure IS the index — no additional infrastructure needed
 - `agent-transcripts/` kept as archive; search/index deferred to Phase 2
 
-### 2.13 `user/memory/` persistence model (git-tracked per workspace branch)
+### 2.13 ~~`user/memory/` persistence model~~ — REMOVED
 
-**Decision:** `user/memory/workspaces/{workspace}/` is git-tracked per workspace branch. Each workspace branch adds `!user/memory/workspaces/{W}/` to `.gitignore`, making all files within (including `_index.yaml`, `decisions.md`, `lessons.md`) version-controlled.
+**Decision:** Removed. `user/memory/` directory eliminated entirely.
 
-**Rationale:**
-
-- Each workspace branch has different memory — switching branches via git automatically switches memory context
-- `_index.yaml` MUST be in git: without it, switching workspace branches would lose the memory metadata that tools depend on
-- Git provides versioning, diff, and conflict resolution for workspace memory — same benefits as `resources/` files
-- `workspace_save_memory` tool handles formatting, dedup, and `_index.yaml` maintenance; git handles persistence and branching
-
-**Current `.gitignore` pattern:** Base rule ignores `user/memory/**`, each workspace branch adds an exception (e.g., `!user/memory/workspaces/k/` on branch `workspaces/k`).
+**Rationale:** Decisions and lessons moved to `resources/workspaces/{scope}/_decisions/` and `_lessons/` respectively. They follow the same `_{topicName}/YYMMDD-name.md` pattern as plans and other topics. All data lives in `resources/`, which is already git-tracked per workspace branch. No special `.gitignore` exceptions needed.
 
 ### 2.14 APM integrated into NestJS server
 
@@ -258,18 +246,13 @@ Memory is classified along two orthogonal axes:
 │   ├── OVERVIEW.md                        # T0 (front-matter) + T1 (full content)
 │   ├── _plans/                            # T0 (front-matter) + T2 (full doc)
 │   │   └── YYMMDD-plan-name.md
-│   ├── _features/                         # T1/T2
+│   ├── _features/                         # T1/T2 (special structure)
 │   ├── _spikes/                           # T1/T2
-│   └── _architecture/                     # T1/T2
-│
-├── user/memory/workspaces/                # L2 Warm Memory (experiential)
-│   ├── {W}/                               # Per-workspace learnings
-│   │   ├── _index.yaml                    # Memory metadata (tags, categories, stats)
-│   │   ├── decisions.md                   # ADR-lite
-│   │   └── lessons.md                     # Mistakes, gotchas, patterns
-│   └── {W}/{D}/                           # Per-domain learnings (when needed)
-│       ├── decisions.md
-│       └── lessons.md
+│   ├── _architecture/                     # T1/T2
+│   ├── _decisions/                        # T0 (front-matter) + T1/T2 (ADR-lite)
+│   │   └── YYMMDD-decision-name.md
+│   └── _lessons/                          # T0 (front-matter) + T1/T2 (gotchas, patterns)
+│       └── YYMMDD-lesson-name.md
 │
 └── agent-transcripts/                     # L3 Cold Memory (archive)
     └── *.jsonl                            # Raw conversation logs
@@ -365,10 +348,9 @@ Always returned to give AI structural orientation without needing to decide what
 
 1. **Folder structure** of `resources/workspaces/{scope}/`
 2. **T0 summaries** (front-matter: name, description, tags) of all OVERVIEW.md files within scope
-3. **Memory metadata** from `user/memory/workspaces/{workspace}/_index.yaml` — available tags, categories
-4. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
+3. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
 
-> **Design note (subject to change):** Defaults currently include structure + T0 + memory metadata + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+> **Design note (subject to change):** Defaults currently include structure + T0 + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
 **`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
@@ -380,10 +362,11 @@ Always returned to give AI structural orientation without needing to decide what
 | `"plans"` | `resources/workspaces/{scope}/*/_plans/` | T0 front-matter of all plans within scope |
 | `"features"` | `resources/workspaces/{scope}/*/_features/` | T0 listing of features within scope |
 | `"architecture"` | `resources/workspaces/{scope}/*/_architecture/` | T0/T1 listing of architecture docs |
-| `"decisions"` | `user/memory/workspaces/{scope}/decisions.md` | Full content (entries are already concise) |
-| `"lessons"` | `user/memory/workspaces/{scope}/lessons.md` | Full content (entries are already concise) |
+| `"decisions"` | `resources/workspaces/{scope}/**/_decisions/` | T0 front-matter of decision files |
+| `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | T0 front-matter of lesson files |
+| `"{any_topic}"` | `resources/workspaces/{scope}/**/_{topicName}/` | Generic scan — any `_{topicName}/` folder works |
 
-**`include_defaults: false`:** Skips folder structure and T0 summaries. Still includes memory metadata (AI needs it for informed filtering). Use on follow-up calls within the same conversation to save tokens.
+**`include_defaults: false`:** Skips folder structure and T0 summaries. Use on follow-up calls within the same conversation to save tokens.
 
 **Response example:**
 
@@ -414,16 +397,6 @@ defaults:
       _meta:
         document_path: "resources/workspaces/devtools/common/OVERVIEW.md"
 
-  memory_metadata:
-    workspace: devtools
-    last_updated: "2026-02-25"
-    tags:
-      - { name: "nestjs", description: "NestJS framework", used_in: [decisions, lessons] }
-      - { name: "pnpm", description: "Package manager issues", used_in: [lessons] }
-    categories:
-      - { name: "architecture", used_in: [decisions] }
-      - { name: "debugging", used_in: [lessons] }
-
   loaded_skills:
     - name: "devtools-cli-builder"
       description: "Guide for building oclif CLI plugins and NestJS backend modules"
@@ -452,40 +425,15 @@ plans:
 
 ### 4.3 Warm Memory — Write Path
 
-#### 4.3.1 Tool: `workspace_save_memory`
+#### 4.3.1 Direct file write (no tool needed)
 
-Tool for saving experiential knowledge (decisions, lessons) to `user/memory/` workspace files. Available via same 3 access layers as `workspace_get_context` (§2.15):
+Decisions and lessons are written directly as files in `resources/`, following the same `_{topicName}/YYMMDD-name.md` pattern as plans. AI agents use native file write tools (Write, StrReplace). No MCP write tool needed.
 
-- **MCP** (AI agents): `workspace_save_memory` tool via APM
-- **CLI** (terminal): `aw workspace save-memory --workspace <W> --type decision --title "..." --content "..."`
-- **REST** (web/services): `POST /workspace/memory`
+**File locations:**
+- Decisions: `resources/workspaces/{scope}/_decisions/YYMMDD-decision-name.md`
+- Lessons: `resources/workspaces/{scope}/_lessons/YYMMDD-lesson-name.md`
 
-**Scope:** `user/memory/workspaces/{scope}/` only. All edits to `resources/` files (plan status updates, OVERVIEW changes, etc.) are done via direct file tools (StrReplace, Write) — not through this tool.
-
-**Parameters:**
-
-```yaml
-scope: { workspace, domain? }
-type: "decision" | "lesson"
-title: string
-content: string
-category: string?      # "architecture", "debugging", "configuration", etc.
-tags: string[]?
-```
-
-**Behavior:**
-
-1. Format entry using the spec in §4.5 (Decision/Lesson entry format)
-2. Append to the appropriate file:
-   - `type: "decision"` → `user/memory/workspaces/{scope}/decisions.md`
-   - `type: "lesson"` → `user/memory/workspaces/{scope}/lessons.md`
-3. Update metadata index (`user/memory/workspaces/{workspace}/_index.yaml`):
-   - Add new tags/categories if not already tracked
-   - Increment counts
-   - Update `last_updated` timestamp
-4. Return confirmation + file path
-
-**Dedup check:** Before saving, AI should call `workspace_get_context` with `topics: ["decisions"]` or `topics: ["lessons"]` to check if similar knowledge already exists. The `context-memory-rule.md` instructs this behavior.
+**File format:** Same as plans — YAML front-matter with `name`, `description`, `tags`, `category`, followed by markdown body content. See §4.5.
 
 #### 4.3.2 Learning cycle triggers
 
@@ -493,13 +441,13 @@ Rules encoded in hot memory (`context-memory-rule.md`) that instruct AI agents t
 
 | Trigger | Condition | Action |
 |---------|-----------|--------|
-| **Hard-won fix** | AI fixes a bug after multiple failed attempts | Auto-suggest saving as lesson (root cause + solution) |
-| **Non-obvious solution** | Solution required knowledge not in any existing docs | Auto-suggest saving as lesson |
-| **Conflict detection** | AI reads existing memory entry that contradicts current reality | Prompt user to update or archive the outdated entry |
-| **Decision moment** | AI makes (or user confirms) an architectural/design choice | Auto-suggest saving as decision with rationale |
-| **End of session** | Conversation is wrapping up | Auto-save: AI determines what's worth saving, writes entries, reports summary of what was saved |
+| **Hard-won fix** | AI fixes a bug after multiple failed attempts | Create lesson file (root cause + solution) |
+| **Non-obvious solution** | Solution required knowledge not in any existing docs | Create lesson file |
+| **Conflict detection** | AI reads existing entry that contradicts current reality | Prompt user to update or archive the outdated entry |
+| **Decision moment** | AI makes (or user confirms) an architectural/design choice | Create decision file with rationale |
+| **End of session** | Conversation is wrapping up | Determine what's worth saving, write files, report summary |
 
-**Execution model (Phase 1):** Main agent executes save directly. This retains full conversation context. A sub-agent approach (delegating via Task tool) would lose conversation history — reconsider in Phase 2 when orchestrator architecture is in place.
+**Execution model (Phase 1):** Main agent writes files directly. This retains full conversation context. A sub-agent approach (delegating via Task tool) would lose conversation history — reconsider in Phase 2 when orchestrator architecture is in place.
 
 ### 4.4 Cold Memory (Layer 3)
 
@@ -562,65 +510,37 @@ tags: string[]              # For filtering (optional)
 | `done` | Fully implemented |
 | `abandoned` | Decided not to proceed (kept for context) |
 
-#### Decision entry format
+#### Decision file format
 
-Each entry in `decisions.md`:
+Each decision is a separate file in `_decisions/YYMMDD-decision-name.md`:
 
-```markdown
-### [YYYY-MM-DD] Decision title
-
-**Category:** architecture | tooling | convention | dependency | ...
-**Tags:** tag1, tag2, tag3
-
-Decision description with rationale.
-
+```yaml
+---
+name: string                # Decision title
+description: string         # 1-2 sentence summary
+category: string?           # architecture | tooling | convention | dependency | ...
+tags: string[]?             # For filtering
+created: YYYY-MM-DD
 ---
 ```
 
-#### Lesson entry format
+Body: Decision description with rationale. Can be as detailed as needed (T1/T2).
 
-Each entry in `lessons.md`:
+#### Lesson file format
 
-```markdown
-### [YYYY-MM-DD] Lesson title
+Each lesson is a separate file in `_lessons/YYMMDD-lesson-name.md`:
 
-**Category:** debugging | performance | configuration | integration | ...
-**Tags:** tag1, tag2, tag3
-
-What happened, root cause, and what to do differently.
-
+```yaml
+---
+name: string                # Lesson title
+description: string         # 1-2 sentence summary
+category: string?           # debugging | performance | configuration | integration | ...
+tags: string[]?             # For filtering
+created: YYYY-MM-DD
 ---
 ```
 
-#### Memory metadata index format
-
-`user/memory/workspaces/{workspace}/_index.yaml` — auto-maintained by `workspace_save_memory`:
-
-```yaml
-workspace: string
-last_updated: YYYY-MM-DD
-
-tags:
-  - name: string
-    description: string?       # Human-readable meaning of this tag
-    used_in: string[]          # Which files use this tag: ["decisions", "lessons"]
-
-categories:
-  - name: string
-    used_in: string[]
-```
-
-This file is git-tracked per workspace branch (see §2.13). Auto-maintained by `workspace_save_memory` — when a new entry is saved with a tag/category not yet tracked, the tool adds it. Loaded as part of defaults in `workspace_get_context` — gives AI awareness of what's queryable without extra tool calls.
-
-**First-run / recovery behavior:**
-
-- **`_index.yaml` missing:** Tool auto-bootstraps by scanning `decisions.md` and `lessons.md` in the same workspace directory. Extracts tags, categories, and counts. Creates `_index.yaml` with `schema_version: 1`. Returns the bootstrapped metadata in response + emits a `_warning: "metadata_bootstrapped"` field.
-- **`_index.yaml` malformed:** Tool rebuilds from source files (same as missing). Emits `_warning: "metadata_rebuilt"`.
-- **Source files missing (no `decisions.md`/`lessons.md`):** Returns empty metadata with zero counts. No error — this is a valid initial state.
-
-```yaml
-schema_version: 1          # for future migration support
-```
+Body: What happened, root cause, and what to do differently. Can be as detailed as needed (T1/T2).
 
 ### 4.6 Context Memory Rule (Hot Memory)
 
@@ -637,15 +557,15 @@ A hot memory rule file (`agent/rules/common/context-memory-rule.md`) that guides
    - NOT needed: general questions, simple file edits with sufficient inline context, infra fixes unrelated to workspace logic
 
 2. **How to use `workspace_get_context` effectively:**
-   - First call: use defaults (structure + T0 + memory metadata) — get orientation
+   - First call: use defaults (structure + T0 + skills) — get orientation
    - Based on defaults, decide which topics to request
    - Follow-up calls: use `include_defaults: false` to save tokens
-   - Use tags/categories from memory metadata for informed filtering
+   - Topics are auto-discovered from `_{topicName}/` folders — no hardcoded list
 
-3. **When to save memory** — learning cycle triggers (references §4.3.2):
+3. **When to save decisions/lessons** — learning cycle triggers (references §4.3.2):
    - AI should proactively detect saveable moments during work
+   - Write files directly to `_decisions/` or `_lessons/` folders (same pattern as plans)
    - At end of session, auto-determine what's worth saving
-   - Use `workspace_get_context` with relevant topics to dedup before saving
 
 4. **How to access cold memory:**
    - Use `document_path` from warm tool responses for direct file reads
@@ -698,17 +618,17 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 | 3 | Micro-tasks without plans | Skipped for now. Not every task needs a plan file — revisit if gap becomes a problem. |
 | 4 | Learnings granularity | Per-domain level. Human reviews to maintain when files grow. May need review/reflect process later. |
 | 5 | Hot memory token budget | ~300 lines / ~3000 tokens total. >80% relevance rule. Quarterly human review. See §4.1. |
-| 6 | save_memory UX | AI auto-handles: determines what's worth saving, writes, reports summary. No confirmation needed. |
+| 6 | save_memory UX | No save tool needed. AI writes decision/lesson files directly to `resources/`. Same pattern as plans. |
 | 7 | Tool consolidation | Three retrieval tools consolidated into one `workspace_get_context` with `topics` parameter. See §2.6. |
 | 8 | Workspace loading mandatory vs optional | Made optional — AI decides autonomously based on task signals. See §2.9. |
 | 9 | Cold memory approach | No separate infrastructure. Raw files + AI searches with keywords. See §2.12. |
 | 10 | Tool naming prefix | `workspace_` prefix for all tools. Future centralized memory uses different namespace. See §2.8. |
 | 11 | `topics` vs `category` naming | `topics` for retrieval params, `category` for entry classification. See §2.7. |
 | 12 | Plan status via tool vs direct edit | Direct file edit. All `resources/` file edits are direct, not via tools. See §2.11. |
-| 13 | Learnings bundling | Decisions and lessons are separate topics in `workspace_get_context`, not grouped under "learnings". Each maps to one data source for consistency. |
-| 14 | Write path boundary (C1 fix) | `resources/` = direct file edit, `user/memory/` = `workspace_save_memory` tool. See §2.3 rewrite. |
-| 15 | `user/memory/` persistence model | Git-tracked per workspace branch. Each branch adds gitignore exception. See §2.13. |
-| 16 | `_index.yaml` first-run behavior | Auto-bootstrap from source files if missing/malformed. `schema_version` field for future migration. See §4.5. |
+| 13 | Learnings bundling | Decisions and lessons are separate topics in `workspace_get_context`. Each maps to its own `_{topicName}/` folder. |
+| 14 | Write path boundary | All data in `resources/` — direct file edit for everything. No `user/memory/`, no save tool. See §2.3. |
+| 15 | `user/memory/` persistence | Removed. All data in `resources/` which is already git-tracked. |
+| 16 | `_index.yaml` | Removed. Front-matter in individual files replaces centralized metadata index. |
 | 17 | `workspace_get_context` no pagination params | No `limit`/`sort_by`/`structure_depth` exposed. Tool owner optimizes internally. AI uses `scope` to narrow. |
 | 18 | Hot memory budget | Increased to ~500 lines / ~5000 tokens. Allows adequate guidance without being too restrictive. |
 | 19 | APM location | Integrated into `@hod/aweave-server` (NestJS). Single server, single port. See §2.14. |
@@ -721,9 +641,6 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 - [ ] **Workspace memory packages (task):** Create the 4 packages: `workspace-memory` (core), `nestjs-workspace-memory` (NestJS), `cli-plugin-workspace` (CLI), MCP integration in server. See §2.15 for structure.
 - [ ] **Plan front-matter migration (task):** Scan existing plans in `resources/*/_plans/` and add missing `status`, `tags`, `created` fields. Similarly, add front-matter to OVERVIEW.md files that lack it.
 - [ ] **OVERVIEW.md front-matter migration (task):** Scan existing OVERVIEW.md files and add `name`, `description`, `tags` front-matter. Migrate any standalone ABSTRACT.md content into the corresponding OVERVIEW.md front-matter.
-- [ ] **Learning file review cadence:** When per-domain `decisions.md` or `lessons.md` grows beyond ~50 entries, consider splitting or archiving older entries. No automated solution yet — human reviews.
-- [ ] **`context-memory-rule.md` creation (task):** Create the hot memory rule file at `agent/rules/common/context-memory-rule.md`. See §4.6 for content spec.
-- [ ] **Memory metadata bootstrap (task):** Create initial `_index.yaml` files for existing workspaces with their current tags/categories.
 - [ ] **AGENTS.md workflow migration (task):** Rewrite AGENTS.md to use optional workspace loading flow instead of 6-step ceremony. See §2.9.
 - [ ] **Default data tuning:** Monitor if structure + T0 + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
 - [ ] **`rule.md` rename (task):** Current `agent/rules/common/rule.md` is symlinked as `AGENTS.md`. After rewriting for optional workspace loading (§2.9), rename to a more descriptive name and update symlink.

@@ -1,12 +1,12 @@
 import { resolveScope } from '../shared/scope';
 import { getDefaults } from './defaults';
-import { getArchitecture } from './topics/architecture';
-import { getDecisions } from './topics/decisions';
-import { getFeatures } from './topics/features';
-import { getLessons } from './topics/lessons';
-import { getOverview } from './topics/overview';
-import { getPlans } from './topics/plans';
-import type { GetContextParams, GetContextResponse } from './types';
+import { scanFeatures } from './topics/features';
+import { scanResourceTopic } from './topics/resource';
+import type {
+  GetContextParams,
+  GetContextResponse,
+  TopicContext,
+} from './types';
 
 export async function getContext(
   projectRoot: string,
@@ -17,58 +17,25 @@ export async function getContext(
   const response: GetContextResponse = {};
 
   if (includeDefaults) {
-    response.defaults = await getDefaults(
-      resolved.resourcesDir,
-      projectRoot,
-      scope.workspace,
-    );
+    response.defaults = await getDefaults(resolved.resourcesDir, projectRoot);
   }
 
   if (!topics || topics.length === 0) {
     return response;
   }
 
+  const ctx: TopicContext = {
+    resourcesDir: resolved.resourcesDir,
+    projectRoot,
+    filters,
+  };
+
   for (const topic of topics) {
-    switch (topic) {
-      case 'plans':
-        response.plans = await getPlans(
-          resolved.resourcesDir,
-          projectRoot,
-          filters,
-        );
-        break;
-
-      case 'features':
-        response.features = await getFeatures(
-          resolved.resourcesDir,
-          projectRoot,
-        );
-        break;
-
-      case 'architecture':
-        response.architecture = await getArchitecture(
-          resolved.resourcesDir,
-          projectRoot,
-        );
-        break;
-
-      case 'overview': {
-        const overview = getOverview(resolved.resourcesDir);
-        if (overview) response.overview = overview;
-        break;
-      }
-
-      case 'decisions': {
-        const decisions = getDecisions(resolved.memoryDir);
-        if (decisions) response.decisions = decisions;
-        break;
-      }
-
-      case 'lessons': {
-        const lessons = getLessons(resolved.memoryDir);
-        if (lessons) response.lessons = lessons;
-        break;
-      }
+    if (topic === 'features') {
+      response[topic] = await scanFeatures(ctx);
+    } else {
+      const result = await scanResourceTopic(topic, ctx);
+      if (result.length > 0) response[topic] = result;
     }
   }
 

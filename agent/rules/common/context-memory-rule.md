@@ -8,16 +8,19 @@ Call `workspace_get_context` when the task involves:
 - Workspace-specific code (path contains `workspaces/` or `resources/workspaces/`)
 - Mentions of workspace, domain, or repository names
 - Understanding project structure, conventions, or history
-- Plans, features, or architecture decisions
+- Plans, features, architecture, decisions, or lessons
 
 **Skip context loading for:** General questions, simple file edits with sufficient inline context, infrastructure fixes unrelated to workspace logic.
 
 ## How to Use `workspace_get_context`
 
-1. **First call** — Use defaults (no topics). Returns folder structure + T0 summaries + memory metadata + available skills.
-2. **Decide topics** — Based on defaults, request what's needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`.
-3. **Follow-up calls** — Set `include_defaults: false` to skip redundant data.
-4. **Filter** — Use tags/categories from memory metadata for targeted queries.
+**Initial orientation:** Call with defaults (no topics) to get folder structure + T0 summaries + available skills.
+
+**During the conversation** — call again with specific topics whenever more context is needed:
+
+- Request topics as needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`, or any `_{topicName}/` folder
+- Set `include_defaults: false` on follow-up calls to skip redundant data
+- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries
 
 **Scope narrowing:**
 
@@ -25,21 +28,20 @@ Call `workspace_get_context` when the task involves:
 - `workspace` + `domain` → narrows to that domain
 - `workspace` + `domain` + `repository` → narrows to specific repo
 
-## When to Save Memory
+**Topic discovery:** Topics map to `_{topicName}/` folders in `resources/`. Adding a new topic = creating a `_{topicName}/` folder with `.md` files (front-matter for T0). No code changes needed.
 
-Detect these moments during work and save via `workspace_save_memory`:
+## When to Save Decisions & Lessons
+
+Decisions and lessons are regular files in `resources/workspaces/{scope}/_{decisions,lessons}/`. Save them directly using file write tools (same as plans).
 
 | Trigger | What to save |
 |---------|-------------|
-| Hard-won fix (multiple failed attempts) | Lesson: root cause + solution |
-| Non-obvious solution (not in existing docs) | Lesson: what worked and why |
-| Architectural/design choice (made or confirmed) | Decision: choice + rationale |
-| Contradicts existing memory | Prompt user to update/archive outdated entry |
-| End of session | Auto-determine what's worth saving, write entries, report summary |
+| Hard-won fix (multiple failed attempts) | Lesson file in `_lessons/` with root cause + solution |
+| Non-obvious solution (not in existing docs) | Lesson file in `_lessons/` |
+| Architectural/design choice (made or confirmed) | Decision file in `_decisions/` with rationale |
+| End of session | Determine what's worth saving, write files, report summary |
 
-**Before saving:** Check for duplicates — call `workspace_get_context` with the relevant topic (`decisions` or `lessons`).
-
-**Execution:** Save directly in the main conversation (not via sub-agent) to retain full context.
+**File format:** `YYMMDD-name.md` with front-matter (`name`, `description`, `tags`, `category`). Same pattern as plans.
 
 ## Cold Memory Access
 
@@ -47,4 +49,3 @@ When warm tools don't surface needed context:
 
 - Use `document_path` from tool responses → read full document directly
 - Search `resources/workspaces/{scope}/` with keywords via Grep or SemanticSearch
-- The workspace file structure is the index — no special tooling needed
