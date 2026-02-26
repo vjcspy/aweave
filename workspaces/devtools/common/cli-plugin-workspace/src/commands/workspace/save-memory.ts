@@ -5,9 +5,21 @@ import {
   output,
   readContent,
 } from '@hod/aweave-cli-shared';
+import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { MemoryType, saveMemory } from '@hod/aweave-workspace-memory';
 import { Command, Flags } from '@oclif/core';
 import { resolve } from 'path';
+
+function resolveProjectRoot(): string {
+  const devtoolsRoot = resolveDevtoolsRoot({
+    cwd: process.cwd(),
+    moduleDir: __dirname,
+  });
+  if (!devtoolsRoot) {
+    throw new Error('Could not resolve devtools root.');
+  }
+  return resolve(devtoolsRoot, '..', '..');
+}
 
 export class WorkspaceSaveMemory extends Command {
   static description =
@@ -58,7 +70,7 @@ export class WorkspaceSaveMemory extends Command {
 
   async run() {
     const { flags } = await this.parse(WorkspaceSaveMemory);
-    const projectRoot = resolve(process.cwd(), '..', '..', '..');
+    const projectRoot = resolveProjectRoot();
 
     const rawContent = await readContent({
       content: flags.content,
@@ -66,7 +78,8 @@ export class WorkspaceSaveMemory extends Command {
       stdin: flags.stdin,
     });
 
-    const content = typeof rawContent === 'string' ? rawContent : String(rawContent ?? '');
+    const content =
+      typeof rawContent === 'string' ? rawContent : String(rawContent ?? '');
     if (!content) {
       this.error('Content is required. Use --content, --file, or --stdin.');
     }
@@ -86,7 +99,12 @@ export class WorkspaceSaveMemory extends Command {
     output(
       new MCPResponse({
         success: true,
-        content: [new MCPContent({ type: ContentType.JSON, data: result as unknown as Record<string, unknown> })],
+        content: [
+          new MCPContent({
+            type: ContentType.JSON,
+            data: result as unknown as Record<string, unknown>,
+          }),
+        ],
         metadata: { resource_type: 'workspace_memory', message: 'Saved' },
       }),
       flags.format,

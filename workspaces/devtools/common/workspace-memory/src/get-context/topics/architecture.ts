@@ -15,7 +15,13 @@ export async function getArchitecture(
     const relPath = relative(projectRoot, file);
     const parts = relPath.split('/');
     const archIdx = parts.indexOf('_architecture');
-    const name = archIdx >= 0 ? parts.slice(archIdx + 1).join('/').replace(/\.md$/, '') : relPath;
+    const name =
+      archIdx >= 0
+        ? parts
+            .slice(archIdx + 1)
+            .join('/')
+            .replace(/\.md$/, '')
+        : relPath;
 
     entries.push({
       name,

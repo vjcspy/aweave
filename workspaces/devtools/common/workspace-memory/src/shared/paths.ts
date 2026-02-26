@@ -10,13 +10,7 @@ export function getResourcesPath(projectRoot: string, scope: Scope): string {
 }
 
 export function getMemoryPath(projectRoot: string, scope: Scope): string {
-  const parts = [
-    projectRoot,
-    'user',
-    'memory',
-    'workspaces',
-    scope.workspace,
-  ];
+  const parts = [projectRoot, 'user', 'memory', 'workspaces', scope.workspace];
   if (scope.domain) parts.push(scope.domain);
   if (scope.repository) parts.push(scope.repository);
   return join(...parts);

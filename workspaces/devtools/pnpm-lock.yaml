@@ -416,6 +416,9 @@ importers:
       '@hod/aweave-cli-shared':
         specifier: workspace:*
         version: link:../cli-shared
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@hod/aweave-workspace-memory':
         specifier: workspace:*
         version: link:../workspace-memory

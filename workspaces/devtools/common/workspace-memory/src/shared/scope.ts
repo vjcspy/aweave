@@ -9,10 +9,7 @@ export interface ResolvedScope {
   memoryDir: string;
 }
 
-export function resolveScope(
-  projectRoot: string,
-  scope: Scope,
-): ResolvedScope {
+export function resolveScope(projectRoot: string, scope: Scope): ResolvedScope {
   if (!scope.workspace) {
     throw new Error('workspace is required in scope');
   }
@@ -29,8 +26,6 @@ export function resolveScope(
 
 export function validateResourcesDir(resolved: ResolvedScope): void {
   if (!existsSync(resolved.resourcesDir)) {
-    throw new Error(
-      `Resources directory not found: ${resolved.resourcesDir}`,
-    );
+    throw new Error(`Resources directory not found: ${resolved.resourcesDir}`);
   }
 }
