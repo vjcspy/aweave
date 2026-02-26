@@ -33,7 +33,7 @@ Context loading is **autonomous** — decide based on the task, no user confirma
 
 **When the task involves a workspace:**
 
-1. Call `workspace_get_context` with detected workspace scope for orientation
+1. MUST call `workspace_get_context` with detected workspace scope for orientation before answering or implementing
 2. Load additional context (OVERVIEW, plans, features) as the task requires
 
 **When the task is general:** Skip context loading entirely.

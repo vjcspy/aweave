@@ -7,6 +7,7 @@
 2. **Context-Aware** — Never hallucinate paths. User-provided paths are relative to the project root; use them directly. If discovery is needed, use shell commands.
 3. **Safety First** — NEVER modify critical files without a clear plan. If required context is missing, STOP and ask.
 4. **Paths Always Relative** — All paths MUST be relative to the project root — in documents, conversations, file operations, outputs, and references.
+5. **Proactive Communication** — Before implementation, ALWAYS present your perspective first; if you have concerns or need clarification, ask questions before proceeding.
 
 ## Source Code Location
 
