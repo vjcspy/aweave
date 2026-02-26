@@ -1,7 +1,7 @@
 ---
 name: Long-term Memory — Phase 1 Implementation
 description: Implement workspace-scoped memory system — hot memory rules, warm memory tools (workspace_get_context, workspace_save_memory) via 4-layer architecture (core, NestJS, CLI, MCP), data format standards, and migration tasks.
-status: new
+status: in_progress
 created: 2026-02-25
 tags: [memory, workspace, mcp, nestjs, cli, hot-memory, warm-memory]
 ---
@@ -50,45 +50,45 @@ Phase 1 delivers:
 
 Hot memory files that auto-load into every conversation. These are the "brain" rules that guide tool usage decisions. Must be in place before warm memory tools are useful — otherwise AI agents won't know when/how to call them.
 
-**Target structure** (per spec §3.2 — files at `agent/rules/common/` root, symlinks for both Cursor and Codex):
+**Agent compatibility constraints:**
+
+- **Cursor:** Reads `.cursor/rules/` AND `AGENTS.md` at repo root
+- **Codex:** Reads ONLY `AGENTS.md` at repo root — cannot load multiple files
+- **Other agents:** Read `AGENTS.md` or `.agent/rules/`
+
+**Approach:** Combine all hot memory source files into a single `rule.md` that is symlinked as `AGENTS.md`. All agents (Cursor, Codex, others) get the full rule set from one file. A CLI command (`aw workspace build-rules`) automates the combination (Phase 5).
+
+**Target structure:**
 
 ```
 agent/rules/common/
-├── user-profile.md                  # 🚧 TODO — Who you are, preferences, coding style (<50 lines)
-├── global-conventions.md            # 🚧 TODO — Cross-cutting decisions, naming, patterns (<80 lines)
-├── context-memory-rule.md           # 🚧 TODO — How/when to use workspace memory tools (<80 lines)
-├── workspace-workflow.md            # 🚧 TODO — How to detect workspace, load context (<100 lines)
-├── hot-memory/                      # ✅ EXISTS — Contains placeholder files to be migrated/removed
+├── user-profile.md                  # Source — Who you are, preferences, coding style (<50 lines)
+├── global-conventions.md            # Source — Cross-cutting decisions, naming, patterns (<80 lines)
+├── context-memory-rule.md           # Source — How/when to use workspace memory tools (<80 lines)
+├── workspace-workflow.md            # Source — How to detect workspace, load context (<100 lines)
+├── rule.md                          # Combined — All sources merged, symlinked as AGENTS.md
 │
 .cursor/rules/
 ├── gitignore-tool-behavior.mdc      # ✅ EXISTS — Cursor-specific (stays)
-├── user-profile.mdc                 # 🚧 TODO — Symlink to agent/rules/common/user-profile.md
-├── global-conventions.mdc           # 🚧 TODO — Symlink to agent/rules/common/global-conventions.md
-├── context-memory-rule.mdc          # 🚧 TODO — Symlink to agent/rules/common/context-memory-rule.md
-└── workspace-workflow.mdc           # 🚧 TODO — Symlink to agent/rules/common/workspace-workflow.md
 │
-.codex/
-├── user-profile.md                  # 🚧 TODO — Symlink to agent/rules/common/user-profile.md
-├── global-conventions.md            # 🚧 TODO — Symlink to agent/rules/common/global-conventions.md
-├── context-memory-rule.md           # 🚧 TODO — Symlink to agent/rules/common/context-memory-rule.md
-└── workspace-workflow.md            # 🚧 TODO — Symlink to agent/rules/common/workspace-workflow.md
+AGENTS.md → agent/rules/common/rule.md  # Symlink at repo root
 ```
 
 **Steps:**
 
-- [ ] **1.1** Create `agent/rules/common/user-profile.md`
+- [x] **1.1** Create `agent/rules/common/user-profile.md`
   - **Source:** Extract from `user/profile.md` + `user/preferences.yaml`
   - **Content:** Identity, preferences, coding style
   - **Budget:** <50 lines, declare budget in comment at top
   - **Outcome:** AI agents know user identity and preferences from conversation start
 
-- [ ] **1.2** Create `agent/rules/common/global-conventions.md`
+- [x] **1.2** Create `agent/rules/common/global-conventions.md`
   - **Content:** Cross-cutting decisions, naming patterns, path conventions, language rules
   - **Source:** Extract universal patterns from current `rule.md` (AGENTS.md) — core principles, output constraints, path rules
   - **Budget:** <80 lines
   - **Outcome:** Conventions available without workspace-specific loading
 
-- [ ] **1.3** Create `agent/rules/common/context-memory-rule.md` (§4.6)
+- [x] **1.3** Create `agent/rules/common/context-memory-rule.md` (§4.6)
   - **Content per spec:**
     1. When to load workspace context (heuristics: path patterns, workspace/domain mentions, task type)
     2. How to use `workspace_get_context` (defaults first → decide topics → follow-up with `include_defaults: false`)
@@ -98,39 +98,30 @@ agent/rules/common/
   - **Budget:** <80 lines
   - **Outcome:** AI agents autonomously decide when and how to use memory tools
 
-- [ ] **1.4** Create `agent/rules/common/workspace-workflow.md`
+- [x] **1.4** Create `agent/rules/common/workspace-workflow.md`
   - **Content:** Lightweight workspace detection + context loading guidance (replaces the 6-step ceremony)
   - **Source:** Distill from current `rule.md` Steps 1-4, removing mandatory confirmation and ceremony
   - **Key change:** AI decides autonomously when to load context based on task signals (§2.9)
   - **Budget:** <100 lines
   - **Outcome:** Workspace detection is fast and frictionless
 
-- [ ] **1.5** Rewrite `agent/rules/common/rule.md` (AGENTS.md)
-  - **Action:** Replace 6-step ceremony with minimal entry point that references hot memory files
-  - **Content:** Role, core principles, source code location, fast tracks (debate), then pointer to hot-memory files for the rest
-  - **Preserve:** Fast Track (debate), core principles, source code location note
-  - **Remove:** Steps 1-6 ceremony (replaced by hot-memory files)
-  - **Outcome:** AGENTS.md is a lightweight bootstrap, not a monolithic workflow
+- [x] **1.5** Combine all source files into `agent/rules/common/rule.md` (AGENTS.md)
+  - **Action:** Merge user-profile, global-conventions, workspace-workflow, context-memory-rule into a single combined file
+  - **Content:** Role + all hot memory sections with heading levels shifted (H1→H2, H2→H3)
+  - **Front-matter:** `generated_from` list of source files + regeneration note
+  - **Outcome:** All agents (Cursor, Codex, others) get full rules from one AGENTS.md file
 
-- [ ] **1.6** Clean up `agent/rules/common/hot-memory/` placeholder files
+- [x] **1.6** Clean up `agent/rules/common/hot-memory/` placeholder files
   - Existing placeholders: `active-workspace-context.md`, `workflow.md` (both empty)
   - Determine if content should be absorbed into the new canonical files or discarded
   - Remove placeholder files and `hot-memory/` directory if no longer needed
   - **Outcome:** No conflicting/duplicate rule locations
 
-- [ ] **1.7** Create symlinks in `.cursor/rules/`
-  - Symlink each hot memory file with `.mdc` extension for Cursor auto-loading
-  - Example: `.cursor/rules/user-profile.mdc` → `../../agent/rules/common/user-profile.md`
-  - **Outcome:** Cursor automatically loads hot memory rules into every conversation
+- [x] ~~**1.7** Create symlinks in `.cursor/rules/`~~ — **CANCELLED:** Not needed. Cursor reads AGENTS.md directly. Individual `.cursor/rules/` symlinks would cause duplicate loading.
 
-- [ ] **1.8** Create `.codex/` directory and symlinks
-  - Create `.codex/` at project root (does not exist yet)
-  - Symlink each hot memory file for Codex auto-loading
-  - Example: `.codex/user-profile.md` → `../agent/rules/common/user-profile.md`
-  - Update `.gitignore` if needed (`.codex/` is currently not in gitignore — verify)
-  - **Outcome:** Codex automatically loads hot memory rules into every conversation
+- [x] ~~**1.8** Create `.codex/` directory and symlinks~~ — **CANCELLED:** Not needed. Codex reads only AGENTS.md. Combined file approach replaces per-file symlinks.
 
-- [ ] **1.9** Verify total hot memory budget
+- [x] **1.9** Verify total hot memory budget
   - Sum all hot memory files (including `gitignore-tool-behavior.mdc`)
   - **Target:** ~500 lines / ~5000 tokens total (§4.1)
   - If over budget, review and demote least-universal content to warm memory
@@ -210,7 +201,8 @@ workspaces/devtools/common/workspace-memory/
   - Folder structure of `resources/workspaces/{scope}/`
   - T0 summaries: scan all `OVERVIEW.md` files within scope, extract front-matter (name, description, tags)
   - Memory metadata from `_index.yaml`
-  - **Outcome:** Default response provides structural orientation
+  - Loaded skills: read `.aweave/loaded-skills.yaml` and include skill entries (name, description, skill_path) — AI agents can then decide which skills to load based on the current task
+  - **Outcome:** Default response provides structural orientation + available skills
 
 - [ ] **2.7** Implement topic handlers (`src/get-context/topics/*.ts`)
   - `plans`: scan `*/_plans/*.md` within scope, extract front-matter (name, description, status, tags, created), apply status/tag filters
@@ -375,7 +367,8 @@ workspaces/devtools/common/cli-plugin-workspace/
     └── commands/
         └── workspace/
             ├── get-context.ts       # 🚧 TODO — aw workspace get-context
-            └── save-memory.ts       # 🚧 TODO — aw workspace save-memory
+            ├── save-memory.ts       # 🚧 TODO — aw workspace save-memory
+            └── build-rules.ts       # 🚧 TODO — aw workspace build-rules
 ```
 
 **Steps:**
@@ -397,7 +390,15 @@ workspaces/devtools/common/cli-plugin-workspace/
   - Output: confirmation via `MCPResponse`
   - **Outcome:** Memory saveable from terminal
 
-- [ ] **5.4** Build + verify
+- [ ] **5.4** Implement `aw workspace build-rules`
+  - Reads source hot memory files from `agent/rules/common/` (user-profile.md, global-conventions.md, workspace-workflow.md, context-memory-rule.md)
+  - Combines into a single `agent/rules/common/rule.md` with heading levels shifted (H1→H2, H2→H3)
+  - Adds `generated_from` front-matter listing source files
+  - Ensures `AGENTS.md` symlink at repo root points to `rule.md`
+  - Calls core directly (no server roundtrip)
+  - **Outcome:** Hot memory rule combination is automated — run after editing any source file
+
+- [ ] **5.5** Build + verify
   - `pnpm -r build` — no errors
   - `aw workspace --help` — shows commands
   - `aw workspace get-context --workspace devtools` — returns expected data
@@ -477,7 +478,22 @@ Update agent infrastructure files to align with the new memory system.
 
 ### Completed Achievements
 
-- [Placeholder — to be filled after implementation]
+- **Phase 1 (Hot Memory Foundation)** — Completed 2026-02-26
+  - Created 4 hot memory source files at `agent/rules/common/`: `user-profile.md` (15 lines), `global-conventions.md` (46 lines), `context-memory-rule.md` (50 lines), `workspace-workflow.md` (52 lines)
+  - Combined all sources into `rule.md` (178 lines / ~1,872 tokens) — symlinked as AGENTS.md at repo root
+  - Removed empty `hot-memory/` placeholder directory (contained `active-workspace-context.md` and `workflow.md`, both 0 bytes)
+  - `.cursor/rules/` unchanged — keeps only `gitignore-tool-behavior.mdc` (Cursor reads AGENTS.md for hot memory)
+  - `user-profile.md` populated from `user/preferences.yaml` only — `user/profile.md` was an empty template; identity fields left for user to fill in later
+
+## Implementation Notes / As Implemented
+
+### Phase 1 Deviations
+
+1. **Combined AGENTS.md approach (revised)** — Initial implementation used per-agent symlinks (`.cursor/rules/` + `.codex/`). Revised to single combined file approach because: Codex only reads `AGENTS.md` at repo root (cannot load multiple files), and Cursor already reads `AGENTS.md` via `always_applied_workspace_rules` (individual `.mdc` symlinks would cause duplicate loading). The combined `rule.md` serves all agents uniformly.
+
+2. **user-profile.md is minimal** — `user/profile.md` source was a blank template with no identity data. Only preferences from `user/preferences.yaml` (language, debate_language, commit_style) were populated. Budget room available for identity and coding style additions later.
+
+3. **Budget well under target** — Combined file is 178 lines / ~1,872 tokens vs the 500/5,000 target. Individual source files remain as separate maintainable units; `aw workspace build-rules` (Phase 5) will automate the combination step.
 
 ## Outstanding Issues & Follow-up
 
