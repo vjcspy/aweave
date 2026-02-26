@@ -1,3 +1,9 @@
+---
+name: NestJS Core Module
+description: Shared NestJS infrastructure module providing structured JSON logging and request context propagation
+tags: []
+---
+
 # NestJS Core Module (`@hod/aweave-nestjs-core`)
 
 > **Source:** `workspaces/devtools/common/nestjs-core/`

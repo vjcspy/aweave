@@ -28,6 +28,7 @@ AGENTS.md
 # ========================================
 user/memory/**
 !user/memory/.gitkeep
+!user/memory/**/_index.yaml
 user/snippets/**
 !user/snippets/.gitkeep
 user/context/**

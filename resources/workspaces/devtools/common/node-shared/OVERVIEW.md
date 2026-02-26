@@ -1,3 +1,9 @@
+---
+name: Node Shared
+description: Node-only shared utility package for runtime helpers including DevTools root discovery
+tags: []
+---
+
 # Node Shared (@hod/aweave-node-shared)
 
 Node-only shared utility package for runtime helpers that are not specific to oclif, NestJS, or React.
