@@ -65,18 +65,17 @@ Beyond what the plan references, scan folder structure and read implementation f
 
 **Step 4: Read Project Rules & Workspace Structure**
 
-Determine workspace from plan references and load the corresponding workspace rule:
+Determine workspace from plan references and load context:
 
-| Plan References Pattern | Workspace Rule to Load |
-|-------------------------|------------------------|
-| `workspaces/<project>/...` or `resources/workspaces/<project>/...` | `agent/rules/common/workspaces/business-workspace.md` |
-| `workspaces/devtools/...` or `resources/workspaces/devtools/...` | `agent/rules/common/workspaces/devtools.md` |
+| Plan References Pattern | Workspace Scope |
+|-------------------------|-----------------|
+| `workspaces/<project>/...` or `resources/workspaces/<project>/...` | `<project>` |
+| `workspaces/devtools/...` or `resources/workspaces/devtools/...` | `devtools` |
 
-Use the workspace rule's **Key Paths** table to discover related context beyond what the plan explicitly references (architecture docs, guides, spikes, related plans, etc.).
+Call `workspace_get_context` with the detected scope to get folder structure, T0 summaries, and available skills. Request topics as needed (plans, architecture, decisions) to discover related context beyond what the plan explicitly references.
 
 Also read:
 - `agent/rules/common/coding/*.md` — coding standards and conventions
-- `resources/workspaces/<PROJECT>/OVERVIEW.md` — project-level context (if not already read)
 
 **Step 5: Synthesize Understanding**
 
