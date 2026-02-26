@@ -1,3 +1,9 @@
+---
+name: Debate NestJS Module
+description: NestJS module providing complete debate backend with REST API, WebSocket gateway, and SQLite database
+tags: []
+---
+
 # Debate NestJS Module (`@hod/aweave-nestjs-debate`)
 
 > **Source:** `workspaces/devtools/common/nestjs-debate/`

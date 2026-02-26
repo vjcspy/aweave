@@ -1,3 +1,9 @@
+---
+name: Unified CLI Entrypoint
+description: oclif-based main CLI application providing the global aw command with plugin composition
+tags: []
+---
+
 # Unified CLI Entrypoint (`@hod/aweave`)
 
 > **Source:** `workspaces/devtools/common/cli/`

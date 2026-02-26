@@ -1,6 +1,9 @@
 ---
 name: Workflow Engine
 description: Plan to build a workflow execution engine to handle sequential and parallel task graphs.
+status: done
+created: 2026-02-08
+tags: []
 ---
 
 # 📋 [WORKFLOW-ENGINE: 2026-02-08] - Workflow Engine Design & Approach

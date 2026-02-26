@@ -1,3 +1,9 @@
+---
+name: Debate Web
+description: React SPA for Arbitrator to monitor debates and submit rulings and interventions
+tags: []
+---
+
 # Debate Web
 
 React SPA for Arbitrator to monitor debates and submit RULING/INTERVENTION.

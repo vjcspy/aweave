@@ -6,21 +6,20 @@ Standard directory structure for the entire workspace:
 <PROJECT_ROOT>/
 ├── agent/                      # AI Agent brain
 │   ├── commands/               # Custom agent commands
-│   ├── templates/              # Document templates
 │   ├── rules/                  # Working protocols & guidelines
+│   │   └── common/             # Shared rules (hot memory sources + workspace rules)
 │   └── skills/                 # Domain-specific agent skills
 │
 ├── resources/                  # Documentation & context
 │   ├── workspaces/             # Workspace-specific docs (mirrors workspaces/)
 │   │   ├── devtools/           # DevTools documentation
-│   │   │   ├── OVERVIEW.md     # Global devtools overview
+│   │   │   ├── OVERVIEW.md     # Global devtools overview (front-matter = T0)
 │   │   │   └── <DOMAIN>/       # Per-domain/package docs
 │   │   └── <WORKSPACE>/
-│   │       ├── OVERVIEW.md     # Global workspace overview
+│   │       ├── OVERVIEW.md     # Global workspace overview (front-matter = T0)
 │   │       └── <DOMAIN>/
 │   │           └── <REPO_NAME>/
-│   │               ├── ABSTRACT.md      # L0 summary (100-200 tokens)
-│   │               ├── OVERVIEW.md      # Repository overview
+│   │               ├── OVERVIEW.md      # Repository overview (front-matter = T0)
 │   │               ├── _features/       # Business feature documentation
 │   │               ├── _plans/          # Implementation plans
 │   │               ├── _spikes/         # Technical investigations
@@ -33,21 +32,28 @@ Standard directory structure for the entire workspace:
 │   ├── devtools/               # Platform tooling (tracked in git)
 │   │   ├── common/             # Shared tools across domains
 │   │   ├── <DOMAIN>/           # Domain-specific devtools
-│   │   ├── scripts/            # Shared scripts
 │   │   └── pnpm-workspace.yaml # Monorepo config
 │   └── <WORKSPACE>/            # Business workspaces (gitignored)
 │       └── <DOMAIN>/
 │           └── <REPO_NAME>/    # Individual repository
 │
 ├── user/                       # User-specific data
+│   ├── memory/                 # Decisions & lessons (per-workspace)
+│   │   └── workspaces/
+│   │       └── <WORKSPACE>/
+│   │           ├── _index.yaml # Memory metadata index
+│   │           ├── decisions.md
+│   │           └── lessons.md
 │   ├── profile.md
 │   ├── preferences.yaml
 │   ├── bookmarks.md
-│   ├── memory/
 │   ├── snippets/
 │   └── context/
 │
-└── AGENTS.md                   # AI Agent entry point
+├── .aweave/
+│   └── loaded-skills.yaml      # Active agent skills configuration
+│
+└── AGENTS.md                   # AI Agent entry point (symlink → agent/rules/common/agent-entry-point.md)
 ```
 
 > For detailed path variables, scope detection, and context loading rules, see the workspace-specific rule files at `agent/rules/common/workspaces/`.

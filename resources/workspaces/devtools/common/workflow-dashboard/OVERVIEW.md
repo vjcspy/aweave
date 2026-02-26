@@ -1,3 +1,9 @@
+---
+name: Workflow Dashboard
+description: Ink v6 terminal dashboard for real-time workflow engine visualization with xstate integration
+tags: []
+---
+
 # Workflow Dashboard (`@hod/aweave-workflow-dashboard`)
 
 > **Source:** `workspaces/devtools/common/workflow-dashboard/`

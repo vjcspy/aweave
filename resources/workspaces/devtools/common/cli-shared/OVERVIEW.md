@@ -1,3 +1,9 @@
+---
+name: CLI Shared Utilities
+description: Pure utility library providing MCP response format, HTTP client, and output helpers for the CLI ecosystem
+tags: []
+---
+
 # CLI Shared Utilities (`@hod/aweave-cli-shared`)
 
 > **Source:** `workspaces/devtools/common/cli-shared/`

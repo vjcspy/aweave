@@ -1,6 +1,9 @@
 ---
 name: Single NPM Package Architecture
 description: Consolidate related packages into a Single NPM Package Architecture for easier release and versioning.
+status: done
+created: 2026-02-11
+tags: []
 ---
 
 # 📋 [NPM-PKG: 2026-02-11] - Single NPM Package Architecture
