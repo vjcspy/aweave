@@ -34,9 +34,7 @@ Context loading is **autonomous** — decide based on the task, no user confirma
 **When the task involves a workspace:**
 
 1. Load the workspace rule file (from detection table above)
-2. Call `workspace_get_context` with appropriate scope for orientation (see `context-memory-rule.md`)
+2. Call `workspace_get_context` with appropriate scope for orientation
 3. Load additional context (OVERVIEW, plans, features) as the task requires
 
 **When the task is general:** Skip context loading entirely.
-
-**Coding tasks:** Load `agent/rules/common/coding/coding-standard-and-quality.md` before writing code.

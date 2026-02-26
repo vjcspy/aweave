@@ -38,7 +38,7 @@ export class GetContextQueryDto {
   @ApiPropertyOptional({
     type: String,
     description:
-      'Comma-separated topics: plans,features,architecture,overview,decisions,lessons',
+      'Comma-separated topic names (auto-discovered from topics folder)',
   })
   topics?: string;
 
@@ -61,7 +61,7 @@ export class GetContextQueryDto {
   })
   filter_tags?: string;
 
-  @ApiPropertyOptional({ description: 'Category filter for decisions/lessons' })
+  @ApiPropertyOptional({ description: 'Category filter' })
   filter_category?: string;
 }
 
