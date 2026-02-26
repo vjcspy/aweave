@@ -6,7 +6,7 @@ export type {
   FeatureEntry,
   GetContextParams,
   GetContextResponse,
-  OverviewT0,
+  OverviewEntry,
   Scope,
   SkillEntry,
   Topic,

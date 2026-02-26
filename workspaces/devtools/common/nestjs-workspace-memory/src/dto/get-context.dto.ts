@@ -44,7 +44,7 @@ export class GetContextQueryDto {
 
   @ApiPropertyOptional({
     type: Boolean,
-    description: 'Include default context (folder structure, T0, metadata)',
+    description: 'Include default context (folder_structure, overviews, loaded_skills)',
     default: true,
   })
   include_defaults?: boolean;
