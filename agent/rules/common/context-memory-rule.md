@@ -10,17 +10,24 @@ Call `workspace_get_context` when the task involves:
 - Understanding project structure, conventions, or history
 - Plans, features, architecture, decisions, or lessons
 
+**Mandatory guardrail:** If the user prompt (or referenced paths) includes any workspace path pattern (`workspaces/` or `resources/workspaces/`), you MUST call `workspace_get_context` before answering or implementing.
+
+Allowed exceptions:
+
+- The user explicitly asks to skip MCP/workspace context loading.
+- The request is clearly unrelated to workspace logic and includes no workspace paths.
+
 **Skip context loading for:** General questions, simple file edits with sufficient inline context, infrastructure fixes unrelated to workspace logic.
 
 ## How to Use `workspace_get_context`
 
-**Initial orientation:** Call with defaults (no topics) to get folder structure + T0 summaries + available skills.
+**Initial orientation:** Call with defaults (no topics) to get folder structure + overviews (name/description/tags) + available skills.
 
 **During the conversation** — call again with specific topics whenever more context is needed:
 
 - Request topics as needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`, or any `_{topicName}/` folder
 - Set `include_defaults: false` on follow-up calls to skip redundant data
-- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries — available values are visible in T0 summaries from previous topic responses
+- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries — available values are visible in previously returned overview/topic entries
 
 **Scope narrowing:**
 
@@ -28,7 +35,7 @@ Call `workspace_get_context` when the task involves:
 - `workspace` + `domain` → narrows to that domain
 - `workspace` + `domain` + `repository` → narrows to specific repo
 
-**Topic discovery:** Topics map to `_{topicName}/` folders in `resources/`. Adding a new topic = creating a `_{topicName}/` folder with `.md` files (front-matter for T0). No code changes needed.
+**Topic discovery:** Topics map to `_{topicName}/` folders in `resources/`. Adding a new topic = creating a `_{topicName}/` folder with `.md` files (front-matter for summary fields). No code changes needed.
 
 ## When to Save Decisions & Lessons
 
