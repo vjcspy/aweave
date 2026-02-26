@@ -3,15 +3,15 @@
 
 ## Workspace Detection
 
-Determine workspace type from the task path or context:
+Determine workspace from the task path or context:
 
-| Path Pattern | Workspace | Rule File |
-|---|---|---|
-| `workspaces/<project>/<domain>/<repo>/` | business-workspace | `agent/rules/common/workspaces/business-workspace.md` |
-| `resources/workspaces/<project>/` | business-workspace | `agent/rules/common/workspaces/business-workspace.md` |
-| `workspaces/devtools/` | devtools | `agent/rules/common/workspaces/devtools.md` |
-| `resources/workspaces/devtools/` | devtools | `agent/rules/common/workspaces/devtools.md` |
-| No workspace path | general | No workspace rule needed |
+| Path Pattern | Workspace |
+|---|---|
+| `workspaces/<project>/<domain>/<repo>/` | business workspace (scope: `<project>`) |
+| `resources/workspaces/<project>/` | business workspace (scope: `<project>`) |
+| `workspaces/devtools/` | devtools (scope: `devtools`) |
+| `resources/workspaces/devtools/` | devtools (scope: `devtools`) |
+| No workspace path | general — no workspace context needed |
 
 If workspace is ambiguous, ask the user.
 
@@ -33,8 +33,7 @@ Context loading is **autonomous** — decide based on the task, no user confirma
 
 **When the task involves a workspace:**
 
-1. Load the workspace rule file (from detection table above)
-2. Call `workspace_get_context` with appropriate scope for orientation
-3. Load additional context (OVERVIEW, plans, features) as the task requires
+1. Call `workspace_get_context` with detected workspace scope for orientation
+2. Load additional context (OVERVIEW, plans, features) as the task requires
 
 **When the task is general:** Skip context loading entirely.
