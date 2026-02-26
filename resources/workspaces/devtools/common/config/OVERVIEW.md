@@ -1,3 +1,9 @@
+---
+name: Config Common
+description: Default configuration schema and YAML files for the common devtools domain
+tags: []
+---
+
 # Config Common (@hod/aweave-config-common)
 
 This package maintains the default configuration schema and YAML files for the `common` devtools domain.

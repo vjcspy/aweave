@@ -1,3 +1,9 @@
+---
+name: CLI Plugin Server
+description: oclif plugin providing server lifecycle management commands for the aweave-server daemon
+tags: []
+---
+
 # CLI Plugin: Server (`@hod/aweave-plugin-server`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-server/`

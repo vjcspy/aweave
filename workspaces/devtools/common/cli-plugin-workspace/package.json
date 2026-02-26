@@ -1,0 +1,28 @@
+{
+  "name": "@hod/aweave-plugin-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "oclif": {
+    "commands": "./dist/commands",
+    "topicSeparator": " "
+  },
+  "dependencies": {
+    "@hod/aweave-workspace-memory": "workspace:*",
+    "@hod/aweave-cli-shared": "workspace:*",
+    "@oclif/core": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

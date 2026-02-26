@@ -1,6 +1,9 @@
 ---
 name: Config Centralization
 description: Plan to centrally manage shared configuration files for NestJS, Next.js, and CLI in a single package.
+status: done
+created: 2026-02-10
+tags: []
 ---
 
 # 📋 260210: 2026-02-10 - Centralized Config Management

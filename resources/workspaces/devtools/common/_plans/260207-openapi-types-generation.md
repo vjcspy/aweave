@@ -1,6 +1,9 @@
 ---
 name: OpenAPI Types Generation
 description: Automate TypeScript type generation from OpenAPI specs to sync API contracts between Frontend and Backend.
+status: done
+created: 2026-02-07
+tags: []
 ---
 
 # 260207 - OpenAPI Types Generation (NestJS → Next.js)
