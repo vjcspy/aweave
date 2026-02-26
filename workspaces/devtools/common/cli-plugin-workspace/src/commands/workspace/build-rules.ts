@@ -4,6 +4,7 @@ import {
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
+import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { Command, Flags } from '@oclif/core';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
@@ -31,7 +32,7 @@ export class WorkspaceBuildRules extends Command {
 
   static flags = {
     'project-root': Flags.string({
-      description: 'Project root directory (defaults to 3 levels up from cwd)',
+      description: 'Project root directory (auto-detected from devtools root)',
     }),
     'dry-run': Flags.boolean({
       default: false,
@@ -46,8 +47,7 @@ export class WorkspaceBuildRules extends Command {
 
   async run() {
     const { flags } = await this.parse(WorkspaceBuildRules);
-    const projectRoot =
-      flags['project-root'] ?? resolve(process.cwd(), '..', '..', '..');
+    const projectRoot = flags['project-root'] ?? resolveProjectRoot();
 
     const sections: string[] = [FRONT_MATTER, '', '# AI Agent Entry Point', ''];
     sections.push(
@@ -114,6 +114,19 @@ export class WorkspaceBuildRules extends Command {
       flags.format,
     );
   }
+}
+
+function resolveProjectRoot(): string {
+  const devtoolsRoot = resolveDevtoolsRoot({
+    cwd: process.cwd(),
+    moduleDir: __dirname,
+  });
+  if (!devtoolsRoot) {
+    throw new Error(
+      'Could not resolve devtools root. Use --project-root flag.',
+    );
+  }
+  return resolve(devtoolsRoot, '..', '..');
 }
 
 function stripBudgetComment(content: string): string {

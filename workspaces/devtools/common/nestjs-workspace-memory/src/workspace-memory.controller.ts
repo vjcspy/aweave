@@ -25,7 +25,10 @@ export class WorkspaceMemoryController {
   @Get('context')
   async getContext(@Query() query: GetContextQueryDto) {
     if (!query.workspace) {
-      return { success: false, error: { code: 'INVALID_INPUT', message: 'workspace is required' } };
+      return {
+        success: false,
+        error: { code: 'INVALID_INPUT', message: 'workspace is required' },
+      };
     }
 
     const topics = this.service.parseTopics(query.topics);
@@ -57,7 +60,10 @@ export class WorkspaceMemoryController {
     if (!body.workspace || !body.type || !body.title || !body.content) {
       return {
         success: false,
-        error: { code: 'INVALID_INPUT', message: 'workspace, type, title, and content are required' },
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'workspace, type, title, and content are required',
+        },
       };
     }
 

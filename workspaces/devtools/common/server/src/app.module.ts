@@ -12,7 +12,12 @@ import { RootRedirectController } from './root-redirect.controller';
 import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 
 @Module({
-  imports: [NestjsCoreModule, DebateModule, DashboardModule, WorkspaceMemoryModule],
+  imports: [
+    NestjsCoreModule,
+    DebateModule,
+    DashboardModule,
+    WorkspaceMemoryModule,
+  ],
   controllers: [RootRedirectController],
   providers: [
     {
