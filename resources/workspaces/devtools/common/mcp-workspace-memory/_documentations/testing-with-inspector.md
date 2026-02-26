@@ -46,4 +46,4 @@ npx @modelcontextprotocol/inspector node workspaces/devtools/common/mcp-workspac
    ```
 
 6. Click **Run Tool**.
-7. The Output section will display the structured JSON response from the workspace memory retrieval. Verify that it correctly returns the folder structure, T0 front-matter, and other relevant context.
+7. The Output section will display the structured JSON response from the workspace memory retrieval. Verify that it correctly returns `defaults.folder_structure`, `defaults.overviews`, and other relevant context.

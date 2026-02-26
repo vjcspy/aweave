@@ -22,7 +22,7 @@ export const WORKSPACE_TOOLS = [
         },
         include_defaults: {
           type: 'boolean',
-          description: 'Include defaults (folder structure, T0, skills)',
+          description: 'Include defaults (folder structure, overviews, skills)',
           default: true,
         },
         filter_status: {

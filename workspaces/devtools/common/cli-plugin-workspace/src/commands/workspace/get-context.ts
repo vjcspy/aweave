@@ -44,7 +44,8 @@ export class WorkspaceGetContext extends Command {
     }),
     'no-defaults': Flags.boolean({
       default: false,
-      description: 'Skip default context (folder structure, T0, metadata)',
+      description:
+        'Skip default context (folder_structure, overviews, loaded_skills)',
     }),
     'filter-status': Flags.string({
       description: 'Comma-separated status filter for plans',
