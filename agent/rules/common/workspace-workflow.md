@@ -22,6 +22,7 @@ If workspace is ambiguous, ask the user.
 | "create plan", "write plan", path to `_plans/` | Plan | `agent/rules/common/tasks/create-plan.md` |
 | "implement", "build", "fix", "update", "change" + code | Implementation | `agent/rules/common/tasks/implementation.md` |
 | "refactor", "restructure", "rename", "move", "extract" | Refactoring | `agent/rules/common/tasks/implementation.md` |
+| Acting as Proposer/Opponent, references debate commands | Debate | `agent/commands/common/debate-proposer.md` or `debate-opponent.md` — skip all other workflow |
 | "what", "how", "why", "explain" — no action verb | Question | Answer directly |
 
 **Ambiguity:** "implement the plan" → Implementation. "refactor and add" → Implementation. Uncertain → ask.
@@ -39,14 +40,3 @@ Context loading is **autonomous** — decide based on the task, no user confirma
 **When the task is general:** Skip context loading entirely.
 
 **Coding tasks:** Load `agent/rules/common/coding/coding-standard-and-quality.md` before writing code.
-
-## Active Skills
-
-Read `.aweave/loaded-skills.yaml` to discover available skills. Load a skill's full `SKILL.md` only when the current task matches its domain. If a referenced `SKILL.md` is missing, STOP and report to the user.
-
-## Implementation Tasks with Plans
-
-When implementing from a plan file:
-
-- After completing work, update the plan's checklist markers (`[ ]` → `[x]`)
-- Append implementation notes if the actual approach differs from the plan
