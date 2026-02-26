@@ -1,3 +1,9 @@
+---
+name: Unified NestJS Server
+description: Single NestJS entry point for all backend services importing feature modules into one process
+tags: []
+---
+
 # Unified NestJS Server (`@hod/aweave-server`)
 
 > **Source:** `workspaces/devtools/common/server/`

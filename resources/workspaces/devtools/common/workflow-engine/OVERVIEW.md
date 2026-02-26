@@ -1,3 +1,9 @@
+---
+name: Workflow Engine
+description: Core workflow execution engine with pure TypeScript multi-step workflow runner and xstate lifecycle bridge
+tags: []
+---
+
 # Workflow Engine (`@hod/aweave-workflow-engine`)
 
 > **Source:** `workspaces/devtools/common/workflow-engine/`

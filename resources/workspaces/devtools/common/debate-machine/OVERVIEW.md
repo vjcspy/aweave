@@ -1,3 +1,9 @@
+---
+name: Debate Machine
+description: Shared xstate v5 state machine definition for debate state transitions consumed by CLI and server
+tags: []
+---
+
 # Debate Machine (`@hod/aweave-debate-machine`)
 
 > **Source:** `workspaces/devtools/common/debate-machine/`
