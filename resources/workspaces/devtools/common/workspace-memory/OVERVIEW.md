@@ -12,7 +12,7 @@ tags: [memory, core, workspace, context]
 
 ## TL;DR
 
-Core library that powers the `workspace_get_context` tool. Scans `resources/workspaces/{scope}/` to assemble structured context: folder structure, OVERVIEW.md T0 summaries, loaded skills, and topic-specific data from `_{topicName}/` folders. Pure TypeScript with zero framework dependencies — consumed by NestJS, CLI, and MCP layers.
+Core library that powers the `workspace_get_context` tool. Scans `resources/workspaces/{scope}/` to assemble structured context: folder structure, OVERVIEW.md summaries (`defaults.overviews`), loaded skills, and topic-specific data from `_{topicName}/` folders. Pure TypeScript with zero framework dependencies — consumed by NestJS, CLI, and MCP layers.
 
 ## Recent Changes Log
 
@@ -33,7 +33,7 @@ workspace-memory/
     ├── index.ts               # Barrel exports
     ├── get-context/
     │   ├── get-context.ts     # Orchestrator — routes topics to handlers
-    │   ├── defaults.ts        # Folder structure + T0 summaries + skills
+    │   ├── defaults.ts        # Folder structure + overviews + skills
     │   ├── types.ts           # Scope, GetContextParams, GetContextResponse, etc.
     │   └── topics/
     │       ├── features.ts    # Special handler for _features/ structure
@@ -56,7 +56,7 @@ workspace-memory/
 
 ## Core Services & Logic (Internal)
 
-- **Defaults assembler (`defaults.ts`):** Generates folder structure tree, scans all OVERVIEW.md files for T0 front-matter (name, description, tags), loads skill entries from `.aweave/loaded-skills.yaml`
+- **Defaults assembler (`defaults.ts`):** Generates folder structure tree, scans all OVERVIEW.md files for front-matter (name, description, tags) into `defaults.overviews`, loads skill entries from `.aweave/loaded-skills.yaml`
 - **Topic routing (`get-context.ts`):** 2-category system — `features` topic gets special handling via `scanFeatures()`, all other topics use generic `scanResourceTopic()` which scans `_{topicName}/` folders
 - **Generic resource scanner (`resource.ts`):** Scans `_{topicName}/**/*.md`, extracts front-matter, applies status/tag/category filters, returns sorted entries with `_meta.document_path`
 - **Features scanner (`features.ts`):** Scans `_features/**/*.md`, derives feature names from path structure

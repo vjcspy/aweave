@@ -25,7 +25,7 @@ The core idea: **treat the agent's working environment like a well-organized bra
 
 - **Filesystem-Based Context Management** — Unified organization of source code, documentation, agent rules, and user data under one root. No vector databases, no external services — just files and directories that both humans and agents can navigate naturally.
 
-- **Tiered Context Loading** — Every documented entity has three tiers: L0 (ABSTRACT.md, 100-200 tokens for quick identification), L1 (OVERVIEW.md, 1-2 pages for planning), and L2 (detailed docs, loaded only when needed). Agents scan L0 to decide relevance, load L1 for context, and dive into L2 only for deep work — reducing token consumption by 60-80% compared to loading everything upfront.
+- **Tiered Context Loading** — Context is loaded in layers: L0 (front-matter summaries from `OVERVIEW.md`), L1 (`OVERVIEW.md` full content when needed), and L2 (detailed docs like `_plans/`, `_architecture/`, `_decisions/`, `_lessons/`). Agents start with lightweight summaries and only dive deeper when required.
 
 - **Workspace-Aware Routing** — Agents detect which workspace, domain, and repository you're working in from your input path, then automatically load the relevant architecture docs, coding standards, and conventions. No manual context stuffing required.
 
@@ -35,7 +35,7 @@ The core idea: **treat the agent's working environment like a well-organized bra
 
 - **Branch-Based Workspace Isolation** — Each workspace lives on its own git branch. The `master` branch is the template with shared infrastructure. Workspace branches merge master and add workspace-specific docs, rules, and tools. Clean separation without repo sprawl.
 
-- **Persistent User Context** — Dedicated `user/` directory for profile, preferences, memory, and personal context that agents reference across sessions. The agent remembers your working style, past decisions, and domain expertise.
+- **Persistent User Context** — Dedicated `user/` directory for profile, preferences, snippets, and personal context. Project decisions and lessons are documented in workspace resources (`_decisions/`, `_lessons/`) so agents can retrieve them consistently across sessions.
 
 ## Directory Structure
 
@@ -50,16 +50,15 @@ The core idea: **treat the agent's working environment like a well-organized bra
 ├── resources/                     # Documentation & context
 │   ├── workspaces/                # Workspace-specific docs
 │   │   ├── devtools/              # DevTools documentation
-│   │   │   ├── ABSTRACT.md        # L0 summary
-│   │   │   ├── OVERVIEW.md        # L1 full overview
+│   │   │   ├── OVERVIEW.md        # L0 front-matter + L1 full overview
 │   │   │   └── common/<PACKAGE>/  # Per-package docs
 │   │   └── <WORKSPACE>/           # Business workspace docs
-│   │       ├── ABSTRACT.md        # L0 summary
-│   │       ├── OVERVIEW.md        # L1 workspace overview
+│   │       ├── OVERVIEW.md        # L0 front-matter + L1 workspace overview
 │   │       └── <DOMAIN>/<REPO>/
-│   │           ├── ABSTRACT.md    # L0 summary
-│   │           ├── OVERVIEW.md    # L1 repo overview
-│   │           └── _plans/        # L2 detailed docs
+│   │           ├── OVERVIEW.md    # L0 front-matter + L1 repo overview
+│   │           ├── _plans/        # L2 detailed docs
+│   │           ├── _decisions/    # Architectural and technical decisions
+│   │           └── _lessons/      # Lessons learned and troubleshooting notes
 │   └── misc/                      # Cross-cutting documentation
 │
 ├── workspaces/                    # Source code
@@ -73,7 +72,6 @@ The core idea: **treat the agent's working environment like a well-organized bra
 │   ├── profile.md                 # User identity & preferences
 │   ├── preferences.yaml           # Agent behavior config
 │   ├── bookmarks.md               # Quick links
-│   ├── memory/                    # AI agent memory across sessions
 │   ├── snippets/                  # Reusable code templates
 │   └── context/                   # Long-term context files
 │
@@ -91,8 +89,8 @@ Every documented entity has up to three tiers of context:
 
 | Tier | File | Size | Purpose |
 |------|------|------|---------|
-| **L0 (Abstract)** | `ABSTRACT.md` | 100-200 tokens | Quick identification — agent reads to decide if this entity is relevant |
-| **L1 (Overview)** | `OVERVIEW.md` | 1-2 pages | Core information — architecture, key paths, usage for planning |
+| **L0 (Summary)** | `OVERVIEW.md` front-matter (`name`, `description`, `tags`) | 1-3 lines | Quick orientation — returned in `defaults.overviews` |
+| **L1 (Overview)** | `OVERVIEW.md` body | 1-2 pages | Core information — architecture, key paths, usage for planning |
 | **L2 (Details)** | `_plans/`, `_architecture/`, etc. | Full docs | Deep reading — only when agent needs implementation details |
 
 ### Entry Point: `AGENTS.md`
@@ -119,8 +117,8 @@ AI agents detect workspace type from your input and load relevant context automa
 ```
 AGENTS.md (always loaded)
   → Workspace rules (loaded per workspace type)
-    → ABSTRACT.md (L0 — quick identification)
-      → OVERVIEW.md (L1 — core context)
+    → workspace_get_context defaults (folder_structure + overviews + loaded_skills)
+      → OVERVIEW.md / topic docs (L1/L2 when needed)
         → Task rules (coding standards, plan templates, etc.)
           → Agent commands (debate, docs, etc.)
 ```
@@ -138,6 +136,21 @@ Each layer is loaded **only when needed**, keeping the context window efficient.
 > **Tip:** Always specify a path when asking AI to work on code. This triggers the correct workspace detection and context loading.
 
 ## DevTools
+
+### Workspace Memory
+
+Use workspace memory tooling to load context on-demand and keep the agent entry point in sync.
+
+```bash
+# Get default workspace context (folder_structure, overviews, loaded_skills)
+aw workspace get-context --workspace devtools
+
+# Get targeted context without defaults to save tokens
+aw workspace get-context --workspace devtools --topics plans,architecture --no-defaults
+
+# Rebuild AGENTS.md from hot-memory source files
+aw workspace build-rules
+```
 
 ### Auth
 

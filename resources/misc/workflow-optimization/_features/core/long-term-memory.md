@@ -314,13 +314,15 @@ scope:
 
 Scope resolution: if only `workspace` is passed, tool aggregates across all domains/repos in that workspace. Adding `domain` narrows to that domain. Adding `repository` narrows to that specific repo.
 
-**Common response metadata:** Every returned entry includes `_meta` fields that are NOT searchable but provide context for follow-up:
+**Common response metadata:** Most returned entries include `_meta` fields that are NOT searchable but provide context for follow-up:
 
 ```yaml
 _meta:
   document_path: string    # relative path to source document
   document_id: string      # unique identifier (filename or generated)
 ```
+
+> **Note:** `defaults.overviews[*]._meta` includes only `document_path` (no `document_id`).
 
 ---
 
@@ -347,10 +349,10 @@ filters:
 Always returned to give AI structural orientation without needing to decide what to ask for:
 
 1. **Folder structure** of `resources/workspaces/{scope}/`
-2. **T0 summaries** (front-matter: name, description, tags) of all OVERVIEW.md files within scope
+2. **Overviews** (front-matter: name, description, tags) of all OVERVIEW.md files within scope, returned as `defaults.overviews`
 3. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
 
-> **Design note (subject to change):** Defaults currently include structure + T0 + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+> **Design note (subject to change):** Defaults currently include structure + overviews + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
 **`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
@@ -366,7 +368,7 @@ Always returned to give AI structural orientation without needing to decide what
 | `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | T0 front-matter of lesson files |
 | `"{any_topic}"` | `resources/workspaces/{scope}/**/_{topicName}/` | Generic scan — any `_{topicName}/` folder works |
 
-**`include_defaults: false`:** Skips folder structure and T0 summaries. Use on follow-up calls within the same conversation to save tokens.
+**`include_defaults: false`:** Skips folder structure and overviews. Use on follow-up calls within the same conversation to save tokens.
 
 **Response example:**
 
@@ -382,7 +384,7 @@ defaults:
     │   └── _plans/
     └── ...
 
-  overviews_t0:
+  overviews:
     - scope: "devtools"
       name: "DevTools"
       description: "Shared development tools and infrastructure"
@@ -557,7 +559,7 @@ A hot memory rule file (`agent/rules/common/context-memory-rule.md`) that guides
    - NOT needed: general questions, simple file edits with sufficient inline context, infra fixes unrelated to workspace logic
 
 2. **How to use `workspace_get_context` effectively:**
-   - First call: use defaults (structure + T0 + skills) — get orientation
+   - First call: use defaults (structure + overviews + skills) — get orientation
    - Based on defaults, decide which topics to request
    - Follow-up calls: use `include_defaults: false` to save tokens
    - Topics are auto-discovered from `_{topicName}/` folders — no hardcoded list
@@ -642,7 +644,7 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 - [ ] **Plan front-matter migration (task):** Scan existing plans in `resources/*/_plans/` and add missing `status`, `tags`, `created` fields. Similarly, add front-matter to OVERVIEW.md files that lack it.
 - [ ] **OVERVIEW.md front-matter migration (task):** Scan existing OVERVIEW.md files and add `name`, `description`, `tags` front-matter. Migrate any standalone ABSTRACT.md content into the corresponding OVERVIEW.md front-matter.
 - [ ] **AGENTS.md workflow migration (task):** Rewrite AGENTS.md to use optional workspace loading flow instead of 6-step ceremony. See §2.9.
-- [ ] **Default data tuning:** Monitor if structure + T0 + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
+- [ ] **Default data tuning:** Monitor if structure + overviews + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
 - [ ] **`rule.md` rename (task):** Current `agent/rules/common/rule.md` is symlinked as `AGENTS.md`. After rewriting for optional workspace loading (§2.9), rename to a more descriptive name and update symlink.
 - [ ] **`create-overview.md` update (task):** Rewrite `agent/commands/common/create-overview.md` to differentiate workspace/domain/repo overview guidelines. Workspace overview MUST NOT list individual packages (T0 defaults already include all OVERVIEW front-matters → listing causes duplication). Remove Phase 4 (ABSTRACT.md generation per §2.4). Add OVERVIEW.md front-matter requirement.
 - [ ] **ABSTRACT.md → OVERVIEW.md front-matter migration (phased cutover):**

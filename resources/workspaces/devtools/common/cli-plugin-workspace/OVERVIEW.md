@@ -39,7 +39,7 @@ cli-plugin-workspace/
 
 ## Public Surface (Inbound)
 
-- **`aw workspace get-context`** — Retrieve workspace context (folder structure, T0 summaries, topic data)
+- **`aw workspace get-context`** — Retrieve workspace context (folder structure, overviews, topic data)
   - Flags: `--workspace` (required), `--domain`, `--repository`, `--topics`, `--no-defaults`, `--filter-status`, `--filter-tags`, `--filter-category`, `--format`
 - **`aw workspace build-rules`** — Combine hot memory source files into a single `AGENTS.md`
   - Flags: `--project-root`, `--dry-run`, `--format`
