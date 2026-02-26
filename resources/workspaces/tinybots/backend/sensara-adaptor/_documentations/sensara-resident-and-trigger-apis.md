@@ -42,12 +42,6 @@ Endpoints are split into two groups:
 
 Requires Kong gateway headers and the `SENSARA_RESIDENT_WRITE_ALL` permission:
 
-| Header | Description |
-|--------|-------------|
-| `x-consumer-id` | Kong consumer ID |
-| `x-consumer-username` | Kong consumer username |
-| `x-consumer-custom-id` | Custom consumer identifier |
-
 ### External Endpoints (Sensara)
 
 Sensara authenticates via an **org token**. The gateway injects the `x-relation-id` header which identifies the calling organization. All external endpoints require this header:
@@ -57,9 +51,6 @@ Sensara authenticates via an **org token**. The gateway injects the `x-relation-
 | `x-relation-id` | `string` (numeric, positive integer) | yes | Organization relation ID, injected by gateway from org token |
 
 No Kong auth headers or permissions are needed for external endpoints.
-
-In curl examples below, `$BASE_URL` refers to the service host (e.g. `https://api.example.com`).
-`$TOKEN` refers to a valid JWT Bearer token (internal endpoints only).
 
 ---
 
