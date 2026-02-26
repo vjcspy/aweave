@@ -50,10 +50,6 @@ export class WorkspaceBuildRules extends Command {
     const projectRoot = flags['project-root'] ?? resolveProjectRoot();
 
     const sections: string[] = [FRONT_MATTER, '', '# AI Agent Entry Point', ''];
-    sections.push(
-      'Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.',
-    );
-    sections.push('');
 
     for (const relPath of SOURCE_FILES) {
       const fullPath = resolve(projectRoot, relPath);

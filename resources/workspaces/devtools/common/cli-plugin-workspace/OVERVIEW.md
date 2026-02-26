@@ -49,7 +49,7 @@ cli-plugin-workspace/
 ## Core Services & Logic (Internal)
 
 - **get-context command:** Resolves project root via `resolveDevtoolsRoot()` (from `@hod/aweave-node-shared`), calls core `getContext()` directly, outputs result in MCPResponse format
-- **build-rules command:** Reads hot memory source files, strips budget comments, shifts heading levels (H1→H2, H2→H3), combines with front-matter and role header, writes to `AGENTS.md`
+- **build-rules command:** Reads hot memory source files, strips budget comments, shifts heading levels (H1→H2, H2→H3), combines with front-matter, writes to `AGENTS.md`
 - **Project root resolution:** Uses `resolveDevtoolsRoot()` + 2 levels up to reach monorepo root
 
 ## External Dependencies & Contracts (Outbound)
