@@ -6,7 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import { generateFolderStructure } from '../parsers/folder-structure';
 import { parseFrontMatter } from '../parsers/front-matter';
 import { getSkillsPath } from '../shared/paths';
-import type { DefaultsResponse, OverviewT0, SkillEntry } from './types';
+import type { DefaultsResponse, OverviewEntry, SkillEntry } from './types';
 
 export async function getDefaults(
   resourcesDir: string,
@@ -17,23 +17,23 @@ export async function getDefaults(
     baseDir: projectRoot,
   });
 
-  const overviewsT0 = await scanOverviewT0(resourcesDir, projectRoot);
+  const overviews = await scanOverviews(resourcesDir, projectRoot);
   const loadedSkills = loadSkills(projectRoot);
 
   return {
     folder_structure: folderStructure,
-    overviews_t0: overviewsT0,
+    overviews,
     loaded_skills: loadedSkills,
   };
 }
 
-async function scanOverviewT0(
+async function scanOverviews(
   resourcesDir: string,
   projectRoot: string,
-): Promise<OverviewT0[]> {
+): Promise<OverviewEntry[]> {
   const pattern = `${resourcesDir}/**/OVERVIEW.md`;
   const files = await fg(pattern, { absolute: true });
-  const entries: OverviewT0[] = [];
+  const entries: OverviewEntry[] = [];
 
   for (const file of files) {
     const content = readFileSync(file, 'utf-8');
@@ -51,7 +51,6 @@ async function scanOverviewT0(
       tags: frontMatter.tags as string[] | undefined,
       _meta: {
         document_path: relPath,
-        document_id: scopePath,
       },
     });
   }

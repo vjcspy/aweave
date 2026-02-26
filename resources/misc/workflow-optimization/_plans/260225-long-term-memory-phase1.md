@@ -141,7 +141,7 @@ workspaces/devtools/common/workspace-memory/
     ├── index.ts                     # 🚧 TODO — Barrel exports
     ├── get-context/
     │   ├── get-context.ts           # Orchestrator — 3-category topic routing
-    │   ├── defaults.ts              # Folder structure + T0 summaries + memory metadata
+    │   ├── defaults.ts              # Folder structure + overviews + memory metadata
     │   ├── topics/
     │   │   ├── memory.ts            # Type 1: read {topic}.md from user/memory/
     │   │   ├── features.ts          # Type 2: scan _features/ (special structure)
@@ -196,7 +196,7 @@ workspaces/devtools/common/workspace-memory/
 
 - [x] **2.6** Implement `getContext()` defaults (`src/get-context/defaults.ts`)
   - Folder structure of `resources/workspaces/{scope}/`
-  - T0 summaries: scan all `OVERVIEW.md` files within scope, extract front-matter (name, description, tags)
+  - Overviews: scan all `OVERVIEW.md` files within scope, extract front-matter (name, description, tags) into `defaults.overviews`
   - Memory metadata from `_index.yaml`
   - Loaded skills: read `.aweave/loaded-skills.yaml` and include skill entries (name, description, skill_path) — AI agents can then decide which skills to load based on the current task
   - **Outcome:** Default response provides structural orientation + available skills
@@ -208,14 +208,14 @@ workspaces/devtools/common/workspace-memory/
   - `overview`: return full OVERVIEW.md content at current scope level
   - `decisions`: read `user/memory/workspaces/{scope}/decisions.md`, return full content
   - `lessons`: read `user/memory/workspaces/{scope}/lessons.md`, return full content
-  - Each handler returns entries with `_meta: { document_path, document_id }`
+  - Most topic handlers return entries with `_meta: { document_path, document_id }`; `defaults.overviews[*]._meta` returns only `document_path`
   - **Outcome:** All topic-specific data retrievable
 
 - [x] **2.8** Implement `getContext()` orchestrator (`src/get-context/get-context.ts`)
   - Accept params: `{ scope, topics?, include_defaults?, filters? }`
   - If no topics + `include_defaults: true`: return defaults only
   - If topics specified: call topic handlers, merge results
-  - If `include_defaults: false`: skip folder structure + T0 summaries, still include memory metadata
+  - If `include_defaults: false`: skip folder structure + overviews, still include memory metadata
   - Apply tag/status/category filters
   - **Outcome:** Single function handles all retrieval combinations
 
@@ -561,4 +561,4 @@ Update agent infrastructure files to align with the new memory system.
 - [ ] **Config package integration** — Project root currently hardcoded as `resolve(cwd, '..', '..', '..')`. Consider moving to `@hod/aweave-config-common`.
 - [ ] **ABSTRACT.md cleanup** — 22 orphaned files can be batch-deleted.
 - [ ] **Cursor MCP verification** — Configure Cursor MCP settings and test end-to-end (step 4.5).
-- [ ] **Default data tuning** — Monitor if structure + T0 + skills is sufficient as defaults.
+- [ ] **Default data tuning** — Monitor if structure + overviews + skills is sufficient as defaults.

@@ -19,15 +19,15 @@ export interface GetContextParams {
 
 export interface EntryMeta {
   document_path: string;
-  document_id: string;
+  document_id?: string;
 }
 
-export interface OverviewT0 {
+export interface OverviewEntry {
   scope: string;
   name?: string;
   description?: string;
   tags?: string[];
-  _meta: EntryMeta;
+  _meta: Pick<EntryMeta, 'document_path'>;
 }
 
 export interface FeatureEntry {
@@ -44,7 +44,7 @@ export interface SkillEntry {
 
 export interface DefaultsResponse {
   folder_structure: string;
-  overviews_t0: OverviewT0[];
+  overviews: OverviewEntry[];
   loaded_skills: SkillEntry[];
 }
 
