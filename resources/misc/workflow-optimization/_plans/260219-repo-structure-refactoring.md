@@ -267,8 +267,8 @@ All moves use `git mv` to preserve history. Order: deepest paths first.
 
 - [ ] **2.9** Create `user/` structure
   ```bash
-  mkdir -p user/memory user/snippets user/context
-  touch user/memory/.gitkeep user/snippets/.gitkeep user/context/.gitkeep
+  mkdir -p user/snippets user/context
+  touch user/snippets/.gitkeep user/context/.gitkeep
   ```
   Create template files: `user/profile.md`, `user/preferences.yaml`, `user/bookmarks.md`
 
@@ -300,8 +300,6 @@ AGENTS.md
 # ========================================
 # User data (structure tracked, content ignored)
 # ========================================
-user/memory/**
-!user/memory/.gitkeep
 user/snippets/**
 !user/snippets/.gitkeep
 user/context/**

@@ -1,12 +1,10 @@
 import fg from 'fast-glob';
 import { relative } from 'path';
 
-import type { FeatureEntry } from '../types';
+import type { FeatureEntry, TopicContext } from '../types';
 
-export async function getFeatures(
-  resourcesDir: string,
-  projectRoot: string,
-): Promise<FeatureEntry[]> {
+export async function scanFeatures(ctx: TopicContext): Promise<FeatureEntry[]> {
+  const { resourcesDir, projectRoot } = ctx;
   const pattern = `${resourcesDir}/**/_features/**/*.md`;
   const files = await fg(pattern, { absolute: true });
   const entries: FeatureEntry[] = [];

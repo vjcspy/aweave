@@ -12,7 +12,7 @@ const TOOLS = [
   {
     name: 'workspace_get_context',
     description:
-      'Get workspace context: folder structure, overviews, plans, features, architecture, decisions, lessons, and loaded skills',
+      'Get workspace context: folder structure, overviews, plans, features, architecture, decisions, lessons, and loaded skills. Topics are auto-discovered from _{topicName}/ folders in resources/.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -25,17 +25,16 @@ const TOOLS = [
         topics: {
           type: 'string',
           description:
-            'Comma-separated: plans,features,architecture,overview,decisions,lessons',
+            'Comma-separated topic names (e.g. "plans,decisions,lessons"). Topics map to _{topicName}/ folders in resources/, except "features" which has special handling.',
         },
         include_defaults: {
           type: 'boolean',
-          description:
-            'Include defaults (folder structure, T0, metadata, skills)',
+          description: 'Include defaults (folder structure, T0, skills)',
           default: true,
         },
         filter_status: {
           type: 'string',
-          description: 'Comma-separated status filter for plans',
+          description: 'Comma-separated status filter',
         },
         filter_tags: {
           type: 'string',
@@ -43,31 +42,10 @@ const TOOLS = [
         },
         filter_category: {
           type: 'string',
-          description: 'Category filter for decisions/lessons',
+          description: 'Category filter',
         },
       },
       required: ['workspace'],
-    },
-  },
-  {
-    name: 'workspace_save_memory',
-    description: 'Save a decision or lesson to workspace memory',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        workspace: { type: 'string', description: 'Workspace name' },
-        domain: { type: 'string', description: 'Domain within workspace' },
-        type: {
-          type: 'string',
-          enum: ['decision', 'lesson'],
-          description: 'Entry type',
-        },
-        title: { type: 'string', description: 'Entry title' },
-        content: { type: 'string', description: 'Entry content' },
-        category: { type: 'string', description: 'Category classification' },
-        tags: { type: 'string', description: 'Comma-separated tags' },
-      },
-      required: ['workspace', 'type', 'title', 'content'],
     },
   },
 ];
@@ -96,8 +74,6 @@ export class McpToolsService implements OnModuleInit {
       switch (name) {
         case 'workspace_get_context':
           return this.handleGetContext(params);
-        case 'workspace_save_memory':
-          return this.handleSaveMemory(params);
         default:
           return {
             content: [{ type: 'text' as const, text: `Unknown tool: ${name}` }],
@@ -131,26 +107,6 @@ export class McpToolsService implements OnModuleInit {
           .map((t: string) => t.trim()),
         category: params.filter_category as string | undefined,
       },
-    });
-
-    return {
-      content: [
-        { type: 'text' as const, text: JSON.stringify(result, null, 2) },
-      ],
-    };
-  }
-
-  private handleSaveMemory(params: Record<string, unknown>) {
-    const result = this.memoryService.saveMemory({
-      scope: {
-        workspace: params.workspace as string,
-        domain: params.domain as string | undefined,
-      },
-      type: params.type as 'decision' | 'lesson',
-      title: params.title as string,
-      content: params.content as string,
-      category: params.category as string | undefined,
-      tags: (params.tags as string)?.split(',').map((t: string) => t.trim()),
     });
 
     return {

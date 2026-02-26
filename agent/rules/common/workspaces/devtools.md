@@ -38,7 +38,8 @@ Determine working scope from the path:
 | **Global Overview** | `resources/workspaces/devtools/OVERVIEW.md` |
 | **Package Overview** | `resources/workspaces/devtools/<DOMAIN>/<PACKAGE_NAME>/OVERVIEW.md` |
 | **Plans** | `resources/workspaces/devtools/common/_plans/` |
-| **Memory (decisions/lessons)** | `user/memory/workspaces/devtools/` |
+| **Decisions** | `resources/workspaces/devtools/common/_decisions/` |
+| **Lessons** | `resources/workspaces/devtools/common/_lessons/` |
 
 ## Context Loading
 

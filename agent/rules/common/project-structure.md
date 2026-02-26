@@ -24,6 +24,8 @@ Standard directory structure for the entire workspace:
 │   │               ├── _plans/          # Implementation plans
 │   │               ├── _spikes/         # Technical investigations
 │   │               ├── _architecture/   # Architecture docs & ADRs
+│   │               ├── _decisions/      # Architectural/design decisions
+│   │               ├── _lessons/        # Lessons learned & gotchas
 │   │               ├── _guides/         # Developer guides
 │   │               └── _releases/       # Release documentation
 │   └── misc/                   # Cross-cutting documentation
@@ -38,22 +40,11 @@ Standard directory structure for the entire workspace:
 │           └── <REPO_NAME>/    # Individual repository
 │
 ├── user/                       # User-specific data
-│   ├── memory/                 # Decisions & lessons (per-workspace)
-│   │   └── workspaces/
-│   │       └── <WORKSPACE>/
-│   │           ├── _index.yaml # Memory metadata index
-│   │           ├── decisions.md
-│   │           └── lessons.md
 │   ├── profile.md
 │   ├── preferences.yaml
 │   ├── bookmarks.md
 │   ├── snippets/
 │   └── context/
 │
-├── .aweave/
-│   └── loaded-skills.yaml      # Active agent skills configuration
-│
-└── AGENTS.md                   # AI Agent entry point (symlink → agent/rules/common/agent-entry-point.md)
+└── AGENTS.md
 ```
-
-> For detailed path variables, scope detection, and context loading rules, see the workspace-specific rule files at `agent/rules/common/workspaces/`.

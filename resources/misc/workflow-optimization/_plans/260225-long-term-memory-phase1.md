@@ -140,16 +140,13 @@ workspaces/devtools/common/workspace-memory/
 └── src/
     ├── index.ts                     # 🚧 TODO — Barrel exports
     ├── get-context/
-    │   ├── get-context.ts           # 🚧 TODO — Main orchestrator
-    │   ├── defaults.ts              # 🚧 TODO — Folder structure + T0 summaries + memory metadata
+    │   ├── get-context.ts           # Orchestrator — 3-category topic routing
+    │   ├── defaults.ts              # Folder structure + T0 summaries + memory metadata
     │   ├── topics/
-    │   │   ├── plans.ts             # 🚧 TODO — Scan _plans/, extract front-matter
-    │   │   ├── features.ts          # 🚧 TODO — Scan _features/, extract T0 listing
-    │   │   ├── architecture.ts      # 🚧 TODO — Scan _architecture/
-    │   │   ├── overview.ts          # 🚧 TODO — Return OVERVIEW.md full content
-    │   │   ├── decisions.ts         # 🚧 TODO — Read decisions.md
-    │   │   └── lessons.ts           # 🚧 TODO — Read lessons.md
-    │   └── types.ts                 # 🚧 TODO — Scope, filters, response types
+    │   │   ├── memory.ts            # Type 1: read {topic}.md from user/memory/
+    │   │   ├── features.ts          # Type 2: scan _features/ (special structure)
+    │   │   └── resource.ts          # Type 3 (default): scan _{topicName}/ with front-matter
+    │   └── types.ts                 # Scope, TopicContext, ResourceEntry, response types
     ├── save-memory/
     │   ├── save-memory.ts           # 🚧 TODO — Append entry + update index
     │   ├── format.ts                # 🚧 TODO — Entry formatting (decision/lesson templates)
@@ -487,26 +484,26 @@ Update agent infrastructure files to align with the new memory system.
 - **Phase 2 (Core Package)** — Completed 2026-02-26
   - Created `@hod/aweave-workspace-memory` at `workspaces/devtools/common/workspace-memory/`
   - Pure TypeScript, zero framework deps. Dependencies: `yaml`, `fast-glob`
-  - Implements: scope resolution, front-matter parser, folder structure generator, metadata index manager, `getContext()` orchestrator with 6 topic handlers, `saveMemory()` with formatting and index updates
+  - Implements: scope resolution, front-matter parser, folder structure generator, `getContext()` orchestrator with 2 handler categories (features + generic resource scan)
   - All public API exported via barrel `src/index.ts`
 
 - **Phase 3 (NestJS Module)** — Completed 2026-02-26
   - Created `@hod/aweave-nestjs-workspace-memory` at `workspaces/devtools/common/nestjs-workspace-memory/`
-  - REST endpoints: `GET /workspace/context`, `POST /workspace/memory`
+  - REST endpoint: `GET /workspace/context`
   - DTOs with Swagger decorators for API documentation
   - Registered in `@hod/aweave-server` (`app.module.ts`)
   - Session tracking (3.4, 3.5) deferred — monitoring concern, not core functionality
 
 - **Phase 4 (MCP Integration)** — Completed 2026-02-26
   - Used `@modelcontextprotocol/sdk` with `Server` class and SSE transport
-  - MCP tools: `workspace_get_context`, `workspace_save_memory` with full input schemas
+  - MCP tool: `workspace_get_context` with full input schema
   - SSE endpoint at `GET /mcp/sse`, message handler at `POST /mcp/messages`
   - Integrated into the same NestJS module (no separate process)
   - Cursor MCP verification (4.5) left as manual step
 
 - **Phase 5 (CLI Plugin)** — Completed 2026-02-26
   - Created `@hod/aweave-plugin-workspace` at `workspaces/devtools/common/cli-plugin-workspace/`
-  - Commands: `aw workspace get-context`, `aw workspace save-memory`, `aw workspace build-rules`
+  - Commands: `aw workspace get-context`, `aw workspace build-rules`
   - All commands call core directly (no server roundtrip)
   - `build-rules` automates combining hot memory sources into `agent-entry-point.md`
   - Registered in `pnpm-workspace.yaml` + `cli/package.json` oclif.plugins
@@ -514,16 +511,14 @@ Update agent infrastructure files to align with the new memory system.
 - **Phase 6 (Data Format Migrations)** — Completed 2026-02-26
   - Migrated 20 plan files: added `status: done`, `created` (from filename), `tags: []`
   - Migrated 22 OVERVIEW.md files: added front-matter with `name`, `description`, `tags`
-  - Bootstrapped `user/memory/workspaces/devtools/_index.yaml` (schema_version: 1)
-  - Updated `.gitignore`: added `!user/memory/**/_index.yaml` exception
-  - Existing memory files were all empty — no entry format fixes needed
+  - Removed `user/memory/` directory and `.gitignore` exceptions (decisions/lessons moved to `resources/`)
 
 - **Phase 7 (Rule & Command Updates)** — Completed 2026-02-26
   - Renamed `rule.md` → `agent-entry-point.md`, updated AGENTS.md symlink
   - Completed ABSTRACT.md → OVERVIEW.md cutover (Phases A-D): all rules now reference OVERVIEW.md, T0 comes from front-matter
   - Updated `devtools.md`: removed ABSTRACT.md references, added `workspace_get_context` guidance
   - Updated `business-workspace.md`: same ABSTRACT→OVERVIEW cutover, simplified context loading
-  - Updated `project-structure.md`: reflects new directory structure (user/memory/, .aweave/, agent-entry-point.md)
+  - Updated `project-structure.md`: reflects new directory structure (_decisions/, _lessons/, .aweave/, agent-entry-point.md)
   - ABSTRACT.md files left in place (Phase E deferred) — harmless, can be cleaned up later
   - `create-overview.md` was already compliant from earlier work
 
@@ -549,12 +544,21 @@ Update agent infrastructure files to align with the new memory system.
 
 5. **Plan files without front-matter** — 2 plan files had no `---` delimiters and were skipped during migration. Can be manually fixed.
 
+6. **2-category topic routing (simplified from 3)** — Refactored `getContext()` to only 2 handler categories:
+   - **Type 1 (features)**: special `_features/` structure (`topics/features.ts`)
+   - **Type 2 (default)**: any other topic → generic scan of `_{topicName}/` folder with front-matter extraction (`topics/resource.ts`)
+   - Removed Type 1 (memory) handler entirely — decisions/lessons now live in `resources/` as `_{topicName}/` folders, handled by the generic scanner
+   - Removed `save-memory/`, `metadata/`, `memory.ts`, `_index.yaml`, `workspace_save_memory` MCP tool/CLI/REST endpoint
+   - `Topic` type is plain `string`; `GetContextResponse` uses `[topic: string]: unknown`
+   - `PlanEntry`/`ArchitectureEntry` replaced by generic `ResourceEntry` (name, path, spread front-matter, _meta)
+   - **Adding a new topic = creating a `_{topicName}/` folder** — no code changes needed
+
 ## Outstanding Issues & Follow-up
 
 - [x] **MCP SDK selection** — Resolved: `@modelcontextprotocol/sdk` with SSE transport
+- [x] **`user/memory/` removal** — Decisions/lessons moved to `resources/` as `_{topicName}/` folders. Removed: `save-memory/`, `metadata/`, `memory.ts`, `_index.yaml`, `workspace_save_memory` tool, `aw workspace save-memory` CLI, `POST /workspace/memory` REST.
 - [ ] **Session tracking** — Deferred from Phase 3. Add when monitoring data is needed.
 - [ ] **Config package integration** — Project root currently hardcoded as `resolve(cwd, '..', '..', '..')`. Consider moving to `@hod/aweave-config-common`.
 - [ ] **ABSTRACT.md cleanup** — 22 orphaned files can be batch-deleted.
 - [ ] **Cursor MCP verification** — Configure Cursor MCP settings and test end-to-end (step 4.5).
-- [ ] **Learning file review cadence** — No automated solution for large memory files (>50 entries).
-- [ ] **Default data tuning** — Monitor if structure + T0 + metadata + skills is sufficient as defaults.
+- [ ] **Default data tuning** — Monitor if structure + T0 + skills is sufficient as defaults.

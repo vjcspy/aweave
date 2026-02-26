@@ -1,12 +1,11 @@
 import { existsSync } from 'fs';
 
 import { Scope } from '../get-context/types';
-import { getMemoryPath, getResourcesPath } from './paths';
+import { getResourcesPath } from './paths';
 
 export interface ResolvedScope {
   scope: Scope;
   resourcesDir: string;
-  memoryDir: string;
 }
 
 export function resolveScope(projectRoot: string, scope: Scope): ResolvedScope {
@@ -19,9 +18,8 @@ export function resolveScope(projectRoot: string, scope: Scope): ResolvedScope {
   }
 
   const resourcesDir = getResourcesPath(projectRoot, scope);
-  const memoryDir = getMemoryPath(projectRoot, scope);
 
-  return { scope, resourcesDir, memoryDir };
+  return { scope, resourcesDir };
 }
 
 export function validateResourcesDir(resolved: ResolvedScope): void {
