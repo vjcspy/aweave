@@ -72,7 +72,7 @@ Determine workspace from plan references and load context:
 | `workspaces/<project>/...` or `resources/workspaces/<project>/...` | `<project>` |
 | `workspaces/devtools/...` or `resources/workspaces/devtools/...` | `devtools` |
 
-Call `workspace_get_context` with the detected scope to get folder structure, T0 summaries, and available skills. Request topics as needed (plans, architecture, decisions) to discover related context beyond what the plan explicitly references.
+Call `workspace_get_context` with the detected scope to get folder structure, overviews, and available skills. Request topics as needed (plans, architecture, decisions) to discover related context beyond what the plan explicitly references.
 
 Also read:
 - `agent/rules/common/coding/*.md` — coding standards and conventions

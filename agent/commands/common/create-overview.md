@@ -129,8 +129,8 @@ The `description` field is extracted by `workspace_get_context` as T0 data. It m
 
 **CRITICAL — What workspace overview MUST NOT contain:**
 
-- **Individual package/repo listings with descriptions** — T0 summaries of all child OVERVIEW.md files are already returned by `workspace_get_context` defaults. Listing them in the workspace overview creates duplication.
-- **Per-package documentation links** — T0 responses include `_meta.document_path` for each OVERVIEW. No need to duplicate.
+- **Individual package/repo listings with descriptions** — child OVERVIEW summaries are already returned in `workspace_get_context` defaults (`defaults.overviews`). Listing them in the workspace overview creates duplication.
+- **Per-package documentation links** — `defaults.overviews` includes `_meta.document_path` for each OVERVIEW. No need to duplicate.
 - **Detailed dependency graphs between packages** — belongs in repo-level or architecture docs.
 
 **Content structure:**
