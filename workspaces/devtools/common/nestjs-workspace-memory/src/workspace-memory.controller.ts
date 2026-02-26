@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiExtraModels,
@@ -6,15 +6,10 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 
-import {
-  GetContextQueryDto,
-  GetContextResponseDto,
-  SaveMemoryBodyDto,
-  SaveMemoryResponseDto,
-} from './dto';
+import { GetContextQueryDto, GetContextResponseDto } from './dto';
 import { WorkspaceMemoryService } from './workspace-memory.service';
 
-@ApiExtraModels(GetContextResponseDto, SaveMemoryResponseDto)
+@ApiExtraModels(GetContextResponseDto)
 @Controller('workspace')
 export class WorkspaceMemoryController {
   constructor(private readonly service: WorkspaceMemoryService) {}
@@ -47,33 +42,6 @@ export class WorkspaceMemoryController {
         tags: query.filter_tags?.split(',').map((t) => t.trim()),
         category: query.filter_category,
       },
-    });
-
-    return { success: true, data: result };
-  }
-
-  @ApiOperation({ summary: 'Save a decision or lesson' })
-  @ApiOkResponse({ type: SaveMemoryResponseDto })
-  @ApiBadRequestResponse({ description: 'Invalid parameters' })
-  @Post('memory')
-  saveMemory(@Body() body: SaveMemoryBodyDto) {
-    if (!body.workspace || !body.type || !body.title || !body.content) {
-      return {
-        success: false,
-        error: {
-          code: 'INVALID_INPUT',
-          message: 'workspace, type, title, and content are required',
-        },
-      };
-    }
-
-    const result = this.service.saveMemory({
-      scope: { workspace: body.workspace, domain: body.domain },
-      type: body.type,
-      title: body.title,
-      content: body.content,
-      category: body.category,
-      tags: body.tags,
     });
 
     return { success: true, data: result };

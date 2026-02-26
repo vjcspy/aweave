@@ -5,7 +5,7 @@ import {
   output,
 } from '@hod/aweave-cli-shared';
 import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
-import { getContext, Topic } from '@hod/aweave-workspace-memory';
+import { getContext } from '@hod/aweave-workspace-memory';
 import { Command, Flags } from '@oclif/core';
 import { resolve } from 'path';
 
@@ -40,7 +40,7 @@ export class WorkspaceGetContext extends Command {
     topics: Flags.string({
       char: 't',
       description:
-        'Comma-separated topics: plans,features,architecture,overview,decisions,lessons',
+        'Comma-separated topic names (auto-discovered from topics folder)',
     }),
     'no-defaults': Flags.boolean({
       default: false,
@@ -67,7 +67,7 @@ export class WorkspaceGetContext extends Command {
     const projectRoot = resolveProjectRoot();
 
     const topics = flags.topics
-      ? (flags.topics.split(',').map((t) => t.trim()) as Topic[])
+      ? flags.topics.split(',').map((t) => t.trim())
       : undefined;
 
     const result = await getContext(projectRoot, {

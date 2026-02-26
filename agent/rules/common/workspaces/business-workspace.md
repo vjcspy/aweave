@@ -45,7 +45,8 @@ Determine working scope from the deepest meaningful path segment:
 | **Spikes** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_spikes/` |
 | **Architecture** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_architecture/` |
 | **Guides** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_guides/` |
-| **Memory** | `user/memory/workspaces/<PROJECT_NAME>/` |
+| **Decisions** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_decisions/` |
+| **Lessons** | `resources/workspaces/<PROJECT_NAME>/<DOMAIN>/<REPO_NAME>/_lessons/` |
 
 ## Context Loading
 
