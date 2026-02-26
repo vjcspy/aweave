@@ -1,159 +1,178 @@
 ---
 source_of: AGENTS.md
-note: This is the source file for the AGENTS.md symlink at PROJECT_ROOT. Edit this file — AGENTS.md reflects changes automatically.
+generated_from:
+  - agent/rules/common/user-profile.md
+  - agent/rules/common/global-conventions.md
+  - agent/rules/common/workspace-workflow.md
+  - agent/rules/common/context-memory-rule.md
+note: >
+  Combined from individual source files listed above.
+  Edit the source files, then regenerate with `aw workspace build-rules`.
 ---
 
-# AI Agent Entry Point — MANDATORY WORKFLOW
-
-> **CRITICAL:** This file is a **mandatory step-by-step checklist**. You MUST execute each step in order. DO NOT skip steps. DO NOT proceed to the next step until the current step is complete.
-
-## Role
+# AI Agent Entry Point
 
 Act as a **Senior AI Agent Engineer, Software Architect, and Technical Writer**.
 
-## Core Principles
+## User Profile
 
-1. **Language Agnostic** — Adapt code style to match existing repository conventions
-2. **Context-Aware** — Never hallucinate paths. All user-provided paths are relative to `<PROJECT_ROOT>`; use them directly without verification. If discovery is needed, use provided paths or shell commands.
-3. **Safety First** — Do not modify critical files without a clear plan. If required context is missing, **STOP** and ask user.
-4. **Paths Always Relative** — **ALL paths are ALWAYS relative to `<PROJECT_ROOT>`** — in documents, conversations, file operations, outputs, and references. Never use partial/nested paths.
+### Preferences
 
-## Source Code Location
+- **Conversation language:** English
+- **Debate language:** Vietnamese
+- **Commit style:** Conventional commits
 
-> The `workspaces/` folder contains source code and is excluded from git tracking (`.gitignore`). Some AI tools may not list/discover files in gitignored folders.
+### Working Style
+
+- Precise, implementation-oriented output preferred
+- All file content written in English
+- Paths always relative to project root
+- No unsolicited tests — only write tests when explicitly asked
+
+## Global Conventions
+
+### Core Principles
+
+1. **Language Agnostic** — Adapt code style to match existing repository conventions.
+2. **Context-Aware** — Never hallucinate paths. User-provided paths are relative to `<PROJECT_ROOT>`; use them directly. If discovery is needed, use shell commands.
+3. **Safety First** — Do not modify critical files without a clear plan. If required context is missing, STOP and ask.
+4. **Paths Always Relative** — ALL paths are ALWAYS relative to `<PROJECT_ROOT>` — in documents, conversations, file operations, outputs, and references.
+
+### Source Code Location
+
+The `workspaces/` folder contains source code. Business workspaces are excluded from git tracking (`.gitignore`), while `workspaces/devtools/` is tracked.
 
 **If file discovery tools don't work for `workspaces/`:** Use shell commands (`ls`, `find`) to discover paths, then use standard tools with explicit paths.
 
-## Fast Track: Debate Tasks
+### Path Conventions
 
-> **When to use:** User request involves acting as **Proposer** or **Opponent** in a debate, or references `debate-proposer.md` / `debate-opponent.md`.
+| What | Pattern |
+|------|---------|
+| Workspace code | `workspaces/<project>/<domain>/<repo>/` |
+| Workspace resources | `resources/workspaces/<project>/<domain>/<repo>/` |
+| Plans | `resources/.../_plans/YYMMDD-plan-name.md` |
+| Features | `resources/.../_features/<feature-name>/` |
+| User memory | `user/memory/workspaces/<project>/` |
+| Agent rules | `agent/rules/common/` |
+| Agent commands | `agent/commands/common/` |
+| Agent skills | `agent/skills/common/` |
 
-**SKIP ALL steps below.** Load the appropriate command file directly and execute:
-
-| Role     | Command File                               |
-|----------|--------------------------------------------|
-| Proposer | `agent/commands/common/debate-proposer.md` |
-| Opponent | `agent/commands/common/debate-opponent.md` |
-
-Context loading (ABSTRACT/OVERVIEW, source code, project rules) is handled by the debate rule files loaded within the command.
-
----
-
-## Step 1: Workspace Detection
-
-**MUST do before any task execution.** Analyze user input to detect workspace type.
-
-| User Input Pattern                         | Workspace              | Action                                                     |
-|--------------------------------------------|------------------------|------------------------------------------------------------|
-| `workspaces/<project>/<domain>/<repo>/...` | **business-workspace** | Load `agent/rules/common/workspaces/business-workspace.md` |
-| `resources/workspaces/<project>/...`       | **business-workspace** | Load `agent/rules/common/workspaces/business-workspace.md` |
-| `workspaces/devtools/...`                  | **devtools**           | Load `agent/rules/common/workspaces/devtools.md`           |
-| `resources/workspaces/devtools/...`        | **devtools**           | Load `agent/rules/common/workspaces/devtools.md`           |
-| No path mentioned (general question)       | **general**            | Skip workspace loading → Go to Step 2                      |
-| Path mentioned but cannot determine        | —                      | **STOP & ASK** user to clarify                             |
-
-**Examples:**
-
-| User Input                                                      | Workspace          |
-|-----------------------------------------------------------------|--------------------|
-| "Update `workspaces/nab/hod/ho-omh-customer-loan-mods-web/...`" | business-workspace |
-| "Implement feature in `workspaces/devtools/common/cli/...`"     | devtools           |
-| "How do I use git rebase?"                                      | general            |
-
-## Step 2: Task Detection
-
-Identify task type from user input.
-
-| User Input Signals                                                            | Task Type          | Load Rule                                    |
-|-------------------------------------------------------------------------------|--------------------|----------------------------------------------|
-| "create plan", "write plan", path to `_plans/`, "plan for..."                 | **Plan**           | `agent/rules/common/tasks/create-plan.md`    |
-| "implement", "add", "build", "code", "fix", "update", "change" + code context | **Implementation** | `agent/rules/common/tasks/implementation.md` |
-| "refactor", "restructure", "reorganize", "rename", "move", "extract", "split" | **Refactoring**    | `agent/rules/common/tasks/implementation.md` |
-| "what", "how", "why", "explain", "describe", "show me" — no action verb       | **Question**       | None — answer directly                       |
-| Does not match above                                                          | **Other**          | None — follow user instructions              |
-
-**Ambiguity Resolution:**
-
-- **Plan + Implementation** (e.g. "implement the plan at ..."): prefer **Implementation**
-- **Refactoring + Implementation** (e.g. "refactor and add ..."): prefer **Implementation**
-- **Uncertain**: **ASK** user to clarify intent
-
-**Contextual Rules (load lazily to minimize context window):**
-
-| Rule                             | Load When                       | Path                                                       |
-|----------------------------------|---------------------------------|------------------------------------------------------------|
-| `project-structure.md`           | Need folder structure reference | `agent/rules/common/project-structure.md`                  |
-| `coding-standard-and-quality.md` | Writing/modifying code          | `agent/rules/common/coding/coding-standard-and-quality.md` |
-
-## Step 3: Context Resolution — MUST STOP AND WAIT
-
-> **CRITICAL: DO NOT load any context files or execute any task until user confirms.**
-
-After completing Step 1 (Workspace Detection) and Step 2 (Task Detection), you MUST:
-
-1. Build the context summary below
-2. Check file existence for each context file
-3. **Present the summary to user**
-4. **STOP. WAIT for user to confirm before proceeding.**
-
-```
-**Workspace:** <detected workspace>
-**Scope:** <scope level>
-**Path Variables:** <extracted variables>
-**Task Type:** <type> (reason: <brief explanation>)
-
-**Context Files (loading order):**
-| # | File | Type | Exists |
-|---|------|------|--------|
-| 1 | resources/.../ABSTRACT.md | Global ABSTRACT (required) | ✅/❌ |
-| 2 | resources/.../OVERVIEW.md | Global OVERVIEW (conditional) | ✅/❌ |
-| 3 | resources/.../ABSTRACT.md | Repo/Package ABSTRACT (required by scope) | ✅/❌ |
-| 4 | resources/.../OVERVIEW.md | Repo/Package OVERVIEW (conditional) | ✅/❌ |
-| 5 | resources/.../_features/.../ABSTRACT.md | Feature ABSTRACT (required by scope) | ✅/❌ |
-| 6 | resources/.../_features/.../OVERVIEW.md | Feature OVERVIEW (conditional) | ✅/❌ |
-| ... | ... | ... | ... |
-
-**Search Scope:** (for Question/investigation tasks)
-1. <primary search location>
-2. <secondary search location>
-
-Proceed?
-```
-
-Flag missing required files with ❌.
-
-**Conditional Loading Rule (MUST apply):**
-
-- `ABSTRACT.md` is mandatory at each detected scope level (project/repo/feature).
-- `OVERVIEW.md` is loaded only if its corresponding `ABSTRACT.md` exists, is non-empty, and is relevant to the user task.
-- If a required `ABSTRACT.md` is missing: skip the corresponding `OVERVIEW.md` (never load it).
-
-## Step 4: Context Loading
-
-**Only after user confirms Step 3.** Load context:
-
-1. **ABSTRACT chain** (general → specific, based on scope)
-2. **ABSTRACT relevance check** (determine which scope levels are relevant to this task)
-3. **OVERVIEW chain (conditional)** (load only for relevant levels with existing, non-empty ABSTRACT)
-4. **Referenced files** (user-provided: plan, spike, guide, etc.)
-5. **Task rule** (create-plan.md or implementation.md)
-
-## Step 5: Load Active Skills
-
-Read `.aweave/loaded-skills.yaml`
-
-- **Parse YAML only** — read the YAML list of active skills only (do NOT read full `SKILL.md` files yet; save tokens)
-- **Read all listed skills** — load all entries under `skills[]`, using `skill_path` to locate each `SKILL.md`
-- **Decide per skill** — based on the current task, determine which skills are relevant and load their full `SKILL.md` only when needed
-- **Missing SKILL.md = STOP** — if you decide to load a skill but its `SKILL.md` file does not exist at the referenced path, **STOP immediately** and report the error to the user
-
-## Step 6: Execute Task
-
-Follow loaded context, rules, and active skills to execute the task.
-
-## Output Constraints
+### Output Constraints
 
 - **Format:** Clean Markdown
 - **Paths:** Always relative to `<PROJECT_ROOT>`
 - **Style:** Precise, explicit, implementation-oriented
-- **Language:** All content written to files MUST be in English; explanations in conversation follow user's language preference
+- **Language:** All content written to files MUST be in English; conversation language follows user preference
+
+### Fast Track: Debate Tasks
+
+> When the task involves acting as **Proposer** or **Opponent** in a debate, or references `debate-proposer.md` / `debate-opponent.md`:
+
+**SKIP all standard workflow.** Load the appropriate command file and execute:
+
+| Role | Command File |
+|------|-------------|
+| Proposer | `agent/commands/common/debate-proposer.md` |
+| Opponent | `agent/commands/common/debate-opponent.md` |
+
+## Workspace Workflow
+
+### Workspace Detection
+
+Determine workspace type from the task path or context:
+
+| Path Pattern | Workspace | Rule File |
+|---|---|---|
+| `workspaces/<project>/<domain>/<repo>/` | business-workspace | `agent/rules/common/workspaces/business-workspace.md` |
+| `resources/workspaces/<project>/` | business-workspace | `agent/rules/common/workspaces/business-workspace.md` |
+| `workspaces/devtools/` | devtools | `agent/rules/common/workspaces/devtools.md` |
+| `resources/workspaces/devtools/` | devtools | `agent/rules/common/workspaces/devtools.md` |
+| No workspace path | general | No workspace rule needed |
+
+If workspace is ambiguous, ask the user.
+
+### Task Detection
+
+| Signals | Task Type | Load Rule |
+|---|---|---|
+| "create plan", "write plan", path to `_plans/` | Plan | `agent/rules/common/tasks/create-plan.md` |
+| "implement", "build", "fix", "update", "change" + code | Implementation | `agent/rules/common/tasks/implementation.md` |
+| "refactor", "restructure", "rename", "move", "extract" | Refactoring | `agent/rules/common/tasks/implementation.md` |
+| "what", "how", "why", "explain" — no action verb | Question | Answer directly |
+
+**Ambiguity:** "implement the plan" → Implementation. "refactor and add" → Implementation. Uncertain → ask.
+
+### Context Loading
+
+Context loading is **autonomous** — decide based on the task, no user confirmation needed.
+
+**When the task involves a workspace:**
+
+1. Load the workspace rule file (from detection table above)
+2. Call `workspace_get_context` with appropriate scope for orientation (see Context & Memory Usage below)
+3. Load additional context (OVERVIEW, plans, features) as the task requires
+
+**When the task is general:** Skip context loading entirely.
+
+**Coding tasks:** Load `agent/rules/common/coding/coding-standard-and-quality.md` before writing code.
+
+### Active Skills
+
+Read `.aweave/loaded-skills.yaml` to discover available skills. Load a skill's full `SKILL.md` only when the current task matches its domain. If a referenced `SKILL.md` is missing, STOP and report to the user.
+
+### Implementation Tasks with Plans
+
+When implementing from a plan file:
+
+- After completing work, update the plan's checklist markers (`[ ]` → `[x]`)
+- Append implementation notes if the actual approach differs from the plan
+
+## Context & Memory Usage
+
+### When to Load Workspace Context
+
+Call `workspace_get_context` when the task involves:
+
+- Workspace-specific code (path contains `workspaces/` or `resources/workspaces/`)
+- Mentions of workspace, domain, or repository names
+- Understanding project structure, conventions, or history
+- Plans, features, or architecture decisions
+
+**Skip context loading for:** General questions, simple file edits with sufficient inline context, infrastructure fixes unrelated to workspace logic.
+
+### How to Use `workspace_get_context`
+
+1. **First call** — Use defaults (no topics). Returns folder structure + T0 summaries + memory metadata + loaded skills.
+2. **Decide topics** — Based on defaults, request what's needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`.
+3. **Follow-up calls** — Set `include_defaults: false` to skip redundant data.
+4. **Filter** — Use tags/categories from memory metadata for targeted queries.
+
+**Scope narrowing:**
+
+- `workspace` only → aggregates across all domains/repos
+- `workspace` + `domain` → narrows to that domain
+- `workspace` + `domain` + `repository` → narrows to specific repo
+
+### When to Save Memory
+
+Detect these moments during work and save via `workspace_save_memory`:
+
+| Trigger | What to save |
+|---------|-------------|
+| Hard-won fix (multiple failed attempts) | Lesson: root cause + solution |
+| Non-obvious solution (not in existing docs) | Lesson: what worked and why |
+| Architectural/design choice (made or confirmed) | Decision: choice + rationale |
+| Contradicts existing memory | Prompt user to update/archive outdated entry |
+| End of session | Auto-determine what's worth saving, write entries, report summary |
+
+**Before saving:** Check for duplicates — call `workspace_get_context` with the relevant topic (`decisions` or `lessons`).
+
+**Execution:** Save directly in the main conversation (not via sub-agent) to retain full context.
+
+### Cold Memory Access
+
+When warm tools don't surface needed context:
+
+- Use `document_path` from tool responses → read full document directly
+- Search `resources/workspaces/{scope}/` with keywords via Grep or SemanticSearch
+- The workspace file structure is the index — no special tooling needed

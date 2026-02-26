@@ -366,8 +366,9 @@ Always returned to give AI structural orientation without needing to decide what
 1. **Folder structure** of `resources/workspaces/{scope}/`
 2. **T0 summaries** (front-matter: name, description, tags) of all OVERVIEW.md files within scope
 3. **Memory metadata** from `user/memory/workspaces/{workspace}/_index.yaml` — available tags, categories
+4. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
 
-> **Design note (subject to change):** Defaults currently include only structure + T0 + memory metadata. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+> **Design note (subject to change):** Defaults currently include structure + T0 + memory metadata + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
 **`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
@@ -422,6 +423,14 @@ defaults:
     categories:
       - { name: "architecture", used_in: [decisions] }
       - { name: "debugging", used_in: [lessons] }
+
+  loaded_skills:
+    - name: "devtools-cli-builder"
+      description: "Guide for building oclif CLI plugins and NestJS backend modules"
+      skill_path: "agent/skills/common/devtools-cli-builder/SKILL.md"
+    - name: "devtools-nestjs-builder"
+      description: "Guide for building NestJS backend modules and serving React SPAs"
+      skill_path: "agent/skills/common/devtools-nestjs-builder/SKILL.md"
 
 plans:
   - name: "Workflow Engine"
