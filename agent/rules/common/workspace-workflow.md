@@ -26,14 +26,3 @@ If workspace is ambiguous, ask the user.
 | "what", "how", "why", "explain" — no action verb | Question | Answer directly |
 
 **Ambiguity:** "implement the plan" → Implementation. "refactor and add" → Implementation. Uncertain → ask.
-
-## Context Loading
-
-Context loading is **autonomous** — decide based on the task, no user confirmation needed.
-
-**When the task involves a workspace:**
-
-1. MUST call `workspace_get_context` with detected workspace scope for orientation before answering or implementing
-2. Load additional context (OVERVIEW, plans, features) as the task requires
-
-**When the task is general:** Skip context loading entirely.
