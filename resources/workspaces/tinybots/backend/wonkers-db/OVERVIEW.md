@@ -1,3 +1,14 @@
+---
+name: "wonkers-db"
+description: "Overview for wonkers-db"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 ## wonkers-db TL;DR
 - Flyway-managed MySQL schema for dashboard and TaaS domains (accounts, relations, subscriptions, chains/orders, devices, ECD/Teamleader links).
 - Only versioned SQL migrations live here; no application/runtime code.

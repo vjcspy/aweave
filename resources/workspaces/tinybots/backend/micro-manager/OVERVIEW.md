@@ -1,3 +1,14 @@
+---
+name: "micro-manager"
+description: "Overview for micro-manager"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** 12f692a
 > **Last Updated:** Thu May 15 11:02:27 2025 +0000

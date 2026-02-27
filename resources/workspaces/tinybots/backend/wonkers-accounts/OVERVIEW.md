@@ -1,3 +1,14 @@
+---
+name: "wonkers-accounts"
+description: "TypeScript/Express service that authenticates dashboard admins, brokers OAuth tokens via Kong, and exposes CRUD APIs for dashboard accounts, MFA, groups, permissions, and SSO linkages"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # wonkers-accounts Overview
 
 ## TL;DR

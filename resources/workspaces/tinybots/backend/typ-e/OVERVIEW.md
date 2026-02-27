@@ -1,3 +1,14 @@
+---
+name: "typ-e"
+description: "Overview for typ-e"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 ## typ-e TL;DR
 - Flyway-managed MySQL schema for core robot accounts, schedules, scripts, and status-check data used by micro-manager, triggers, and status services.
 - Source of truth is versioned SQL migrations only; no application logic lives here.

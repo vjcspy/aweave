@@ -1,3 +1,14 @@
+---
+name: "azi-3-status-check-jobs"
+description: "Stateless Node.js worker that schedules per-robot, per-rule monitoring windows and runs actions (currently alarms) when gaps in events are detected"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** feature/PROD-594 (user-approved deviation from develop)  
 > **Last Commit:** 4310f0c (Updated from N/A – previous hash not recorded)  
 > **Last Updated:** 2025-11-22

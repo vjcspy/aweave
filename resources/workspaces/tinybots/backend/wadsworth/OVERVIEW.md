@@ -1,3 +1,14 @@
+---
+name: "wadsworth"
+description: "Speech interaction service managing voice commands for TinyBots robots, built on `TinyDatabaseAppAuthenticated` with Awilix wiring"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** (refresh as needed)
 > **Last Updated:** Thu Jan 15 2026 +0000

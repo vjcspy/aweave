@@ -1,3 +1,14 @@
+---
+name: "Atlas"
+description: "Atlas is a batch-job service that copies and anonymises robot script data from the typ-e database to the intelligence database"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # Atlas Overview
 
 ## TL;DR

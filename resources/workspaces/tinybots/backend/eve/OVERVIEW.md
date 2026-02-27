@@ -1,3 +1,14 @@
+---
+name: "EVE (Extraterrestrial Vegetation Evaluator)"
+description: "EVE is a Java/Dropwizard service managing schedules for Tessa robots"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # EVE (Extraterrestrial Vegetation Evaluator)
 
 ## TL;DR
