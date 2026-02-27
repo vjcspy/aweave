@@ -1,4 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  DefaultValuePipe,
+  Get,
+  ParseBoolPipe,
+  Query,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiExtraModels,
@@ -18,7 +24,11 @@ export class WorkspaceMemoryController {
   @ApiOkResponse({ type: GetContextResponseDto })
   @ApiBadRequestResponse({ description: 'Invalid scope or parameters' })
   @Get('context')
-  async getContext(@Query() query: GetContextQueryDto) {
+  async getContext(
+    @Query() query: GetContextQueryDto,
+    @Query('include_defaults', new DefaultValuePipe(true), ParseBoolPipe)
+    includeDefaults: boolean,
+  ) {
     if (!query.workspace) {
       return {
         success: false,
@@ -27,7 +37,6 @@ export class WorkspaceMemoryController {
     }
 
     const topics = this.service.parseTopics(query.topics);
-    const includeDefaults = query.include_defaults !== false;
 
     const result = await this.service.getContext({
       scope: {

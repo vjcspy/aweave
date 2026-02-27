@@ -18,7 +18,10 @@ export async function scanResourceTopic(
 ): Promise<ResourceEntry[]> {
   const { resourcesDir, projectRoot, filters } = ctx;
   const pattern = `${resourcesDir}/**/_${topicName}/**/*.md`;
-  const files = await fg(pattern, { absolute: true });
+  const files = await fg(pattern, {
+    absolute: true,
+    ignore: ['**/OVERVIEW.md'],
+  });
   const entries: ResourceEntry[] = [];
 
   for (const file of files) {

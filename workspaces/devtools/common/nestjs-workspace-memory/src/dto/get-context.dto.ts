@@ -38,14 +38,14 @@ export class GetContextQueryDto {
   @ApiPropertyOptional({
     type: String,
     description:
-      'Comma-separated topic names (auto-discovered from topics folder)',
+      'Comma-separated topic names (e.g. "plans,features"). Each topic returns { overview_t1, entries }.',
   })
   topics?: string;
 
   @ApiPropertyOptional({
     type: Boolean,
     description:
-      'Include default context (folder_structure, overviews, loaded_skills)',
+      'Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills)',
     default: true,
   })
   include_defaults?: boolean;

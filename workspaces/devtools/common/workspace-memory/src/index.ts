@@ -10,6 +10,7 @@ export type {
   Scope,
   SkillEntry,
   Topic,
+  TopicEntriesResponse,
   TopicContext,
 } from './get-context/types';
 export { generateFolderStructure } from './parsers/folder-structure';
