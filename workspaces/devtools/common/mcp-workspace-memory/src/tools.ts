@@ -16,9 +16,12 @@ export const WORKSPACE_TOOLS = [
           description: 'Repository within domain',
         },
         topics: {
-          type: 'string',
+          anyOf: [
+            { type: 'string' },
+            { type: 'array', items: { type: 'string' } },
+          ],
           description:
-            'Comma-separated topic names (e.g. "plans,decisions,lessons"). Topics map to _{topicName}/ folders in resources/, except "features" and "overview" which have special handling.',
+            'Topic names as comma-separated string or string[] (e.g. "plans,decisions,lessons" or ["plans","decisions","lessons"]). Topics map to _{topicName}/ folders in resources/, except "features" and "overview" which have special handling.',
         },
         include_defaults: {
           type: 'boolean',
@@ -27,12 +30,18 @@ export const WORKSPACE_TOOLS = [
           default: true,
         },
         filter_status: {
-          type: 'string',
-          description: 'Comma-separated status filter',
+          anyOf: [
+            { type: 'string' },
+            { type: 'array', items: { type: 'string' } },
+          ],
+          description: 'Status filter as comma-separated string or string[]',
         },
         filter_tags: {
-          type: 'string',
-          description: 'Comma-separated tag filter',
+          anyOf: [
+            { type: 'string' },
+            { type: 'array', items: { type: 'string' } },
+          ],
+          description: 'Tag filter as comma-separated string or string[]',
         },
         filter_category: {
           type: 'string',
