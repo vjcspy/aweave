@@ -1,3 +1,10 @@
+---
+name: "Tessa Order Status Report / Retention KPI / Robot Profile"
+description: "Document regarding Tessa Order Status Report / Retention KPI / Robot Profile"
+created: 2025-11-07
+tags: ["releases","wonkers-graphql"]
+---
+
 # Production release: Tessa Order Status Report / Retention KPI / Robot Profile
 
 This release bundles updates that add Robot Profile data to rawData, expose Retention KPI metrics, and extend the Tessa Order Status Report.

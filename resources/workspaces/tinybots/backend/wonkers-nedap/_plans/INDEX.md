@@ -1,3 +1,11 @@
+---
+name: "Plans Index"
+description: "Quick reference index for all technical plans within the wonkers-nedap repository, facilitating easy navigation for developers and AI agents."
+created: 2026-02-19
+tags: ["plans","wonkers-nedap"]
+status: done
+---
+
 # Plans Index
 
 > Quick reference for all plans in this repository.

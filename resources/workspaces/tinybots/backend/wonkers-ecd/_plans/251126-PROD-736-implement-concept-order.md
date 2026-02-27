@@ -1,3 +1,11 @@
+---
+name: "Implement Concept Order Flow for Ecare Puur"
+description: "Implementation strategy for transitioning Ecare Puur orders to a concept order workflow, prioritizing raw form data preservation and relaxed validation for a smoother back-office review process."
+created: 2025-11-26
+tags: ["plans","wonkers-ecd"]
+status: done
+---
+
 # 📋 [PROD-736: 2025-11-26] - Implement Concept Order Flow for Ecare Puur
 
 ## References
@@ -814,7 +822,7 @@ return res.status(200).json({ orderId: result }) // conceptOrderId returned as o
 
 2. **Order tracking in ecd_order table** - ✅ IMPLEMENTED
    - **Decision**: No tracking needed for concept orders
-   - **Implementation**: 
+   - **Implementation**:
      - Removed `ClientIdRepository.addClient()` calls from subscribe flow
      - Concept orders tracked by concept service, not `ecd_order` table
      - No changes needed to `ClientIdRepository` class
@@ -1072,6 +1080,7 @@ Total estimated effort: ~15-21 hours
 The plan showed getting `eCareHeaders` separately for each API call (getClient, getRequester, getTeamsString), each wrapped in its own try-catch.
 
 **Actual Implementation:**
+
 ```typescript
 // Get auth headers ONCE at the beginning
 let eCareHeaders: { Authorization: string } | null = null
@@ -1092,6 +1101,7 @@ if (eCareHeaders) {
 ```
 
 **Rationale:**
+
 - **More efficient:** Calls auth API once instead of 3+ times
 - **Better error handling:** If auth fails, skip ALL enrichment immediately (faster fallback)
 - **Cleaner code:** Conditional enrichment based on `eCareHeaders` availability
@@ -1105,6 +1115,7 @@ if (eCareHeaders) {
 Showed a single try-catch block for all enrichment (client + requester).
 
 **Actual Implementation:**
+
 ```typescript
 // 3a. Enrich client
 if (eCareHeaders) { try { client = ... } catch { /* client defaults */ } }
@@ -1119,6 +1130,7 @@ if (eCareHeaders) { try { careteam = ... } catch { /* careteam defaults */ } }
 ```
 
 **Rationale:**
+
 - **Better error isolation:** Client enrichment failure doesn't block requester enrichment
 - **Clearer code:** Each enrichment step is independent
 - **Easier debugging:** Can see exactly which enrichment step failed
@@ -1145,6 +1157,7 @@ Actual implementation was done in multiple commits for better tracking:
 ### 📝 Summary of Refinements
 
 All refinements maintain the core requirements:
+
 - ✅ Accept all input (no validation blocking)
 - ✅ Best-effort API enrichment with fallback defaults
 - ✅ Preserve raw form data via `mapNotificationToForm()`
@@ -1152,11 +1165,13 @@ All refinements maintain the core requirements:
 - ✅ No order lookup on unsubscribe
 
 The actual implementation is MORE robust than the plan due to:
+
 - Centralized auth (fewer API calls, faster fallback)
 - Separated enrichment steps (better error isolation)
 - Comprehensive test coverage (98 tests passing)
 
 **Files Updated in Plan (December 31, 2025):**
+
 - Aligned subscribe/unsubscribe flow code examples with actual implementation
 - Added "Key Changes" note about centralized auth header retrieval
 - Added this "Implementation Refinements" section to document post-implementation learnings

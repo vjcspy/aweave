@@ -1,3 +1,11 @@
+---
+name: "Implement Streaming API with Location Data"
+description: "Implementation plan to migrate Sensara location events from a polling-based model to real-time SSE streaming by extending existing infrastructure to handle LastLocationResponse and mapping location labels to internal TinyBots events."
+created: 2026-01-07
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📋 [Streaming-Location-Events: 2026-01-07] - Implement Streaming API with Location Data
 
 ## References
@@ -11,10 +19,12 @@
 > Implement the new streaming api with location data. Location events should now be forwarded from the streaming api to megazord events
 >
 > If working, the following current flows should now rely on the events from the event stream:
+>
 > - location check
 > - client in hearing range check
 >
 > The following should remain unchanged:
+>
 > - activity check
 >
 > Repos: Sensara adaptor, Megazord event, (maybe) azi-3 status check
@@ -22,6 +32,7 @@
 ## 🎯 Objective
 
 Migrate from **polling-based** to **streaming-based** (SSE) approach for Location Events from Sensara, providing:
+
 - Reduced latency: receive events in real-time instead of polling every 3 seconds
 - Reduced API calls: single SSE connection instead of multiple REST calls
 - Increased reliability: no missed events between poll intervals
@@ -30,7 +41,7 @@ Migrate from **polling-based** to **streaming-based** (SSE) approach for Locatio
 
 ## 📊 Existing SSE Infrastructure (IMPORTANT CONTEXT)
 
-### ✅ SSE Streaming ĐÃ ĐƯỢC IMPLEMENT cho các event types sau:
+### ✅ SSE Streaming ĐÃ ĐƯỢC IMPLEMENT cho các event types sau
 
 | Event Type | Description | Status |
 |------------|-------------|--------|
@@ -61,6 +72,7 @@ sensara-adaptor/src/
 ### 🔑 Key Insight: RE-USE Existing Infrastructure
 
 **KHÔNG CẦN tạo mới SSE infrastructure.** Chỉ cần:
+
 1. **ADD** `LastLocationResponse` vào `dataTypes` array trong `registerStream()`
 2. **ADD** event listener trong `SensaraEventSource._registerEvents()`
 3. **ADD** case handler trong `SensaraEvent.fromEvent()`
@@ -129,11 +141,13 @@ sensara-adaptor/src/
 #### Why Remove Location Event Mappings from megazord-events?
 
 If we **keep** the mapping after implementing streaming:
+
 - megazord-events will **still call sensara-adaptor** to start a poller
 - But the poller is **unnecessary** because events already come from the SSE stream
 - Result: **duplicate events** and **wasted resources**
 
 By **removing** the mapping:
+
 - megazord-events just stores the subscription
 - Events arrive via: SSE → sensara-adaptor → megazord-events → fan out to subscribers
 - Clean, single source of truth
@@ -142,7 +156,7 @@ By **removing** the mapping:
 
 ### ⚠️ Key Considerations
 
-1. **RE-USE, Don't Reinvent**: 
+1. **RE-USE, Don't Reinvent**:
    - SSE infrastructure đã được implement và đang hoạt động tốt cho 3 event types
    - Chỉ cần ADD `LastLocationResponse` theo cùng pattern
    - KHÔNG cần tạo mới EventSource, job handlers, etc.
@@ -153,7 +167,7 @@ By **removing** the mapping:
    - **Cần confirm với Sensara**: V3 có support `LastLocationResponse` không?
    - Nếu cần V4, đó là migration riêng biệt, không liên quan trực tiếp đến việc thêm location streaming
 
-3. **Backward Compatibility**: 
+3. **Backward Compatibility**:
    - Activity check MUST remain unchanged (still uses polling)
    - Location polling endpoints should be deprecated but kept for rollback safety
 
@@ -176,7 +190,7 @@ By **removing** the mapping:
   - **Outcome**: Contains `organizationId`, `residentId`, `sectorId`, `correlationId`, `deviceId`, `label`, `timestamp`, `location`
   
 - [ ] Define scope and edge cases
-  - **Outcome**: 
+  - **Outcome**:
     - Edge case 1: Multiple residents with same location label
     - Edge case 2: Stream disconnection handling (existing backoff logic applies)
     - Edge case 3: Transition period - old pollers may still be running
@@ -236,6 +250,7 @@ const registerConfig: RegisterNotification = {
 ```
 
 > **Note về V4 API**: Nếu Sensara yêu cầu V4 format cho `LastLocationResponse`, đó là concern riêng biệt. Có thể:
+>
 > - Option A: Migrate toàn bộ sang V4 (breaking change)
 > - Option B: Chỉ dùng V4 cho LastLocationResponse (parallel registration)
 > - Option C: Confirm với Sensara nếu V3 vẫn support LastLocationResponse
@@ -353,6 +368,7 @@ public static convertEvent(event: SensaraEvent): IncomingEventBodyDto | null {
 #### Step 6: Handle CLIENT_IN_HEARING_RANGE (Special Case)
 
 **Consideration**: `CLIENT_IN_HEARING_RANGE` cần logic đặc biệt:
+
 - Cần check location có match với `hearableLocations` của resident không
 - Cần inject `ResidentRepository` để fetch hearable locations
 - Có thể cache để tránh query DB mỗi event
@@ -384,6 +400,7 @@ public static convertEvent(event: SensaraEvent): IncomingEventBodyDto | null {
 > Do not summarize the results until the implementation is done and I request it
 
 ### ✅ Completed Achievements
+
 - [To be filled after implementation]
 
 ## 🚧 Outstanding Issues & Follow-up
@@ -394,16 +411,16 @@ public static convertEvent(event: SensaraEvent): IncomingEventBodyDto | null {
    - Does V3 API support `LastLocationResponse` data type? (preferred - no migration needed)
    - If V4 required, what's the exact endpoint and format?
    - `LastLocationResponse` exact schema (especially `location` field type)
-   
+
 2. **CLIENT_IN_HEARING_RANGE Logic**: Current polling logic checks `hearableLocations` stored in DB per resident. With streaming approach:
    - Need to fetch hearable locations on each location event
    - OR cache hearable locations in memory (need refresh strategy)
-   
-3. **Transition Strategy**: 
+
+3. **Transition Strategy**:
    - How to handle existing active pollers during deployment?
    - Should we add feature flag to gradually rollout?
 
-4. **Monitoring**: 
+4. **Monitoring**:
    - Add metrics for streaming events vs polled events
    - Alert when stream disconnects or no location events received for extended period
 

@@ -1,3 +1,10 @@
+---
+name: "Cloudwatch azi-3-status-check-jobs"
+description: "Document regarding Cloudwatch azi-3-status-check-jobs"
+created: 2026-02-27
+tags: ["guides","azi-3-status-check-jobs"]
+---
+
 # Cloudwatch azi-3-status-check-jobs
 
 ## Query

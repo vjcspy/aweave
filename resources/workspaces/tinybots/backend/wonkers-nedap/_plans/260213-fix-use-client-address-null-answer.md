@@ -1,3 +1,11 @@
+---
+name: "Fix crash when `useClientAddress` question has no answer"
+description: "Technical plan to add null-safe guards for useClientAddress parsing in Nedap mappers to prevent crashes when survey answers are missing or undefined."
+created: 2026-02-13
+tags: ["plans","wonkers-nedap"]
+status: done
+---
+
 # 📋 [BUG-USECLIENTADDRESS-NULL: 2026-02-13] - Fix crash when `useClientAddress` question has no answer
 
 ## References

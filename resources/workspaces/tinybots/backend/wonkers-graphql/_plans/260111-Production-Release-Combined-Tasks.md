@@ -1,3 +1,11 @@
+---
+name: "wonkers-graphql"
+description: "Document regarding wonkers-graphql"
+created: 2026-01-11
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # Production Release - Combined Tasks: wonkers-graphql
 
 **Release Date:** 2025-01-11  

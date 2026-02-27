@@ -1,3 +1,11 @@
+---
+name: "Sensara Endpoints Review & Fix"
+description: "Comprehensive completion plan for PR #65 (PROD-437), addressing critical code quality issues like N+1 queries, correcting trigger subscription logic, enforcing soft-delete semantics during lookups, and implementing required CRUD endpoints for external resident management."
+created: 2026-02-13
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📋 [PROD-437: 2026-02-13] - Complete PR #65: Sensara Endpoints Review & Fix
 
 ## References
@@ -57,6 +65,7 @@ Address all PR review comments, fix code quality issues, resolve build failures,
 ### Build Status
 
 **Build is CLEAN** — verified 2026-02-13 on branch `feature/PROD-437-sensara-endpoints`:
+
 - `yarn run build` — passes (exit 0)
 - `npx tsc --noEmit` — passes (0 errors)
 
@@ -106,6 +115,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **File:** `src/service/ResidentService.ts:64-71`
   - **Change:** Replace per-resident `getRobotAccountById` loop with batch `getRobotAndUserAccountDetailsBySerials` + Map lookup
   - **Before:**
+
     ```typescript
     const robotAccounts = await Promise.all(
       residentRobots.map(r => this._robotAccountService.getRobotAccountById(r.robotId))
@@ -116,7 +126,9 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
       return resident
     })
     ```
+
   - **After:**
+
     ```typescript
     const robotIdToSerial = new Map(robotAccountDetails.map(d => [d.robotId, d.serial]))
     residentRobots = residentRobots.map(r => ({
@@ -124,6 +136,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
       robotSerial: robotIdToSerial.get(r.robotId) ?? null
     }))
     ```
+
   - **Note:** `robotAccountDetails` already fetched at line 51 — reuse it, remove the second service call entirely
   - **Outcome:** Single batch call instead of N calls; eliminates N+1 query
   - **Tests:** Update `test/service/ResidentServiceTest.ts` — remove `getRobotAccountById` mocks
@@ -158,13 +171,17 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 - [x] **2.6** Replace `console.log` with Logger
   - **File:** `src/service/ResidentService.ts:60`
   - **Change:** Add `ctx: IRequestContext` parameter to `getResidentsWithRobots`, replace:
+
     ```typescript
     console.log('No residents found for robotIds:', robotIds)
     ```
+
     with:
+
     ```typescript
     Logger.loggerFromCtx(ctx).info('No residents found for robotIds', { robotIds })
     ```
+
   - **Outcome:** Structured logging with request context
 
 - [x] **2.7** Add missing validation decorator
@@ -179,21 +196,25 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
 - [x] **3.1** Migrate all resident routes to `/v1/ext/sensara/*`
   - **File:** `src/App.ts`
   - **Changes:**
+
     | Old Path | New Path |
     |----------|----------|
     | `PUT /v1/sensara/residents` | `PUT /v1/ext/sensara/residents` |
     | `DELETE /v1/sensara/residents/:residentId` | `DELETE /v1/ext/sensara/residents/:residentId` |
     | `GET /v1/sensara/residents` | `GET /v1/ext/sensara/residents` |
+
   - **Outcome:** All resident routes under `/v1/ext/sensara/*`
 
 - [x] **3.2** Migrate trigger routes from internal to external path
   - **File:** `src/App.ts`
   - **Changes:**
+
     | Old Path | New Path |
     |----------|----------|
     | `POST /internal/v1/events/residents/:residentId/subscriptions/triggers` | `POST /v1/ext/sensara/residents/:residentId/events/subscriptions/triggers` |
     | `GET /internal/v1/events/residents/:residentId/subscriptions/triggers` | `GET /v1/ext/sensara/residents/:residentId/events/subscriptions/triggers` |
     | `DELETE /internal/v1/events/residents/:residentId/subscriptions/triggers/:subscriptionId` | `DELETE /v1/ext/sensara/residents/:residentId/events/subscriptions/triggers/:subscriptionId` |
+
   - **Outcome:** All trigger routes under `/v1/ext/sensara/*`, exposed externally
 
 - [x] **3.3** Add authentication to all endpoints
@@ -220,6 +241,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **Files:** `ResidentController.ts`, `ResidentService.ts`, `App.ts`
   - **Auth:** `SENSARA_RESIDENT_WRITE_ALL`
   - **Flow:**
+
     ```
     residentId (path param)
       → ResidentRepository.getResidentByResidentId(residentId) (is_active=1 enforced)
@@ -227,6 +249,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
       → ResidentRepository.getHearableLocations(robotId)
       → Response: { id, residentId, robotId, hearableLocations, robotSerial }
     ```
+
   - **Note:** `robotSerial` is fetched from `RobotAccountService` (same service used by list endpoint), not from repository
   - **Tests:** IT for: 200 success, 404 not found, 404 deleted resident (soft-delete from Phase 1.2), 403 no permission
 
@@ -235,6 +258,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
   - **New DTO:** `src/model/dto/ResidentPatchDto.ts` with `hearableLocations: string[]`
   - **Auth:** `SENSARA_RESIDENT_WRITE_ALL`
   - **Flow:**
+
     ```
     residentId (path param) + body: { hearableLocations: string[] }
       → ResidentRepository.getResidentByResidentId(residentId)
@@ -242,6 +266,7 @@ Previous 8 TS errors (documented in earlier analysis) have already been resolved
       → Insert new hearable locations
       → Response: { id, residentId, robotId, hearableLocations }
     ```
+
   - **Tests:** IT for: 200 success, 404 not found, 400 validation error, 403 no permission
 
 ### Phase 5: Testing & Verification

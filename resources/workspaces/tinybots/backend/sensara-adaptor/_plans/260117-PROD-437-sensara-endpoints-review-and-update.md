@@ -1,3 +1,11 @@
+---
+name: "Sensara Endpoints Review & Update Plan"
+description: "Detailed review and remediation plan for the PROD-437 Sensara external endpoints implementation, identifying gaps in path naming conventions, missing CRUD operations for residents, and addressing code quality blockers for PR merge."
+created: 2026-01-17
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📋 [PROD-437: 2026-01-17] - Sensara Endpoints Review & Update Plan
 
 ## References
@@ -19,6 +27,7 @@
 **API Specification (from image):**
 
 **Resident Endpoints:**
+
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/v1/ext/sensara/residents` | Get all residents and their robot |
@@ -26,6 +35,7 @@
 | PATCH | `/v1/ext/sensara/residents/{residentId}` | Update a resident and their robot |
 
 **Events-Triggers Endpoints:**
+
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/v1/ext/sensara/residents/{residentId}/events/subscriptions/triggers` | Create trigger subscription |
@@ -53,6 +63,7 @@ Review implementation on branch `feature/PROD-437-sensara-endpoints`, compare wi
 ### 1.1 Commits Overview
 
 The branch has **27 commits** with the following main tasks:
+
 - PROD-474: Create GET endpoint to get all residents
 - PROD-506: Create POST trigger endpoint
 - PROD-507: Create GET trigger endpoint
@@ -100,6 +111,7 @@ test/
 ### 1.4 Implementation Details
 
 **GET /v1/sensara/residents Flow:**
+
 ```
 Request (x-relation-id header)
     ↓
@@ -115,6 +127,7 @@ Response: ResidentRobotWithSerial[]
 ```
 
 **Trigger Endpoints Flow:**
+
 ```
 Request (residentId in path)
     ↓
@@ -233,10 +246,12 @@ res.status(400).send({ message: 'Invalid subscriptionId' })
 #### 3.2.1 Path Naming - Decision needed
 
 **Option A:** Change to `/v1/ext/sensara/*` according to spec
+
 - Pros: Matches spec, consistent with external API convention
 - Cons: Breaking change if clients are already using it
 
 **Option B:** Keep current `/v1/sensara/*`
+
 - Pros: No breaking change
 - Cons: Does not match spec
 
@@ -248,12 +263,14 @@ res.status(400).send({ message: 'Invalid subscriptionId' })
 **Current:** `/internal/v1/events/residents/{residentId}/subscriptions/triggers`
 
 **Questions to clarify:**
+
 1. Do trigger endpoints need to be exposed externally? (currently internal)
 2. If exposed externally, is auth required?
 
 #### 3.2.3 Authentication - Decision needed
 
 **Question:** What does "Ignore authentication" specifically mean?
+
 - A) Remove auth completely? (risky for security)
 - B) Add feature flag to toggle? (recommended)
 - C) Only apply to development/testing?
@@ -265,6 +282,7 @@ res.status(400).send({ message: 'Invalid subscriptionId' })
 #### 3.3.1 GET /v1/ext/sensara/residents/{residentId}
 
 **Flow:**
+
 ```
 residentId (path param)
     ↓
@@ -278,6 +296,7 @@ Response: { id, residentId, robotId, hearableLocations }
 #### 3.3.2 PATCH /v1/ext/sensara/residents/{residentId}
 
 **Flow:**
+
 ```
 residentId (path param) + body: { hearableLocations: string[] }
     ↓

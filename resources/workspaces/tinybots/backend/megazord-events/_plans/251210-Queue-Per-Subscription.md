@@ -1,3 +1,11 @@
+---
+name: "📋 251210 - Queue Per Subscription Support"
+description: "Architecture expansion for SQS fan-out, enabling per-subscription queue routing via an optional queue suffix; allows multiple services to subscribe to the same event stream while maintaining isolated processing queues with custom address construction."
+created: 2025-12-10
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 251210 - Queue Per Subscription Support
 
 ## References
@@ -24,7 +32,8 @@ Currently both `azi-3-status-check` and `azi-3-status-check-jobs` consume from t
 }
 ```
 
-**Queue Address Construction:** 
+**Queue Address Construction:**
+
 - If `subscription.queue` is provided: `address = "${statusQueueConfig.address}-${subscription.queue}"`
 - If `subscription.queue` is NOT provided: `address = "${statusQueueConfig.address}"` (default behavior)
 
@@ -60,7 +69,7 @@ Enable service-specific queue routing in megazord-events subscription system by 
   - **Outcome:** `azi-3-status-check-jobs` - WILL BE UPDATED to pass queue suffix "azi-3-status-check-jobs"
   
 - [x] Define scope and edge cases
-  - **Scope:** 
+  - **Scope:**
     1. `megazord-events` - Add queue suffix support in DTO, domain, repository, service
     2. `azi-3-status-check-jobs` - Pass queue suffix when creating subscriptions  
     3. `tiny-internal-services` - Update EventService to support optional queue parameter
@@ -392,7 +401,7 @@ async subscribe(
 }
 ```
 
-2. **Update `broadcastToSubscriptionHandler()` method** to pass subscription to notify:
+1. **Update `broadcastToSubscriptionHandler()` method** to pass subscription to notify:
 
 ```typescript
 private async broadcastToSubscriptionHandler(
@@ -445,7 +454,7 @@ private async broadcastToSubscriptionHandler(
 }
 ```
 
-3. **Refactor `notify()` method** to construct queue address based on subscription queue suffix:
+1. **Refactor `notify()` method** to construct queue address based on subscription queue suffix:
 
 ```typescript
 private async notifySubscription<T extends BaseDomain>(
@@ -605,6 +614,7 @@ private async initializeSessionForRule(
 **File:** `tiny-internal-services/lib/services/EventService.ts` (approximate location)
 
 **Changes:**
+
 ```typescript
 async createSubscription(
   robotId: number,
@@ -632,6 +642,7 @@ async createSubscription(
 ```
 
 **Validation:**
+
 - Shared library change is backward compatible
 - Both with and without queue parameter work correctly
 - Update version and publish to npm/yarn registry
@@ -643,6 +654,7 @@ async createSubscription(
 **File:** `tinybots/backend/megazord-events/test/controllers/EventSubscriptionControllerIT.ts`
 
 **New Test Cases:**
+
 ```typescript
 describe('POST /internal/v1/events/robots/:robotId/subscriptions with queue', () => {
   it('should create subscription with custom queue', async () => {
@@ -774,6 +786,7 @@ describe('Event fan-out with custom queues', () => {
 **File:** `tinybots/backend/megazord-events/test/services/EventSubscriptionServiceTest.ts`
 
 **New Unit Test Cases:**
+
 ```typescript
 describe('EventSubscriptionsService - Queue Routing', () => {
   it('should pass queue to repository when creating subscription', async () => {
@@ -805,6 +818,7 @@ describe('EventSubscriptionsService - Queue Routing', () => {
 ```
 
 **Validation:**
+
 - All new tests pass
 - Existing tests continue to pass
 - Test coverage remains above thresholds (95% statements/functions/lines)
@@ -842,7 +856,7 @@ azi-3-status-check-jobs:
     # Messages will be sent to: http://localstack:4566/000000000000/status-queue-azi-3-status-check-jobs
 ```
 
-2. **localstack initialization** - Create queues with suffix pattern:
+1. **localstack initialization** - Create queues with suffix pattern:
 
 **File:** `workspaces/devtools/tinybots/local/localstack/init-queues.sh` (update or create)
 
@@ -853,7 +867,7 @@ awslocal sqs create-queue --queue-name status-queue-azi-3-status-check-jobs
 echo "SQS queues created"
 ```
 
-3. **Production/Staging Environment Variables** - Document in deployment guides:
+1. **Production/Staging Environment Variables** - Document in deployment guides:
 
 ```bash
 # megazord-events
@@ -950,6 +964,7 @@ const subscription = await megazordEventClient.subscribe(
 - Existing subscriptions continue working with default queue
 - New subscriptions can optionally specify queue suffix
 - No breaking changes to API contracts
+
 ```
 
 **File:** `resources/workspaces/tinybots/backend/azi-3-status-check-jobs/OVERVIEW.md`
@@ -991,6 +1006,7 @@ This prevents message collision with other services that subscribe to the same e
 ```
 
 **Validation:**
+
 - Documentation is clear and accurate
 - Examples reflect actual implementation
 - Migration notes cover all edge cases
@@ -1000,6 +1016,7 @@ This prevents message collision with other services that subscribe to the same e
 #### Step 4.1: Local Development Testing
 
 **Tasks:**
+
 1. Start localstack with separate queues
 2. Start megazord-events service
 3. Start azi-3-status-check service
@@ -1009,6 +1026,7 @@ This prevents message collision with other services that subscribe to the same e
 7. Verify no cross-contamination
 
 **Commands:**
+
 ```bash
 # Start infrastructure
 cd workspaces/devtools
@@ -1030,6 +1048,7 @@ just dev-azi-3-status-check-jobs
 ```
 
 **Validation Criteria:**
+
 - ✅ Each service successfully starts with new configuration
 - ✅ Services create subscriptions with queue parameter
 - ✅ Messages route to correct queues
@@ -1039,12 +1058,14 @@ just dev-azi-3-status-check-jobs
 #### Step 4.2: Integration Test Suite
 
 **Tasks:**
+
 1. Run all megazord-events tests
 2. Run all azi-3-status-check tests
 3. Run all azi-3-status-check-jobs tests
 4. Verify coverage thresholds maintained
 
 **Commands:**
+
 ```bash
 cd megazord-events && yarn test
 cd azi-3-status-check && yarn test
@@ -1052,6 +1073,7 @@ cd azi-3-status-check-jobs && yarn test
 ```
 
 **Validation Criteria:**
+
 - ✅ All existing tests pass
 - ✅ All new tests pass
 - ✅ Coverage ≥ 95% statements/functions/lines
@@ -1061,12 +1083,14 @@ cd azi-3-status-check-jobs && yarn test
 #### Step 4.3: Backward Compatibility Verification
 
 **Tasks:**
+
 1. Create subscription WITHOUT queue parameter
 2. Verify it uses default queue
 3. Verify message routing works
 4. Verify existing consumers (if any without queue param) still work
 
 **Test Scenarios:**
+
 ```bash
 # Scenario 1: Legacy subscription (no queue)
 curl -X POST http://megazord:8080/internal/v1/events/robots/1/subscriptions \
@@ -1087,6 +1111,7 @@ curl -X POST http://megazord:8080/internal/v1/events/robots/1/subscriptions \
 ```
 
 **Validation Criteria:**
+
 - ✅ Subscriptions without queue parameter work as before
 - ✅ Default queue receives messages from legacy subscriptions
 - ✅ Custom queues receive messages from new subscriptions
@@ -1095,12 +1120,14 @@ curl -X POST http://megazord:8080/internal/v1/events/robots/1/subscriptions \
 #### Step 4.4: Error Handling & Edge Cases
 
 **Tasks:**
+
 1. Test invalid queue URL format
 2. Test empty queue string
 3. Test SQS send failure to custom queue
 4. Test subscription with non-existent queue (if applicable)
 
 **Test Scenarios:**
+
 ```bash
 # Invalid queue format
 curl -X POST ... -d '{"eventNames": ["TEST"], "queue": "not-a-url"}'
@@ -1115,6 +1142,7 @@ curl -X POST ... -d '{"eventNames": ["TEST"], "queue": ""}'
 ```
 
 **Validation Criteria:**
+
 - ✅ Invalid queue formats rejected with clear error messages
 - ✅ SQS failures logged with sufficient context
 - ✅ Failures don't corrupt subscription state
@@ -1125,11 +1153,13 @@ curl -X POST ... -d '{"eventNames": ["TEST"], "queue": ""}'
 #### Step 5.1: Database Migration
 
 **Tasks:**
+
 1. Test migration on local dev database
 2. Prepare rollback script
 3. Document migration steps for production
 
 **Migration Script (Flyway/SQL):**
+
 ```sql
 -- Up migration
 ALTER TABLE event_subscription 
@@ -1144,6 +1174,7 @@ CREATE INDEX idx_event_subscription_queue ON event_subscription(queue_address);
 ```
 
 **Validation:**
+
 - ✅ Migration runs without errors
 - ✅ Existing data preserved (queue_address is NULL)
 - ✅ Rollback script tested

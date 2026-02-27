@@ -1,9 +1,19 @@
+---
+name: "Create Internal Trigger Subscription Endpoints"
+description: "Implementation details for non-admin internal API endpoints for trigger subscriptions, establishing a pattern for secure service-to-service communication while enforcing single-event subscription limits and preventing active duplicate subscriptions."
+created: 2025-11-07
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 [PROD-438: 2025-11-07] - Create Internal Trigger Subscription Endpoints
 
 ## 🎯 Objective
+>
 > Create internal endpoints for trigger subscriptions that can be called by the Sensara adaptor, allowing trigger subscriptions to be managed without requiring admin authentication. Implement validation to ensure trigger subscriptions contain only one event per subscription and prevent duplicate active trigger subscriptions for the same event.
 
 **Context**:
+
 - External endpoints already exist: POST/GET/DELETE `/v1/events/robots/{robotId}/subscriptions/triggers`
 - These require admin authentication and M_O_TRIGGERS_SETTING_WRITE_ALL permission
 - Sensara adaptor needs to create trigger subscriptions without admin overhead
@@ -14,6 +24,7 @@
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze existing external trigger endpoints implementation
   - **Outcome**: Located in `EventSubscriptionController`:
     - `createTriggerSubscription`: Uses `CreateTriggerSubscriptionDto`, converts to array
@@ -61,9 +72,11 @@ test/
 ### Phase 3: Implementation Steps
 
 #### Step 3.1: Update CreateTriggerSubscriptionDto 🚧 TODO
+
 **File**: `src/models/DTOs/CreateTriggerSubscriptionDto.ts`
 
 **Change eventNames from array to string**:
+
 ```typescript
 // BEFORE (current)
 export class CreateTriggerSubscriptionDto {
@@ -84,12 +97,14 @@ export class CreateTriggerSubscriptionDto {
 ```
 
 **Rationale**:
+
 - Enforces single-event rule at DTO level (compile-time + runtime validation)
 - No need for service-layer validation of array length
 - Simpler API contract for consumers
 - Type-safe: impossible to send multiple events
 
 #### Step 3.2: Update Existing Controller Method � UPDATE
+
 **File**: `src/controllers/EventSubscriptionsController.ts`
 
 **Modify `createTriggerSubscription` method** to handle new DTO structure:
@@ -129,13 +144,16 @@ public createTriggerSubscription = async (
 **Note**: `getTriggerSubscriptions` and `deleteSubscription` remain unchanged.
 
 #### Step 3.3: Add Duplicate Validation to Service Layer 🚧 TODO
+
 **File**: `src/services/EventSubscriptionService.ts`
 
 **Changes needed**:
+
 1. Import error class: `import { ConflictError } from 'ts-http-errors'`
 2. Add validation in `subscribe()` method when `isTriggerSubscription === true`
 
 **Validation logic** (add BEFORE creating subscription):
+
 ```typescript
 async subscribe(
   ctx: IRequestContext,
@@ -179,6 +197,7 @@ async subscribe(
 **Note**: Single-event rule is now enforced by DTO, no validation needed here.
 
 #### Step 3.4: Register Internal Routes 🚧 TODO
+
 **File**: `src/cmd/app/main.ts`
 
 **Add routes in `setEndpoints()` method** (after existing internal endpoints, before external trigger endpoints):
@@ -212,6 +231,7 @@ this.app.delete(
 ```
 
 **Key differences from external endpoints**:
+
 - ❌ No `useAdminValidator` middleware
 - ❌ No `usePermissionValidator` middleware
 - ✅ Same controller methods (100% reuse - no separate internal methods needed!)
@@ -220,6 +240,7 @@ this.app.delete(
 - ✅ Same validation (duplicate detection applies to both)
 
 #### Step 3.5: Update Integration Tests 🚧 TODO
+
 ```
 
 **Key differences from external endpoints**:
@@ -247,6 +268,7 @@ describe('POST /v1/events/robots/:robotId/subscriptions/triggers', () => {
 ```
 
 **Add new internal endpoint tests**:
+
 ```typescript
 describe('POST /internal/v1/events/robots/:robotId/subscriptions/triggers', () => {
   // Setup: Mock sensara adaptor, create event schemas
@@ -276,9 +298,11 @@ describe('DELETE /internal/v1/events/robots/:robotId/subscriptions/triggers/:sub
 ```
 
 #### Step 3.6: Add Service Unit Tests 🚧 TODO
+
 **File**: `test/services/EventSubscriptionServiceTest.ts`
 
 **Add tests**:
+
 ```typescript
 describe('subscribe() - trigger duplicate validation', () => {
   it('should reject trigger subscription when active subscription exists for same event')
@@ -294,16 +318,19 @@ describe('subscribe() - trigger duplicate validation', () => {
 ### Phase 4: Integration with External Services 🔮 FUTURE
 
 **Tiny Internal Services** (Separate repository - not in scope):
+
 - Add internal trigger endpoints to service interface
 - Document in API contract
 
 **Tiny Internal Service Mocks** (Separate repository - not in scope):
+
 - Add mock responses for 3 internal endpoints
 - Include validation errors (400, 409) in mock scenarios
 
 ## 📊 Summary of Results
 
 ### ✅ Completed Achievements
+
 - [x] Analysis of existing trigger endpoints implementation
 - [x] Analysis of subscription service architecture
 - [x] Identified validation requirements and edge cases
@@ -348,6 +375,7 @@ describe('subscribe() - trigger duplicate validation', () => {
 ## 🚧 Outstanding Issues & Follow-up
 
 ### ⚠️ Known Issues
+
 - [ ] Need to verify error class imports
   - ConflictError: Check if available in `ts-http-errors` or `tiny-backend-tools`
   - Import pattern: `import { ConflictError } from 'ts-http-errors'`
@@ -360,6 +388,7 @@ describe('subscribe() - trigger duplicate validation', () => {
   - **Mitigation**: Coordinate with teams using external endpoint (if any exist)
 
 ### 🔮 Future Improvements
+
 - [ ] Add metrics/logging for duplicate subscription attempts
 - [ ] Consider soft validation mode for migration scenarios
 - [ ] Add endpoint to list all subscriptions (including inactive) for debugging
@@ -367,6 +396,7 @@ describe('subscribe() - trigger duplicate validation', () => {
 - [ ] API documentation in Swagger/OpenAPI format
 
 ### 📝 External Repository Updates (Separate Tickets)
+
 - [ ] **tiny-internal-services**: Add 3 internal trigger endpoints to service interface
 - [ ] **tiny-internal-service-mocks**: Add mock implementations with validation
 - [ ] **sensara-adaptor**: Integrate with new internal endpoints
@@ -375,7 +405,9 @@ describe('subscribe() - trigger duplicate validation', () => {
 **Last updated**: 2025-11-07 (Revised)
 **Status**: 🚧 Implementation Plan Ready - Aligned with 3 key changes
 **Key Changes**:
+
 1. ✅ DTO enforces single event (string instead of array)
 2. ✅ Controller methods 100% reused (no separate internal methods)
 3. ✅ Duplicate validation applies to both internal AND external endpoints
+
 ---

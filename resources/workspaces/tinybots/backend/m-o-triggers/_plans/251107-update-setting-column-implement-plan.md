@@ -1,9 +1,19 @@
+---
+name: "Replace schedule_constraints with allowed_days_of_week Column"
+description: "Implementation plan to replace the initial JSON schedule_constraints column with a simpler VARCHAR-based allowed_days_of_week column before production deployment."
+created: 2025-11-07
+tags: ["plans","m-o-triggers"]
+status: done
+---
+
 # 📋 [251107-2025-11-07] - Replace schedule_constraints with allowed_days_of_week Column
 
 ## 🎯 Objective
+>
 > Replace the JSON `schedule_constraints` column with a simple VARCHAR `allowed_days_of_week` column to store comma-separated day values for better database compatibility and simplicity.
 
 **Background**: After review, stakeholders want to simplify the design by:
+
 1. **Removing** the complex JSON `schedule_constraints` column (not yet deployed)
 2. **Adding** a simple `allowed_days_of_week VARCHAR` column
 3. **Renaming** `ScheduleConstraints` → simpler domain model focused only on days of week
@@ -14,6 +24,7 @@
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze current implementation
   - **Outcome**: Current implementation uses JSON type with `{"allowedDaysOfWeek":["mon","wed","fri"]}` format
   - **Decision**: Since NOT deployed yet, we can do breaking changes:
@@ -44,6 +55,7 @@
 ### Phase 2: Implementation (File/Code Structure)
 
 #### 📁 File Structure
+
 ```
 src/
 ├── models/
@@ -74,9 +86,11 @@ ci/
 ### Phase 3: Detailed Implementation Steps
 
 #### Step 1: Create Database Migration (🚧 TODO)
+
 **File**: `ci/db/migrations/V94__replace_schedule_constraints_with_allowed_days.sql`
 
 **Decision: VARCHAR(100) vs TEXT**
+
 - **VARCHAR(100)** ✅ **RECOMMENDED**
   - Fixed maximum length (100 bytes)
   - Can be indexed efficiently
@@ -92,6 +106,7 @@ ci/
 **✅ Choose VARCHAR(100)** - More than enough for our use case and better performance.
 
 **Migration SQL**:
+
 ```sql
 -- Step 1: Drop old JSON column (not deployed yet, safe to drop)
 ALTER TABLE event_trigger_setting
@@ -112,6 +127,7 @@ COMMENT 'Comma-separated list of allowed days: fri,mon,sat,sun,thu,tue,wed (sort
 ```
 
 **Rollback SQL**:
+
 ```sql
 -- Remove new column
 ALTER TABLE event_trigger_setting
@@ -125,12 +141,15 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
 ---
 
 #### Step 2: Update Domain Model (🔄 IN PROGRESS)
+
 **File**: `src/models/domains/EventTriggerDomain.ts`
 
 **Changes**:
+
 1. **❌ REMOVE** the entire `ScheduleConstraints` class (not needed anymore)
 
 2. **✅ ADD** direct field with helper methods:
+
    ```typescript
    // Helper functions for day serialization (move to EventTriggerSettingDomain or utility)
    export const serializeDaysOfWeek = (days: DayOfWeek[] | undefined): string | null => {
@@ -159,6 +178,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 3. **✅ UPDATE** EventTriggerSettingDomain:
+
    ```typescript
    export class EventTriggerSettingDomain extends BaseDomain {
      // ... existing fields ...
@@ -189,6 +209,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 **Key Changes**:
+
 - ❌ Remove `ScheduleConstraints` class entirely
 - ❌ Remove `scheduleConstraints?: ScheduleConstraints` field
 - ✅ Add `allowedDaysOfWeek?: DayOfWeek[]` field directly
@@ -197,11 +218,13 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
 ---
 
 #### Step 3: Update Repository Layer (🔄 IN PROGRESS)
+
 **File**: `src/repositories/EventTriggerRepository.ts`
 
 **Changes**:
 
 1. **Update INSERT query string** (change column name):
+
    ```typescript
    private INSERT_EVENT_TRIGGER_SETTING = `
      INSERT INTO
@@ -223,6 +246,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 2. **Update SELECT queries** (change column name in all places):
+
    ```typescript
    private GET_EVENT_TRIGGER_SETTING = `
      SELECT
@@ -246,6 +270,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 3. **Update INSERT - no serialization needed** (DTO already did it):
+
    ```typescript
    // In createSetting() and createWithSetting()
    const res = await transaction.query<ResultSetHeader>(
@@ -269,6 +294,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 4. **Update interface** (change to string since DTO serializes it):
+
    ```typescript
    export interface ICreateEventTriggerSetting {
      robotId?: number
@@ -288,6 +314,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
    ```
 
 **Summary of Changes**:
+
 - Column name: `SCHEDULE_CONSTRAINTS` → `ALLOWED_DAYS_OF_WEEK`
 - Update ALL SELECT queries (3-4 queries) - returns CSV string
 - Update INSERT query (1 query) - receives CSV string
@@ -295,6 +322,7 @@ ADD COLUMN schedule_constraints JSON DEFAULT NULL;
 - **No serialization in repository** - just pass through the string from DTO
 
 **Data Flow**:
+
 ```
 API Request (array) → DTO (array) → toRepositoryRequest() serializes → Repository (string) → Database (VARCHAR)
 Database (VARCHAR) → Repository (string) → Domain Transform deserializes → Domain (array) → API Response (array)
@@ -303,10 +331,13 @@ Database (VARCHAR) → Repository (string) → Domain Transform deserializes →
 ---
 
 #### Step 4: Update DTO Layer (🔄 IN PROGRESS)
+
 **File**: `src/models/dtos/UpsertTriggerSettingDto.ts`
 
 **Changes**:
+
 1. **Simplify DTO field**:
+
    ```typescript
    export class UpsertTriggerSettingDto {
      // ... existing fields ...
@@ -329,6 +360,7 @@ Database (VARCHAR) → Repository (string) → Domain Transform deserializes →
    ```
 
 2. **Update toRepositoryRequest method** (this is the mapper - serialize here):
+
    ```typescript
    toRepositoryRequest(
      eventSchema: domains.EventSchemaDomain
@@ -354,6 +386,7 @@ Database (VARCHAR) → Repository (string) → Domain Transform deserializes →
 **Note**: `toRepositoryRequest()` acts as a **mapper/transformer** between DTO and Repository layers, similar to how `parseTimeframe()` and `parseTimeOnly()` transform other fields. Serialization belongs here to match the existing pattern.
 
 **API Request Changes**:
+
 ```diff
   // OLD API format (nested object)
 - {
@@ -373,9 +406,11 @@ Database (VARCHAR) → Repository (string) → Domain Transform deserializes →
 ---
 
 #### Step 5: Update Service Layer (🔄 IN PROGRESS)
+
 **File**: `src/services/TriggerSchedulerParser.ts`
 
 **Changes**:
+
 ```typescript
 // In getExpectedExecutedTime()
 private getExpectedExecutedTime(
@@ -416,6 +451,7 @@ private findNextAllowedDate(
 #### Step 6: Update Tests (🔄 IN PROGRESS)
 
 ##### A. Unit Tests for Serialization (🚧 TODO)
+
 **New File**: `test/models/domains/EventTriggerDomainTest.ts`
 
 ```typescript
@@ -472,10 +508,13 @@ describe('Day of Week Serialization', () => {
 ```
 
 ##### B. Update Existing Tests
+
 **File**: `test/services/TriggerSchedulerParserTest.ts`
 
 **Actions**:
+
 - ✅ Update test data to use new field structure:
+
   ```typescript
   // OLD:
   // setting.scheduleConstraints = {
@@ -489,6 +528,7 @@ describe('Day of Week Serialization', () => {
 **File**: `test/repositories/EventTriggersRepositoryTest.ts`
 
 **Actions**:
+
 - Add integration tests for VARCHAR column handling
 - Test NULL, empty string, valid CSV, invalid CSV
 - Update existing tests that reference `scheduleConstraints`
@@ -498,6 +538,7 @@ describe('Day of Week Serialization', () => {
 ### Phase 4: Testing & Validation
 
 #### Integration Test Checklist (🚧 TODO)
+
 - [ ] Test creating setting with `allowedDaysOfWeek: ['mon', 'wed', 'fri']`
   - Verify database stores: `"fri,mon,wed"` (sorted alphabetically, no quotes)
 - [ ] Test retrieving setting and verify correct deserialization
@@ -509,7 +550,9 @@ describe('Day of Week Serialization', () => {
 - [ ] Verify all SELECT queries return correct field
 
 #### Manual Testing Steps (🚧 TODO)
+
 1. **Verify old column removed**:
+
    ```sql
    -- Should return 0 rows
    SELECT COLUMN_NAME
@@ -519,12 +562,14 @@ describe('Day of Week Serialization', () => {
    ```
 
 2. **Run migration**:
+
    ```bash
    # No data migration needed - feature not deployed yet
    mysql -u root -p tinybots < ci/db/migrations/V94__replace_schedule_constraints_with_allowed_days.sql
    ```
 
 3. **Verify new column**:
+
    ```sql
    -- Should show VARCHAR(100)
    SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, COLUMN_COMMENT
@@ -534,6 +579,7 @@ describe('Day of Week Serialization', () => {
    ```
 
 4. **API Test** (Updated format):
+
    ```bash
    curl -X PUT http://localhost:8080/v1/triggers/settings \
      -H "Content-Type: application/json" \
@@ -550,6 +596,7 @@ describe('Day of Week Serialization', () => {
    ```
 
 5. **Verify database value**:
+
    ```sql
    -- Should show: "fri,mon,wed" (sorted alphabetically)
    SELECT id, allowed_days_of_week
@@ -562,6 +609,7 @@ describe('Day of Week Serialization', () => {
 ## 📊 Summary of Results
 
 ### ✅ Completed Achievements
+
 - [ ] Database migration created and tested
 - [ ] Domain model simplified (removed ScheduleConstraints class)
 - [ ] Repository layer updated (column name + VARCHAR serialization)
@@ -573,6 +621,7 @@ describe('Day of Week Serialization', () => {
 - [ ] Documentation updated
 
 ### Key Benefits
+
 - ✅ **Simpler Code**: No nested `scheduleConstraints.allowedDaysOfWeek`, just `allowedDaysOfWeek`
 - ✅ **Better Database Schema**: VARCHAR(100) is more efficient than JSON for short strings
 - ✅ **Better Performance**: VARCHAR can be indexed, stored inline with row
@@ -586,6 +635,7 @@ describe('Day of Week Serialization', () => {
 ## 🚧 Outstanding Issues & Follow-up
 
 ### ⚠️ Known Issues
+
 - [ ] **BREAKING CHANGE**: API format changed (acceptable - not deployed yet)
   - Old: `{"scheduleConstraints": {"allowedDaysOfWeek": [...]}}`
   - New: `{"allowedDaysOfWeek": [...]}`
@@ -593,7 +643,9 @@ describe('Day of Week Serialization', () => {
 - [ ] Consider adding CHECK constraint for MySQL 8.0.16+ (optional)
 
 ### 🔮 Future Improvements
+
 - [ ] Add CHECK constraint for valid day names (MySQL 8.0.16+):
+
   ```sql
   ALTER TABLE event_trigger_setting
   ADD CONSTRAINT check_allowed_days_format
@@ -602,24 +654,31 @@ describe('Day of Week Serialization', () => {
     allowed_days_of_week REGEXP '^(fri|mon|sat|sun|thu|tue|wed)(,(fri|mon|sat|sun|thu|tue|wed))*$'
   );
   ```
+
 - [ ] Add database index if filtering by specific days becomes common:
+
   ```sql
   CREATE INDEX idx_allowed_days ON event_trigger_setting(allowed_days_of_week);
   ```
+
 - [ ] Consider future constraint types (keep as **separate columns** for simplicity):
   - `allowed_days_of_month VARCHAR(100)` for "1,15,30"
   - `excluded_dates TEXT` for "2025-12-25,2026-01-01"
   - Each field is independent, simpler to query/index
 
 ### Migration Risk Assessment
+
 **Risk Level**: � **Low** (feature not deployed yet)
+
 - **Data Loss Risk**: None (no existing data to migrate)
 - **Downtime Required**: No (simple column add/drop)
 - **Rollback Complexity**: Low (just revert code + restore old column)
 
 ### Rollback Plan (if needed)
+
 1. Revert code changes (git revert)
 2. Run rollback SQL:
+
    ```sql
    ALTER TABLE event_trigger_setting DROP COLUMN allowed_days_of_week;
    ALTER TABLE event_trigger_setting ADD COLUMN schedule_constraints JSON DEFAULT NULL;
@@ -628,6 +687,7 @@ describe('Day of Week Serialization', () => {
 ---
 
 ## 🔗 References
+
 - **Original Implementation**: `resources/workspaces/tinybots/m-o-triggers/251103-trigger-configuration.md`
 - **Domain Model**: `src/models/domains/EventTriggerDomain.ts`
 - **Repository**: `src/repositories/EventTriggerRepository.ts`

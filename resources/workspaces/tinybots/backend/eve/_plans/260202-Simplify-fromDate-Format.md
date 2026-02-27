@@ -1,3 +1,11 @@
+---
+name: "Simplify fromDate Format from ISO8601 to YYYY-MM-DD"
+description: "Technical plan to simplify the fromDate API parameter from ISO8601 to YYYY-MM-DD, including Java service layer adjustments for robot-timezone-aware date normalization and validation rule updates to improve frontend developer experience."
+created: 2026-02-02
+tags: ["plans","eve"]
+status: done
+---
+
 # 📋 [PROD-XXX: 2026-02-02] - Simplify fromDate Format from ISO8601 to YYYY-MM-DD
 
 ## References
@@ -14,6 +22,7 @@
 > **From Developer:**
 >
 > Hiện tại `fromDate` yêu cầu ISO8601 format với timezone offset (e.g., `2026-05-05T00:00:00+02:00`). Điều này gây khó khăn cho frontend vì:
+>
 > - Phải tính toán timezone offset (DST-aware)
 > - Format phức tạp, dễ gây parsing errors
 > - User intent chỉ là "delete from ngày X", không cần precision đến giây
@@ -29,12 +38,14 @@ Simplify `fromDate` parameter từ ISO8601 (`2026-05-05T00:00:00+02:00`) sang YY
 #### 1. Timezone Handling Strategy
 
 **Current (ISO8601):**
+
 ```
 Client sends: "2026-05-05T00:00:00+02:00"
 Server: Parse ZonedDateTime → normalize to robot TZ
 ```
 
 **Proposed (YYYY-MM-DD):**
+
 ```
 Client sends: "2026-05-05"
 Server: Parse LocalDate → convert to ZonedDateTime using robot TZ from X-Time-Zone header
@@ -87,6 +98,7 @@ Results:
 **Rule**: Nếu cả hai được cung cấp → **query param wins**.
 
 **Implementation Note**:
+
 ```java
 // In DeleteV4ScheduleResource.java
 LocalDate fromDateLocal = null;
@@ -137,6 +149,7 @@ log.info("Soft-delete series: scheduleId={}, robotId={}, " +
 | `X-Time-Zone` header | UI display hint (optional) | Client-controlled ⚠️ |
 
 **Existing behavior** (giữ nguyên):
+
 ```java
 // ScheduleService.java - existing code
 TimeZone robotTz = robotService.getRobotTimezone(robotId);  // From DB, not header
@@ -144,6 +157,7 @@ ZoneId robotZoneId = ZoneId.of(robotTz.getID());
 ```
 
 **Note**: Plan description đã gây hiểu nhầm khi viết "using robot TZ from X-Time-Zone header". Thực tế, server luôn lấy timezone từ robot profile.
+
 - Past occurrences trong ngày đã execute rồi
 - `end_at = start of today` không affect những occurrences đã chạy
 
@@ -158,6 +172,7 @@ ZoneId robotZoneId = ZoneId.of(robotTz.getID());
 **Context**: Soft-delete recurring schedule (`fromDate` parameter) là feature mới được implement trong plan `260121-Soft-Delete-Recurring-Schedule-Series.md`. Feature **chưa release to production** và chưa có client nào sử dụng.
 
 **Decision**: Breaking change is acceptable vì:
+
 1. Feature chưa release → không có existing client
 2. Không cần deprecation period hay backward compatibility
 3. Đơn giản hóa implementation
@@ -429,11 +444,13 @@ public void softDeleteOnDstFallBackDate_shouldSucceed() {
 ### 📝 API Contract Summary
 
 **Before:**
+
 ```bash
 DELETE /v4/schedules/{robotId}?fromDate=2026-05-05T00:00:00%2B02:00
 ```
 
 **After:**
+
 ```bash
 DELETE /v4/schedules/{robotId}?fromDate=2026-05-05
 ```

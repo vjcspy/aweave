@@ -1,3 +1,10 @@
+---
+name: "Nedap ONS Retrieve Concepts Flow (Order/Return)"
+description: "Comprehensive documentation of the end-to-end flow for retrieving order and return concepts from Nedap ONS, including API call chains and survey linking logic."
+created: 2026-02-27
+tags: ["documentations","wonkers-nedap"]
+---
+
 # 📘 [260213] - Nedap ONS Retrieve Concepts Flow (Order/Return)
 
 ## 1. Context
@@ -5,6 +12,7 @@
 Tài liệu này mô tả end-to-end flow khi người dùng bấm **Retrieve latest** ở dashboard admin để đồng bộ concept từ Nedap ONS vào TinyBots.
 
 Mục tiêu:
+
 - Làm rõ vì sao form mới có thể "không chạy" dù ONS đã có dữ liệu.
 - Làm rõ quan hệ giữa `orderSurveys` và `returnSurveys`.
 - Liệt kê toàn bộ API tham gia theo đúng call chain thực tế trong code.
@@ -17,6 +25,7 @@ Mục tiêu:
 - Nếu `4284` chưa nằm trong `orderSurveys`, hệ thống sẽ **không gọi ONS API cho survey 4284**, nên sẽ không có concept nào được tạo từ form đó.
 
 Source code references:
+
 - Lấy order theo `orderSurveys`: `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:54`
 - Lấy return theo `returnSurveys`: `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:120`
 - Model survey IDs: `workspaces/tinybots/backend/wonkers-nedap/src/model/Config/SurveyIds.ts:3`
@@ -37,6 +46,7 @@ Source code references:
   - Nguồn survey/survey results/client/employee/address.
 
 Source references:
+
 - FE trigger: `workspaces/tinybots/frontend/wonkers-dash-admin/src/app/components/orders/overview/SpeedDial/OrderOverviewSpeedDial.tsx:29`
 - FE endpoint config: `workspaces/tinybots/frontend/wonkers-dash-admin/src/app/common/utilities/constants/constants.module.ts:46`
 - Admin retrieve endpoint (taas-orders): `workspaces/tinybots/backend/wonkers-taas-orders/src/App.ts:284`
@@ -97,6 +107,7 @@ flowchart TD
 ```
 
 Implication:
+
 - `4284` không nằm trong config => đi nhánh `Skip survey hoàn toàn`.
 - `552` đã nằm trong config `returnSurveys` => đi nhánh poll/map/push bình thường.
 
@@ -105,12 +116,14 @@ Implication:
 ### 6.1 Trigger APIs (UI -> Backend)
 
 1. `POST /v4/admin/taas-orders/concepts/retrieve`
+
 - Caller: `wonkers-dash-admin`
 - Purpose: Trigger manual retrieval of concepts
 - FE reference: `workspaces/tinybots/frontend/wonkers-dash-admin/src/app/components/orders/overview/redux/api.ts:24`
 - Route reference: `workspaces/tinybots/backend/wonkers-taas-orders/src/App.ts:284`
 
-2. `POST /internal/v1/nedap-ons/orders/retrieve`
+1. `POST /internal/v1/nedap-ons/orders/retrieve`
+
 - Caller: `wonkers-taas-orders` (`NedapOnsService`)
 - Purpose: Delegate retrieve process to `wonkers-nedap`
 - Service reference: `workspaces/tinybots/backend/wonkers-taas-orders/src/service/NedapOnsService.ts:17`
@@ -118,16 +131,18 @@ Implication:
 
 ### 6.2 Config APIs (source of linked survey IDs)
 
-3. `GET /internal/v1/nedap-ons/configs`
-4. `POST /internal/v1/nedap-ons/configs`
-5. `GET /internal/v1/nedap-ons/configs/:configId`
-6. `PATCH /internal/v1/nedap-ons/configs/:configId`
-7. `DELETE /internal/v1/nedap-ons/configs/:configId`
+1. `GET /internal/v1/nedap-ons/configs`
+2. `POST /internal/v1/nedap-ons/configs`
+3. `GET /internal/v1/nedap-ons/configs/:configId`
+4. `PATCH /internal/v1/nedap-ons/configs/:configId`
+5. `DELETE /internal/v1/nedap-ons/configs/:configId`
 
 Purpose:
+
 - Quản lý danh sách survey IDs mà `wonkers-nedap` sẽ poll.
 
 References:
+
 - Route registration: `workspaces/tinybots/backend/wonkers-nedap/src/App.ts:179`
 - Controller methods: `workspaces/tinybots/backend/wonkers-nedap/src/controller/InternalOnsConfigIntegrationController.ts:12`
 - Insert/update config data: `workspaces/tinybots/backend/wonkers-nedap/src/service/OnsIntegrationConfigService.ts:12`
@@ -135,39 +150,48 @@ References:
 
 ### 6.3 ONS External APIs (called by wonkers-nedap)
 
-8. `GET /t/survey/surveys/{surveyId}`
+1. `GET /t/survey/surveys/{surveyId}`
+
 - Purpose: Lấy survey definition
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:35`
 
-9. `GET /t/survey/surveys/{surveyId}/survey_results?updated_since=YYYY-MM-DD`
+1. `GET /t/survey/surveys/{surveyId}/survey_results?updated_since=YYYY-MM-DD`
+
 - Purpose: Lấy list survey results theo surveyId
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:50`
 
-10. `GET /t/survey/survey_results/{surveyResultId}`
+1. `GET /t/survey/survey_results/{surveyResultId}`
+
 - Purpose: Lấy full answers của từng result
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:82`
 
-11. `GET /t/clients/{clientId}`
+1. `GET /t/clients/{clientId}`
+
 - Purpose: Lấy client metadata
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:149`
 
-12. `GET /t/clients/{clientId}/main_address` (lazy address enrichment)
+1. `GET /t/clients/{clientId}/main_address` (lazy address enrichment)
+
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:131`
 
-13. `GET /t/employees/{employeeId}` (lazy requester enrichment)
+1. `GET /t/employees/{employeeId}` (lazy requester enrichment)
+
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:97`
 
-14. `GET /t/employees/{employeeId}/teams` (lazy team enrichment)
+1. `GET /t/employees/{employeeId}/teams` (lazy team enrichment)
+
 - Ref: `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:114`
 
 ### 6.4 Internal Push APIs (wonkers-nedap -> wonkers-taas-orders)
 
-15. `POST /internal/v6/taas-orders/concepts/orders`
+1. `POST /internal/v6/taas-orders/concepts/orders`
+
 - Purpose: Create order concept
 - Caller ref: `workspaces/tinybots/backend/wonkers-nedap/src/service/WonkersTaasOrderService.ts:20`
 - Receiver route ref: `workspaces/tinybots/backend/wonkers-taas-orders/src/App.ts:544`
 
-16. `POST /internal/v1/taas-orders/concepts/returns`
+1. `POST /internal/v1/taas-orders/concepts/returns`
+
 - Purpose: Create return concept
 - Caller ref: `workspaces/tinybots/backend/wonkers-nedap/src/service/WonkersTaasOrderService.ts:31`
 - Receiver route ref: `workspaces/tinybots/backend/wonkers-taas-orders/src/App.ts:291`
@@ -175,12 +199,14 @@ References:
 ## 7. Survey Linking Model
 
 `surveyIds` được định nghĩa gồm 2 mảng:
+
 - `orderSurveys: number[]`
 - `returnSurveys: number[]`
 
 Ref: `workspaces/tinybots/backend/wonkers-nedap/src/model/Config/SurveyIds.ts:3`
 
 Runtime behavior:
+
 - Order retrieval chỉ dùng `orderSurveys`: `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:54`
 - Return retrieval chỉ dùng `returnSurveys`: `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:120`
 
@@ -189,9 +215,11 @@ Runtime behavior:
 Có 2 cách chạy retrieval:
 
 1. Manual trigger (từ UI admin)
+
 - Flow như mục 4.
 
-2. Cron job nội bộ của wonkers-nedap
+1. Cron job nội bộ của wonkers-nedap
+
 - Mặc định mỗi 4 tiếng: `0 */4 * * *`
 - Config ref: `workspaces/tinybots/backend/wonkers-nedap/config/default.json:30`
 - Job function ref: `workspaces/tinybots/backend/wonkers-nedap/src/App.ts:273`
@@ -199,18 +227,23 @@ Có 2 cách chạy retrieval:
 ## 9. Debug Checklist cho tester/dev
 
 1. Kiểm tra config hiện tại có chứa survey mới chưa
+
 - `GET /internal/v1/nedap-ons/configs`
 
-2. Nếu chưa có `4284`, update config để thêm vào `surveyIds.orderSurveys`
+1. Nếu chưa có `4284`, update config để thêm vào `surveyIds.orderSurveys`
+
 - `PATCH /internal/v1/nedap-ons/configs/:configId`
 
-3. Trigger retrieval thủ công
+1. Trigger retrieval thủ công
+
 - `POST /v4/admin/taas-orders/concepts/retrieve`
 
-4. Đọc log `wonkers-nedap` để xác thực survey IDs thực sự được poll
+1. Đọc log `wonkers-nedap` để xác thực survey IDs thực sự được poll
+
 - Log mẫu: `Survey ids: [...]` (được in tại `workspaces/tinybots/backend/wonkers-nedap/src/api/OnsNedapApi.ts:163`)
 
-5. Xác nhận concept đã được tạo ở `wonkers-taas-orders`
+1. Xác nhận concept đã được tạo ở `wonkers-taas-orders`
+
 - Query qua admin concepts endpoint:
   - `GET /v6/admin/taas-orders/concepts/orders`
   - `GET /v6/admin/taas-orders/concepts/returns`

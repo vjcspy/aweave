@@ -1,3 +1,10 @@
+---
+name: "Store Trigger-Based Script Executions"
+description: "Document regarding Store Trigger-Based Script Executions"
+created: 2026-01-14
+tags: ["releases","micro-manager"]
+---
+
 # Production Release: Store Trigger-Based Script Executions
 
 This release adds the ability to store script executions that are triggered by events (e.g., robot enters a room, sensor detects motion) alongside existing scheduled executions in micro-manager. It also includes backward compatibility fixes to ensure existing APIs continue to return only scheduled executions.

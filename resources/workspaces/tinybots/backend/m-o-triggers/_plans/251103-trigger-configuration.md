@@ -1,3 +1,11 @@
+---
+name: "Trigger Configuration Enhancement - Schedule Constraints"
+description: "Design document for enhancing trigger configurations with JSON-based schedule constraints, focusing on event-driven execution and backward compatibility."
+created: 2025-11-03
+tags: ["plans","m-o-triggers"]
+status: done
+---
+
 # Trigger Configuration Enhancement - Schedule Constraints
 
 **Date**: November 3, 2025
@@ -12,6 +20,7 @@ The trigger system is **event-driven**: when an external event arrives, the syst
 ### Previous Behavior
 
 Triggers were only constrained by **time-of-day** windows:
+
 - `allowedStartTime` / `allowedEndTime` (e.g., 08:00-20:00)
 - If current time is within window → Execute immediately
 - If outside window + `isReschedulable=true` → Schedule for next day at startTime
@@ -45,12 +54,14 @@ interface ScheduleConstraints {
 ```
 
 **Database**:
+
 ```sql
 ALTER TABLE event_trigger_setting
 ADD COLUMN schedule_constraints JSON DEFAULT NULL;
 ```
 
 **Storage Examples**:
+
 ```json
 {"allowedDaysOfWeek": ["mon", "wed", "fri"]}
 {"allowedDaysOfWeek": ["mon", "tue", "wed", "thu", "fri"]}
@@ -168,6 +179,7 @@ if (!setting.scheduleConstraints) {
 ### 4. Robot-Specific Overrides
 
 Works seamlessly with existing robot-specific triggers:
+
 - Default trigger: `robotId = NULL`, `scheduleConstraints = {"allowedDaysOfWeek": ["mon", "wed", "fri"]}`
 - Robot #42 override: `robotId = 42`, `scheduleConstraints = {"allowedDaysOfWeek": ["tue", "thu"]}`
 - Repository already prioritizes robot-specific settings
@@ -283,6 +295,7 @@ ALTER TABLE event_trigger_setting DROP COLUMN schedule_constraints;
 No data migration needed - existing triggers work with `NULL` constraints.
 
 Optional: Add constraints to existing settings:
+
 ```sql
 UPDATE event_trigger_setting
 SET schedule_constraints = '{"allowedDaysOfWeek":["mon","tue","wed","thu","fri"]}'

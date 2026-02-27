@@ -1,3 +1,11 @@
+---
+name: "Grant Event Trigger Permissions to Atlas User"
+description: "Technical plan to grant SELECT and DELETE permissions on trigger tables to the atlas-rw user, enabling batch cleanup of orphaned event triggers."
+created: 2026-01-11
+tags: ["plans","typ-e"]
+status: done
+---
+
 # 📋 [TYP-E-ATLAS-PERM: 2026-01-11] - Grant Event Trigger Permissions to Atlas User
 
 ## References
@@ -13,6 +21,7 @@
 From Atlas FK Constraint Fix plan (`resources/workspaces/tinybots/atlas/260104-Atlas-FK-Constraint-Fix.md`):
 
 > **Pre-existing Test Failures (NOT related to this fix)**
+>
 > - **Batch jobs IT**: `SELECT command denied to user 'atlas-rw' for table 'event_trigger'` - **Database permission issue**
 > - **Action Required**: Grant SELECT/DELETE on `event_trigger` and `event_trigger_setting` tables to `atlas-rw` user
 
@@ -103,6 +112,7 @@ GRANT SELECT, DELETE ON `tinybots`.`event_trigger_setting` TO 'atlas-rw'@'192.16
 ### Phase 3: Verification
 
 1. **Local Verification** (if Docker databases are running):
+
    ```bash
    # Apply migration to local typ-e-db
    cd typ-e
@@ -129,6 +139,7 @@ GRANT SELECT, DELETE ON `tinybots`.`event_trigger_setting` TO 'atlas-rw'@'192.16
 > *Do not fill until implementation is complete*
 
 ### ✅ Completed Achievements
+
 - [ ] pom.xml version bumped to `100.0.0-SNAPSHOT`
 - [ ] Migration file `V100__grant_atlas_event_trigger_permissions.sql` created
 - [ ] Local verification passed
@@ -139,5 +150,6 @@ GRANT SELECT, DELETE ON `tinybots`.`event_trigger_setting` TO 'atlas-rw'@'192.16
 ## 🚧 Outstanding Issues & Follow-up
 
 ### Dependencies
+
 - [ ] Coordinate with Atlas deployment - typ-e migration must be deployed first
 - [ ] Update Atlas plan to mark Phase 4 (DB permissions) as completed after this is deployed

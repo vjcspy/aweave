@@ -1,3 +1,11 @@
+---
+name: "📋 251223-Sensara-Events-GraphQL - Add Sensara Events Query to GraphQL"
+description: "Document regarding 📋 251223-Sensara-Events-GraphQL - Add Sensara Events Query to GraphQL"
+created: 2025-12-23
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 251223-Sensara-Events-GraphQL - Add Sensara Events Query to GraphQL
 
 ## References

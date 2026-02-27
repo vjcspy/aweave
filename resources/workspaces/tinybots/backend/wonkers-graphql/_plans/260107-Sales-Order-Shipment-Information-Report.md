@@ -1,3 +1,11 @@
+---
+name: "Sales Order Shipment Information Report"
+description: "Document regarding Sales Order Shipment Information Report"
+created: 2026-01-07
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 [PROD-XXX: 2026-01-07] - Sales Order Shipment Information Report
 
 ## References

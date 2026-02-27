@@ -1,3 +1,11 @@
+---
+name: "Store Trigger-Based Script Executions"
+description: "Document regarding Store Trigger-Based Script Executions"
+created: 2025-12-06
+tags: ["plans","micro-manager"]
+status: done
+---
+
 # 📋 [251206] - Store Trigger-Based Script Executions
 
 ## References

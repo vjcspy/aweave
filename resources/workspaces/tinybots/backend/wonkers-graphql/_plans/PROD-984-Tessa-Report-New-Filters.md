@@ -1,3 +1,11 @@
+---
+name: "Add Fields to Tessa Order Status Report"
+description: "Document regarding Add Fields to Tessa Order Status Report"
+created: 2026-02-27
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 [PROD-984: 2025-12-30] - Add Fields to Tessa Order Status Report
 
 ## References

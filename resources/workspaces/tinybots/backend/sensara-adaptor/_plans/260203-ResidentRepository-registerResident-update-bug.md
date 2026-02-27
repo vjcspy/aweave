@@ -1,3 +1,11 @@
+---
+name: "`ResidentRepository.registerResident()` có thể không update mapping mong muốn"
+description: "Technical analysis and remediation plan for a bug in the resident registration repository where mapping updates used non-unique identifiers in WHERE clauses, causing silent failures and data inconsistency; proposes shifting to ID-based updates with affected row validation."
+created: 2026-02-03
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📌 Issue Note: `ResidentRepository.registerResident()` có thể không update mapping mong muốn
 
 **Repo:** `workspaces/tinybots/backend/sensara-adaptor`  
@@ -94,6 +102,7 @@ Logic “tìm row” và “update row” dùng **khóa khác nhau**:
   - `UPDATE sensara_resident_robot SET ... WHERE id=?`
 
 Ưu điểm:
+
 - Update đúng row 100% (khóa ổn định nhất).
 
 ### Option B: Update theo `resident_id` hiện tại của row đã tìm thấy
@@ -101,11 +110,13 @@ Logic “tìm row” và “update row” dùng **khóa khác nhau**:
 - Dùng `WHERE resident_id = entry.residentId` (residentId cũ), không dùng residentId mới.
 
 Ưu điểm:
+
 - Ít thay đổi SQL hơn.
 
 ### Thêm guard để tránh silent fail
 
 Sau UPDATE, check `affectedRows`:
+
 - Nếu `affectedRows === 0` → throw error / rollback (để biết chắc có vấn đề dữ liệu/logic).
 
 ## Checklist verify sau khi sửa
@@ -124,4 +135,3 @@ Sau UPDATE, check `affectedRows`:
 ## Note về test runner (Devtools)
 
 Hiện tại chạy `just -f workspaces/devtools/tinybots/local/Justfile test-sensara-adaptor` có thể fail nếu docker-compose mount sai path vào container (container báo không tìm thấy `/usr/src/app/package.json`). Nếu gặp lại, cần kiểm tra `workspaces/devtools/tinybots/local/docker-compose.yaml` service `sensara-adaptor` và path volumes.
-

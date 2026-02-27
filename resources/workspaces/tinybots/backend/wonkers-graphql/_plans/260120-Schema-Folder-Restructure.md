@@ -1,3 +1,11 @@
+---
+name: "Schema Folder Restructure"
+description: "Document regarding Schema Folder Restructure"
+created: 2026-01-20
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 [REFACTOR: 2026-01-20] - Schema Folder Restructure
 
 ## References

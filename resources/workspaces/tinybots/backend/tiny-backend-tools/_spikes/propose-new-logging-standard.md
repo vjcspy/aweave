@@ -1,3 +1,10 @@
+---
+name: "New Logging Standard for Tinybots Backend"
+description: "Document regarding New Logging Standard for Tinybots Backend"
+created: 2026-02-25
+tags: ["spikes","tiny-backend-tools"]
+---
+
 # Proposal: New Logging Standard for Tinybots Backend
 
 [TOC]

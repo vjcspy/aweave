@@ -1,3 +1,11 @@
+---
+name: "260225 - Sensara Adaptor API Schemas"
+description: "Detailed plan for implementing Sensara adaptor API schemas and parameters in tiny-specs, covering both internal admin and external relation-based endpoints."
+created: 2026-02-25
+tags: ["plans","tiny-specs"]
+status: done
+---
+
 # 260225 - Sensara Adaptor API Schemas
 
 ## References

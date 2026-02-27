@@ -1,3 +1,11 @@
+---
+name: "azi-3-status-check-jobs Improvements"
+description: "Document regarding azi-3-status-check-jobs Improvements"
+created: 2025-11-22
+tags: ["plans","azi-3-status-check-jobs"]
+status: done
+---
+
 # 📋 [REFACTOR: 2025-11-22] - azi-3-status-check-jobs Improvements
 
 ## References

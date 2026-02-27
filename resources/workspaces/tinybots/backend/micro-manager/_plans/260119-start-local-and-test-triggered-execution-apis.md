@@ -1,3 +1,11 @@
+---
+name: "Start micro-manager local + test Triggered Execution APIs"
+description: "Document regarding Start micro-manager local + test Triggered Execution APIs"
+created: 2026-01-19
+tags: ["plans","micro-manager"]
+status: done
+---
+
 # [260119] - Start micro-manager local + test Triggered Execution APIs
 
 ## Mục tiêu
