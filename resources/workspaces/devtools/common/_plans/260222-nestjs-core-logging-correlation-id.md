@@ -167,7 +167,7 @@ workspaces/devtools/common/
   - [x] Smoke-test API + WebSocket flows to confirm logs remain readable, structured, and not excessively noisy.
 
 - [x] [Phase 1] Documentation Updates
-  - [x] Add `resources/workspaces/devtools/common/nestjs-core/ABSTRACT.md` and `resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md`.
+  - [x] Add `resources/workspaces/devtools/common/nestjs-core/abstract summary file` and `resources/workspaces/devtools/common/nestjs-core/OVERVIEW.md`.
   - [ ] Update `resources/workspaces/devtools/common/server/OVERVIEW.md` to document shared `pino` logger integration, correlation behavior (HTTP + WebSocket), and JSONL log file location.
   - [x] Document explicit implementation split for correlation:
     - [x] HTTP correlation via Express middleware
@@ -212,7 +212,7 @@ workspaces/devtools/common/
 - Retrofitted structured logging across `nestjs-debate` (database, argument, gateway) and `nestjs-dashboard` (configs, skills)
 - Added per-WS-connection correlation ID tracking in `debate.gateway.ts`
 - All packages build and compile; runtime smoke test verified (health check, correlation headers, JSONL output)
-- Created `ABSTRACT.md` and `OVERVIEW.md` documentation for `nestjs-core`
+- Created `abstract summary file` and `OVERVIEW.md` documentation for `nestjs-core`
 
 ## Outstanding Issues & Follow-up
 

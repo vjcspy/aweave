@@ -58,7 +58,7 @@ tags: []
 - **Naming accuracy** — Folder names that match their actual purpose
 - **Structural consistency** — Source code and documentation follow parallel hierarchies
 - **Separation of concerns** — Agent brain, resources, workspaces, and user data are distinct top-level concepts
-- **Tiered context loading** — ABSTRACT.md (L0, 100-200 tokens) alongside OVERVIEW.md (L1) enables cheaper agent decision-making
+- **Tiered context loading** — abstract summary file (L0, 100-200 tokens) alongside OVERVIEW.md (L1) enables cheaper agent decision-making
 - **Self-documenting for AI** — Structure itself teaches agents where to find things
 
 ## Target State
@@ -97,18 +97,18 @@ tags: []
 ├── resources/                   # Documentation & context (renamed from devdocs/)
 │   ├── workspaces/              # Workspace docs
 │   │   ├── devtools/            # DevTools docs (moved from resources/workspaces/devtools/)
-│   │   │   ├── ABSTRACT.md      # L0: 100-200 tokens
+│   │   │   ├── abstract summary file      # L0: 100-200 tokens
 │   │   │   ├── OVERVIEW.md      # L1: full overview
 │   │   │   └── common/
 │   │   │       ├── _plans/
 │   │   │       └── <PACKAGE>/
-│   │   │           ├── ABSTRACT.md
+│   │   │           ├── abstract summary file
 │   │   │           └── OVERVIEW.md
 │   │   └── <WORKSPACE>/         # Business workspace docs
-│   │       ├── ABSTRACT.md
+│   │       ├── abstract summary file
 │   │       ├── OVERVIEW.md
 │   │       └── <DOMAIN>/<REPO>/
-│   │           ├── ABSTRACT.md
+│   │           ├── abstract summary file
 │   │           ├── OVERVIEW.md
 │   │           ├── _plans/
 │   │           ├── _features/
@@ -171,7 +171,7 @@ master                      ← Common/shared content only
 
 | Tier | File | Size | When Agent Loads |
 |------|------|------|-----------------|
-| L0 (Abstract) | `ABSTRACT.md` | 100-200 tokens | Always — for quick identification and routing |
+| L0 (Abstract) | `abstract summary file` | 100-200 tokens | Always — for quick identification and routing |
 | L1 (Overview) | `OVERVIEW.md` | 1-2 pages | When workspace/repo is identified as target |
 | L2 (Details) | `_plans/`, `_architecture/`, etc. | Full docs | Only when deep reading is needed |
 
@@ -426,21 +426,21 @@ These files define AI agent behavior. Correctness is critical.
 
 ### Phase 6: Update Agent Commands (6 files, ~28 refs)
 
-- [ ] **6.1** Update + enhance `agent/commands/common/create-overview.md` — 5 refs + NEW ABSTRACT.md section
+- [ ] **6.1** Update + enhance `agent/commands/common/create-overview.md` — 5 refs + NEW abstract summary file section
   - Path resolution table: `projects/<PROJECT>/...` → `workspaces/<WS>/...`
   - Path resolution table: `resources/workspaces/...` → `resources/workspaces/...`
   - Resolution logic: all path derivation rules
-  - **NEW: Add Phase 4 — ABSTRACT.md Generation**
-    - After generating/updating OVERVIEW.md, also create/update `ABSTRACT.md` in same directory
-    - ABSTRACT.md content: 100-200 tokens max, one-paragraph summary
+  - **NEW: Add Phase 4 — abstract summary file Generation**
+    - After generating/updating OVERVIEW.md, also create/update `abstract summary file` in same directory
+    - abstract summary file content: 100-200 tokens max, one-paragraph summary
     - Template:
       ```markdown
       # <Name> — Abstract
       
       <One paragraph, 100-200 tokens. Describe: what this is, its primary purpose, key technologies, and relationship to other components.>
       ```
-    - If ABSTRACT.md exists, update it to reflect any changes in OVERVIEW.md
-    - If ABSTRACT.md does not exist, generate it from the OVERVIEW.md content
+    - If abstract summary file exists, update it to reflect any changes in OVERVIEW.md
+    - If abstract summary file does not exist, generate it from the OVERVIEW.md content
 
 - [ ] **6.2** Update `agent/commands/common/debate-proposer.md` — 4 refs
   - CLI reference paths: `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md` → `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md`
@@ -483,10 +483,10 @@ These files define AI agent behavior. Correctness is critical.
   - Directory structure diagram: full rewrite with new structure
   - Path conventions table: all paths updated
   - Workspace-aware routing table: updated patterns
-  - Context layers diagram: add L0 (ABSTRACT.md) tier
+  - Context layers diagram: add L0 (abstract summary file) tier
   - Documentation links section: all paths updated
   - Add `user/` folder description
-  - Add Tiered Context Loading section (ABSTRACT.md / OVERVIEW.md / detailed docs)
+  - Add Tiered Context Loading section (abstract summary file / OVERVIEW.md / detailed docs)
   - DevTools commands: `cd devtools` → `cd workspaces/devtools`
 
 ### Phase 9: Update DevTools Documentation (30+ files, ~594 refs)
@@ -518,12 +518,12 @@ Then handle `devtools/` → `workspaces/devtools/` manually per file (context-se
 
 - [ ] **9.3** Update `resources/misc/workflow-optimization/260215-agent-workflow-v1.md`
 
-### Phase 10: Create ABSTRACT.md Files (L0 Tier)
+### Phase 10: Create abstract summary file Files (L0 Tier)
 
-Create ABSTRACT.md alongside each OVERVIEW.md on master. Content: 100-200 tokens, single paragraph.
+Create abstract summary file alongside each OVERVIEW.md on master. Content: 100-200 tokens, single paragraph.
 
-- [ ] **10.1** Create `resources/workspaces/devtools/ABSTRACT.md`
-- [ ] **10.2** Create ABSTRACT.md for each devtools package that has OVERVIEW.md (14 packages)
+- [ ] **10.1** Create `resources/workspaces/devtools/abstract summary file`
+- [ ] **10.2** Create abstract summary file for each devtools package that has OVERVIEW.md (14 packages)
 
 ### Phase 11: Create User Template Files
 
@@ -593,7 +593,7 @@ Create ABSTRACT.md alongside each OVERVIEW.md on master. Content: 100-200 tokens
   - devdocs/ → resources/ (documentation & context)
   - devtools/ → workspaces/devtools/ (unified under workspaces)
   - Add user/ folder for user-specific data
-  - Add ABSTRACT.md (L0) alongside OVERVIEW.md files
+  - Add abstract summary file (L0) alongside OVERVIEW.md files
   - Rename business-project → business-workspace
   - Update all path references (~800+) across ~55 files"
   ```
@@ -621,7 +621,7 @@ Each workspace lives on its own git branch (e.g., `workspaces/k`, `workspaces/ti
 2. Move workspace-specific files to new paths
 3. Update path references in workspace-specific content
 4. Update `.gitignore` branch-specific negate patterns
-5. Add ABSTRACT.md files for workspace docs
+5. Add abstract summary files for workspace docs
 6. Rename the branch
 
 ### Step-by-Step Instructions
@@ -727,19 +727,19 @@ Replace the old branch negate section at the end of `.gitignore`:
 !workspaces/devtools/<WS_NAME>/
 ```
 
-#### B.5: Add ABSTRACT.md Files
+#### B.5: Add abstract summary file Files
 
-Create ABSTRACT.md alongside each OVERVIEW.md in the workspace docs:
+Create abstract summary file alongside each OVERVIEW.md in the workspace docs:
 
 ```bash
 # Find all OVERVIEW.md files under this workspace
 find resources/workspaces/<WS_NAME>/ -name 'OVERVIEW.md'
 ```
 
-For each OVERVIEW.md found, create a sibling ABSTRACT.md with:
+For each OVERVIEW.md found, create a sibling abstract summary file with:
 - Read the OVERVIEW.md content
 - Write a 100-200 token summary paragraph
-- Save as ABSTRACT.md in the same directory
+- Save as abstract summary file in the same directory
 
 Template:
 ```markdown
@@ -785,7 +785,7 @@ git commit -m "refactor: migrate workspace <WS_NAME> to new repo structure
 
 - Move workspace docs to resources/workspaces/<WS_NAME>/
 - Update all path references
-- Add ABSTRACT.md files
+- Add abstract summary files
 - Update .gitignore branch section"
 git push origin workspaces/<WS_NAME>
 ```
@@ -804,5 +804,5 @@ git push origin workspaces/<WS_NAME>
 - [ ] `agent/commands/meta/` folder may need rename to match workspace name (currently `meta/` on `projects/k` branch)
 - [ ] pnpm-workspace.yaml internal paths are relative to devtools root — should be unaffected by the move, but verify after
 - [ ] Global npm install path (`pnpm link --global`) may need update in user shell configs
-- [ ] Consider adding ABSTRACT.md auto-generation command to devtools CLI
-- [ ] Consider creating an ABSTRACT.md template in `agent/templates/common/`
+- [ ] Consider adding abstract summary file auto-generation command to devtools CLI
+- [ ] Consider creating an abstract summary file template in `agent/templates/common/`
