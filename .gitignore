@@ -19,9 +19,13 @@ AGENTS.md
 .cursor/
 .trae/
 !/.aweave/
+!/.agents/
 
 /.aweave/*
 !/.aweave/loaded-skills.yaml
+
+/.agents/*
+!/.agents/rules/
 
 # ========================================
 # User data (structure tracked, content ignored)
