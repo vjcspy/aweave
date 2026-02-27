@@ -1,40 +1,67 @@
 <!-- budget: 100 lines -->
 # Workspace Workflow
 
-## Context Parameter Detection
+## BLOCKER: Scope Resolution Before First Tool Call
 
-When handling a workspace-scoped task, extract `workspace`, `domain`, and `repository` from the task path to call `workspace_get_context`.
+For any workspace-scoped task, the agent MUST resolve scope from the concrete path BEFORE calling any tool.
 
-### Path → Parameter Mapping
+- MUST parse path first, then call `workspace_get_context`.
+- MUST NOT use a default workspace as a warm-up when the path already indicates scope.
+- NEVER call `workspace_get_context(workspace=devtools)` by default for non-`devtools` paths.
+- If scope cannot be resolved from user input, ask the user before proceeding.
 
-**Business workspace path:** `workspaces/<workspace>/<domain>/<repo>/`
+### Path → Logical Scope Mapping (Source of Truth)
 
-| Path Segment                              | Parameter    | Example |
-|-------------------------------------------|--------------|---------|
-| `workspaces/<workspace>/`                 | `workspace`  | `nab`   |
-| `workspaces/<workspace>/<domain>/`        | `domain`     | `hod`   |
-| `workspaces/<workspace>/<domain>/<repo>/` | `repository` | `eve`   |
+**Business workspace path:** `workspaces/<project>/<domain>/<repo>/`
 
-**Example:** `workspaces/nab/hod/eve/` → `workspace=nab`, `domain=hod`, `repository=eve`
+| Path Segment                            | Logical Scope Field | Example   |
+|-----------------------------------------|---------------------|-----------|
+| `workspaces/<project>/`                 | `project`           | `nab` |
+| `workspaces/<project>/<domain>/`        | `domain`            | `hod` |
+| `workspaces/<project>/<domain>/<repo>/` | `repository`        | `eve`     |
 
-**Resources path:** `resources/workspaces/<workspace>/` → `workspace=<workspace>` only (no domain/repo)
+**Business resources path:** `resources/workspaces/<project>/` → `project=<project>` (no domain/repo unless path provides them)
 
-**Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `workspace=devtools`
+**Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `project=devtools`
 
-**No workspace path** → general context, no workspace_get_context call needed
+**No workspace path:** general task, no `workspace_get_context` required.
 
-If any parameter is ambiguous, ask the user.
+### Logical Scope → `workspace_get_context` Parameters
+
+Use this exact order. Do not skip steps.
+
+1. **PRIMARY (MUST try first):**  
+   map `project -> workspace`, `domain -> domain`, `repository -> repository`
+2. **SCHEMA FALLBACK (ONLY if primary fails due to MCP namespace mismatch):**  
+   map `workspace=devtools`, `domain=<project>`, `repository=<repository-if-applicable>`
+3. **FINAL FALLBACK:**  
+   if tool unavailable or scope cannot be loaded, use direct file access and explicitly note fallback in response
+
+Rules:
+- MUST record why fallback was needed.
+- NEVER use schema fallback before primary fails.
+- NEVER ignore path-derived `project/domain/repository`.
+
+### Quick Examples
+
+- `workspaces/nab/hod/eve/`  
+  logical scope: `project=nab`, `domain=hod`, `repository=eve`  
+  primary call: `workspace=nab, domain=hod, repository=eve`  
+  schema fallback only if needed: `workspace=devtools, domain=nab, repository=eve`
+
+- `workspaces/devtools/common/server/`  
+  call: `workspace=devtools, domain=common, repository=server`
 
 ## Task Detection
 
-**Before handling any workspace-scoped task:** Call `workspace_get_context` first. See Context & Memory Usage.
+**Before handling any workspace-scoped task:** call `workspace_get_context` first, after completing scope resolution above.
 
-| Signals | Task Type | Load Rule |
-|---|---|---|
-| "create plan", "write plan", path to `_plans/` | Plan | `agent/rules/common/tasks/create-plan.md` |
-| "implement", "build", "fix", "update", "change" + code | Implementation | `agent/rules/common/tasks/implementation.md` |
-| "refactor", "restructure", "rename", "move", "extract" | Refactoring | `agent/rules/common/tasks/implementation.md` |
-| Acting as Proposer/Opponent, references debate commands | Debate | `agent/commands/common/debate-proposer.md` or `debate-opponent.md` — skip all other workflow |
-| "what", "how", "why", "explain" — no action verb | Question | Answer directly |
+| Signals                                                       | Task Type      | Load Rule                                                                                    |
+|---------------------------------------------------------------|----------------|----------------------------------------------------------------------------------------------|
+| "create plan", "write plan", "give me plan" path to `_plans/` | Plan           | `agent/rules/common/tasks/create-plan.md`                                                    |
+| "implement", "build", "fix", "update", "change" + code        | Implementation | `agent/rules/common/tasks/implementation.md`                                                 |
+| "refactor", "restructure", "rename", "move", "extract"        | Refactoring    | `agent/rules/common/tasks/implementation.md`                                                 |
+| Acting as Proposer/Opponent, references debate commands       | Debate         | `agent/commands/common/debate-proposer.md` or `debate-opponent.md` — skip all other workflow |
+| "what", "how", "why", "explain" — no action verb              | Question       | Answer directly                                                                              |
 
 **Ambiguity:** "implement the plan" → Implementation. "refactor and add" → Implementation. Uncertain → ask.
