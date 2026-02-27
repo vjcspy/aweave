@@ -1,54 +1,58 @@
-<!-- budget: 80 lines -->
+<!-- budget: 100 lines -->
 # Context & Memory Usage
+
+## Key Concepts
+
+**Memory layers (when to load):**
+- **Hot** (L1): Auto-loaded rules (this file). Always in context, zero cost.
+- **Warm** (L2): On-demand via `workspace_get_context`. Returns T0 data — fast, token-efficient.
+- **Cold** (L3): Raw files in workspace. Read directly or search with keywords when warm data isn't enough.
+
+**Data tiers (how much to load):**
+- **T0 (Abstract):** ~100-200 tokens. Front-matter summaries (name, description, status, tags). Enough to orient and decide what to read next.
+- **T1 (Overview):** Overview files are files that have been synthesized and summarized to provide a general perspective
+- **T2 (Detail):** Full document content or check the source code, the actual implementation.
+
+**Purpose of `workspace_get_context`:** Fast T0 query on warm memory — avoids reading all files which wastes tokens. Get T0 summaries first → identify exactly which files matter → then read only those for T1/T2 detail.
+
+**Topics:** Folders named `_{topicName}/` in workspace resources (e.g., `_plans/`, `_features/`, `_decisions/`, `_lessons/`, `_architecture/`, etc...). Topics are NOT hardcoded — user can flexibly create new topics by adding `_{topicName}/` folders. Discover existing topics from the folder structure returned by the first `workspace_get_context` call. Each topic folder may have its own OVERVIEW.md explaining organization, front-matter schema, and valid field values.
 
 ## When to Load Workspace Context
 
+Context loading is **autonomous** — decide based on the task, no user confirmation needed.
+
 Call `workspace_get_context` when the task involves:
-
-- Workspace-specific code (path contains `workspaces/` or `resources/workspaces/`)
+- Workspace-specific code (paths contain `workspaces/` or `resources/workspaces/`)
 - Mentions of workspace, domain, or repository names
-- Understanding project structure, conventions, or history
-- Plans, features, architecture, decisions, or lessons
+- Project structure, conventions, history, plans, features, architecture, decisions, or lessons
 
-**Mandatory guardrail:** If the user prompt (or referenced paths) includes any workspace path pattern (`workspaces/` or `resources/workspaces/`), you MUST call `workspace_get_context` before answering or implementing.
+**Mandatory:** If user prompt or referenced paths include workspace path patterns, you MUST call `workspace_get_context` before answering or implementing.
 
-Allowed exceptions:
-
-- The user explicitly asks to skip MCP/workspace context loading.
-- The request is clearly unrelated to workspace logic and includes no workspace paths.
-
-**Skip context loading for:** General questions, simple file edits with sufficient inline context, infrastructure fixes unrelated to workspace logic.
+**Skip for:** General questions, simple edits with sufficient inline context, infra fixes unrelated to workspace logic. Also skip if user explicitly asks to.
 
 ## How to Use `workspace_get_context`
 
-**Initial orientation:** Call with defaults (no topics) to get folder structure + overviews (name/description/tags) + available skills.
+1. **Orientation (first call):** Call with defaults (no topics) → returns folder structure + OVERVIEW summaries + available skills. Inspect folder structure to discover which `_{topicName}/` topics exist in the workspace.
+2. **Match user intent to topics:** Check if user's request relates to any discovered topic from step 1.
+3. **Load topic T0:** If matched, call with specific topics (e.g., `topics: ["plans"]`) and `include_defaults: false` → returns T0 summaries (front-matter) of all entries in that topic.
+4. **Deep dive (T1/T2):** Use `document_path` from T0 results → read specific files directly. Or search `resources/workspaces/{scope}/` with keywords via Grep/SemanticSearch.
 
-**During the conversation** — call again with specific topics whenever more context is needed:
+**Scope narrowing:** `workspace` → all domains/repos. Add `domain` → narrows. Add `repository` → specific repo.
 
-- Request topics as needed: `plans`, `features`, `architecture`, `overview`, `decisions`, `lessons`, or any `_{topicName}/` folder
-- Set `include_defaults: false` on follow-up calls to skip redundant data
-- Use `filter_status`, `filter_tags`, `filter_category` for targeted queries — available values are visible in previously returned overview/topic entries
-
-**Scope narrowing:**
-
-- `workspace` only → aggregates across all domains/repos
-- `workspace` + `domain` → narrows to that domain
-- `workspace` + `domain` + `repository` → narrows to specific repo
-
-**Topic discovery:** Topics map to `_{topicName}/` folders in `resources/`. Adding a new topic = creating a `_{topicName}/` folder with `.md` files (front-matter for summary fields). No code changes needed.
+Use `filter_status`, `filter_tags`, `filter_category` for targeted queries — available values visible in previously returned entries or in topic OVERVIEW.md.
 
 ## When to Save Decisions & Lessons
 
-Decisions and lessons are regular files in `resources/workspaces/{scope}/_{decisions,lessons}/`. Save them directly using file write tools (same as plans).
+Save directly as files in `resources/workspaces/{scope}/_{decisions,lessons}/` (same pattern as plans).
 
 | Trigger | What to save |
 |---------|-------------|
-| Hard-won fix (multiple failed attempts) | Lesson file in `_lessons/` with root cause + solution |
-| Non-obvious solution (not in existing docs) | Lesson file in `_lessons/` |
-| Architectural/design choice (made or confirmed) | Decision file in `_decisions/` with rationale |
-| End of session | Determine what's worth saving, write files, report summary |
+| Hard-won fix (multiple failed attempts) | Lesson in `_lessons/` — root cause + solution |
+| Non-obvious solution | Lesson in `_lessons/` |
+| Architectural/design choice confirmed | Decision in `_decisions/` — with rationale |
+| End of session | Determine what's worth saving, write files, report |
 
-**File format MUST follow:** `YYMMDD-name.md` with front-matter (`name`, `description`, `tags`, `category`). Same pattern as plans.
+**File format:** `YYMMDD-name.md` with front-matter (`name`, `description`, `tags`, `category`).
 
 ## Finding Additional Context
 
