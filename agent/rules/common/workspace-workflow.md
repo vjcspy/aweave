@@ -1,19 +1,29 @@
 <!-- budget: 100 lines -->
 # Workspace Workflow
 
-## Workspace Detection
+## Context Parameter Detection
 
-Determine workspace from the task path or context:
+When handling a workspace-scoped task, extract `workspace`, `domain`, and `repository` from the task path to call `workspace_get_context`.
 
-| Path Pattern | Workspace |
-|---|---|
-| `workspaces/<project>/<domain>/<repo>/` | business workspace (scope: `<project>`) |
-| `resources/workspaces/<project>/` | business workspace (scope: `<project>`) |
-| `workspaces/devtools/` | devtools (scope: `devtools`) |
-| `resources/workspaces/devtools/` | devtools (scope: `devtools`) |
-| No workspace path | general — no workspace context needed |
+### Path → Parameter Mapping
 
-If workspace is ambiguous, ask the user.
+**Business workspace path:** `workspaces/<workspace>/<domain>/<repo>/`
+
+| Path Segment                              | Parameter    | Example |
+|-------------------------------------------|--------------|---------|
+| `workspaces/<workspace>/`                 | `workspace`  | `nab`   |
+| `workspaces/<workspace>/<domain>/`        | `domain`     | `hod`   |
+| `workspaces/<workspace>/<domain>/<repo>/` | `repository` | `eve`   |
+
+**Example:** `workspaces/nab/hod/eve/` → `workspace=nab`, `domain=hod`, `repository=eve`
+
+**Resources path:** `resources/workspaces/<workspace>/` → `workspace=<workspace>` only (no domain/repo)
+
+**Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `workspace=devtools`
+
+**No workspace path** → general context, no workspace_get_context call needed
+
+If any parameter is ambiguous, ask the user.
 
 ## Task Detection
 
