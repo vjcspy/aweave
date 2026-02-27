@@ -1,141 +1,21 @@
-# Bitbucket CLI Plugin (`@aweave/cli-plugin-tinybots-bitbucket`)
+---
+name: "cli-plugin-bitbucket"
+description: "Oclif CLI plugin cung cấp topic `aw tinybots-bitbucket` — Bitbucket PR tools cho TinyBots domain, gọi trực tiếp Bitbucket REST API v2.0 với auto-pagination."
+tags: ["tinybots", "cli", "bitbucket", "oclif"]
+---
 
-> **Source:** `workspaces/devtools/tinybots/cli-plugin-bitbucket/`
-> **Last Updated:** 2026-02-13
+> **Branch:** workspaces/tinybots
+> **Last Commit:** 114ae5b
+> **Last Updated:** Fri Feb 27 09:31:44 2026 +0000
 
-oclif plugin cung cấp topic `aw tinybots-bitbucket` — Bitbucket PR tools cho TinyBots domain. Plugin gọi trực tiếp Bitbucket REST API, auto-fetches all pages cho paginated endpoints.
+## TL;DR
 
-## Purpose
+Thay thế curl commands bằng structured CLI tool cho Bitbucket PR operations trong TinyBots domain. Plugin gọi trực tiếp Bitbucket API, auto-fetches tất cả pages cho paginated endpoints, và trả về `MCPResponse` JSON format nhất quán với toàn bộ `aw` commands.
 
-Thay thế curl commands bằng structured CLI tool cho Bitbucket PR operations:
+## Repo Purpose & Bounded Context
 
-- **PR Info:** Get pull request details
-- **Comments:** List all PR comments (auto-pagination, lấy tất cả pages)
-- **Tasks:** List all PR tasks (auto-pagination)
-
-**Cách tiếp cận:** Direct HTTP calls tới Bitbucket API v2.0:
-- Authentication: Basic auth qua env vars (`BITBUCKET_USER`, `BITBUCKET_APP_PASSWORD`)
-- Auto-pagination: Fetch tất cả pages (up to `--max` limit) trong 1 lần gọi
-- Output: MCPResponse JSON format — consistent với tất cả `aw` commands
-
-**Domain-specific:** Nằm trong `workspaces/devtools/tinybots/` (không phải `workspaces/devtools/common/`) vì chỉ dành cho TinyBots workspace. Đây là pattern cho domain-specific tools — future domains (nab, etc.) sẽ tạo plugin riêng tại `workspaces/devtools/<domain>/cli-plugin-<name>/`.
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│          @aweave/cli-plugin-tinybots-bitbucket                  │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  commands/tinybots-bitbucket/                                │
-│  ├── pr.ts                 ← Get PR details                  │
-│  ├── comments.ts           ← List comments (auto-paginate)   │
-│  └── tasks.ts              ← List tasks (auto-paginate)      │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  lib/                                                        │
-│  ├── client.ts             ← BitbucketClient                 │
-│  │   ├── getPR()             (HTTPClient wrapper)            │
-│  │   ├── listPRComments()    Auto-pagination                 │
-│  │   └── listPRTasks()       Returns MCPResponse             │
-│  │                                                           │
-│  └── models.ts             ← Data models + parsers           │
-│      ├── PullRequest                                         │
-│      ├── PRComment                                           │
-│      ├── PRTask                                              │
-│      └── BitbucketUser                                       │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│                        HTTPS                                 │
-│            ┌───────────────────────────┐                     │
-│            │  api.bitbucket.org/2.0    │                     │
-│            └───────────────────────────┘                     │
-└──────────────────────────────────────────────────────────────┘
-```
-
-## Dependencies
-
-| Package | Role |
-|---------|------|
-| `@oclif/core` | oclif Command class, Flags, Args |
-| `@aweave/cli-shared` | MCPResponse, HTTPClient, output helper, createPaginatedResponse |
-
-**External API:** Bitbucket REST API v2.0 (`https://api.bitbucket.org/2.0`)
-
-## Commands
-
-| Command | Description | Args |
-|---------|-------------|------|
-| `aw tinybots-bitbucket pr <repo> <pr_id>` | Get PR details | repo slug, PR ID |
-| `aw tinybots-bitbucket comments <repo> <pr_id>` | List all comments | repo slug, PR ID |
-| `aw tinybots-bitbucket tasks <repo> <pr_id>` | List all tasks | repo slug, PR ID |
-
-### Common Flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--workspace` | `tinybots` | Bitbucket workspace slug |
-| `--format` | `json` | Output format: `json` or `markdown` |
-| `--max` | `500` | Max items to fetch (comments/tasks only) |
-
-### Auto-Pagination
-
-Bitbucket API returns paginated responses (max 100 per page). Plugin automatically fetches all pages:
-
-```
-Page 1: GET /pullrequests/{id}/comments?pagelen=100
-Page 2: GET {next_url}     ← from response.next
-Page 3: GET {next_url}
-... until no more pages or --max reached
-```
-
-All items aggregated into single MCPResponse with `total_count`.
-
-## Configuration
-
-| Env Var | Required | Description |
-|---------|----------|-------------|
-| `BITBUCKET_USER` | Yes | Bitbucket username/email |
-| `BITBUCKET_APP_PASSWORD` | Yes | Bitbucket App Password |
-
-> Create an App Password at: https://bitbucket.org/account/settings/app-passwords/
-
-## Data Models
-
-### PullRequest
-
-| Field | Type | Source |
-|-------|------|--------|
-| `id` | number | `data.id` |
-| `title` | string | `data.title` |
-| `description` | string | `data.description` |
-| `author` | BitbucketUser | `data.author` |
-| `source_branch` | string | `data.source.branch.name` |
-| `destination_branch` | string | `data.destination.branch.name` |
-| `state` | `OPEN` \| `MERGED` \| `DECLINED` \| `SUPERSEDED` | `data.state` |
-| `created_on` | string (ISO) | `data.created_on` |
-
-### PRComment
-
-| Field | Type | Source |
-|-------|------|--------|
-| `id` | number | `data.id` |
-| `content` | string | `data.content.raw` |
-| `author` | BitbucketUser | `data.user` |
-| `file_path` | string? | `data.inline.path` (inline comments only) |
-| `line` | number? | `data.inline.to` (inline comments only) |
-| `created_on` | string? | `data.created_on` |
-
-### PRTask
-
-| Field | Type | Source |
-|-------|------|--------|
-| `id` | number | `data.id` |
-| `content` | string | `data.content.raw` |
-| `state` | `RESOLVED` \| `UNRESOLVED` | `data.state` |
-| `comment_id` | number? | `data.comment.id` |
-| `creator` | BitbucketUser? | `data.creator` |
+- **Role:** Domain-specific CLI extension cho Bitbucket PR workflows — get PR info, list comments, list tasks
+- **Domain:** `devtools/tinybots` — chỉ dành cho TinyBots workspace. Pattern cho future domain-specific tools: `workspaces/devtools/<domain>/cli-plugin-<name>/`
 
 ## Project Structure
 
@@ -147,32 +27,41 @@ workspaces/devtools/tinybots/cli-plugin-bitbucket/
     ├── index.ts                    # (empty — oclif auto-discovers commands)
     ├── commands/
     │   └── tinybots-bitbucket/
-    │       ├── pr.ts
-    │       ├── comments.ts
-    │       └── tasks.ts
+    │       ├── pr.ts               # Get PR details
+    │       ├── comments.ts         # List comments (auto-paginate)
+    │       └── tasks.ts            # List tasks (auto-paginate)
     └── lib/
         ├── client.ts               # BitbucketClient (HTTPClient wrapper)
         └── models.ts               # PullRequest, PRComment, PRTask, parsers
 ```
 
-## Development
+## Public Surface (Inbound)
 
-```bash
-cd workspaces/devtools
+- **`aw tinybots-bitbucket pr <repo> <pr_id>`:** Get PR details (title, description, author, branches, state)
+- **`aw tinybots-bitbucket comments <repo> <pr_id>`:** List all PR comments — auto-pagination, supports inline comments với file path + line
+- **`aw tinybots-bitbucket tasks <repo> <pr_id>`:** List all PR tasks với state (`RESOLVED` / `UNRESOLVED`)
 
-# Build
-pnpm turbo build --filter=@aweave/cli...
+**Common flags:**
 
-# Test (requires Bitbucket credentials)
-export BITBUCKET_USER=user@example.com
-export BITBUCKET_APP_PASSWORD=ATATTxxxxx
+- `--workspace` (default: `tinybots`) — Bitbucket workspace slug
+- `--format` (`json` | `markdown`, default: `json`) — output format
+- `--max` (default: `500`) — giới hạn số items fetch (comments/tasks only)
 
-aw tinybots-bitbucket pr my-repo 123
-aw tinybots-bitbucket comments my-repo 123 --max 50
+## Core Services & Logic (Internal)
+
+- **`BitbucketClient` (`lib/client.ts`):** Wrapper quanh `@aweave/cli-shared` `HTTPClient`. Xử lý Basic Auth (`BITBUCKET_USER` + `BITBUCKET_APP_PASSWORD`), auto-pagination (`response.next`), và trả về `MCPResponse`
+- **Models (`lib/models.ts`):** Parse raw Bitbucket API responses thành typed objects: `PullRequest`, `PRComment` (có `file_path`/`line` cho inline comments), `PRTask`, `BitbucketUser`
+
+**Auto-pagination flow:**
+
+```
+Page 1: GET /pullrequests/{id}/comments?pagelen=100
+Page 2: GET {response.next}
+... until no more pages or --max reached
+→ Aggregate all items → MCPResponse với total_count
 ```
 
-## Related
+## External Dependencies & Contracts (Outbound)
 
-- **Shared Utilities:** `workspaces/devtools/common/cli-shared/`
-- **Main CLI:** `workspaces/devtools/common/cli/`
-- **Architecture Plan:** `resources/workspaces/devtools/common/_plans/260207-cli-oclif-refactor.md`
+- **External APIs:** Bitbucket REST API v2.0 (`https://api.bitbucket.org/2.0`) — Basic Auth via `BITBUCKET_USER` + `BITBUCKET_APP_PASSWORD` env vars
+- **Internal packages:** `@aweave/cli-shared` (MCPResponse, HTTPClient, output helper, createPaginatedResponse), `@oclif/core` (Command, Flags, Args)
