@@ -1,3 +1,12 @@
+---
+description: Internal admin dashboard for TinyBots staff to manage robots, TaaS orders, organisations, subscriptions, and voice assistant devices.
+folder_structure: |-
+  - src/: Source code for the hybrid AngularJS/React application.
+  - localization/: i18n translation files.
+  - styles/: Global SCSS styles.
+  - tools/: Utility tools for label printing and data parsing.
+---
+
 # wonkers-dash-admin - TinyBots Admin Dashboard
 
 ## Purpose
@@ -102,6 +111,7 @@ The app communicates with TinyBots admin APIs. URLs are configured in `src/app/c
 ### API Calls by Feature
 
 #### Auth (`wonkers`)
+
 - `POST /v3/admin/accounts/login` - Admin login
 - `POST /v3/admin/accounts/token` - Refresh token
 - `POST /v3/admin/accounts/mfa` - Setup MFA
@@ -110,6 +120,7 @@ The app communicates with TinyBots admin APIs. URLs are configured in `src/app/c
 - `GET /v3/openid/oauth/signup/microsoft` - Microsoft SSO signup
 
 #### Overview (`admin`)
+
 - `GET /v4/admin/overview` - Dashboard overview data
 - `GET /v3/admin/robots` - List robots
 - `GET /v4/admin/robots` - List robots (v4)
@@ -120,6 +131,7 @@ The app communicates with TinyBots admin APIs. URLs are configured in `src/app/c
 - `GET /v2/admin/relations` - List relations
 
 #### TaaS Orders (`admin`)
+
 - `GET /v6/admin/taas-orders` - List orders
 - `GET /v6/admin/taas-orders/{id}` - Get order details
 - `POST /v6/admin/taas-orders` - Create order
@@ -133,6 +145,7 @@ The app communicates with TinyBots admin APIs. URLs are configured in `src/app/c
 - `POST /v6/admin/taas-orders/{id}/status/reject-return` - Reject return
 
 #### Order/Return Concepts (`admin`)
+
 - `GET /v6/admin/taas-orders/concepts/orders` - Search order concepts
 - `GET /v6/admin/taas-orders/concepts/orders/{id}` - Get order concept
 - `GET /v6/admin/taas-orders/concepts/returns` - Search return concepts
@@ -140,23 +153,28 @@ The app communicates with TinyBots admin APIs. URLs are configured in `src/app/c
 - `POST /v4/admin/taas-orders/concepts/retrieve` - Retrieve concepts from source
 
 #### Organisations (`admin`)
+
 - `GET /v3/admin/accounts/relations/{relationId}` - List organisation admin accounts
 - `POST /v2/admin/invite` - Send admin invite
 - `DELETE /v3/admin/accounts?email=` - Delete admin account (super user)
 - `GET /v2/admin/relations?email=` - Get relations by email
 
 #### TaaS Link (`admin`)
+
 - `POST /v4/admin/taas/{taasId}/link` - Link TaaS subscription
 - `DELETE /v3/admin/taas` - Delete TaaS
 
 #### Voice Assistant Enrollment (`admin`)
+
 - `GET /v1/android-devices/devices` - List voice assistant devices
 - `GET /v1/android-devices/qr` - Get enrollment QR code
 
 #### Dashboard Transfer (`admin`)
+
 - `POST /v3/admin/transfer` - Transfer dashboard ownership
 
 #### Analytics (`graphql`)
+
 - `POST /v4/dashboard/graphql` - Execute GraphQL queries
 
 ## State Management (Redux)
@@ -280,6 +298,7 @@ components/featureName/
 ### Dymo Label Printing
 
 Located in `src/tools/TbDymo/`. Provides label templates for:
+
 - Robot box labels
 - MAC address labels
 - CPU serial labels
