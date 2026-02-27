@@ -6,9 +6,24 @@ interface ToolCallResult {
   isError?: boolean;
 }
 
-function parseCommaSeparated(value?: string): string[] | undefined {
-  if (!value) return undefined;
-  return value.split(',').map((s) => s.trim());
+function parseList(value: unknown): string[] | undefined {
+  if (value === undefined || value === null) return undefined;
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  return undefined;
 }
 
 function parseBoolean(value: unknown, defaultValue: boolean): boolean {
@@ -53,11 +68,11 @@ async function handleGetContext(
       domain: params.domain as string | undefined,
       repository: params.repository as string | undefined,
     },
-    topics: parseCommaSeparated(params.topics as string),
+    topics: parseList(params.topics),
     includeDefaults,
     filters: {
-      status: parseCommaSeparated(params.filter_status as string),
-      tags: parseCommaSeparated(params.filter_tags as string),
+      status: parseList(params.filter_status),
+      tags: parseList(params.filter_tags),
       category: params.filter_category as string | undefined,
     },
   });
