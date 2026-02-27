@@ -5,7 +5,7 @@
 
 **Memory layers (when to load):**
 - **Hot** (L1): Auto-loaded rules (this file). Always in context, zero cost.
-- **Warm** (L2): On-demand via `workspace_get_context`. Returns T0 data — fast, token-efficient.
+- **Warm** (L2): On-demand via `workspace_get_context`. Returns scoped T1 overview plus T0 listings.
 - **Cold** (L3): Raw files in workspace. Read directly or search with keywords when warm data isn't enough.
 
 **Data tiers (how much to load):**
@@ -13,7 +13,7 @@
 - **T1 (Overview):** Overview files are files that have been synthesized and summarized to provide a general perspective
 - **T2 (Detail):** Full document content or check the source code, the actual implementation.
 
-**Purpose of `workspace_get_context`:** Fast T0 query on warm memory — avoids reading all files which wastes tokens. Get T0 summaries first → identify exactly which files matter → then read only those for T1/T2 detail.
+**Purpose of `workspace_get_context`:** Fast scoped retrieval on warm memory — defaults provide `scope_overview_t1` + T0 orientation, then topic calls provide `{ overview_t1, entries }` for targeted work.
 
 **Topics:** Folders named `_{topicName}/` in workspace resources (e.g., `_plans/`, `_features/`, `_decisions/`, `_lessons/`, `_architecture/`, etc...). Topics are NOT hardcoded — user can flexibly create new topics by adding `_{topicName}/` folders. Discover existing topics from the folder structure returned by the first `workspace_get_context` call. Each topic folder may have its own OVERVIEW.md explaining organization, front-matter schema, and valid field values.
 
@@ -32,10 +32,10 @@ Call `workspace_get_context` when the task involves:
 
 ## How to Use `workspace_get_context`
 
-1. **Orientation (first call):** Call with defaults (no topics) → returns folder structure + OVERVIEW summaries + available skills. Inspect folder structure to discover which `_{topicName}/` topics exist in the workspace.
+1. **Orientation (first call):** Call with defaults (no topics) → returns `scope_overview_t1`, folder structure, OVERVIEW T0 summaries, and available skills. Inspect folder structure to discover which `_{topicName}/` topics exist in the workspace.
 2. **Match user intent to topics:** Check if user's request relates to any discovered topic from step 1.
-3. **Load topic T0:** If matched, call with specific topics (e.g., `topics: ["plans"]`) and `include_defaults: false` → returns T0 summaries (front-matter) of all entries in that topic.
-4. **Deep dive (T1/T2):** Use `document_path` from T0 results → read specific files directly. Or search `resources/workspaces/{scope}/` with keywords via Grep/SemanticSearch.
+3. **Load topic context:** If matched, call with specific topics (e.g., `topics: ["plans"]`) and `include_defaults: false` → each topic returns `{ overview_t1, entries }`.
+4. **Deep dive (T2):** Use `document_path` from `entries` → read specific files directly. Or search `resources/workspaces/{scope}/` with keywords via Grep/SemanticSearch.
 
 **Scope narrowing:** `workspace` → all domains/repos. Add `domain` → narrows. Add `repository` → specific repo.
 

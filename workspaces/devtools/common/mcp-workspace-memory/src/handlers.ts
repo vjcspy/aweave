@@ -11,6 +11,23 @@ function parseCommaSeparated(value?: string): string[] | undefined {
   return value.split(',').map((s) => s.trim());
 }
 
+function parseBoolean(
+  value: unknown,
+  defaultValue: boolean,
+): boolean {
+  if (value === undefined) return defaultValue;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1') return true;
+    if (normalized === 'false' || normalized === '0') return false;
+  }
+
+  return defaultValue;
+}
+
 export async function handleToolCall(
   projectRoot: string,
   toolName: string,
@@ -31,10 +48,7 @@ async function handleGetContext(
   projectRoot: string,
   params: Record<string, unknown>,
 ): Promise<ToolCallResult> {
-  const includeDefaults =
-    params.include_defaults !== undefined
-      ? Boolean(params.include_defaults)
-      : true;
+  const includeDefaults = parseBoolean(params.include_defaults, true);
 
   const result = await getContext(projectRoot, {
     scope: {

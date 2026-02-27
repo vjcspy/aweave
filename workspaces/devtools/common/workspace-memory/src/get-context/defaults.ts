@@ -6,12 +6,14 @@ import { parse as parseYaml } from 'yaml';
 import { generateFolderStructure } from '../parsers/folder-structure';
 import { parseFrontMatter } from '../parsers/front-matter';
 import { getSkillsPath } from '../shared/paths';
+import { loadScopeOverviewT1 } from './overview';
 import type { DefaultsResponse, OverviewEntry, SkillEntry } from './types';
 
 export async function getDefaults(
   resourcesDir: string,
   projectRoot: string,
 ): Promise<DefaultsResponse> {
+  const scopeOverviewT1 = loadScopeOverviewT1(resourcesDir);
   const folderStructure = generateFolderStructure(resourcesDir, {
     maxDepth: 4,
     baseDir: projectRoot,
@@ -21,6 +23,7 @@ export async function getDefaults(
   const loadedSkills = loadSkills(projectRoot);
 
   return {
+    scope_overview_t1: scopeOverviewT1,
     folder_structure: folderStructure,
     overviews,
     loaded_skills: loadedSkills,
@@ -46,9 +49,13 @@ async function scanOverviews(
 
     entries.push({
       scope: scopePath,
-      name: frontMatter.name as string | undefined,
-      description: frontMatter.description as string | undefined,
-      tags: frontMatter.tags as string[] | undefined,
+      name: asString(frontMatter.name),
+      description: asString(frontMatter.description),
+      tags: asStringArray(frontMatter.tags),
+      folder_structure: asString(frontMatter.folder_structure),
+      status_values: asStringArray(frontMatter.status_values),
+      category_values: asStringArray(frontMatter.category_values),
+      tag_values: asStringArray(frontMatter.tag_values),
       _meta: {
         document_path: relPath,
       },
@@ -81,4 +88,13 @@ function loadSkills(projectRoot: string): SkillEntry[] {
   } catch {
     return [];
   }
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.filter((item): item is string => typeof item === 'string');
 }

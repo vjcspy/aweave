@@ -1,5 +1,6 @@
 import { resolveScope } from '../shared/scope';
 import { getDefaults } from './defaults';
+import { loadScopeOverviewT1, loadTopicOverviewT1 } from './overview';
 import { scanFeatures } from './topics/features';
 import { scanResourceTopic } from './topics/resource';
 import type {
@@ -31,11 +32,30 @@ export async function getContext(
   };
 
   for (const topic of topics) {
+    if (topic === 'overview') {
+      response[topic] = {
+        overview_t1: loadScopeOverviewT1(resolved.resourcesDir),
+        entries: [],
+      };
+      continue;
+    }
+
+    const overview_t1 = loadTopicOverviewT1(
+      topic,
+      resolved.resourcesDir,
+      projectRoot,
+    );
+
     if (topic === 'features') {
-      response[topic] = await scanFeatures(ctx);
+      response[topic] = {
+        overview_t1,
+        entries: await scanFeatures(ctx),
+      };
     } else {
-      const result = await scanResourceTopic(topic, ctx);
-      if (result.length > 0) response[topic] = result;
+      response[topic] = {
+        overview_t1,
+        entries: await scanResourceTopic(topic, ctx),
+      };
     }
   }
 
