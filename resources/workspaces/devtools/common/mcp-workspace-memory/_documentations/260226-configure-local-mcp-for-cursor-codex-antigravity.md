@@ -1,54 +1,83 @@
 ---
 name: Configure Local MCP for Cursor, Codex, and Antigravity
-description: How to register the local workspace-memory STDIO MCP server in Cursor, Codex, and Antigravity using the built dist/stdio.js entry point.
+description: How to register local workspace-memory MCP using aw workspace mcp (recommended) or aw-mcp-memory (alternative) for Cursor, Codex, and Antigravity.
 tags: [mcp, workspace-memory, cursor, codex, antigravity, stdio]
 category: documentation
 ---
 
 # Configure `workspace-memory` MCP (Cursor, Codex, Antigravity)
 
-This document shows how to configure the local `@hod/aweave-mcp-workspace-memory` STDIO server for:
+This document shows two supported ways to configure local `workspace-memory` MCP for:
 
 - Cursor
 - Codex
 - Antigravity (Gemini)
 
-## Server Entry Point
-
-Use the built STDIO entry point:
-
-- `workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js`
-
-The server resolves project root with:
-
-- `env.PROJECT_ROOT` (recommended)
-- fallback: process working directory (`cwd`)
-
 ## Prerequisites
 
-1. Build the MCP package (so `dist/stdio.js` exists).
-2. Run the client from the project root, or set `PROJECT_ROOT` / `cwd` explicitly.
-3. `node` must be available on PATH.
+1. Build packages from `workspaces/devtools/`:
+   - `pnpm install`
+   - `pnpm -r build`
+2. Ensure `aw` is available (`pnpm link --global` in `workspaces/devtools/common/cli`, or use `bin/dev.js` for local testing).
+3. Ensure Node.js is available on PATH.
 
-## Shared Command (all clients)
+## Approach 1 (Recommended): `aw workspace mcp`
 
-- `command`: `node`
-- `args`: `["workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js"]`
+Use the unified CLI command:
 
-Recommended environment:
+- `command`: `aw`
+- `args`: `["workspace", "mcp"]`
 
-- `PROJECT_ROOT`: absolute path to this repository root (example: `/Users/kai/work/aweave`)
+### Root Resolution Contract
+
+`aw workspace mcp` resolves project root in this order:
+
+1. `--project-root /absolute/path/to/aweave` (if provided)
+2. `AWEAVE_DEVTOOLS_ROOT` environment variable
+3. Auto-discovery from `cwd` / module path
+4. If unresolved: fail-fast with remediation error
+
+For deterministic behavior across directories, set one of:
+
+- `--project-root` in args, or
+- `AWEAVE_DEVTOOLS_ROOT` in env
+
+## Approach 2 (Alternative): `aw-mcp-memory`
+
+Use the standalone binary exported by `@hod/aweave-mcp-workspace-memory`:
+
+- `command`: `aw-mcp-memory`
+- `args`: `[]`
+- Recommended env: `PROJECT_ROOT=/absolute/path/to/aweave`
+
+This approach is useful when you want to run MCP without going through `aw` command dispatch.
 
 ## Cursor (`.cursor/mcp.json`)
 
-Add/update the `workspace-memory` entry under `mcpServers` in `.cursor/mcp.json`:
+### Recommended (`aw workspace mcp`)
 
 ```json
 {
   "mcpServers": {
     "workspace-memory": {
-      "command": "node",
-      "args": ["workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js"],
+      "command": "aw",
+      "args": ["workspace", "mcp"],
+      "env": {
+        "AWEAVE_DEVTOOLS_ROOT": "/absolute/path/to/aweave"
+      }
+    }
+  }
+}
+```
+
+### Alternative (`aw-mcp-memory`)
+
+```json
+{
+  "mcpServers": {
+    "workspace-memory": {
+      "command": "aw-mcp-memory",
+      "args": [],
       "env": {
         "PROJECT_ROOT": "/absolute/path/to/aweave"
       }
@@ -57,41 +86,65 @@ Add/update the `workspace-memory` entry under `mcpServers` in `.cursor/mcp.json`
 }
 ```
 
-Notes:
-
-- If Cursor always launches from the project root, `env.PROJECT_ROOT` may be omitted.
-- If `.cursor/mcp.json` already contains other servers, only add the `workspace-memory` block.
-
 ## Codex (`~/.codex/config.toml`)
 
-Add this table to `~/.codex/config.toml`:
+### Recommended (`aw workspace mcp`)
 
 ```toml
 [mcp_servers.workspace-memory]
-command = "node"
-args = ["workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js"]
-cwd = "/absolute/path/to/aweave"
+command = "aw"
+args = ["workspace", "mcp"]
+
+[mcp_servers.workspace-memory.env]
+AWEAVE_DEVTOOLS_ROOT = "/absolute/path/to/aweave"
+```
+
+If you prefer explicit arg over env:
+
+```toml
+[mcp_servers.workspace-memory]
+command = "aw"
+args = ["workspace", "mcp", "--project-root", "/absolute/path/to/aweave"]
+```
+
+### Alternative (`aw-mcp-memory`)
+
+```toml
+[mcp_servers.workspace-memory]
+command = "aw-mcp-memory"
+args = []
 
 [mcp_servers.workspace-memory.env]
 PROJECT_ROOT = "/absolute/path/to/aweave"
 ```
 
-Notes:
-
-- `cwd` is supported by Codex and is recommended for stable relative path resolution.
-- `PROJECT_ROOT` is redundant when `cwd` is correct, but keeping both makes behavior explicit.
-- If you use a project-scoped `.codex/config.toml`, keep the same server block there instead of the global file.
-
 ## Antigravity (`~/.gemini/antigravity/mcp_config.json`)
 
-Add/update the `workspace-memory` entry under `mcpServers` in `~/.gemini/antigravity/mcp_config.json`:
+### Recommended (`aw workspace mcp`)
 
 ```json
 {
   "mcpServers": {
     "workspace-memory": {
-      "command": "node",
-      "args": ["workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js"],
+      "command": "aw",
+      "args": ["workspace", "mcp"],
+      "env": {
+        "AWEAVE_DEVTOOLS_ROOT": "/absolute/path/to/aweave"
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+### Alternative (`aw-mcp-memory`)
+
+```json
+{
+  "mcpServers": {
+    "workspace-memory": {
+      "command": "aw-mcp-memory",
+      "args": [],
       "env": {
         "PROJECT_ROOT": "/absolute/path/to/aweave"
       },
@@ -101,30 +154,31 @@ Add/update the `workspace-memory` entry under `mcpServers` in `~/.gemini/antigra
 }
 ```
 
-Notes:
-
-- `disabled` is optional; include it only if you want explicit enable/disable control.
-- Keep existing servers in the same `mcpServers` object.
-
 ## Quick Verification
 
 After configuring the client:
 
 1. Restart the client (Cursor / Codex / Antigravity).
 2. Confirm the `workspace-memory` MCP server is listed as connected/enabled.
-3. Call `workspace_get_context` with a small request (for example, default params) to verify tool discovery and execution.
+3. Call `workspace_get_context` with a small request to verify tool discovery and execution.
 
 ## Common Issues
 
-### `Cannot find module .../dist/stdio.js`
+### `aw workspace mcp` cannot resolve project root
 
-- Build the package first so `dist/stdio.js` exists.
+- Set `AWEAVE_DEVTOOLS_ROOT` to repository root, or
+- Add `--project-root /absolute/path/to/aweave` to args.
 
-### Server starts but returns wrong project context
+### `aw-mcp-memory` starts but returns wrong project context
 
 - Set `PROJECT_ROOT` to the correct repository root.
-- For Codex, also set `cwd` to the repository root.
 
-### `node` command not found
+### `aw-mcp-memory` command not found
 
-- Install Node.js or use a full path to the `node` executable in `command`.
+- Ensure package is linked/installed so binary is available:
+  - `cd workspaces/devtools/common/mcp-workspace-memory && pnpm link --global`
+
+### `aw` command not found
+
+- Ensure CLI is linked/installed:
+  - `cd workspaces/devtools/common/cli && pnpm link --global`

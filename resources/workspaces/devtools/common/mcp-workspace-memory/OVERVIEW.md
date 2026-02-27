@@ -7,12 +7,12 @@ tags: [mcp, memory, workspace, stdio, context]
 # MCP Workspace Memory (`@hod/aweave-mcp-workspace-memory`)
 
 > **Branch:** master
-> **Last Commit:** 2b6635f
-> **Last Updated:** 2026-02-26
+> **Last Commit:** (local changes)
+> **Last Updated:** 2026-02-27
 
 ## TL;DR
 
-Transport-agnostic MCP layer that owns tool definitions and handler logic for workspace memory. Provides a `createWorkspaceMemoryServer(projectRoot)` factory consumed by both the NestJS SSE transport and the built-in STDIO transport. The STDIO entry point (`dist/stdio.js`) allows Cursor and other local AI agents to use workspace memory tools without running a server.
+Transport-agnostic MCP layer that owns tool definitions and handler logic for workspace memory. Provides a `createWorkspaceMemoryServer(projectRoot)` factory consumed by both the NestJS SSE transport and the built-in STDIO transport. The package also exposes a global binary `aw-mcp-memory` (mapped to `dist/stdio.js`) so local AI agents can use workspace memory tools without running a server.
 
 ## Recent Changes Log
 
@@ -46,6 +46,9 @@ mcp-workspace-memory/
 - **STDIO entry point** (`dist/stdio.js`)
   - Spawned by Cursor via `.cursor/mcp.json` config
   - Reads `PROJECT_ROOT` env var or falls back to `process.cwd()`
+- **Global binary** (`aw-mcp-memory`)
+  - Mapped via `package.json#bin` to `dist/stdio.js`
+  - Intended for agent/client configs that prefer stable command names over raw `node <path>`
 
 ## Core Services & Logic (Internal)
 
@@ -53,6 +56,7 @@ mcp-workspace-memory/
 - **handlers.ts:** Routes tool calls by name to handler functions. Each handler parses MCP string params (comma-separated lists) into typed args and delegates to core `getContext()`. Returns MCP-compliant `{ content, isError }` responses.
 - **server.ts:** Factory function that creates an MCP `Server` instance, wires `ListTools` and `CallTool` request handlers, and returns the server without connecting any transport. Consumer decides transport (STDIO, SSE, etc.).
 - **stdio.ts:** Standalone entry point that creates the server and connects `StdioServerTransport`. Not imported by any other module — only executed directly as a process.
+- **stdio.ts:** Standalone entry point with node shebang so compiled output can be executed as `aw-mcp-memory`.
 
 ## External Dependencies & Contracts (Outbound)
 

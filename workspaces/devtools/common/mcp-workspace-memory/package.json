@@ -1,6 +1,9 @@
 {
   "name": "@hod/aweave-mcp-workspace-memory",
   "version": "0.1.0",
+  "bin": {
+    "aw-mcp-memory": "./dist/stdio.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

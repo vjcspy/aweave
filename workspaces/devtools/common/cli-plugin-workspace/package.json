@@ -14,9 +14,11 @@
     "topicSeparator": " "
   },
   "dependencies": {
+    "@hod/aweave-mcp-workspace-memory": "workspace:*",
     "@hod/aweave-node-shared": "workspace:*",
     "@hod/aweave-workspace-memory": "workspace:*",
     "@hod/aweave-cli-shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "@oclif/core": "catalog:"
   },
   "devDependencies": {
