@@ -30,8 +30,9 @@ Provide a repeatable, step-by-step workflow to change author and committer metad
 
 - [ ] **Backup both repositories**
   - **Outcome**: Two backup clones (e.g. `repo-a-backup`, `repo-b-backup`) in a safe location
-- [ ] **Capture current Git identity**
-  - **Outcome**: `NAME=$(git config user.name)` and `EMAIL=$(git config user.email)` stored for use in filter
+- [ ] **Capture current Git identity (local config → dùng thay thế toàn bộ author cũ)**
+  - **Outcome**: `Dinh Khoi Le` / `DinhKhoi.Le@nab.com.au` — dùng làm author mới cho mọi commit
+
 - [ ] **Verify remote URLs**
   - **Outcome**: Confirm Repo A and Repo B remote URLs before force push
 
@@ -47,15 +48,12 @@ Provide a repeatable, step-by-step workflow to change author and committer metad
 - [ ] Run filter-branch with author/committer replacement
 
   ```bash
-  NAME=$(git config user.name)
-  EMAIL=$(git config user.email)
-
-  git filter-branch -f --env-filter "
-  export GIT_AUTHOR_NAME=\"$NAME\"
-  export GIT_AUTHOR_EMAIL=\"$EMAIL\"
-  export GIT_COMMITTER_NAME=\"$NAME\"
-  export GIT_COMMITTER_EMAIL=\"$EMAIL\"
-  " --tag-name-filter cat -- --all
+  git filter-branch -f --env-filter '
+  export GIT_AUTHOR_NAME="Dinh Khoi Le"
+  export GIT_AUTHOR_EMAIL="DinhKhoi.Le@nab.com.au"
+  export GIT_COMMITTER_NAME="Dinh Khoi Le"
+  export GIT_COMMITTER_EMAIL="DinhKhoi.Le@nab.com.au"
+  ' --tag-name-filter cat -- --all
   ```
 
 - [ ] Force push all branches and tags to Repo A remote
@@ -77,15 +75,12 @@ Provide a repeatable, step-by-step workflow to change author and committer metad
 - [ ] Run the **same** filter-branch command (identical to Repo A)
 
   ```bash
-  NAME=$(git config user.name)
-  EMAIL=$(git config user.email)
-
-  git filter-branch -f --env-filter "
-  export GIT_AUTHOR_NAME=\"$NAME\"
-  export GIT_AUTHOR_EMAIL=\"$EMAIL\"
-  export GIT_COMMITTER_NAME=\"$NAME\"
-  export GIT_COMMITTER_EMAIL=\"$EMAIL\"
-  " --tag-name-filter cat -- --all
+  git filter-branch -f --env-filter '
+  export GIT_AUTHOR_NAME="Dinh Khoi Le"
+  export GIT_AUTHOR_EMAIL="DinhKhoi.Le@nab.com.au"
+  export GIT_COMMITTER_NAME="Dinh Khoi Le"
+  export GIT_COMMITTER_EMAIL="DinhKhoi.Le@nab.com.au"
+  ' --tag-name-filter cat -- --all
   ```
 
 - [ ] Force push all branches and tags to Repo B remote
