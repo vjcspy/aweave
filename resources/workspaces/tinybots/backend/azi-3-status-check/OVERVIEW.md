@@ -1,3 +1,14 @@
+---
+name: "azi-3-status-check"
+description: "Overview for azi-3-status-check"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # azi-3-status-check Overview
 >
 > TL;DR: Node/TypeScript service that lets Tinybots robots kick off “status check” script steps, persists and evaluates them against historical/future Megazord events using configurable templates, and pushes updates back over SQS.

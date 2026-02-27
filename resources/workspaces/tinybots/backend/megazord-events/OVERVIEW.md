@@ -1,3 +1,14 @@
+---
+name: "Megazord Events"
+description: "Ingests robot telemetry and stores structured incoming events, schemas, providers, and subscriptions; seeds schemas from `schemas/events/*.json` (now includes `SHORT_INACTIVITY`, `LONGER_IN_BED_SHORT/LONG`, updated `NO_TOILET_ACTIVITY_ALARM`)"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** 097c2bf (Merged in feature/fix-yarn4-issue, PR #52)
 > **Last Updated:** Tue Dec 16 03:01:31 2025 +0000

@@ -1,3 +1,14 @@
+---
+name: "wonkers-ecd"
+description: "Exposes two authenticated webhook endpoints that translate Ecare Puur and ZSP notifications into TinyBots order lifecycle actions"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** d1fe232
 > **Last Updated:** Fri Nov 14 16:05:45 2025 +0800

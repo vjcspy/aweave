@@ -1,3 +1,14 @@
+---
+name: "tiny-internal-services — Repository"
+description: "Overview for tiny-internal-services — Repository"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # tiny-internal-services — Repository Overview
 
 **TL;DR**: Shared TypeScript SDK that centralizes Tinybots domain models and service clients (robots, Taas orders, subscriptions, Sensara, notifications). Downstream services import these classes to call other internal APIs with consistent DTO validation, logging, and error handling.

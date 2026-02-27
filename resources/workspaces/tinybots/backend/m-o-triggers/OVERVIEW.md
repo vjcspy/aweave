@@ -1,3 +1,14 @@
+---
+name: "m-o-triggers"
+description: "Authenticated trigger management API and scheduler for TinyBots robots, built on `TinyDatabaseAppAuthenticated` with Awilix wiring"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** bcb16de (Updated from n/a)
 > **Last Updated:** Tue Nov 11 04:56:16 2025 +0000

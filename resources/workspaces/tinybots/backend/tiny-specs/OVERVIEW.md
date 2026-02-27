@@ -1,3 +1,14 @@
+---
+name: "tiny-specs"
+description: "Overview for tiny-specs"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # tiny-specs
 
 ## Purpose

@@ -1,3 +1,14 @@
+---
+name: "Sensara Adaptor"
+description: "Node.js/TypeScript adaptor linking Sensara resident telemetry to TinyBots via SSE ingestion, pollers, and admin APIs"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop
 > **Last Commit:** 3258c9d (Updated from N/A - metadata missing previously)
 > **Last Updated:** Fri Nov 7 04:46:00 2025 +0000

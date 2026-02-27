@@ -1,3 +1,14 @@
+---
+name: "tiny-backend-testing-tools"
+description: "Shared integration-test kit for TinyBots Node.js services: MySQL fixture builders, Kong auth probes, and assertion helpers"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** master
 > **Last Commit:** 0d17cfd
 > **Last Updated:** 2025-12-04

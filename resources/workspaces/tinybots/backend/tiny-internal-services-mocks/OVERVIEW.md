@@ -1,3 +1,14 @@
+---
+name: "tiny-internal-services-mocks"
+description: "TypeScript helper library exporting mocks for Tiny Internal Services clients; uses ts-mockito and nock to stub HTTP calls while shaping DTOs with class-transformer"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** master
 > **Last Commit:** e0a35b4
 > **Last Updated:** Tue Nov 18 08:14:29 2025 +0000

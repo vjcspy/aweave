@@ -1,3 +1,14 @@
+---
+name: "Wonkers-TaaS Orders"
+description: "Node/Express service that handles the full TaaS order lifecycle (create, patch, status transitions, returns) for both external partners and dashboard admins"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 > **Branch:** develop  
 > **Last Commit:** ff8bbab  
 > **Last Updated:** Thu Sep 18 06:43:49 2025 +0000

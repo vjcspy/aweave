@@ -1,3 +1,14 @@
+---
+name: "Wonkers GraphQL"
+description: "Overview for Wonkers GraphQL"
+tags: ["backend", "microservice"]
+updated: 2026-02-27
+---
+
+> **Branch:** workspaces/tinybots
+> **Last Commit:** fc28243
+> **Last Updated:** 2026-02-27
+
 # Wonkers GraphQL
 
 This README explains the project architecture, the two data-access mechanisms (legacy via REST and new via Prisma + Nexus), how schemas are merged, and the key points to follow when contributing. It is written to be simple and clear for developers and AI agents.
