@@ -33,5 +33,7 @@ skills:
       databases
     skill_path: /Users/kai/work/aweave/agent/skills/tinybots/database-access/SKILL.md
   - name: testing-guidelines
-    description: TinyBots testing best practices and assertion patterns for writing integration tests
+    description: >-
+      MUST load this skill. For ANY TinyBots testing task — implementing tests, running tests,
+      debugging test failures — ALWAYS read and follow this skill before proceeding.
     skill_path: /Users/kai/work/aweave/agent/skills/tinybots/testing-guidelines/SKILL.md
