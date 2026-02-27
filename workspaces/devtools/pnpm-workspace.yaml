@@ -59,6 +59,10 @@ packages:
   - common/cli-plugin-server
   - common/cli-plugin-demo-workflow
   - common/cli-plugin-test
+  - common/workspace-memory
+  - common/mcp-workspace-memory
+  - common/nestjs-workspace-memory
+  - common/cli-plugin-workspace
   - tinybots/cli-plugin-bitbucket
 
 onlyBuiltDependencies:

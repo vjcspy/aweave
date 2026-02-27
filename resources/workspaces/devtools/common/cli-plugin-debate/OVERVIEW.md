@@ -1,3 +1,9 @@
+---
+name: Debate CLI Plugin
+description: oclif plugin providing CLI interface for AI agent debate management via HTTP client to NestJS server
+tags: []
+---
+
 # Debate CLI Plugin (`@hod/aweave-plugin-debate`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-debate/`

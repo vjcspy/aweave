@@ -24,6 +24,7 @@ This document serves as the primary context source for other AI Agents or Develo
 | `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md` | Use as-is |
 | `resources/workspaces/<PROJECT>/<DOMAIN>/OVERVIEW.md` | Use as-is (Domain Overview) |
 | `resources/workspaces/<PROJECT>/OVERVIEW.md` | Use as-is (Workspace Overview) |
+| `resources/workspaces/.../_<topicName>/OVERVIEW.md` | Use as-is (Topic Overview) |
 
 **Scope Detection:**
 
@@ -32,6 +33,7 @@ This document serves as the primary context source for other AI Agents or Develo
 | `resources/workspaces/<PROJECT>/OVERVIEW.md` | **workspace** |
 | `resources/workspaces/<PROJECT>/<DOMAIN>/OVERVIEW.md` | **domain** |
 | `resources/workspaces/<PROJECT>/<DOMAIN>/<REPO>/OVERVIEW.md` | **repo** |
+| `resources/workspaces/.../_<topicName>/OVERVIEW.md` | **topic** |
 
 **Resolution Logic:**
 
@@ -44,7 +46,11 @@ This document serves as the primary context source for other AI Agents or Develo
    - Use the provided path as `TARGET_PATH`
    - Derive: `SOURCE_PATH` from TARGET_PATH (if repo scope)
 
-3. **Confirm** both paths with user before proceeding:
+3. **IF** the resolved path contains a `_{topicName}/` segment:
+   - Set scope to **topic**
+   - The topic name is derived from the `_{topicName}` folder name (strip leading underscore)
+
+4. **Confirm** both paths with user before proceeding:
    - "Source: `{SOURCE_PATH}`" (if applicable)
    - "Output: `{TARGET_PATH}`"
    - "Scope: `{SCOPE}`"
@@ -108,10 +114,17 @@ name: string                # Scope name (e.g., "DevTools", "DevTools Common", "
 description: string         # 1-2 sentence abstract — this IS the T0 summary
 tags: string[]              # For filtering (optional)
 updated: YYYY-MM-DD        # Last meaningful update (optional)
+
+# Only required if scope is topic (e.g., resources/workspaces/.../_{topicName}/OVERVIEW.md)
+folder_structure: string    # Flat vs nested, prefix conventions, etc. 
+status_values: string[]     # Example: ['new', 'in_progress', 'done']
+category_values: string[]   # Example: ['architecture', 'tooling']
+tag_values: string[]        # Example: ['frontend', 'backend']
 ---
 ```
 
 The `description` field is extracted by `workspace_get_context` as T0 data. It must be self-contained — a reader should understand the scope's purpose from this field alone.
+Keep `description` concise (purpose-level summary only). Topic-specific organization and allowed filter values belong in dedicated fields (`folder_structure`, `status_values`, `category_values`, `tag_values`).
 
 ### ALL Scopes: Metadata Header (after front-matter)
 
@@ -129,8 +142,8 @@ The `description` field is extracted by `workspace_get_context` as T0 data. It m
 
 **CRITICAL — What workspace overview MUST NOT contain:**
 
-- **Individual package/repo listings with descriptions** — T0 summaries of all child OVERVIEW.md files are already returned by `workspace_get_context` defaults. Listing them in the workspace overview creates duplication.
-- **Per-package documentation links** — T0 responses include `_meta.document_path` for each OVERVIEW. No need to duplicate.
+- **Individual package/repo listings with descriptions** — child OVERVIEW summaries are already returned in `workspace_get_context` defaults (`defaults.overviews`). Listing them in the workspace overview creates duplication.
+- **Per-package documentation links** — `defaults.overviews` includes `_meta.document_path` for each OVERVIEW. No need to duplicate.
 - **Detailed dependency graphs between packages** — belongs in repo-level or architecture docs.
 
 **Content structure:**
@@ -250,6 +263,66 @@ tags: [<relevant tags>]
 
 ---
 
+### Scope: Topic Overview
+
+**Purpose:** Context for a topic folder (`_{topicName}/`). Answers: "What is this topic? How are files organized? What front-matter fields exist and what values do they accept?"
+
+**Why topic overviews are needed:** Each topic has its own conventions — file naming, folder structure, front-matter schema, and valid field values. The topic overview is the single source of truth for these conventions. It enables AI agents to correctly create new entries, interpret existing ones, and use `filter_status`/`filter_category`/`filter_tags` effectively.
+
+**Content structure:**
+
+```markdown
+---
+name: "<Topic Name>"
+description: "<1-2 sentences: what this topic contains and why it exists>"
+tags: [<relevant tags>]
+folder_structure: "<concise directory convention summary>"
+status_values: [<valid status enum values>]
+category_values: [<valid category enum values>]
+tag_values: [<common/expected tags>]
+---
+
+> **Branch:** {CURRENT_BRANCH}
+> **Last Commit:** {CURRENT_HASH}
+> **Last Updated:** {CURRENT_DATE}
+
+## Purpose
+[What this topic represents. When should a new entry be created here? Who creates entries (human, AI, or both)?]
+
+## File Organization
+[Describe how files/folders are structured within this topic. **NOTE: also put a concise string representation of this in the `folder_structure` front-matter schema.**]
+- Naming convention (e.g., `YYMMDD-name.md` for chronological topics)
+- Flat vs nested structure (e.g., `_features/` uses subdirectories by category like `core/`, `common/`, while `_plans/` is flat)
+- Any special files besides OVERVIEW.md
+
+## Front-matter Schema
+[List each front-matter field for files in this topic. For each field specify: meaning, type, required vs optional, and ALL valid values for enum-like fields.]
+
+Example (for `_plans/`):
+- `name` (string, required): Human-readable plan name
+- `description` (string, required): 1-2 sentence summary
+- `status` (string, required): `new` | `in_progress` | `partial` | `done` | `abandoned`
+- `created` (YYYY-MM-DD, required): When the plan was created
+- `updated` (YYYY-MM-DD, optional): When status last changed
+- `tags` (string[], optional): For filtering
+
+## Required Topic Front-matter Updates
+**CRITICAL:** When generating a **Topic Overview**, ensure you include the new machine-readable front-matter fields so `workspace_get_context` surfaces them:
+- `folder_structure`: A concise 1-2 sentence string mapping out the directory tree requirements.
+- `status_values`: Any valid status ENUMS mapped out here.
+- `category_values`: Any valid category ENUMS mapped out here.
+- `tag_values`: Any frequently expected tags.
+```
+
+**Key differences from other scopes:**
+
+- Focus is on **data format conventions**, not architecture or business context
+- MUST enumerate valid values for enum-like fields (status, category) — AI agents depend on this for filtering and creating entries
+- MUST describe folder organization pattern (flat vs. nested, naming conventions)
+- Content comes from inspecting existing files in the topic + any documented conventions in the feature spec
+
+---
+
 ## Phase 3: Architectural Deep Scan (Repo Scope Only)
 
 **Action:** For repo-scope overviews, scan the codebase to identify architectural patterns. Auto-detect the language to use correct terminology.
@@ -259,7 +332,7 @@ tags: [<relevant tags>]
 3. **Core Services & Domain Logic:** Where business logic is isolated. Map data flow.
 4. **External Dependencies:** Scan imports and config files. List ALL external systems.
 
-> **For workspace/domain scopes:** Skip deep code scanning. These overviews are based on understanding the overall structure and reading existing child OVERVIEW.md files, not scanning individual source files.
+> **For workspace/domain/topic scopes:** Skip deep code scanning. Workspace and domain overviews are based on understanding the overall structure and reading existing child OVERVIEW.md files. Topic overviews are based on inspecting existing files within the topic folder (naming patterns, front-matter fields, folder structure).
 
 ---
 
@@ -270,9 +343,12 @@ tags: [<relevant tags>]
 **Validation checklist:**
 
 - [ ] Front-matter includes `name`, `description` (and optionally `tags`, `updated`)
+- [ ] **Topic scope:** Front-matter also includes `folder_structure`, `status_values`, `category_values`, `tag_values`
 - [ ] `description` field is self-contained (understandable without reading the full document)
 - [ ] Metadata header has correct branch, commit hash, date
 - [ ] Content follows scope-appropriate template
 - [ ] **Workspace scope:** Does NOT list individual packages/repos with descriptions
+- [ ] **Topic scope:** Enumerates ALL valid values for enum fields (status, category)
+- [ ] **Topic scope:** Describes folder organization pattern (flat vs nested, naming convention)
 - [ ] **All scopes:** No tables used in main content (use headings + bullets)
 - [ ] Constraint: DO NOT use tables in main content. Use Hierarchical Headings (H2, H3, H4) and Bullet points.

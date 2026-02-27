@@ -1,3 +1,0 @@
-# Debate Web — Abstract
-
-Debate Web (`@hod/aweave-debate-web`) is a React 19 single-page application that provides the Arbitrator interface for monitoring debates and submitting RULING or INTERVENTION actions. Built with Rsbuild, Tailwind CSS v4, shadcn/ui, and react-router v7, it features a sidebar debate list with search, a real-time argument timeline updated via native WebSocket, and action panels for arbitrator decisions. The API client is generated from the server's OpenAPI spec using `openapi-typescript` and `openapi-fetch` for full type safety. The SPA is served as static assets by the unified NestJS server and connects to its WebSocket endpoint for live updates.

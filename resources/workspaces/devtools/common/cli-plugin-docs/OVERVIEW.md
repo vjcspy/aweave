@@ -1,3 +1,9 @@
+---
+name: Docs CLI Plugin
+description: oclif plugin for document storage and versioning with direct SQLite database access
+tags: []
+---
+
 # Docs CLI Plugin (`@hod/aweave-plugin-docs`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-docs/`

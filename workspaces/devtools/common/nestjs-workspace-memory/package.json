@@ -1,0 +1,30 @@
+{
+  "name": "@hod/aweave-nestjs-workspace-memory",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@hod/aweave-workspace-memory": "workspace:*",
+    "@hod/aweave-mcp-workspace-memory": "workspace:*",
+    "@hod/aweave-nestjs-core": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/swagger": "catalog:",
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "peerDependencies": {
+    "@nestjs/core": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "@types/express": "^5.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

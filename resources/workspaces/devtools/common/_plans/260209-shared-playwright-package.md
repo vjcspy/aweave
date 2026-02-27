@@ -1,6 +1,9 @@
 ---
 name: Shared Playwright Package
 description: Extract and package Playwright utilities and configurations into a shared package for reuse across projects.
+status: done
+created: 2026-02-09
+tags: []
 ---
 
 # 📋 [PLAYWRIGHT-SHARED: 2026-02-09] - Extract Playwright to Shared Package

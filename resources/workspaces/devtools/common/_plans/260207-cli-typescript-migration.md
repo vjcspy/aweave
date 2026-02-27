@@ -1,6 +1,9 @@
 ---
 name: CLI Typescript Migration
 description: Fully migrate the CLI codebase to TypeScript for type safety and better maintainability.
+status: done
+created: 2026-02-07
+tags: []
 ---
 
 # 📋 [CLI-TS-MIGRATION: 2026-02-07] - Migrate CLI Toolset from Python to TypeScript

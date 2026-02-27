@@ -1,6 +1,9 @@
 ---
 name: Workspace-Scoped Skills YAML
 description: Migrate skills activation state from global ~/.aweave/ (JSON+MD) to a single repo-level .aweave/loaded-skills.yaml for workspace isolation and better AI consumption.
+status: done
+created: 2026-02-24
+tags: []
 ---
 
 # 260224-Workspace-Scoped-Skills-YAML — Workspace-Scoped Loaded Skills (YAML)

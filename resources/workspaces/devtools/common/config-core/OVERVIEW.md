@@ -1,3 +1,9 @@
+---
+name: Config Core
+description: Node-only shared configuration loader library for centralized YAML configuration management
+tags: []
+---
+
 # Config Core (@hod/aweave-config-core)
 
 A node-only shared configuration loader library acting as the heart of the centralized configuration management across the `devtools` workspaces.

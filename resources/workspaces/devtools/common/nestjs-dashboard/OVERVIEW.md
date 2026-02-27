@@ -1,3 +1,9 @@
+---
+name: NestJS Dashboard Module
+description: NestJS backend module exposing REST APIs for workspace YAML configurations and AI agent skill management
+tags: []
+---
+
 ## Metadata Header
 >
 > **Branch:** master
