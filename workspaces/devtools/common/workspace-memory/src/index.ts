@@ -10,8 +10,8 @@ export type {
   Scope,
   SkillEntry,
   Topic,
-  TopicEntriesResponse,
   TopicContext,
+  TopicEntriesResponse,
 } from './get-context/types';
 export { generateFolderStructure } from './parsers/folder-structure';
 export type { ParsedFrontMatter } from './parsers/front-matter';
