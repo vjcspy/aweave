@@ -109,6 +109,17 @@ export function resolveDevtoolsRoot(
   return null;
 }
 
+export function resolveProjectRootFromDevtools(
+  options: ResolveDevtoolsRootOptions = {},
+): string | null {
+  const devtoolsRoot = resolveDevtoolsRoot(options);
+  if (!devtoolsRoot) {
+    return null;
+  }
+
+  return path.resolve(devtoolsRoot, '..', '..');
+}
+
 function normalizeMaxDepth(maxDepth?: number): number {
   if (
     typeof maxDepth !== 'number' ||
