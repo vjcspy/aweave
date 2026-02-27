@@ -1,6 +1,6 @@
 ---
 name: Node Shared
-description: Node-only shared utility package for runtime helpers including DevTools root discovery
+description: Node-only shared utility package for runtime helpers including DevTools root discovery. MUST load full overview content when implementing any new feature related to nodejs runtime.
 tags: []
 ---
 
