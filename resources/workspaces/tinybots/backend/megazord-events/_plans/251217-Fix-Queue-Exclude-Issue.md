@@ -1,3 +1,11 @@
+---
+name: "📋 251217 - Fix Queue Field Serialization Issue"
+description: "Technical fix for a serialization bug where the @Exclude decorator blocked internal database hydration of SQS routing fields; shifts to contextual exclusion that hides the field from API responses while permitting critical server-side logic access."
+created: 2025-12-17
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 251217 - Fix Queue Field Serialization Issue
 
 ## References
@@ -13,6 +21,7 @@
 After refactoring according to `resources/workspaces/tinybots/megazord-events/251210-Queue-Per-Subscription.md`, the `@Exclude()` decorator was added to the `queue` field in `SubscriptionDomain` to prevent it from being returned in API responses. However, this decorator also prevents the field from being populated when querying from the database, breaking the queue routing logic in `EventSubscriptionsService.broadcastToSubscriptionHandler()`.
 
 **Current Problem:**
+
 ```typescript
 // SubscriptionDomain.ts
 @IsString()
@@ -22,6 +31,7 @@ queue?: string
 ```
 
 **Expected Behavior:**
+
 - Queue field should NOT be exposed in external API responses (GET endpoints)
 - Queue field MUST be populated from database for internal business logic
 - Queue routing in `broadcastToSubscriptionHandler()` must work correctly
@@ -29,6 +39,7 @@ queue?: string
 ## 🎯 Objective
 
 Fix the `queue` field serialization strategy in `SubscriptionDomain` to:
+
 1. Prevent exposure in external API responses (maintain API contract)
 2. Allow internal business logic to access the queue value from database queries
 3. Ensure proper queue routing in SQS message publishing
@@ -96,6 +107,7 @@ megazord-events/
 **File:** `tinybots/backend/megazord-events/src/models/domains/SubscriptionDomain.ts`
 
 **Current Code (Lines 32-36):**
+
 ```typescript
 @IsString()
 @IsOptional()
@@ -104,6 +116,7 @@ queue?: string
 ```
 
 **Updated Code:**
+
 ```typescript
 @IsString()
 @IsOptional()
@@ -112,11 +125,13 @@ queue?: string
 ```
 
 **Rationale:**
+
 - `toPlainOnly: true` means exclude this field ONLY when transforming instance → plain object (JSON response)
 - When transforming plain object → instance (DB query → domain), field will be populated
 - This allows internal business logic to access `subscription.queue` while hiding it from API consumers
 
 **Validation:**
+
 - Verify `class-transformer` import includes `Exclude` with proper typing
 - Confirm no TypeScript errors after change
 - Ensure domain still extends `BaseDomain` correctly
@@ -128,12 +143,14 @@ queue?: string
 **File:** `tinybots/backend/megazord-events/src/repositories/EventSubscriptionsRepository.ts`
 
 **Verification Points:**
+
 - Confirm `GET_ALL` query includes `ES.QUEUE queue` in SELECT (line 69)
 - Confirm `GET_BY_ID` query includes `ES.QUEUE queue` in SELECT (line 48)
 - Verify repository uses `Repository.mappers` to transform results
 - Check that base `Repository` class uses `plainToClass()` or similar for hydration
 
 **Expected Behavior:**
+
 - After fixing decorator, `subscription.queue` should be populated from DB results
 - No code changes needed in repository if SELECT clauses already include QUEUE column
 
@@ -148,6 +165,7 @@ queue?: string
 **Test Case:** "should populate queue field from database when broadcasting events"
 
 **Test Logic:**
+
 ```typescript
 test('should populate queue field from database when broadcasting events', async () => {
   // Arrange: Create subscription with queue suffix
@@ -177,6 +195,7 @@ test('should populate queue field from database when broadcasting events', async
 **Test Case:** "should not expose queue field in subscription API responses"
 
 **Test Logic:**
+
 ```typescript
 test('should not expose queue field in subscription GET response', async () => {
   // Arrange: Create subscription with queue
@@ -213,11 +232,13 @@ test('should not expose queue field in subscription GET response', async () => {
 **Existing Test Reference:** According to `251210-Queue-Per-Subscription.md`, queue routing tests were already added in PR #49
 
 **Verification:**
+
 - Locate existing tests that verify messages sent to `${statusQueue.address}-{queue}`
 - Run tests to confirm they pass with the decorator fix
 - Check test logs for `queue: subscription.queue || 'undefined'` output
 
 **Expected Behavior:**
+
 - Tests should now pass if they were failing due to queue being undefined
 - SQS mock/spy should receive messages at correct queue addresses
 - Logs should show actual queue value instead of "undefined"
@@ -227,7 +248,9 @@ test('should not expose queue field in subscription GET response', async () => {
 **Task:** Perform manual verification in development environment
 
 **Steps:**
+
 1. **Create subscription with queue suffix**
+
    ```bash
    curl -X POST http://localhost:3000/internal/v1/events/robots/123/subscriptions \
      -H "Content-Type: application/json" \
@@ -239,6 +262,7 @@ test('should not expose queue field in subscription GET response', async () => {
    ```
 
 2. **Trigger incoming event for the robot**
+
    ```bash
    curl -X POST http://localhost:3000/internal/v1/events/robots/123/incomings \
      -H "Content-Type: application/json" \
@@ -254,15 +278,18 @@ test('should not expose queue field in subscription GET response', async () => {
    - Should see SQS publish to `${statusQueueAddress}-test-jobs`
 
 4. **Verify SQS queues** (if using LocalStack or AWS)
+
    ```bash
    aws sqs receive-message --queue-url <queue-url> --region us-east-1
    ```
+
    - Message should appear in suffixed queue
 
 5. **Check API response** (if GET endpoint exists)
    - Response should NOT include `queue` field
 
 **Expected Results:**
+
 - ✅ Queue routing works correctly
 - ✅ Messages sent to proper queue addresses
 - ✅ Queue field hidden from API responses
@@ -273,6 +300,7 @@ test('should not expose queue field in subscription GET response', async () => {
 > Do not summarize the results until the implementation is done and I request it
 
 ### ✅ Completed Achievements
+
 - [List major accomplishments]
 
 ## 🚧 Outstanding Issues & Follow-up
@@ -280,11 +308,13 @@ test('should not expose queue field in subscription GET response', async () => {
 ### ⚠️ Alternative Solutions Considered
 
 **Option B: Response DTOs**
+
 - Create separate response DTOs for API endpoints
 - Map domain → response DTO in controllers
 - More explicit but requires additional classes
 
 **Option C: Controller-Level Transformation Groups**
+
 - Use `class-transformer` groups in controller serialization
 - Apply `@Exclude({ groups: ['external'] })` to queue field
 - Pass `{ groups: ['external'] }` when serializing responses

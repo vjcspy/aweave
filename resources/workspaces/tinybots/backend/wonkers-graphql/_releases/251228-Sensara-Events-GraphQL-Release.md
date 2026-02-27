@@ -1,3 +1,10 @@
+---
+name: "Sensara Events GraphQL Release Document"
+description: "Document regarding Sensara Events GraphQL Release Document"
+created: 2025-12-28
+tags: ["releases","wonkers-graphql"]
+---
+
 # Sensara Events GraphQL Release Document
 
 ## Feature Description

@@ -1,3 +1,11 @@
+---
+name: "Implement Hardware Type Parsing from ONS Survey"
+description: "Implementation strategy for parsing the hardwareType field from ONS surveys in wonkers-nedap, supporting the distinction between robot and voice assistant orders."
+created: 2026-01-21
+tags: ["plans","wonkers-nedap"]
+status: done
+---
+
 # 📋 [260121] - Implement Hardware Type Parsing from ONS Survey
 
 ## References
@@ -16,6 +24,7 @@
 > **Contact for forms:** Evan has created new ONS ECD form question
 >
 > **Tasks:**
+>
 > 1. Get the parameter `hardwareType` - values will be provided by Evan later
 > 2. Implement parsing the new question in `wonkers-nedap`
 > 3. Update concept orders to accept new field (db changes, concept library, wonkers-taas-orders)
@@ -112,18 +121,22 @@ Implement parsing of the new `hardwareType` survey question in `wonkers-nedap` a
 > **Deployment Order** (cần maintain integrity khi default = null):
 >
 > **Step 1: wonkers-taas-orders** (deploy first)
+>
 > - Update `ConceptOrderV6Dto` to accept optional `hardwareType`
 > - Update `createConceptV6` to handle null
 >
 > **Step 2: wonkers-db** (verify/update if needed)
+>
 > - Ensure `hardware_type_id` column is nullable
 > - Remove DEFAULT=1 if present (để null khi không có giá trị)
 >
 > **Step 3: wonkers-nedap** (deploy last)
+>
 > - Add `getHardwareType()` mapper method
 > - Switch URL V1 → V6
 >
 > **Rollback strategy:**
+>
 > - Rollback wonkers-nedap first (switch V6 → V1)
 > - Then rollback wonkers-taas-orders if needed
 
@@ -138,12 +151,12 @@ Implement parsing of the new `hardwareType` survey question in `wonkers-nedap` a
 - [x] ~~Confirm default behavior (Assumption 3)~~ → ✅ Confirmed: `null`
 - [ ] Confirm scope (Assumption 4)
 - [ ] **Obtain sample Survey Result JSON** from Evan containing `hardwareType` question
-   - Verify `answeredQuestions[].additionalInfo` contains expected key
-   - Save as test fixture: `wonkers-nedap/test/fixtures/survey-result-with-hardware-type.json`
+  - Verify `answeredQuestions[].additionalInfo` contains expected key
+  - Save as test fixture: `wonkers-nedap/test/fixtures/survey-result-with-hardware-type.json`
 - [ ] Review existing `ConceptOrderMapper` implementation
-   - **File**: `wonkers-nedap/src/mappers/ConceptOrderMapper.ts`
+  - **File**: `wonkers-nedap/src/mappers/ConceptOrderMapper.ts`
 - [ ] Review existing `WonkersTaasOrderService` implementation
-   - **File**: `wonkers-nedap/src/service/WonkersTaasOrderService.ts`
+  - **File**: `wonkers-nedap/src/service/WonkersTaasOrderService.ts`
 
 ---
 
@@ -156,6 +169,7 @@ Implement parsing of the new `hardwareType` survey question in `wonkers-nedap` a
 **File:** `wonkers-taas-orders/src/model/dto/ConceptOrderV6Dto.ts`
 
 **Current:**
+
 ```typescript
 export class ConceptOrderV6Dto extends ConceptOrderDto {
    @Expose()
@@ -166,6 +180,7 @@ export class ConceptOrderV6Dto extends ConceptOrderDto {
 ```
 
 **Proposed Change:**
+
 ```typescript
 export class ConceptOrderV6Dto extends ConceptOrderDto {
    @Expose()
@@ -186,6 +201,7 @@ export class ConceptOrderV6Dto extends ConceptOrderDto {
 **Current:** `+order.hardwareType` (unary plus assumes non-null)
 
 **Proposed Change:**
+
 ```typescript
 hardwareTypeId: order.hardwareType != null ? +order.hardwareType : null
 ```
@@ -200,6 +216,7 @@ hardwareTypeId: order.hardwareType != null ? +order.hardwareType : null
 **Column:** `hardware_type_id`
 
 **Verify:**
+
 - [ ] Column is **nullable** (not `NOT NULL`)
 - [ ] Remove `DEFAULT=1` if present (to allow explicit null)
 
@@ -230,6 +247,7 @@ wonkers-nedap/src/
 **Current:** No `hardwareType` field
 
 **Proposed Change:**
+
 ```typescript
 // Add new field
 @IsString()
@@ -249,12 +267,14 @@ hardwareType?: 'ROBOT' | 'VOICE_ASSISTANT' | null
 **Current:** Does not parse `hardwareType`
 
 **Proposed Change:**
+
 ```typescript
 // Add after existing field mappings (around line 125)
 dto.hardwareType = this.getHardwareType(resultProperties, 'hardwareType') // Key TBD from Evan
 ```
 
 **Mapping Configuration (confirmed by PO):**
+
 ```typescript
 // Exact match for simple values
 const hardwareTypeMap: Record<string, 'ROBOT' | 'VOICE_ASSISTANT'> = {
@@ -270,6 +290,7 @@ if (lowerValue.includes('met visuele')) return 'VOICE_ASSISTANT'
 ```
 
 **New Method:**
+
 ```typescript
 static getHardwareType(
         answeredQuestions: SurveyAnsweredQuestion[],
@@ -312,6 +333,7 @@ static getHardwareType(
 **File:** `wonkers-nedap/src/service/WonkersTaasOrderService.ts`
 
 **Current:**
+
 ```typescript
 public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDto> {
    const url = `${this.wonkersTaasOrderAddress}/internal/v1/taas-orders/concepts/orders`
@@ -320,6 +342,7 @@ public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDt
 ```
 
 **Proposed Change:**
+
 ```typescript
 public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDto> {
    // Change V1 → V6
@@ -335,6 +358,7 @@ public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDt
 ### Phase 4: Update Tests
 
 **Files:**
+
 - `wonkers-nedap/test/mappers/ConceptOrderMapperTest.ts` (if exists)
 - `wonkers-nedap/test/service/WonkersTaasOrderServiceTest.ts` (if exists)
 - `wonkers-nedap/test/fixtures/survey-result-with-hardware-type.json` (new fixture)
@@ -374,6 +398,7 @@ public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDt
    - Update snapshots/assertions to include new field
 
 **Fixture-based testing:**
+
 - Use sample JSON from Evan as base fixture
 - Verify `answeredQuestions[].additionalInfo` parsing works correctly with real data
 
@@ -409,6 +434,7 @@ public async addConceptOrder (orderDto: ConceptOrderDto): Promise<ConceptOrderDt
 | 5.0 | - | - | Integration testing | 3.3 | ⬜ TODO |
 
 > **⚠️ Deployment Order (Atomicity):**
+>
 > 1. **Deploy wonkers-taas-orders** (Task 2.1, 2.2) - V6 accepts null
 > 2. **Verify wonkers-db** (Task 2.3) - column is nullable
 > 3. **Deploy wonkers-nedap** (Task 3.1, 3.2, 3.3, 4.0) - mapper + V6 switch

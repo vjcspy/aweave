@@ -1,3 +1,11 @@
+---
+name: "CI/CD Pipeline cho azi-3-status-check-jobs"
+description: "Document regarding CI/CD Pipeline cho azi-3-status-check-jobs"
+created: 2025-11-25
+tags: ["plans","azi-3-status-check-jobs"]
+status: done
+---
+
 # 📋 [PROD-XXX: 2025-11-25] - CI/CD Pipeline cho azi-3-status-check-jobs
 
 ## TL;DR

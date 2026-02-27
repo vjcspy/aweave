@@ -1,3 +1,11 @@
+---
+name: "Filter Scheduled Executions Only in Existing APIs"
+description: "Document regarding Filter Scheduled Executions Only in Existing APIs"
+created: 2026-01-05
+tags: ["plans","micro-manager"]
+status: done
+---
+
 # 📋 [260105] - Filter Scheduled Executions Only in Existing APIs
 
 ## References

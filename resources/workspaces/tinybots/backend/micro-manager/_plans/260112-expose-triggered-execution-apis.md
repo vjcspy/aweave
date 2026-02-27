@@ -1,3 +1,11 @@
+---
+name: "Expose Triggered Script Execution APIs for Frontend"
+description: "Document regarding Expose Triggered Script Execution APIs for Frontend"
+created: 2026-01-12
+tags: ["plans","micro-manager"]
+status: done
+---
+
 # 📋 [260112] - Expose Triggered Script Execution APIs for Frontend
 
 ## Implementation Status

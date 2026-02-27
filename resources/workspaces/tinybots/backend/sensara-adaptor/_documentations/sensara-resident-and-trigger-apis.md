@@ -23,6 +23,7 @@ confluence_sync:
         synced_at: "2026-02-26T14:51:12+07:00"
         local_hash: "synced"
         remote_hash: "synced"
+description: "Technical documentation of the Sensara API integration, covering internal resident management and external trigger subscription endpoints, including authentication requirements and request/response specifications."
 ---
 
 # Sensara Resident & Trigger APIs

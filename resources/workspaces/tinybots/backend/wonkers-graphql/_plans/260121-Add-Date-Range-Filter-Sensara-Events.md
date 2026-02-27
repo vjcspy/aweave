@@ -1,3 +1,11 @@
+---
+name: "📋 260121 - Add Date Range Filter for Sensara Events GraphQL"
+description: "Document regarding 📋 260121 - Add Date Range Filter for Sensara Events GraphQL"
+created: 2026-01-21
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 260121 - Add Date Range Filter for Sensara Events GraphQL
 
 ## References

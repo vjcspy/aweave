@@ -1,3 +1,11 @@
+---
+name: "Analytics Data Masking for Healthcare Information Compliance"
+description: "Document regarding Analytics Data Masking for Healthcare Information Compliance"
+created: 2025-12-23
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 [PROD: 251223] - Analytics Data Masking for Healthcare Information Compliance
 
 ## References

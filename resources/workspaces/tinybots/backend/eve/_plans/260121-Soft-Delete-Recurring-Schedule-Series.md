@@ -52,6 +52,7 @@ confluence_sync:
         synced_at: "2026-02-24T03:20:42Z"
         local_hash: "35918dade4c1f5eeaee50a070b883ce91e22c6e2c906b768da8b1a647aa2564d"
         remote_hash: "35918dade4c1f5eeaee50a070b883ce91e22c6e2c906b768da8b1a647aa2564d"
+description: "Implementation strategy for soft-deleting recurring schedule series by utilizing the end_at field to terminate future occurrences while preserving historical execution records, including detailed boundary semantics and transactional integrity requirements."
 ---
 
 # 📋 [PROD-XXX: 2026-01-21] - Soft Delete Recurring Schedule Series
@@ -131,6 +132,7 @@ Content-Type: application/json
 > When the delete series command is used it should only delete items in the series in the future. If you delete from 2026-05-05 then only tasks after 2026-05-05 should be deleted. If you select a value in the past: 2020-10-10 it should be blocked.
 >
 > **Endpoint:**
+>
 > ```
 > DELETE https://api.tinybots.academy/v4/schedules/{robotId}
 > ```
@@ -166,6 +168,7 @@ The following code analysis proves that setting `end_at` will prevent future tas
 ##### 2.1 Query Filter - Schedules with `end_at <= now` are excluded
 
 **File**: `eve/src/main/java/nl/tinybots/eve/repository/TaskRepository.java` (lines 57-61)
+
 ```java
 // findRobotSchedule() - Robot's schedule query
 + "WHERE rs.`robot_id` = :robotId "
@@ -178,6 +181,7 @@ The following code analysis proves that setting `end_at` will prevent future tas
 ##### 2.2 `mightFire()` - Prevents scheduling after endTime
 
 **File**: `eve/src/main/java/nl/tinybots/eve/util/ScheduleUtils.java` (lines 145-153)
+
 ```java
 public static boolean mightFire(V6Schedule schedule, Robot robot, ZonedDateTime now) {
     ZonedDateTime start = schedule.getStartTime() == null ? now : schedule.getStartTime();
@@ -195,6 +199,7 @@ public static boolean mightFire(V6Schedule schedule, Robot robot, ZonedDateTime 
 ##### 2.3 `explode()` - Calendar view respects endTime
 
 **File**: `eve/src/main/java/nl/tinybots/eve/util/ScheduleUtils.java` (lines 175-183)
+
 ```java
 // Similarly we need to stop sooner when the until is after the Tasks endTime.
 ZonedDateTime correctedUntil = schedule.getEndTime() != null && until.isAfter(schedule.getEndTime())
@@ -212,6 +217,7 @@ while (time != null && time.isBefore(correctedUntil)) {  // ← Only creates occ
 ##### 2.4 Existing Pattern - `deleteScheduledScripts()` already uses this approach
 
 **File**: `eve/src/main/java/nl/tinybots/eve/repository/TaskRepository.java` (lines 327-332)
+
 ```java
 @SqlUpdate("UPDATE `task_schedule` AS ts "
     + "JOIN robot_schema AS rs ON (rs.schedule_id = ts.id)"
@@ -243,18 +249,21 @@ int deleteScheduledScripts(@Bind("scriptId") Long scriptId, @Bind("robotId") Lon
 #### 4. Boundary Semantics (Exclusive)
 
 > **Definition**: `fromDate` acts as an exclusive boundary in robot's timezone.
+>
 > - Occurrences with `time < fromDate` → **KEPT** (historical)
 > - Occurrences with `time >= fromDate` → **REMOVED** (future)
 
 **Example** (Robot TZ: Europe/Amsterdam):
+
 - Schedule: Daily at 09:00
 - `fromDate`: 2026-05-05T00:00:00+02:00
-- Result: 
+- Result:
   - 2026-05-04 09:00 → ✅ Kept
   - 2026-05-05 09:00 → ❌ Removed
   - 2026-05-06 09:00 → ❌ Removed
 
 **Timezone Handling**:
+
 - `fromDate` MUST be provided as ISO8601 with offset (e.g., `2026-05-05T00:00:00+02:00`)
 - Resource layer normalizes `fromDate` to robot's timezone (from `X-Time-Zone` header) using `withZoneSameInstant()`
 - Service layer computes "now" in robot timezone for consistent validation
@@ -262,10 +271,12 @@ int deleteScheduledScripts(@Bind("scriptId") Long scriptId, @Bind("robotId") Lon
 - Invalid format (missing offset, malformed string) → **400 Bad Request**
 
 **DST Handling**:
+
 - All comparisons use `Instant` (epoch-based) to avoid DST ambiguity
 - Example: If robot TZ is Europe/Amsterdam and `fromDate=2026-03-29T02:30:00+01:00` (during DST gap), the Instant comparison will still work correctly
 
 **Offset vs X-Time-Zone Semantics**:
+
 - Client-provided offset is treated as the source of truth for the absolute instant
 - `withZoneSameInstant(robotTz)` preserves the instant, only changes zone representation for logging/display
 - **Allowed behavior**: Client may send any valid offset; system normalizes to robot TZ internally
@@ -287,6 +298,7 @@ int deleteScheduledScripts(@Bind("scriptId") Long scriptId, @Bind("robotId") Lon
 **Concern**: Race condition between `updateScheduleEndAt()` and occurrence-creation jobs.
 
 **Solution**:
+
 - Wrap `updateScheduleEndAt()` in a transaction at service layer
 - Use `SELECT ... FOR UPDATE` pattern if needed for critical sections
 - Scheduler jobs should re-check `end_at` after reading schedule
@@ -369,11 +381,13 @@ public class TaskIdentifierDto {
 > **Note**: `@InFutureOrPresent` allows `fromDate=NOW` which is the common use case. Create custom validator if not exists, or use `@FutureOrPresent` from javax.validation with robot TZ normalization in mapper.
 
 **Behavior**:
+
 - If `time` is provided → Delete single occurrence (existing behavior)
 - If `fromDate` is provided (and `time` is null) → Soft delete series from `fromDate`
 - If neither provided → Soft delete series from NOW (backward compatible)
 
 **Naming Convention**:
+
 - API level: `fromDate` (business-friendly, "delete from this date")
 - Internal/DB: `endAt` (technical, matches `task_schedule.end_at` column)
 
@@ -773,7 +787,7 @@ delete:
 
 ### ✅ Resolved Questions (from Review)
 
-1. **Query param support?** 
+1. **Query param support?**
    - **Answer**: YES - Supporting both `?fromDate=ISO8601` query param AND request body for compatibility with clients that don't support DELETE body.
 
 2. **Boundary semantics?**

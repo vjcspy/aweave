@@ -1,3 +1,11 @@
+---
+name: "Toilet Activity Monitoring Job (Reuse azi-3-status-check)"
+description: "Document regarding Toilet Activity Monitoring Job (Reuse azi-3-status-check)"
+created: 2025-11-19
+tags: ["plans","azi-3-status-check"]
+status: done
+---
+
 # 📋 [PROD594: 2025-11-19] - Toilet Activity Monitoring Job (Reuse azi-3-status-check)
 
 [TOC]

@@ -1,3 +1,11 @@
+---
+name: "Day-of-Week Scheduling Constraints"
+description: "Comprehensive proposal comparing JSON constraints, CRON expressions, and relational tables for implementing advanced trigger scheduling (days of week/month)."
+created: 2025-11-07
+tags: ["plans","m-o-triggers"]
+status: done
+---
+
 # 🚀 Production Release Document: Day-of-Week Scheduling Constraints
 
 **Release Date**: TBD
@@ -12,18 +20,21 @@
 This release implements a **new feature** for day-of-week scheduling constraints for event triggers, allowing triggers to be scheduled only on specific days (e.g., Monday, Wednesday, Friday).
 
 **Key Benefits**:
+
 - ✅ **New capability**: Triggers can be restricted to specific days of the week
 - ✅ **Smart rescheduling**: Automatic rescheduling to next allowed day when current day is not permitted
 - ✅ **Performance**: Using VARCHAR column for efficient storage and indexing
 - ✅ **Simple API**: Direct array format for easy integration
 
 **Breaking Changes**:
+
 - ✅ **None** - This is a new feature with backward compatibility
 - ✅ Existing triggers without `allowedDaysOfWeek` continue to work as before (no day restrictions)---
 
 ## 🎯 What's Changed
 
 ### Database Changes
+
 - **New column**: `allowed_days_of_week VARCHAR(100)` added to `event_trigger_setting` table
 - **Storage format**: Comma-separated day codes (e.g., `"fri,mon,wed"`)
 - **Valid values**: `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun` (sorted alphabetically)
@@ -33,9 +44,11 @@ This release implements a **new feature** for day-of-week scheduling constraints
 ### API Changes
 
 #### New Optional Field: `allowedDaysOfWeek`
+
 The existing API endpoint now accepts an **optional** new field for day-of-week constraints.
 
 #### Request Format (New Feature)
+
 ```json
 PUT /v1/triggers/settings
 {
@@ -53,6 +66,7 @@ PUT /v1/triggers/settings
 **Note**: `allowedDaysOfWeek` is **optional**. If omitted, triggers work as before (no day restrictions).
 
 #### Response Format (New Feature)
+
 ```json
 {
   "id": 1,
@@ -73,18 +87,22 @@ PUT /v1/triggers/settings
 ### Behavior
 
 #### Scenario 1: Current Day is Allowed
+
 - **Condition**: Trigger created on Monday with `allowedDaysOfWeek: ["mon", "wed", "fri"]`
 - **Result**: Executes immediately (if within allowed time window)
 
 #### Scenario 2: Current Day Not Allowed (Reschedulable)
+
 - **Condition**: Trigger created on Tuesday with `allowedDaysOfWeek: ["mon", "wed", "fri"]`
 - **Result**: Rescheduled to Wednesday at `allowedStartTime`
 
 #### Scenario 3: Current Day Not Allowed (Non-Reschedulable)
+
 - **Condition**: Trigger created on Tuesday with `allowedDaysOfWeek: ["mon", "wed"]` and `isReschedulable: false`
 - **Result**: Trigger rejected with status `REJECTED`
 
 #### Scenario 4: No Day Restrictions
+
 - **Condition**: `allowedDaysOfWeek` is `null` or not provided
 - **Result**: Works as before (any day allowed)
 
@@ -99,12 +117,14 @@ PUT /v1/triggers/settings
 - **Commit ID**: `4afc6a466bacfd7d25e881dee5529cc5dae6ba08`
 
 **Expected Output**:
+
 ```
 COLUMN_NAME             | DATA_TYPE | CHARACTER_MAXIMUM_LENGTH | COLUMN_COMMENT
 allowed_days_of_week    | varchar   | 100                     | Comma-separated list of allowed days...
 ```
 
 **Verification**:
+
 ```sql
 -- All existing records should have NULL (no day constraints)
 SELECT id, allowed_days_of_week
@@ -113,13 +133,16 @@ LIMIT 10;
 
 -- Expected: allowed_days_of_week = NULL for all existing record
 ```
+
 ### 2. Deploy m-o-trigger
-- **Repository**: [`m-o-trigger`](https://bitbucket.org/tinybots/m-o-triggers/src/master/) 
+
+- **Repository**: [`m-o-trigger`](https://bitbucket.org/tinybots/m-o-triggers/src/master/)
 - **Commit ID**: `46cfbbf834d77c43ccf8a6513d80a46329ab7412`
 
 ### 3. API Tests
 
 #### Test 1: Create Default Trigger Setting with Day Constraints
+
 ```bash
 curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
   -H "Content-Type: application/json" \
@@ -157,6 +180,7 @@ curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
 ```
 
 **Verification**:
+
 ```sql
 -- Check database storage (should be sorted CSV)
 SELECT id, allowed_days_of_week
@@ -169,6 +193,7 @@ WHERE id = <SETTING_ID>;
 ---
 
 #### Test 2: Create Robot-Specific Trigger Setting
+
 ```bash
 curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
   -H "Content-Type: application/json" \
@@ -209,6 +234,7 @@ curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
 ---
 
 #### Test 3: Create Trigger on Allowed Day (Should Execute Immediately)
+
 **Precondition**: Run on Monday
 **Setting**: `allowedDaysOfWeek: ["mon", "wed", "fri"]`
 
@@ -238,12 +264,14 @@ curl -X POST https://m-o-triggers.production.example.com/internal/v1/triggers \
 ```
 
 **Verification**:
+
 - `status` should be `ACCEPTED`
 - `expectedExecutedAt` should be close to current time (within seconds)
 
 ---
 
 #### Test 4: Create Trigger on Non-Allowed Day (Should Reschedule)
+
 **Precondition**: Run on Tuesday
 **Setting**: `allowedDaysOfWeek: ["mon", "wed", "fri"]`, `isReschedulable: true`
 
@@ -271,12 +299,14 @@ curl -X POST https://m-o-triggers.production.example.com/internal/v1/triggers \
 ```
 
 **Verification**:
+
 - `status` should be `ACCEPTED`
 - `expectedExecutedAt` should be Wednesday at `08:00` (allowedStartTime)
 
 ---
 
 #### Test 5: Create Trigger Without Day Constraints (Backward Compatibility)
+
 **Purpose**: Verify existing API calls continue to work without the new field
 
 ```bash
@@ -317,6 +347,7 @@ curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
 ```
 
 **Verification**:
+
 - ✅ API call succeeds without new field (backward compatible)
 - ✅ Response includes `allowedDaysOfWeek: null`
 - ✅ Database has `allowed_days_of_week = NULL`
@@ -325,6 +356,7 @@ curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
 ---
 
 #### Test 6: Retrieve Trigger with Setting (Check Deserialization)
+
 ```bash
 curl -X GET https://m-o-triggers.production.example.com/v1/triggers/<TRIGGER_ID> \
   -H "x-consumer-id: <ROBOT_ID>" \
@@ -347,12 +379,14 @@ curl -X GET https://m-o-triggers.production.example.com/v1/triggers/<TRIGGER_ID>
 ```
 
 **Verification**:
+
 - `setting.allowedDaysOfWeek` should be an array, not a CSV string
 - Days should be lowercase and sorted
 
 ---
 
 #### Test 7: Invalid Day Names (Should Reject)
+
 ```bash
 curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
   -H "Content-Type: application/json" \
@@ -381,4 +415,3 @@ curl -X PUT https://m-o-triggers.production.example.com/v1/triggers/settings \
 ```
 
 ---
-

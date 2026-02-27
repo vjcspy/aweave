@@ -1,3 +1,11 @@
+---
+name: "📋 260119 - Move Sensara Events Report to `allReports`"
+description: "Document regarding 📋 260119 - Move Sensara Events Report to `allReports`"
+created: 2026-01-19
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # 📋 260119 - Move Sensara Events Report to `allReports`
 
 ## References

@@ -1,3 +1,11 @@
+---
+name: "Add BETA_issue Field to Tessa Order Status Report"
+description: "Document regarding Add BETA_issue Field to Tessa Order Status Report"
+created: 2026-02-27
+tags: ["plans","wonkers-graphql"]
+status: done
+---
+
 # PROD-522: Add BETA_issue Field to Tessa Order Status Report
 
 ## Overview

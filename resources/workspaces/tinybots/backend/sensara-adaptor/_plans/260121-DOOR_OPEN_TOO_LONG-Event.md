@@ -1,3 +1,11 @@
+---
+name: "Add ST_DOOR_OPEN Sensara Alarm as Trigger"
+description: "Implementation plan for integrating the Sensara ST_DOOR_OPEN notification as a new DOOR_OPEN_TOO_LONG trigger event, spanning enum updates in the shared library, event mapping in the adaptor, and schema generation in megazord-events."
+created: 2026-01-21
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📋 [260121] - Add ST_DOOR_OPEN Sensara Alarm as Trigger
 
 ## References
@@ -24,13 +32,15 @@
 > Priority: Same as other triggers (they're all the same)
 >
 > Services involved:
+>
 > - megazord-events
 > - sensara-adaptor
 
 ## 🎯 Objective
 
 Add support for the new Sensara alarm `ST_DOOR_OPEN` by:
-1. Creating a new TinyBots event `DOOR_OPEN_TOO_LONG` 
+
+1. Creating a new TinyBots event `DOOR_OPEN_TOO_LONG`
 2. Mapping the Sensara notification `ST_DOOR_OPEN` to `DOOR_OPEN_TOO_LONG` in the sensara-adaptor pipeline
 3. Enabling trigger functionality for downstream automation workflows
 
@@ -38,7 +48,7 @@ Add support for the new Sensara alarm `ST_DOOR_OPEN` by:
 
 ## 📊 Code Analysis: Current SSE Streaming Implementation
 
-### ✅ SSE Streaming ĐÃ IMPLEMENT cho:
+### ✅ SSE Streaming ĐÃ IMPLEMENT cho
 
 | Event Type | Description | Status |
 |------------|-------------|--------|
@@ -68,7 +78,7 @@ this._pendingEventSource.addEventListener('NotificationResponse', ...)  // ← L
 this._pendingEventSource.addEventListener('StateExtramuralResponse', ...)
 ```
 
-### 🔴 SSE Streaming CHƯA IMPLEMENT cho:
+### 🔴 SSE Streaming CHƯA IMPLEMENT cho
 
 | Event Type | Description | Status | Plan |
 |------------|-------------|--------|------|

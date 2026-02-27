@@ -1,3 +1,11 @@
+---
+name: "External Endpoint Restructure"
+description: "Implementation details for the final restructuring of Sensara API surface, including the split between internal and external endpoints, migration to the /ext/v1/ path prefix, and implementation of relationIdMiddleware for trusted header validation."
+created: 2026-02-25
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 # 📋 [PROD-437: 2026-02-25] - External Endpoint Restructure
 
 ## References

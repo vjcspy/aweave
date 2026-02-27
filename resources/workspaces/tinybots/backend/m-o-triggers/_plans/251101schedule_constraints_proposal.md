@@ -1,3 +1,11 @@
+---
+name: "Schedule Constraints Proposal"
+description: "Comprehensive proposal comparing JSON constraints, CRON expressions, and relational tables for implementing advanced trigger scheduling."
+created: 2026-02-27
+tags: ["plans","m-o-triggers"]
+status: done
+---
+
 # Schedule Constraints Proposal
 
 ## Executive Summary
@@ -18,6 +26,7 @@ This proposal addresses the need to extend trigger scheduling capabilities beyon
    - Otherwise → **Reject**
 
 ### Example
+
 ```javascript
 Event: "Robot needs restock" arrives at 14:30
 Setting: allowedStartTime=08:00, allowedEndTime=20:00
@@ -41,6 +50,7 @@ Result: Schedule for 08:00 tomorrow
 ### User Stories
 
 **Story 1: Day-of-Week Filtering**
+
 ```
 AS A warehouse manager
 I WANT triggers to only execute on specific days of the week
@@ -53,6 +63,7 @@ Acceptance Criteria:
 ```
 
 **Story 2: Day-of-Month Patterns**
+
 ```
 AS AN operations manager
 I WANT triggers to execute on specific dates of the month
@@ -65,6 +76,7 @@ Acceptance Criteria:
 ```
 
 **Story 3: Advanced Patterns (Future)**
+
 ```
 AS A scheduler admin
 I WANT to define complex scheduling rules
@@ -87,6 +99,7 @@ Examples:
 Add a `schedule_cron` column that uses standard CRON syntax to define when triggers are allowed to execute.
 
 **Database Schema:**
+
 ```sql
 ALTER TABLE event_trigger_setting
 ADD COLUMN schedule_cron VARCHAR(255) DEFAULT NULL
@@ -94,6 +107,7 @@ COMMENT 'Cron expression for allowed execution times (Quartz format)';
 ```
 
 **Examples:**
+
 ```bash
 '0 9 * * MON-FRI'     # 9am on weekdays
 '0 0 * * MON#1'       # First Monday of month at midnight
@@ -128,6 +142,7 @@ export class EventTriggerSettingDomain extends BaseDomain {
 #### Pros & Cons
 
 **Pros:**
+
 - ✅ Extremely flexible - handles any scheduling pattern
 - ✅ Industry standard (Quartz, Spring, Kubernetes)
 - ✅ Battle-tested libraries available (`cron-parser`, `croner`)
@@ -135,6 +150,7 @@ export class EventTriggerSettingDomain extends BaseDomain {
 - ✅ Future-proof for complex requirements
 
 **Cons:**
+
 - ⚠️ **Overkill for current needs** - minute/hour precision unnecessary
 - ⚠️ **Potential conflicts** - CRON includes time-of-day, but we already have `allowedStartTime`/`allowedEndTime`
 - ⚠️ **Complex UX** - Non-technical users struggle with CRON syntax
@@ -144,11 +160,13 @@ export class EventTriggerSettingDomain extends BaseDomain {
 #### Use Cases
 
 Best for:
+
 - Systems that need minute/hour-level precision
 - Scheduled background jobs (not event-driven triggers)
 - Teams already familiar with CRON
 
 Not ideal for:
+
 - Event-driven systems with existing time-window logic
 - Non-technical administrators
 - Simple day-level filtering needs
@@ -162,6 +180,7 @@ Not ideal for:
 Add a `schedule_constraints` JSON column that stores structured day-level constraints, working alongside existing time windows.
 
 **Database Schema:**
+
 ```sql
 ALTER TABLE event_trigger_setting
 ADD COLUMN schedule_constraints JSON DEFAULT NULL
@@ -169,6 +188,7 @@ COMMENT 'Additional scheduling constraints beyond time window';
 ```
 
 **Examples:**
+
 ```json
 {"allowedDaysOfWeek": ["mon", "wed", "fri"]}
 {"allowedDaysOfMonth": [1, 15]}
@@ -284,6 +304,7 @@ PUT /v1/triggers/settings
 #### Pros & Cons
 
 **Pros:**
+
 - ✅ **Separation of concerns** - Time (HH:mm) vs. Days (constraints) are orthogonal
 - ✅ **User-friendly** - Simple checkbox UI for day selection
 - ✅ **No conflicts** - Complements existing time window logic
@@ -293,6 +314,7 @@ PUT /v1/triggers/settings
 - ✅ **Backward compatible** - NULL = no constraints
 
 **Cons:**
+
 - ⚠️ **JSON query performance** - Filtering in SQL is less efficient than columns
 - ⚠️ **Custom parsing** - Need to implement constraint checking logic
 - ⚠️ **Limited by design** - Cannot express minute-level patterns (intentional)
@@ -300,12 +322,14 @@ PUT /v1/triggers/settings
 #### Use Cases
 
 Best for:
+
 - Event-driven systems with time-window filtering
 - Day-level scheduling constraints
 - Non-technical administrators
 - Incremental feature rollout
 
 Ideal when:
+
 - You already have time-of-day logic
 - You need simple, clear business rules
 - You want room for future extensions
@@ -319,6 +343,7 @@ Ideal when:
 Add explicit columns for each type of constraint.
 
 **Database Schema:**
+
 ```sql
 ALTER TABLE event_trigger_setting
 ADD COLUMN allowed_days_of_week VARCHAR(50) DEFAULT NULL
@@ -328,6 +353,7 @@ ADD COLUMN allowed_days_of_month VARCHAR(100) DEFAULT NULL
 ```
 
 **Examples:**
+
 ```sql
 allowed_days_of_week: 'mon,wed,fri'
 allowed_days_of_month: '1,15'
@@ -401,6 +427,7 @@ private findNextAllowedDate(
 #### Pros & Cons
 
 **Pros:**
+
 - ✅ **Explicit schema** - Clear what constraints exist
 - ✅ **Easy SQL queries** - Direct column access: `WHERE allowed_days_of_week LIKE '%mon%'`
 - ✅ **Better indexing** - Can create indexes on specific columns
@@ -408,6 +435,7 @@ private findNextAllowedDate(
 - ✅ **Clear validation** - One column = one concern
 
 **Cons:**
+
 - ⚠️ **Less extensible** - Adding new constraint types requires ALTER TABLE
 - ⚠️ **More columns** - Schema grows with each new constraint type
 - ⚠️ **Duplication** - Similar parsing logic for each column type
@@ -416,12 +444,14 @@ private findNextAllowedDate(
 #### Use Cases
 
 Best for:
+
 - Fixed set of constraint types
 - Heavy SQL querying/filtering needs
 - Performance-critical scenarios
 - Teams that prefer explicit schemas
 
 Not ideal for:
+
 - Rapidly evolving requirements
 - Need for complex nested constraints
 - Frequent schema changes
@@ -471,6 +501,7 @@ Not ideal for:
    - Clear mental model: "Time window + Day filter"
 
 4. **Extensibility**
+
    ```javascript
    // Phase 1: Basic day filtering
    {"allowedDaysOfWeek": ["mon", "wed", "fri"]}
@@ -499,11 +530,13 @@ Not ideal for:
 #### When to Reconsider
 
 Switch to **Full CRON** if:
+
 - Requirements emerge for minute/hour precision scheduling
 - System shifts from event-driven to time-scheduled jobs
 - Need to match external systems using CRON
 
 Switch to **Separate Columns** if:
+
 - SQL query performance becomes critical
 - Constraint types are fixed forever
 - Need advanced database-level filtering
@@ -515,6 +548,7 @@ Switch to **Separate Columns** if:
 ### Phase 1: MVP - Day of Week (Sprint 1-2)
 
 **Scope:**
+
 - Add `schedule_constraints` JSON column
 - Implement `allowedDaysOfWeek` support only
 - Update `TriggerSchedulerParser.getExpectedExecutedTime()`
@@ -522,6 +556,7 @@ Switch to **Separate Columns** if:
 - Simple UI: 7 checkboxes for days
 
 **Deliverables:**
+
 - Database migration script
 - Updated domain models and DTOs
 - Business logic in `TriggerSchedulerParser`
@@ -531,12 +566,14 @@ Switch to **Separate Columns** if:
 ### Phase 2: Day of Month (Sprint 3-4)
 
 **Scope:**
+
 - Add `allowedDaysOfMonth` support
 - Handle edge cases (Feb 30, etc.)
 - Validation for combining constraints
 - Enhanced UI with text input
 
 **Deliverables:**
+
 - Extended constraint logic
 - Additional test coverage
 - Updated documentation
@@ -544,6 +581,7 @@ Switch to **Separate Columns** if:
 ### Phase 3: Advanced Patterns (Future)
 
 **Scope:**
+
 - First/Last day-of-week of month
 - Exclude specific dates (holidays)
 - Timezone-aware scheduling
@@ -556,6 +594,7 @@ Switch to **Separate Columns** if:
 ### Scenario 1: Weekday Shipping Schedule
 
 **Configuration:**
+
 ```json
 {
   "allowedStartTime": "08:00",
@@ -568,6 +607,7 @@ Switch to **Separate Columns** if:
 ```
 
 **Behavior:**
+
 | Event Arrival | Current System | With Constraints |
 |---------------|----------------|------------------|
 | Mon 10:00 | Execute NOW | Execute NOW ✅ |
@@ -578,6 +618,7 @@ Switch to **Separate Columns** if:
 ### Scenario 2: Monthly Inventory Cycle
 
 **Configuration:**
+
 ```json
 {
   "allowedStartTime": "00:00",
@@ -590,6 +631,7 @@ Switch to **Separate Columns** if:
 ```
 
 **Behavior:**
+
 | Event Arrival | Result |
 |---------------|--------|
 | Oct 1, 10:00 | Execute NOW ✅ |
@@ -643,13 +685,16 @@ class ScheduleConstraintsDto {
 ### Performance Impact
 
 **Read Path**: Minimal impact
+
 - Constraint checking happens in-memory (application layer)
 - No additional database queries
 
 **Write Path**: No impact
+
 - Single JSON column update
 
 **Query Path**: Moderate impact
+
 - Cannot filter by constraints in SQL efficiently
 - Acceptable for current scale (triggers are not heavily queried)
 

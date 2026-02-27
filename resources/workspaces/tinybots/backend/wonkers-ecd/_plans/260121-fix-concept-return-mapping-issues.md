@@ -1,3 +1,11 @@
+---
+name: "Fix Concept Return Mapping Issues for Ecare Puur"
+description: "Technical plan to fix missing fields (clientId, clientUuid, pickupAddress) in Ecare Puur concept returns and resolve automated order association issues."
+created: 2026-01-21
+tags: ["plans","wonkers-ecd"]
+status: done
+---
+
 # 📋 [260121] - Fix Concept Return Mapping Issues for Ecare Puur
 
 ## References
@@ -12,12 +20,15 @@
 Following the production release of concept orders and returns (PROD-736), there are issues with parsing concept returns from Ecare Puur that lead to manual actions:
 
 ### Issue 1: Order Association Not Working
+>
 > When accepting the concept return it should automatically find the order associated with the return. From my head this uses a combination of the relation and the clientId. This is however not working from concept returns from wonkers-ecd.
 
 ### Issue 2: Pickup Address Not Mapped
+>
 > Pickup address not mapped correctly in the return. It does exist in the application.
-> 
+>
 > Parameters in form:
+>
 > - recipient (naam van de bewoner/organisatie van het ophaaladres)
 > - street (straatnaam)
 > - homeNumberExtension (huisnummer + toevoeging)
@@ -25,6 +36,7 @@ Following the production release of concept orders and returns (PROD-736), there
 > - city (plaatsnaam)
 
 ### Issue 3: Return Reason Possibly Not Available
+>
 > I got some sounds from the Tessa experts that return reason is not available - check if it's correctly mapped. Did not get confirmation from Rosa Veenbaas on this.
 
 **Context:** Concept returns are created from "Afmeldbericht" in the same flow.
@@ -52,7 +64,7 @@ const returnDto: ConceptReturnDto = {
 }
 ```
 
-2. **`wonkers-taas-orders` uses `clientId` for order matching:**
+1. **`wonkers-taas-orders` uses `clientId` for order matching:**
 
 ```typescript
 // ConceptOrderService.addReturnConcept()
@@ -62,7 +74,7 @@ const orders = await this.adminTaasOrderRepository.findMatchingTaasOrders(
 )
 ```
 
-3. **SQL Query expects `clientId`:**
+1. **SQL Query expects `clientId`:**
 
 ```sql
 WHERE tor.client_id=? AND drt.serial LIKE ?
@@ -89,7 +101,7 @@ const additionalFields: UnsubscribeFields = {
 }
 ```
 
-2. **BUT `mapUnsubscribe()` does NOT pass it to `ConceptReturnDto`:**
+1. **BUT `mapUnsubscribe()` does NOT pass it to `ConceptReturnDto`:**
 
 ```typescript
 const returnDto: ConceptReturnDto = {
@@ -136,11 +148,13 @@ private getReturnReason(notification: PuurNotificationDto): string[] {
 ```
 
 **Mapping to DTO:**
+
 ```typescript
 returnReason: returnReasons.length > 0 ? returnReasons.join(', ') : null
 ```
 
 **Potential Issues:**
+
 - Field keys may not match what the form sends
 - May need to use `Display` instead of `Value`
 - May need different field keys entirely
@@ -238,6 +252,7 @@ returnReason: returnReasons.length > 0 ? returnReasons.join(', ') : null
 #### Task 1.1: Add `clientId` and `clientUuid` Parameters
 
 **Current Signature:**
+
 ```typescript
 public mapUnsubscribe(
   notification: PuurNotificationDto,
@@ -247,6 +262,7 @@ public mapUnsubscribe(
 ```
 
 **New Signature:**
+
 ```typescript
 public mapUnsubscribe(
   notification: PuurNotificationDto,
@@ -300,6 +316,7 @@ const returnDto: ConceptReturnDto = {
 **File:** `wonkers-ecd/src/service/ecare/EcarePuurService.ts`
 
 **Current Call:**
+
 ```typescript
 const returnDto = this.ecarePuurMappingService.mapUnsubscribe(
   notification,
@@ -309,6 +326,7 @@ const returnDto = this.ecarePuurMappingService.mapUnsubscribe(
 ```
 
 **Updated Call:**
+
 ```typescript
 const returnDto = this.ecarePuurMappingService.mapUnsubscribe(
   notification,
@@ -396,11 +414,13 @@ private getOptionalRetrievalAddress(notification: PuurNotificationDto): Retrieva
 **File:** `wonkers-ecd/src/service/ecare/EcarePuurMappingService.ts`
 
 **Action:** After receiving sample Afmeldbericht payload:
+
 1. Check if field keys match `RETURN_REASONS` array
 2. Check if values are in `Value` or `Display` property
 3. Update mapping if needed
 
 **Placeholder for changes:**
+
 ```typescript
 // TODO: Update after payload verification
 private RETURN_REASONS: string[] = [
@@ -429,6 +449,7 @@ private getReturnReason(notification: PuurNotificationDto): string[] {
 ### Phase 5: Update Tests
 
 **Files:**
+
 - `wonkers-ecd/test/ecareService/EcarePuurMappingServiceTest.ts`
 - `wonkers-ecd/test/ecareService/EcarePuurServiceTest.ts`
 - `wonkers-ecd/test/controller/EcarePuurNotificationControllerIT.ts`
@@ -462,11 +483,13 @@ private getReturnReason(notification: PuurNotificationDto): string[] {
 **File:** `wonkers-taas-orders/src/repository/AdminTaasOrderRepository.ts`
 
 **Current Query:**
+
 ```sql
 WHERE tor.client_id=? AND drt.serial LIKE ?
 ```
 
 **Proposed Enhancement (add `relationId`):**
+
 ```sql
 WHERE tor.client_id=? AND tor.relation_id=? AND drt.serial LIKE ?
 ```

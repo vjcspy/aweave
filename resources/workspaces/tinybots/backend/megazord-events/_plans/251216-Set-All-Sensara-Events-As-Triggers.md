@@ -1,3 +1,11 @@
+---
+name: "📋 251216 - Set All Sensara Events As Triggers"
+description: "Bulk update to the Sensara event schema configuration, enabling the hasTrigger flag for 26 location and activity-based events to support universal automation trigger capabilities across the TinyBots ecosystem."
+created: 2025-12-16
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 251216 - Set All Sensara Events As Triggers
 
 ## References
@@ -22,7 +30,7 @@ Enable all Sensara-related events (especially location-based `IN_*` events) to b
 1. **Sensara Location Events**: Sensara provides location telemetry that maps to TinyBots `IN_*` events (e.g., `IN_BATHROOM`, `IN_KITCHEN`, `IN_BEDROOM`, etc.) through the `sensara-adaptor` service
 2. **Current State**: Most location events currently have `hasTrigger: false` in their JSON schema definitions
 3. **Schema Loading**: Event schemas are seeded from `megazord-events/schemas/events/*.json` at startup via `EventSchemasLoader`
-4. **Impact Scope**: 
+4. **Impact Scope**:
    - Changes only affect which events can be used for `TRIGGER_SUBSCRIPTION` type subscriptions
    - Does not impact existing `SERVICE_SUBSCRIPTION` workflows
    - Sensara adaptor uses `LocationEventMapper` to map Sensara locations to TinyBots events dynamically
@@ -31,6 +39,7 @@ Enable all Sensara-related events (especially location-based `IN_*` events) to b
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] ✅ Analyze event schema structure and generator logic
   - **Outcome**: Confirmed that `schemas/gen.ts` contains `CustomConfigs` for setting `hasTrigger` flag, and JSON files in `schemas/events/` are loaded at startup
 - [x] ✅ Identify all Sensara-related events from `TinybotsEvent` enum
@@ -87,16 +96,19 @@ megazord-events/
 ### Phase 3: Detailed Implementation Steps
 
 #### Step 1: Update Schema Generator Configuration
+
 **File:** `megazord-events/schemas/gen.ts`
 
 **Action:** Add all Sensara-related events to `CustomConfigs` with `hasTrigger: true` and appropriate level
 
 **Changes:**
+
 1. Add entries for all 22 location-based `IN_*` events
 2. Add entries for `ACTIVITY`, `IN_BED`, `INSIDE_HOME`, `OUTSIDE_HOME`
 3. Keep existing custom configs for `SUSPICIOUS_INACTIVITY`, `SHORT_INACTIVITY`, `OUT_OF_BED`, `EARLY_OUT_OF_BED`, `LONGER_IN_BED_SHORT`, `LONGER_IN_BED_LONG`
 
 **Implementation:**
+
 ```typescript
 const CustomConfigs: {
   [K in keyof typeof TinybotsEvent]?: Config
@@ -142,11 +154,13 @@ const CustomConfigs: {
 ```
 
 #### Step 2: Regenerate Event Schema JSON Files
+
 **Directory:** `megazord-events/schemas/events/`
 
 **Action:** Use the schema generator to regenerate all event JSON files with updated `hasTrigger` values
 
 **Commands:**
+
 ```bash
 cd tinybots/backend/megazord-events
 # Regenerate all schemas with FORCE_GENERATE flag to overwrite existing files
@@ -156,23 +170,28 @@ FORCE_GENERATE=true yarn generate:schemas
 **Verification:** Confirm that all Sensara-related event JSON files now have `hasTrigger: true`
 
 #### Step 3: Verify Changes
+
 **Action:** Review the generated files to ensure correctness
 
 **Checks:**
+
 1. All `IN_*` location events have `hasTrigger: true`
 2. `ACTIVITY`, `IN_BED`, `INSIDE_HOME`, `OUTSIDE_HOME` have `hasTrigger: true`
 3. Existing trigger events retain their configuration
 4. No unintended changes to other properties (level, isActive, description)
 
 #### Step 4: Database Schema Update Consideration
+
 **Note:** The event schemas are loaded into the database at application startup via `EventSchemasLoader`. The upsert logic in `EventSchemasLoader` will update existing `event_schema` rows when the service restarts.
 
 **Action Required:**
+
 - No manual database migration needed
 - Schema changes take effect on next deployment/restart
 - Existing subscriptions are unaffected; new trigger subscriptions can be created for these events going forward
 
 #### Step 5: Testing Strategy
+
 **Manual Testing Plan:**
 
 1. **Schema Generation Test:**
@@ -196,14 +215,17 @@ FORCE_GENERATE=true yarn generate:schemas
    - Check that trigger subscriptions fire when Sensara events arrive
 
 **Expected Outcome:**
+
 - All Sensara events can be selected when creating trigger subscriptions
 - Trigger subscriptions work end-to-end for Sensara events
 - No regression in existing functionality
 
 ## 📊 Summary of Results
+>
 > Do not summarize the results until the implementation is done and I request it
 
 ### ✅ Completed Achievements
+
 - [To be filled after implementation]
 
 ## 🚧 Outstanding Issues & Follow-up
@@ -211,6 +233,7 @@ FORCE_GENERATE=true yarn generate:schemas
 ### ⚠️ Issues/Clarifications
 
 **Questions to Consider:**
+
 1. **Scope Confirmation**: Should ALL Sensara events have `hasTrigger: true`, or only specific ones?
    - Currently including: all `IN_*` location events (22), `ACTIVITY`, `IN_BED`, `INSIDE_HOME`, `OUTSIDE_HOME`
    - Excluding from triggers: `CLIENT_IN_HEARING_RANGE` (internal poller event), specific activity types like `EATING_ACTIVITY`, `TOILET_ACTIVITY`, `BATHROOM_ACTIVITY` (may be too granular)
@@ -230,6 +253,7 @@ FORCE_GENERATE=true yarn generate:schemas
    - **Recommendation**: Add test cases for at least 2-3 representative Sensara events to verify trigger flow
 
 **Follow-up Tasks:**
+
 - [ ] Monitor production logs after deployment for any unexpected behavior
 - [ ] Update API documentation if it lists which events support triggers
 - [ ] Consider adding dashboard UI to show all trigger-capable events

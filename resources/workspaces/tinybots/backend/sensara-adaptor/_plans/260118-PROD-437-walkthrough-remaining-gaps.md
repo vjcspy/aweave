@@ -1,3 +1,11 @@
+---
+name: "260118-PROD-437-walkthrough-remaining-gaps"
+description: "Technical walkthrough and checklist of remaining implementation gaps for the PROD-437 Sensara API restructure, including path synchronization, authentication policy enforcement, and resolution of TypeScript build errors."
+created: 2026-01-18
+tags: ["plans","sensara-adaptor"]
+status: done
+---
+
 - **Repo:** `sensara-adaptor`
 - **Branch:** `feature/PROD-437-sensara-endpoints`
 - **Source:** `resources/workspaces/tinybots/sensara-adaptor/260117-PROD-437-sensara-endpoints-review-and-update.md`
@@ -58,7 +66,7 @@
 
 #### Need to change
 
-- [ ] Confirm the precise meaning of “ignore authentication” 
+- [ ] Confirm the precise meaning of “ignore authentication”
 - [ ] Update integration tests to reflect the decided behavior.
 
 ### 2.4 Missing resident endpoints from spec

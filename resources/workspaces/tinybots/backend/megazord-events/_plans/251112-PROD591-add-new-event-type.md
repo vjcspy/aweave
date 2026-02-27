@@ -1,3 +1,11 @@
+---
+name: "Add 2 new events to tinybots events service"
+description: "Pipeline update to incorporate new Sensara ST_SLEEPING_AWAKE_DELAYED notifications, including TinybotsEvent enum expansion, automated JSON schema generation with level-10 priority, and translation mapping in the Sensara adaptor."
+created: 2025-11-12
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 [PROD591: 2025-11-12] - Add 2 new events to tinybots events service
 
 ## User Requirements

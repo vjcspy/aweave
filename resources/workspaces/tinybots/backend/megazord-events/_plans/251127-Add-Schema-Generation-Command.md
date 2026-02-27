@@ -1,3 +1,11 @@
+---
+name: "Add Schema Generation Command & Existence Check"
+description: "Enhancements to the event schema development workflow, introducing a dedicated npm generate script and idempotent generation logic that prevents overlapping local customizations unless a force flag is explicitly provided."
+created: 2025-11-27
+tags: ["plans","megazord-events"]
+status: done
+---
+
 # 📋 [251127] - Add Schema Generation Command & Existence Check
 
 ## References

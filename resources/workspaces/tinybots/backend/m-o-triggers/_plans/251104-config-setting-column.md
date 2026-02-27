@@ -1,3 +1,11 @@
+---
+name: "Schedule Constraints Storage Options - Technical Decision Document"
+description: "Technical decision document evaluating four storage options (JSON, VARCHAR, TEXT, Relational) for schedule constraints, prioritizing database independence and validation."
+created: 2025-11-04
+tags: ["plans","m-o-triggers"]
+status: done
+---
+
 # Schedule Constraints Storage Options - Technical Decision Document
 
 **Date**: 2024-11-04
@@ -21,10 +29,12 @@ This document presents 4 viable approaches for storing schedule constraint confi
 ## Requirements
 
 ### Current (Phase 1)
+
 - Store `allowedDaysOfWeek`: array of day names (e.g., `["mon", "wed", "fri"]`)
 - Values must be one of: `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`
 
 ### Future (Phase 2 - I'm not sure, but I'll assume so)
+
 - `allowedDaysOfMonth`: array of day numbers (e.g., `[1, 15, 30]`)
 - `excludedDates`: array of specific dates (holiday,...) (e.g., `["2025-12-25", "2025-01-01"]`)
 - `allowedWeeksOfMonth`: array of week numbers (e.g., `[1, 3]` for 1st and 3rd week)
@@ -113,6 +123,7 @@ CHECK (
 - ✅ No extra fields allowed (`additionalProperties: false`)
 
 **What happens on invalid data**:
+
 ```sql
 -- Invalid JSON syntax
 INSERT INTO event_trigger_settings (schedule_constraints)
@@ -148,6 +159,7 @@ FROM event_trigger_settings;
 ```
 
 **Schema is in database**:
+
 ```sql
 -- Anyone can see the schema without reading service code
 SHOW CREATE TABLE event_trigger_settings;
@@ -155,6 +167,7 @@ SHOW CREATE TABLE event_trigger_settings;
 ```
 
 **Query capabilities**:
+
 ```sql
 -- Find all settings that do NOT run on Saturday
 SELECT id, robot_id, schedule_constraints
@@ -210,10 +223,9 @@ WHERE JSON_CONTAINS(
    - ⚠️ CHECK constraint syntax is MySQL-specific
 2. **Complexity**
    - ⚠️ JSON schema validation requires MySQL 8.0.17+ [LINK](https://dev.mysql.com/doc/refman/8.0/en/json-validation-functions.html)
-4. **Perception**
+3. **Perception**
    - ⚠️ May be perceived as "too flexible" despite schema enforcement
    - ⚠️ Requires team buy-in on JSON approach
-
 
 ---
 
@@ -253,20 +265,23 @@ CHECK (
 ### Key Points
 
 **Database-Level Enforcement**:
+
 - ✅ String length <= 100 characters
 
 **What the database validates**:
+
 - ✅ String length <= 100 characters
 
 **What the database does NOT validate**:
+
 - ❌ Valid day names (could store "abc,xyz,123" without CHECK)
 - ❌ No duplicates (could store "mon,mon,mon")
 - ❌ No empty strings vs NULL distinction
 
-
 ### Self-Documentation
 
 **Reading directly from database**:
+
 ```sql
 SELECT id, robot_id, allowed_days_of_week
 FROM event_trigger_settings;
@@ -286,6 +301,7 @@ FROM event_trigger_settings;
 - ⚠️ Future developers must read service code to understand
 
 **Query capabilities**:
+
 ```sql
 -- Find all settings that do NOT run on Saturday
 -- Must use REGEXP or FIND_IN_SET (limited)
@@ -303,7 +319,6 @@ WHERE allowed_days_of_week IS NOT NULL
    - ✅ Simple to understand initially
    - ✅ No JSON knowledge required
    - ✅ Direct string storage
-
 
 ### Cons
 
@@ -372,19 +387,23 @@ ADD COLUMN excluded_dates_constraints TEXT;  -- '{"excludedDates":["2025-12-25",
 ### Key Points
 
 **Database-Level Enforcement**:
+
 - ✅ Text storage (accepts any string)
 
 **What the database does NOT validate**:
+
 - ❌ JSON syntax
 - ❌ JSON structure
 - ❌ Field types
 - ❌ Allowed values
 
 **Cannot add validation**:
+
 - ❌ MySQL doesn't have `JSON_VALID()` for TEXT columns
 - ❌ Would need to convert to JSON type to validate
 
 **Self-Documentation**:
+
 ```sql
 SELECT id, robot_id, schedule_constraints
 FROM event_trigger_settings;
@@ -394,11 +413,13 @@ FROM event_trigger_settings;
 ```
 
 Human-readable like JSON, but:
+
 - ⚠️ No guarantee it's actually valid JSON
 - ⚠️ Could contain: `{invalid json`, `"just a string"`, `null`, etc.
 - ⚠️ Schema not documented anywhere
 
 **Query capabilities**:
+
 ```sql
 -- Cannot query reliably
 -- TEXT columns don't support JSON functions
@@ -450,6 +471,7 @@ WHERE schedule_constraints LIKE '%"sat"%';  -- Unreliable and slow
 ### Assessment
 
 **This option is strictly worse than Option 1 (native JSON)**:
+
 - Same code complexity
 - Same data format
 - But ZERO database validation
@@ -528,6 +550,7 @@ GROUP BY s.id;
 ### Key Points
 
 **Database-Level Enforcement**:
+
 - ✅ ENUM enforces exact values (only `mon`-`sun`)
 - ✅ PRIMARY KEY prevents duplicates
 - ✅ FOREIGN KEY enforces referential integrity
@@ -536,6 +559,7 @@ GROUP BY s.id;
 ### Self-Documentation
 
 **Reading directly from database**:
+
 ```sql
 -- Simple query
 SELECT * FROM schedule_constraint_allowed_days WHERE setting_id = 1;
@@ -567,6 +591,7 @@ GROUP BY s.id;
 - ✅ Standard relational design
 
 **Query capabilities**:
+
 ```sql
 -- Find all settings that do NOT run on Saturday
 SELECT DISTINCT s.id, s.robot_id
@@ -714,7 +739,6 @@ WHERE d.setting_id IS NULL;
 | **Option 3** | Inserts `{invalid json syntax` | ✅ **Database accepts** → Runtime error when read |
 | **Option 4** | Tries to insert `('monday')` into ENUM | ❌ **Database rejects**: "Invalid enum value" |
 
-
 ### Concern 4: "Speed of development hindered by mistakes without knowing cause"
 
 | Option | Time to Discover Bug | Where Bug is Caught |
@@ -724,22 +748,22 @@ WHERE d.setting_id IS NULL;
 | **Option 3** | At runtime when parsing | ❌ JSON parse error, unclear what's wrong |
 | **Option 4** | Immediately at INSERT | ✅ Database ENUM/FK error |
 
-
 ### Concern 5: "JSON invalidates strict typing rules completely"
 
 **Response**: This is true for **free-form JSON** (Option 3), but NOT for **JSON with schema validation** (Option 1).
 
 **Option 1 with schema validation**:
+
 - ✅ Strictly typed (schema defines exact structure)
 - ✅ Database enforces types
 - ✅ More strict than VARCHAR (which accepts any string)
 - ✅ Comparable to ENUM table (Option 4) in strictness
 
 **The key difference**:
+
 - Free-form JSON = untyped
 - JSON + schema validation = strictly typed
 - Option 1 is the latter
-
 
 ---
 
@@ -748,7 +772,6 @@ WHERE d.setting_id IS NULL;
 ### Recommended: Enhanced VARCHAR with Validation
 
 Combine the simplicity of Option 2 with stronger safeguards:
-
 
 ### Application-Level Safeguards
 
@@ -794,6 +817,7 @@ export class ScheduleConstraints {
 ### Key Principles
 
 1. **Always Sort Before Save**
+
    ```typescript
    // Prevents "mon,wed,fri" vs "fri,mon,wed" duplication
    toDbString(): string {
@@ -802,6 +826,7 @@ export class ScheduleConstraints {
    ```
 
 2. **Unit Test the Serialization**
+
    ```typescript
    describe('ScheduleConstraints', () => {
      it('should serialize consistently', () => {
@@ -820,6 +845,7 @@ export class ScheduleConstraints {
    ```
 
 3. **Document the Format**
+
    ```sql
    -- Add column comment
    ALTER TABLE event_trigger_settings
@@ -828,6 +854,7 @@ export class ScheduleConstraints {
    ```
 
 4. **Add Integration Test for Database Constraint**
+
    ```typescript
    it('should reject invalid format at database level', async () => {
      await expect(

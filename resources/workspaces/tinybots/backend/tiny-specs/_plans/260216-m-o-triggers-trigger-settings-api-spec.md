@@ -1,3 +1,11 @@
+---
+name: "[Create m-o-triggers Trigger Settings API Spec in tiny-specs]"
+description: "Technical plan to create OpenAPI 3.0 specifications for m-o-triggers trigger settings in tiny-specs, ensuring stable contract alignment for downstream consumers."
+created: 2026-02-16
+tags: ["plans","tiny-specs"]
+status: done
+---
+
 # [260216-m-o-triggers-trigger-settings-api-spec] - [Create m-o-triggers Trigger Settings API Spec in tiny-specs]
 
 ## References

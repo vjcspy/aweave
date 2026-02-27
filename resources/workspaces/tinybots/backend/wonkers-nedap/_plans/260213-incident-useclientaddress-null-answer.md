@@ -46,6 +46,8 @@ confluence_sync:
 
 # Incident Analysis - `useClientAddress` Null Answer Crash (wonkers-nedap)
 
+description: "Incident analysis and resolution strategy for the useClientAddress null answer crash, detailing the root cause, business impact, and mitigation options."
+
 ## 1. Audience & Purpose
 
 - **Audience**: Technical Leader
@@ -61,6 +63,7 @@ During concept order retrieval, `wonkers-nedap` crashes with:
 The exception occurs in `ConceptOrderMapper.canUseClientLocation`, because the code directly reads `configAnswer.answer.text` when `answer` is missing.
 
 Conclusion:
+
 - **Primary root cause is missing null-safety in code**.
 - **Missing `answer` in ONS data is the trigger condition**.
 - The same risk pattern exists in the return mapper and may cause similar failures in return flow.
@@ -68,16 +71,19 @@ Conclusion:
 ## 3. Timeline Snapshot (from observed logs)
 
 ### 2026-02-11
+
 - Error appears in order-mapping stack trace at `ConceptOrderMapper.canUseClientLocation`.
 - The system then continues with return retrieval.
 
 ### 2026-02-13
+
 - Same error recurs:
   - `TypeError: Cannot read properties of undefined (reading 'text')`
   - Stack trace points to `ConceptOrderMapper.canUseClientLocation`.
 - Immediately after, logs show `Getting returns from integration nedap_ons`.
 
 Interpretation:
+
 - Order retrieval for one integration fails in mapper.
 - Overall retrieve flow still proceeds to returns due to catch boundaries between order and return stages.
 
@@ -110,6 +116,7 @@ Interpretation:
 ```
 
 Source references:
+
 - Order retrieval mapping call: `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:64`
 - Stage loops + catch (orders/returns): `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:84`, `workspaces/tinybots/backend/wonkers-nedap/src/service/SurveyService.ts:153`
 - Orchestration order-first then returns: `workspaces/tinybots/backend/wonkers-nedap/src/service/ConceptService.ts:166`
@@ -119,36 +126,43 @@ Source references:
 ### 5.1 Failing line
 
 In `ConceptOrderMapper`:
+
 - `configAnswer.answer.text` is accessed directly without null-safety.
 - Reference: `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptOrderMapper.ts:245`
 
 ### 5.2 Why `answer` can legitimately be missing
 
 `mapSurvey` builds `answeredQuestions` from full survey definition, not only answered items.
+
 - If no matching answer exists in `surveyResult.answers`, the question still exists but `answer` is undefined.
 - Reference: `workspaces/tinybots/backend/wonkers-nedap/src/mappers/mapSurvey.ts:87`
 
 The model explicitly allows this:
+
 - `answer?: SurveyAnswer`
 - Reference: `workspaces/tinybots/backend/wonkers-nedap/src/model/NedapOns/SurveyQuestion.ts:27`
 
 ### 5.3 Runtime trigger condition
 
 The crash occurs when all are true:
+
 1. `deliveryAddress.zipcode == null` (this enables `useClientAddress` branch)
 2. A `useClientAddress` question exists in the relevant group
 3. That question has no `answer`
 
 Trigger branch reference:
+
 - `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptOrderMapper.ts:217`
 
 ## 6. Is It a Data Problem or a Code Problem?
 
 Short answer:
+
 - **Code problem (primary)**: mapper assumes `answer` is always present.
 - **Data/contract variance (secondary)**: ONS payload can omit `answer` for some questions.
 
 Leadership framing:
+
 - This is an integration-boundary robustness issue.
 - The service should not rely on upstream payload completeness to avoid crashes.
 
@@ -162,6 +176,7 @@ Leadership framing:
 ### 7.2 Latent risk
 
 The same pattern exists in `ConceptReturnMapper`:
+
 - Reference: `workspaces/tinybots/backend/wonkers-nedap/src/mappers/ConceptReturnMapper.ts:199`
 - This means return flow can hit the same class of failure with similar payload shape.
 
@@ -178,10 +193,12 @@ The same pattern exists in `ConceptReturnMapper`:
 - Add regression tests for "question exists, answer missing".
 
 Pros:
+
 - Stops recurrence quickly.
 - Small scope, low deployment risk.
 
 Cons:
+
 - Does not fully resolve upstream contract ambiguity; it improves resilience.
 
 ## Option B - Enforce strict upstream contract only
@@ -189,9 +206,11 @@ Cons:
 - Coordinate with ONS/form owner to guarantee `useClientAddress` always has an answer.
 
 Pros:
+
 - Cleaner upstream data.
 
 Cons:
+
 - Timeline is externally controlled.
 - Does not protect against other null/missing fields.
 
@@ -201,24 +220,30 @@ Cons:
 - In parallel, align contract/testing checklist with tester + ONS form owner.
 
 Pros:
+
 - Immediate risk reduction + long-term integration governance improvement.
 
 Cons:
+
 - Requires cross-team coordination.
 
 ## 9. Recommended Next Actions (Leadership)
 
 1. **Approve Option C**:
+
 - Deliver null-safety hotfix + regression tests in current sprint.
 - Open follow-up action with tester/form owner on payload contract expectations.
 
-2. **Operational guardrail**:
+1. **Operational guardrail**:
+
 - Add dedicated alert/error tagging for `useClientAddress` parse failures to track recurrence.
 
-3. **Data governance**:
+1. **Data governance**:
+
 - Require test datasets for every new form to include branch-driving fields (e.g., `useClientAddress`) in both answered and missing states.
 
-4. **Release-note alignment**:
+1. **Release-note alignment**:
+
 - Communicate this as an integration robustness incident, not a business-rule change.
 
 ## 10. Supporting References
