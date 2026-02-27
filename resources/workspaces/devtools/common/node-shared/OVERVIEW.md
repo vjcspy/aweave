@@ -20,6 +20,10 @@ This package currently provides a single responsibility: **DevTools root discove
 - `resolveDevtoolsRoot(options?)` → `string | null`
   - Uses a standardized precedence to resolve the DevTools workspace root (`pnpm-workspace.yaml` marker by default).
   - Returns `null` when no candidate resolves.
+- `resolveProjectRootFromDevtools(options?)` → `string | null`
+  - Resolves DevTools root with the same precedence as `resolveDevtoolsRoot()`.
+  - Converts DevTools root to monorepo project root via `../..`.
+  - Returns `null` when no candidate resolves.
 
 ## Resolution Precedence (Standardized)
 
@@ -42,6 +46,7 @@ This keeps `__dirname`/module-directory discovery as a **fallback**, not the onl
 - `workspaces/devtools/common/cli-plugin-config/`
 - `workspaces/devtools/common/cli-plugin-dashboard/`
 - `workspaces/devtools/common/nestjs-dashboard/`
+- `workspaces/devtools/common/cli-plugin-workspace/`
 
 ## Design Notes
 

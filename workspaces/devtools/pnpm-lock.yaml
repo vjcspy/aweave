@@ -416,12 +416,18 @@ importers:
       '@hod/aweave-cli-shared':
         specifier: workspace:*
         version: link:../cli-shared
+      '@hod/aweave-mcp-workspace-memory':
+        specifier: workspace:*
+        version: link:../mcp-workspace-memory
       '@hod/aweave-node-shared':
         specifier: workspace:*
         version: link:../node-shared
       '@hod/aweave-workspace-memory':
         specifier: workspace:*
         version: link:../workspace-memory
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.12.1
+        version: 1.27.1(zod@3.25.76)
       '@oclif/core':
         specifier: 'catalog:'
         version: 4.8.0

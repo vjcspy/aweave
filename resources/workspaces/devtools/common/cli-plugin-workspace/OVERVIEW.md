@@ -7,12 +7,12 @@ tags: [memory, cli, workspace, context, hot-memory]
 # Workspace CLI Plugin (`@hod/aweave-plugin-workspace`)
 
 > **Branch:** master
-> **Last Commit:** 2b6635f
-> **Last Updated:** 2026-02-26
+> **Last Commit:** (local changes)
+> **Last Updated:** 2026-02-27
 
 ## TL;DR
 
-oclif plugin providing `aw workspace` commands for context retrieval and rule building. Calls `@hod/aweave-workspace-memory` core library directly (no server roundtrip). Key command `build-rules` combines hot memory source files into the single `AGENTS.md` entry point.
+oclif plugin providing `aw workspace` commands for context retrieval, rule building, and local MCP STDIO entrypoint. Calls core libraries directly (no server roundtrip). Key commands include `build-rules` for hot memory rule composition and `mcp` for running workspace-memory tools over STDIO.
 
 ## Recent Changes Log
 
@@ -34,7 +34,8 @@ cli-plugin-workspace/
     └── commands/
         └── workspace/
             ├── get-context.ts              # aw workspace get-context
-            └── build-rules.ts              # aw workspace build-rules
+            ├── build-rules.ts              # aw workspace build-rules
+            └── mcp.ts                      # aw workspace mcp
 ```
 
 ## Public Surface (Inbound)
@@ -45,18 +46,24 @@ cli-plugin-workspace/
   - Flags: `--project-root`, `--dry-run`, `--format`
   - Sources: `agent/rules/common/user-profile.md`, `global-conventions.md`, `workspace-workflow.md`, `context-memory-rule.md`
   - Output: `AGENTS.md` at project root with `generated_from` front-matter
+- **`aw workspace mcp`** — Start Workspace Memory MCP server via STDIO
+  - Flags: `--project-root` (optional, absolute path)
+  - Root resolution order: explicit `--project-root` → `resolveProjectRootFromDevtools()` (`AWEAVE_DEVTOOLS_ROOT`/`cwd`/`moduleDir`) → fail-fast with remediation error
 
 ## Core Services & Logic (Internal)
 
 - **get-context command:** Resolves project root via `resolveDevtoolsRoot()` (from `@hod/aweave-node-shared`), calls core `getContext()` directly, outputs result in MCPResponse format
 - **build-rules command:** Reads hot memory source files, strips budget comments, shifts heading levels (H1→H2, H2→H3), combines with front-matter, writes to `AGENTS.md`
-- **Project root resolution:** Uses `resolveDevtoolsRoot()` + 2 levels up to reach monorepo root
+- **mcp command:** Creates workspace-memory MCP server and binds `StdioServerTransport` for local AI clients
+- **Project root resolution:** Uses `resolveProjectRootFromDevtools()` from `@hod/aweave-node-shared` for deterministic root discovery
 
 ## External Dependencies & Contracts (Outbound)
 
 - **`@hod/aweave-workspace-memory`** — Core context retrieval (called directly)
+- **`@hod/aweave-mcp-workspace-memory`** — MCP server factory for workspace tools
 - **`@hod/aweave-cli-shared`** — MCPResponse, output helpers, ContentType
-- **`@hod/aweave-node-shared`** — `resolveDevtoolsRoot()` for path resolution
+- **`@hod/aweave-node-shared`** — root discovery helpers (`resolveDevtoolsRoot`, `resolveProjectRootFromDevtools`)
+- **`@modelcontextprotocol/sdk`** — STDIO transport implementation
 - **`@oclif/core`** — CLI framework
 - **Filesystem:** Reads `agent/rules/common/*.md`, writes `AGENTS.md`
 
