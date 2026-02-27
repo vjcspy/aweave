@@ -1,3 +1,11 @@
+---
+name: SPA Self-Serve from Feature Modules
+description: Eliminate server-side SPA boilerplate by letting each NestJS feature module self-serve its own SPA via shared middleware.
+status: done
+created: 2026-02-23
+tags: []
+---
+
 # 260223 - SPA Self-Serve from Feature Modules
 
 ## References

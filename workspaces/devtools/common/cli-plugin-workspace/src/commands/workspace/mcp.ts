@@ -1,7 +1,7 @@
-import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
-import { Command, Flags } from '@oclif/core';
+import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Command, Flags } from '@oclif/core';
 import { isAbsolute, resolve } from 'path';
 
 function resolveProjectRoot(projectRootFlag?: string): string {
