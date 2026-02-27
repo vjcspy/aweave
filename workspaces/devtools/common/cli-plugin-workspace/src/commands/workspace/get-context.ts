@@ -40,12 +40,12 @@ export class WorkspaceGetContext extends Command {
     topics: Flags.string({
       char: 't',
       description:
-        'Comma-separated topic names (auto-discovered from topics folder)',
+        'Comma-separated topic names (each topic returns { overview_t1, entries })',
     }),
     'no-defaults': Flags.boolean({
       default: false,
       description:
-        'Skip default context (folder_structure, overviews, loaded_skills)',
+        'Skip defaults (scope_overview_t1, folder_structure, overviews, loaded_skills)',
     }),
     'filter-status': Flags.string({
       description: 'Comma-separated status filter for plans',
