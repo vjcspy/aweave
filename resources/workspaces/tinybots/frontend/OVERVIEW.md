@@ -8,13 +8,3 @@ folder_structure: |-
 # TinyBots Frontend Workspace
 
 This directory contains the frontend applications for the TinyBots ecosystem.
-
-## Projects
-
-### [ui.r2d2](file:///Users/kai/work/aweave/resources/workspaces/tinybots/frontend/ui.r2d2/OVERVIEW.md)
-
-The Customer Dashboard is a React-based web application that allows end-users to manage their Tessa robots, including task scheduling, music management, and robot configuration.
-
-### [wonkers-dash-admin](file:///Users/kai/work/aweave/resources/workspaces/tinybots/frontend/wonkers-dash-admin/OVERVIEW.md)
-
-The Admin Dashboard is a hybrid AngularJS/React application used by TinyBots staff for internal operations such as TaaS order management, device enrollment, and organisation management.
