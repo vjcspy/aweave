@@ -16,16 +16,51 @@ We will implement two robust approaches to solve this:
 
 ## Proposed Changes
 
+### 0. `workspaces/devtools/common/node-shared/` (Reuse/Extend Existing Root Discovery)
+
+We will reuse the existing root-discovery primitives from `@hod/aweave-node-shared` and add a small extension so callers can resolve project root without duplicating path math.
+
+#### [MODIFY] `src/paths/devtools-root.ts`
+
+- Keep using the existing `resolveDevtoolsRoot()` precedence contract:
+  1. `AWEAVE_DEVTOOLS_ROOT` env override
+  2. `cwd`
+  3. `moduleDir`
+- Add `resolveProjectRootFromDevtools(options?)` helper that:
+  - Calls `resolveDevtoolsRoot(options)`.
+  - Returns monorepo project root via `path.resolve(devtoolsRoot, '..', '..')`.
+  - Returns `null` if DevTools root cannot be resolved (preserves shared failure contract).
+
+#### [MODIFY] `src/paths/index.ts` and `src/index.ts`
+
+- Export the new `resolveProjectRootFromDevtools()` helper.
+
+#### [MODIFY] `resources/workspaces/devtools/common/node-shared/OVERVIEW.md`
+
+- Document the new helper and when callers should use it.
+
+---
+
 ### 1. `workspaces/devtools/common/cli-plugin-workspace/`
 
 We will add a new command `aw workspace mcp` that spawns or requires the MCP STDIO server.
 Since this plugin already manages workspace context, adding the MCP server command here fits perfectly.
 
+#### [MODIFY] `package.json`
+
+- Add `@hod/aweave-mcp-workspace-memory` to `dependencies` (workspace dependency).
+- Add `@modelcontextprotocol/sdk` to `dependencies` so `StdioServerTransport` can be imported directly.
+
 #### [NEW] `src/commands/workspace/mcp.ts`
 
 - Create a new oclif command `WorkspaceMcp`.
 - Description: "Start the Workspace Memory MCP STDIO Server".
-- Logic: Import `dist/stdio.js` from `@hod/aweave-mcp-workspace-memory` or execute it as a child process. Since we are in the same monorepo and `dist` is published, we can either directly import the core logic or just execute the node script. For a clean integration, we will dynamically import the `stdio.js` script so it runs in the current process, connecting to STDIO.
+- Flags: Add a `--project-root` flag (optional) for fallback.
+- Logic: Import `createWorkspaceMemoryServer` from `@hod/aweave-mcp-workspace-memory` and `StdioServerTransport` from `@modelcontextprotocol/sdk/server/stdio.js`. Resolve project root using this deterministic order:
+  1. `--project-root` (explicit absolute path)
+  2. `resolveProjectRootFromDevtools({ cwd: process.cwd(), moduleDir: __dirname })` from `@hod/aweave-node-shared`
+  3. If still unresolved: **fail fast** with actionable error (`set --project-root or AWEAVE_DEVTOOLS_ROOT`)
+- Then initialize the server and connect STDIO transport. We intentionally do not fallback to raw `process.cwd()` to avoid silent wrong-root behavior.
 
 #### [MODIFY] `resources/workspaces/devtools/common/cli-plugin-workspace/OVERVIEW.md`
 
@@ -65,6 +100,7 @@ We will make the package itself executable globally.
   1. `aw workspace mcp` (Recommended for `aw` CLI users).
   2. `aw-mcp-memory` (Fallback/Alternative).
 - Deprecate the old relative path approach.
+- Document `AWEAVE_DEVTOOLS_ROOT` and `--project-root` as explicit root controls for deterministic behavior.
 
 ---
 
@@ -86,4 +122,10 @@ We will make the package itself executable globally.
 
 ### Manual Verification
 
-- Ask the user to configure their Cursor/Codex `mcp.json` using `aw workspace mcp` or `aw-mcp-memory` and confirm the tools are loaded correctly regardless of the current working directory.
+- **Explicit Verification Matrix:**
+  1. Run `aw workspace mcp` from the repository root and verify it serves the expected workspace context.
+  2. Run from an unrelated directory (`~`) with `AWEAVE_DEVTOOLS_ROOT` set and verify context remains correct.
+  3. Run from an unrelated directory with `aw workspace mcp --project-root /path/to/repo` and verify explicit path takes priority.
+  4. Run from an unrelated directory **without** overrides and verify command fails with clear remediation message.
+  5. Verify no non-MCP stdout noise before JSON-RPC handshake.
+- Ask the user to configure their Cursor/Codex `mcp.json` using `aw workspace mcp` (plus `AWEAVE_DEVTOOLS_ROOT` or `--project-root` when needed) or `aw-mcp-memory` and confirm tools load correctly across working directories.
