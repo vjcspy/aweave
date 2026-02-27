@@ -1,3 +1,0 @@
-# Workflow Dashboard — Abstract
-
-The Workflow Dashboard (`@hod/aweave-workflow-dashboard`) is a reusable Ink v6 + React 19 terminal UI component for visualizing workflow engine execution in real-time. It provides a stage/task tree sidebar with strategy and status icons, a main panel with four modes (live rolling logs, task detail, human input prompt, completion summary), and full keyboard navigation (arrow keys, Enter, Esc, number shortcuts). Workflow plugins consume it via `<WorkflowDashboard actor={actor} />`, passing an xstate actor from the workflow engine. The component subscribes to xstate context via `@xstate/react` hooks and uses entirely custom Ink components (Spinner, ElapsedTime, OptionSelect, FreeTextInput) to avoid peer dependency conflicts with Ink v6.

@@ -38,7 +38,7 @@ Phase 1 delivers:
 
 1. **4-layer architecture** (§2.15): Core package has zero framework deps. NestJS, CLI, and MCP layers import core. CLI calls core directly (no server roundtrip). This mirrors the debate pattern (`debate-machine` → `nestjs-debate` → `cli-plugin-debate`).
 2. **AGENTS.md rewrite is high-impact** (§2.9): The current 6-step mandatory ceremony will be replaced with optional, AI-driven context loading. Must be done carefully — it affects every conversation.
-3. **ABSTRACT.md elimination** (§2.4): T0 data moves to OVERVIEW.md front-matter. This requires a phased cutover — dual-read support first, then migration, then cleanup.
+3. **abstract summary file elimination** (§2.4): T0 data moves to OVERVIEW.md front-matter. This requires a phased cutover — dual-read support first, then migration, then cleanup.
 4. **`user/memory/` git tracking** (§2.13): Currently fully gitignored. Each workspace branch needs to add exceptions. Master branch setup comes first; per-workspace branch setup is documented for branch owners.
 5. **Existing memory files**: `user/memory/workspaces/devtools/` already has decisions.md and lessons.md at workspace, domain, and repo levels. These need to be validated against the entry format spec (§4.5) and an `_index.yaml` bootstrapped from them.
 6. **MCP integration location**: `workspace_*` tools are part of APM, integrated into `@hod/aweave-server` (§2.14). This is a NestJS MCP integration, not a standalone MCP process.
@@ -417,7 +417,7 @@ Update existing files to conform to new front-matter standards. This enables war
 - [x] **6.2** OVERVIEW.md front-matter migration
   - Scan all `OVERVIEW.md` files in `resources/`
   - Add front-matter: `name`, `description` (extract from first paragraph or heading), `tags`
-  - If corresponding `ABSTRACT.md` exists, copy its content into `description` field
+  - If corresponding `abstract summary file` exists, copy its content into `description` field
   - **Outcome:** All OVERVIEWs have T0-extractable front-matter
 
 - [x] **6.3** Memory metadata bootstrap
@@ -448,7 +448,7 @@ Update agent infrastructure files to align with the new memory system.
 - [x] **7.1** Update `agent/commands/common/create-overview.md` (§2.4 + §7 open item) — already compliant from earlier conversation
   - Differentiate workspace/domain/repo overview guidelines
   - Add rule: workspace OVERVIEW MUST NOT list individual packages (T0 defaults already include all OVERVIEW front-matters)
-  - Remove Phase 4 (ABSTRACT.md generation) per §2.4
+  - Remove Phase 4 (abstract summary file generation) per §2.4
   - Add OVERVIEW.md front-matter requirement (name, description, tags, updated)
   - **Outcome:** Overview creation command produces compliant files
 
@@ -457,16 +457,16 @@ Update agent infrastructure files to align with the new memory system.
   - Update AGENTS.md symlink to point to new filename
   - **Outcome:** File name reflects its purpose
 
-- [x] **7.3** ABSTRACT.md → OVERVIEW.md front-matter phased cutover (§7 open item)
-  - **Phase A:** Introduce dual-read support — accept both ABSTRACT.md and OVERVIEW.md front-matter as T0 source in `workspace_get_context`
+- [x] **7.3** abstract summary file → OVERVIEW.md front-matter phased cutover (§7 open item)
+  - **Phase A:** Introduce dual-read support — accept both abstract summary file and OVERVIEW.md front-matter as T0 source in `workspace_get_context`
   - **Phase B:** Validate all scopes have OVERVIEW.md with front-matter (from step 6.2)
-  - **Phase C:** Update rule files that hardcode ABSTRACT.md paths (`rule.md`, `devtools.md`, `business-workspace.md`, `project-structure.md`)
-  - **Phase D:** Stop generating ABSTRACT.md, remove hard requirement
-  - **Phase E:** Clean up orphaned ABSTRACT.md files
-  - **Outcome:** ABSTRACT.md fully deprecated, T0 comes from OVERVIEW.md front-matter
+  - **Phase C:** Update rule files that hardcode abstract summary file paths (`rule.md`, `devtools.md`, `business-workspace.md`, `project-structure.md`)
+  - **Phase D:** Stop generating abstract summary file, remove hard requirement
+  - **Phase E:** Clean up orphaned abstract summary files
+  - **Outcome:** abstract summary file fully deprecated, T0 comes from OVERVIEW.md front-matter
 
 - [x] **7.4** Update workspace rule files for new loading flow
-  - `agent/rules/common/workspaces/devtools.md` — Remove ABSTRACT.md references, align with new context loading
+  - `agent/rules/common/workspaces/devtools.md` — Remove abstract summary file references, align with new context loading
   - `agent/rules/common/workspaces/business-workspace.md` — Same updates
   - `agent/rules/common/project-structure.md` — Update to reflect new directory structure (hot-memory files, user/memory/ layout)
   - **Outcome:** All workspace rules consistent with new memory system
@@ -515,11 +515,11 @@ Update agent infrastructure files to align with the new memory system.
 
 - **Phase 7 (Rule & Command Updates)** — Completed 2026-02-26
   - Renamed `rule.md` → `agent-entry-point.md`, updated AGENTS.md symlink
-  - Completed ABSTRACT.md → OVERVIEW.md cutover (Phases A-D): all rules now reference OVERVIEW.md, T0 comes from front-matter
-  - Updated `devtools.md`: removed ABSTRACT.md references, added `workspace_get_context` guidance
+  - Completed abstract summary file → OVERVIEW.md cutover (Phases A-D): all rules now reference OVERVIEW.md, T0 comes from front-matter
+  - Updated `devtools.md`: removed abstract summary file references, added `workspace_get_context` guidance
   - Updated `business-workspace.md`: same ABSTRACT→OVERVIEW cutover, simplified context loading
   - Updated `project-structure.md`: reflects new directory structure (_decisions/, _lessons/, .aweave/, agent-entry-point.md)
-  - ABSTRACT.md files left in place (Phase E deferred) — harmless, can be cleaned up later
+  - abstract summary files left in place (Phase E deferred) — harmless, can be cleaned up later
   - `create-overview.md` was already compliant from earlier work
 
 ## Implementation Notes / As Implemented
@@ -540,7 +540,7 @@ Update agent infrastructure files to align with the new memory system.
 
 3. **Project root resolution** — Both NestJS service and CLI commands resolve project root as 3 levels up from cwd (`workspaces/devtools/common/` → project root). This works for the current monorepo layout. Could be made configurable via config package later.
 
-4. **ABSTRACT.md cleanup deferred** — 22 orphaned ABSTRACT.md files remain. They cause no harm (nothing references them) and can be batch-deleted in a follow-up.
+4. **abstract summary file cleanup deferred** — 22 orphaned abstract summary files remain. They cause no harm (nothing references them) and can be batch-deleted in a follow-up.
 
 5. **Plan files without front-matter** — 2 plan files had no `---` delimiters and were skipped during migration. Can be manually fixed.
 
@@ -559,6 +559,6 @@ Update agent infrastructure files to align with the new memory system.
 - [x] **`user/memory/` removal** — Decisions/lessons moved to `resources/` as `_{topicName}/` folders. Removed: `save-memory/`, `metadata/`, `memory.ts`, `_index.yaml`, `workspace_save_memory` tool, `aw workspace save-memory` CLI, `POST /workspace/memory` REST.
 - [ ] **Session tracking** — Deferred from Phase 3. Add when monitoring data is needed.
 - [ ] **Config package integration** — Project root currently hardcoded as `resolve(cwd, '..', '..', '..')`. Consider moving to `@hod/aweave-config-common`.
-- [ ] **ABSTRACT.md cleanup** — 22 orphaned files can be batch-deleted.
+- [ ] **abstract summary file cleanup** — 22 orphaned files can be batch-deleted.
 - [ ] **Cursor MCP verification** — Configure Cursor MCP settings and test end-to-end (step 4.5).
 - [ ] **Default data tuning** — Monitor if structure + overviews + skills is sufficient as defaults.
