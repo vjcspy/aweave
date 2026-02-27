@@ -1,3 +1,9 @@
+---
+name: Shared Playwright
+description: Shared browser automation library wrapping playwright-core with sensible defaults for the DevTools monorepo
+tags: []
+---
+
 # Shared Playwright (`@hod/aweave-playwright`)
 
 > **Source:** `workspaces/devtools/common/playwright/`

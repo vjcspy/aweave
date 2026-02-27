@@ -1,3 +1,9 @@
+---
+name: Demo Workflow Plugin
+description: oclif plugin running demo workflow showcase as reference implementation for the workflow engine
+tags: []
+---
+
 # Demo Workflow Plugin (`@hod/aweave-plugin-demo-workflow`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-demo-workflow/`

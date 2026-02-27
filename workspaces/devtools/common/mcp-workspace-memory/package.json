@@ -1,0 +1,25 @@
+{
+  "name": "@hod/aweave-mcp-workspace-memory",
+  "version": "0.1.0",
+  "bin": {
+    "aw-mcp-memory": "./dist/stdio.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@hod/aweave-workspace-memory": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

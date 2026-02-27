@@ -1,3 +1,9 @@
+---
+name: Dashboard Web
+description: DevTools Dashboard frontend SPA built with React and Rsbuild for managing developer configurations
+tags: []
+---
+
 ## Metadata Header
 >
 > **Branch:** master

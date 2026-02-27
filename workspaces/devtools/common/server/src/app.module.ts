@@ -4,6 +4,7 @@ import {
 } from '@hod/aweave-nestjs-core';
 import { DashboardModule } from '@hod/aweave-nestjs-dashboard';
 import { DebateModule } from '@hod/aweave-nestjs-debate';
+import { WorkspaceMemoryModule } from '@hod/aweave-nestjs-workspace-memory';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
@@ -11,7 +12,12 @@ import { RootRedirectController } from './root-redirect.controller';
 import { AppExceptionFilter } from './shared/filters/app-exception.filter';
 
 @Module({
-  imports: [NestjsCoreModule, DebateModule, DashboardModule],
+  imports: [
+    NestjsCoreModule,
+    DebateModule,
+    DashboardModule,
+    WorkspaceMemoryModule,
+  ],
   controllers: [RootRedirectController],
   providers: [
     {

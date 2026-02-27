@@ -1,6 +1,9 @@
 ---
 name: XState Debate Machine
 description: Design a state machine using XState to manage complex states of the Debate feature for strict logic transitions.
+status: done
+created: 2026-02-07
+tags: []
 ---
 
 # 📋 [XSTATE-MACHINE: 2026-02-07] - Extract Debate State Machine to Shared xstate Package

@@ -1,3 +1,9 @@
+---
+name: Dashboard CLI Plugin
+description: oclif plugin using Ink v6 for interactive terminal dashboard with real-time monitoring
+tags: []
+---
+
 # Dashboard CLI Plugin (`@hod/aweave-plugin-dashboard`)
 
 > **Source:** `workspaces/devtools/common/cli-plugin-dashboard/`

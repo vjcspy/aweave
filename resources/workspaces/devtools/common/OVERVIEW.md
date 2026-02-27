@@ -1,3 +1,9 @@
+---
+name: Common Devtools — Shared Platform Infrastructure
+description: Domain-agnostic foundation providing CLI framework, shared libraries, state machines, backend server, and UI components
+tags: []
+---
+
 # Common Devtools — Shared Platform Infrastructure
 
 Common Devtools is the domain-agnostic foundation of the `aw` CLI ecosystem — providing the CLI framework, shared libraries, state machines, backend server, and UI components reused across all domains (NAB, future domains).

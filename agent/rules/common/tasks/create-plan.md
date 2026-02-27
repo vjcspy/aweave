@@ -9,7 +9,7 @@
 
 ## Generation Rules
 
-- **References:** All file paths must be cited exactly as provided by the user (relative to `PROJECT_ROOT`) to ensure accessibility for other AI Agents.
+- **References:** All file paths must be cited exactly as provided by the user (relative to project root) to ensure accessibility for other AI Agents.
 - **User Requirements:** Preserve the user's original requirements verbatim. Omit the section entirely if user did not provide explicit requirements.
 - **Summary of Results:** Leave with placeholder text only. Do NOT fill in results — this section is updated after implementation is complete, upon user request.
 - **Outstanding Issues:** Include only if there are actual issues or clarifications needed. Omit if none.

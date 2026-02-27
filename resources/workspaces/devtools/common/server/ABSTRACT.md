@@ -1,3 +1,0 @@
-# Server — Abstract
-
-The Server package (`@hod/aweave-server`) is the unified NestJS application that hosts all backend feature modules in a single process on port 3456. It contains no business logic itself — it provides application bootstrap, global infrastructure (AuthGuard with Bearer token, AppExceptionFilter, CORS middleware, OpenAPI/Swagger), and module composition by importing feature modules like `@hod/aweave-nestjs-debate`. The server serves REST APIs for CLI consumption, WebSocket connections for real-time web UI updates, and static SPA assets, all through a single Express HTTP server with a `ws`-based WebSocket adapter. New features follow the pattern of creating a separate `@hod/aweave-nestjs-<feature>` pnpm package and adding it to the server's imports.

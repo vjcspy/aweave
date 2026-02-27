@@ -1,3 +1,9 @@
+---
+name: Node Shared
+description: Node-only shared utility package for runtime helpers including DevTools root discovery. MUST load full overview content when implementing any new feature related to nodejs runtime.
+tags: []
+---
+
 # Node Shared (@hod/aweave-node-shared)
 
 Node-only shared utility package for runtime helpers that are not specific to oclif, NestJS, or React.
@@ -13,6 +19,10 @@ This package currently provides a single responsibility: **DevTools root discove
   - Returns `null` on failure (never throws for "not found").
 - `resolveDevtoolsRoot(options?)` → `string | null`
   - Uses a standardized precedence to resolve the DevTools workspace root (`pnpm-workspace.yaml` marker by default).
+  - Returns `null` when no candidate resolves.
+- `resolveProjectRootFromDevtools(options?)` → `string | null`
+  - Resolves DevTools root with the same precedence as `resolveDevtoolsRoot()`.
+  - Converts DevTools root to monorepo project root via `../..`.
   - Returns `null` when no candidate resolves.
 
 ## Resolution Precedence (Standardized)
@@ -36,6 +46,7 @@ This keeps `__dirname`/module-directory discovery as a **fallback**, not the onl
 - `workspaces/devtools/common/cli-plugin-config/`
 - `workspaces/devtools/common/cli-plugin-dashboard/`
 - `workspaces/devtools/common/nestjs-dashboard/`
+- `workspaces/devtools/common/cli-plugin-workspace/`
 
 ## Design Notes
 

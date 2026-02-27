@@ -1,6 +1,9 @@
 ---
 name: Auto Ruling On Resolution
 description: Plan to automate rule application during code conflict resolution to minimize human errors.
+status: done
+created: 2026-02-07
+tags: []
 ---
 
 # 260207 - Auto Ruling on Resolution

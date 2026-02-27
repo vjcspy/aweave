@@ -1,3 +1,9 @@
+---
+name: DevTools Overview
+description: Unified TypeScript monorepo overview with CLI, server, and frontend architecture
+tags: []
+---
+
 # DevTools Overview
 
 > **Branch:** master
