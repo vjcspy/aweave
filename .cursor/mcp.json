@@ -4,8 +4,8 @@
       "url": "http://localhost:8931/mcp"
     },
     "workspace-memory": {
-      "command": "node",
-      "args": ["workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js"]
+      "command": "aw",
+      "args": ["workspace", "mcp"]
     }
   }
 }

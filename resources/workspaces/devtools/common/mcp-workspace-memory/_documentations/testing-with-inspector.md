@@ -1,32 +1,67 @@
 ---
 name: Testing MCP Workspace Memory with Inspector
-description: Guide on how to test the workspace_get_context MCP tool locally using the Anthropic MCP Inspector
+description: Guide on how to test workspace_get_context locally with MCP Inspector using aw workspace mcp (recommended) or aw-mcp-memory (alternative)
 tags: [mcp, testing, inspector, stdio]
 ---
 
 # Testing MCP Workspace Memory with MCP Inspector
 
-This guide explains how to test the `workspace_get_context` MCP tool locally using the official Anthropic MCP Inspector via the STDIO transport.
+This guide explains how to test the `workspace_get_context` MCP tool locally using the official Anthropic MCP Inspector via STDIO, with two supported server entrypoints:
+
+1. `aw workspace mcp` (recommended)
+2. `aw-mcp-memory` (alternative)
 
 ## Prerequisites
 
-Ensure the `mcp-workspace-memory` package is fully built before testing. Run this command from the project root:
+From `workspaces/devtools/`, ensure everything required is built:
 
 ```bash
-yarn workspace @hod/aweave-mcp-workspace-memory build
+pnpm install
+pnpm -r build
 ```
 
-## Running the Inspector
+Ensure command availability:
+
+- For `aw workspace mcp`: `aw` should be available (or use `bin/dev.js` under `workspaces/devtools/common/cli`).
+- For `aw-mcp-memory`: binary should be available (for example via `pnpm link --global` in `workspaces/devtools/common/mcp-workspace-memory`).
+
+## Running the Inspector (Recommended: `aw workspace mcp`)
 
 Anthropic provides an official web-based Inspector to test MCP tools.
 
-To launch the Inspector against the local `stdio.js` entry point, run the following command from the project root:
+### Option A: Use environment override
+
+Run from any directory:
 
 ```bash
-npx @modelcontextprotocol/inspector node workspaces/devtools/common/mcp-workspace-memory/dist/stdio.js
+AWEAVE_DEVTOOLS_ROOT=/absolute/path/to/aweave/workspaces/devtools \
+  npx @modelcontextprotocol/inspector aw workspace mcp
 ```
 
-*(Note: If the server requires testing with `PROJECT_ROOT` pointing to a specific directory other than the current working directory, prepend it to the command. For example: `PROJECT_ROOT=$(pwd) npx ...`)*
+### Option B: Use explicit `--project-root`
+
+```bash
+npx @modelcontextprotocol/inspector \
+  aw workspace mcp --project-root /absolute/path/to/aweave
+```
+
+`aw workspace mcp` root resolution order:
+
+1. `--project-root`
+2. `AWEAVE_DEVTOOLS_ROOT`
+3. auto-discovery from `cwd/moduleDir`
+4. fail-fast if unresolved
+
+## Running the Inspector (Alternative: `aw-mcp-memory`)
+
+Use this when you want to test the standalone binary directly:
+
+```bash
+PROJECT_ROOT=/absolute/path/to/aweave \
+  npx @modelcontextprotocol/inspector aw-mcp-memory
+```
+
+`aw-mcp-memory` resolves project root from `PROJECT_ROOT` and falls back to `cwd`.
 
 ## Test Steps
 
@@ -47,3 +82,18 @@ npx @modelcontextprotocol/inspector node workspaces/devtools/common/mcp-workspac
 
 6. Click **Run Tool**.
 7. The Output section will display the structured JSON response from the workspace memory retrieval. Verify that it correctly returns `defaults.folder_structure`, `defaults.overviews`, and other relevant context.
+
+## Common Troubleshooting
+
+### `aw workspace mcp` fails with root resolution error
+
+- Set `AWEAVE_DEVTOOLS_ROOT`, or
+- Pass `--project-root /absolute/path/to/aweave`.
+
+### `aw-mcp-memory` returns wrong context
+
+- Ensure `PROJECT_ROOT` points to the monorepo root (`/absolute/path/to/aweave`).
+
+### `aw` or `aw-mcp-memory` command not found
+
+- Link/install corresponding package globally before running Inspector.

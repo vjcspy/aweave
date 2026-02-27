@@ -85,7 +85,7 @@ const MAX_VISIBLE_LOGS = 2000;
 export function LogsView() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [streaming, setStreaming] = useState(true);
+  const [streaming] = useState(true);
   const [paused, setPaused] = useState(false);
 
   // Filters
