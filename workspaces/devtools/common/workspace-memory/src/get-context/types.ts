@@ -19,7 +19,6 @@ export interface GetContextParams {
 
 export interface EntryMeta {
   document_path: string;
-  document_id?: string;
 }
 
 export interface OverviewEntry {

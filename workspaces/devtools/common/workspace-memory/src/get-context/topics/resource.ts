@@ -48,7 +48,6 @@ export async function scanResourceTopic(
       path: relPath,
       _meta: {
         document_path: relPath,
-        document_id: filename,
       },
     });
   }

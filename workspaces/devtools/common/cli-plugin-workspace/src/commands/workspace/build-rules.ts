@@ -6,8 +6,16 @@ import {
 } from '@hod/aweave-cli-shared';
 import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { Command, Flags } from '@oclif/core';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, symlinkSync, lstatSync, unlinkSync } from 'fs';
-import { resolve, basename, relative } from 'path';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+} from 'fs';
+import { basename, relative, resolve } from 'path';
 
 const SOURCE_FILES = [
   'agent/rules/common/user-profile.md',
