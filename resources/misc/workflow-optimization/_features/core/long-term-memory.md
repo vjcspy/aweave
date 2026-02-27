@@ -58,9 +58,9 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 - No `user/memory/` directory, no `_index.yaml`, no `workspace_save_memory` tool — significantly simpler architecture
 - `resources/` is already git-tracked — no special `.gitignore` gymnastics needed
 
-### 2.4 No separate ABSTRACT.md files
+### 2.4 No separate abstract summary files
 
-**Decision:** Remove ABSTRACT.md as a standalone file type. T0 (abstract) data is stored in YAML front-matter of OVERVIEW.md files instead.
+**Decision:** Remove abstract summary file as a standalone file type. T0 (abstract) data is stored in YAML front-matter of OVERVIEW.md files instead.
 
 **Rationale:**
 
@@ -219,7 +219,7 @@ Memory is classified along two orthogonal axes:
 
 | Tier | Name | Size | Use case |
 |------|------|------|----------|
-| T0 | Abstract | 100-200 tokens | Quick orientation. Extracted from YAML front-matter of OVERVIEW.md and plan files. No separate ABSTRACT.md files needed. |
+| T0 | Abstract | 100-200 tokens | Quick orientation. Extracted from YAML front-matter of OVERVIEW.md and plan files. No separate abstract summary files needed. |
 | T1 | Overview | 1-2 pages | Working context. Enough to make decisions. |
 | T2 | Detail | Full document | Deep dive. Implementation reference. |
 
@@ -506,7 +506,7 @@ tag_values: string[]        # Optional for topics (enum of common tags)
 ---
 ```
 
-The `description` field replaces the need for a separate ABSTRACT.md file. MCP tools extract this field for T0 responses.
+The `description` field replaces the need for a separate abstract summary file. MCP tools extract this field for T0 responses.
 
 #### Plan front-matter standard
 
@@ -636,7 +636,7 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 
 | # | Question | Resolution |
 |---|----------|------------|
-| 1 | No separate ABSTRACT.md | T0 data lives in OVERVIEW.md front-matter. ABSTRACT.md files are eliminated. See §2.4. |
+| 1 | No separate abstract summary file | T0 data lives in OVERVIEW.md front-matter. abstract summary files are eliminated. See §2.4. |
 | 2 | Plan front-matter migration | Will scan and migrate existing plans to add `status` and `tags`. See §7. |
 | 3 | Micro-tasks without plans | Skipped for now. Not every task needs a plan file — revisit if gap becomes a problem. |
 | 4 | Learnings granularity | Per-domain level. Human reviews to maintain when files grow. May need review/reflect process later. |
@@ -663,17 +663,17 @@ When learnings volume makes full-file reading impractical, introduce semantic se
 - [x] **Relationship to APM:** `workspace_*` tools are part of APM, integrated into `@hod/aweave-server` (NestJS). Not a standalone MCP process.
 - [ ] **Workspace memory packages (task):** Create the 4 packages: `workspace-memory` (core), `nestjs-workspace-memory` (NestJS), `cli-plugin-workspace` (CLI), MCP integration in server. See §2.15 for structure.
 - [ ] **Plan front-matter migration (task):** Scan existing plans in `resources/*/_plans/` and add missing `status`, `tags`, `created` fields. Similarly, add front-matter to OVERVIEW.md files that lack it.
-- [ ] **OVERVIEW.md front-matter migration (task):** Scan existing OVERVIEW.md files and add `name`, `description`, `tags` front-matter. Migrate any standalone ABSTRACT.md content into the corresponding OVERVIEW.md front-matter.
+- [ ] **OVERVIEW.md front-matter migration (task):** Scan existing OVERVIEW.md files and add `name`, `description`, `tags` front-matter. Migrate any standalone abstract summary file content into the corresponding OVERVIEW.md front-matter.
 - [ ] **AGENTS.md workflow migration (task):** Rewrite AGENTS.md to use optional workspace loading flow instead of 6-step ceremony. See §2.9.
 - [ ] **Default data tuning:** Monitor if structure + overviews + metadata is sufficient as defaults, or if additional default data (e.g., recent plans) should be added. See §4.2.2 design note.
 - [ ] **`rule.md` rename (task):** Current `agent/rules/common/rule.md` is symlinked as `AGENTS.md`. After rewriting for optional workspace loading (§2.9), rename to a more descriptive name and update symlink.
-- [ ] **`create-overview.md` update (task):** Rewrite `agent/commands/common/create-overview.md` to differentiate workspace/domain/repo overview guidelines. Workspace overview MUST NOT list individual packages (T0 defaults already include all OVERVIEW front-matters → listing causes duplication). Remove Phase 4 (ABSTRACT.md generation per §2.4). Add OVERVIEW.md front-matter requirement.
-- [ ] **ABSTRACT.md → OVERVIEW.md front-matter migration (phased cutover):**
-  1. Introduce dual-read support in rules/tooling: accept both `ABSTRACT.md` and `OVERVIEW.md` front-matter as T0 source
+- [ ] **`create-overview.md` update (task):** Rewrite `agent/commands/common/create-overview.md` to differentiate workspace/domain/repo overview guidelines. Workspace overview MUST NOT list individual packages (T0 defaults already include all OVERVIEW front-matters → listing causes duplication). Remove Phase 4 (abstract summary file generation per §2.4). Add OVERVIEW.md front-matter requirement.
+- [ ] **abstract summary file → OVERVIEW.md front-matter migration (phased cutover):**
+  1. Introduce dual-read support in rules/tooling: accept both `abstract summary file` and `OVERVIEW.md` front-matter as T0 source
   2. Update generators (`create-overview.md`) to write front-matter format (configurable or both temporarily)
-  3. Migrate existing docs: copy ABSTRACT.md content into corresponding OVERVIEW.md front-matter `description` field
-  4. Validate coverage: ensure all scopes that had ABSTRACT.md now have OVERVIEW.md with front-matter
-  5. Update rule files that hardcode ABSTRACT.md paths (`rule.md`, `devtools.md`, `business-workspace.md`, `project-structure.md`) to use OVERVIEW.md front-matter
-  6. Flip defaults: new docs use front-matter only, stop generating ABSTRACT.md
-  7. Remove ABSTRACT.md hard requirement after compatibility checks pass
-  8. Clean up: remove orphaned ABSTRACT.md files
+  3. Migrate existing docs: copy abstract summary file content into corresponding OVERVIEW.md front-matter `description` field
+  4. Validate coverage: ensure all scopes that had abstract summary file now have OVERVIEW.md with front-matter
+  5. Update rule files that hardcode abstract summary file paths (`rule.md`, `devtools.md`, `business-workspace.md`, `project-structure.md`) to use OVERVIEW.md front-matter
+  6. Flip defaults: new docs use front-matter only, stop generating abstract summary file
+  7. Remove abstract summary file hard requirement after compatibility checks pass
+  8. Clean up: remove orphaned abstract summary files

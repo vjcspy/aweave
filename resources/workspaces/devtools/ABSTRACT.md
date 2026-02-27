@@ -1,3 +1,0 @@
-# DevTools — Abstract
-
-DevTools is a unified TypeScript monorepo providing the `aw` CLI — a single entrypoint for all developer tooling across the organization. Built with oclif for CLI plugin composition, NestJS for backend services, and React for web UIs, it runs as a pnpm workspace with domain-first folder structure. The monorepo hosts CLI plugins (debate, docs, dashboard, server management, workflows), a unified NestJS server on port 3456 serving REST + WebSocket + static SPA, shared libraries (xstate state machines, Playwright browser automation, CLI utilities), and Ink v6 terminal dashboards. All packages are published to npm under the `@hod/` scope, installable via `npx @hod/aweave` without cloning the repository.
