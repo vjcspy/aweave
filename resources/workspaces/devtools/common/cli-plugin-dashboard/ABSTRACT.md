@@ -1,3 +1,0 @@
-# Dashboard CLI Plugin — Abstract
-
-The Dashboard CLI Plugin (`@hod/aweave-plugin-dashboard`) is an ESM oclif plugin that renders an interactive terminal dashboard using Ink v6 and React 19. It provides real-time monitoring of pm2 processes, health checks, CPU/memory/disk statistics, and workspace status through a tabbed interface with keyboard navigation. The plugin serves as both a practical monitoring tool (`aw dashboard`) and the reference implementation for integrating Ink v6 with oclif in an ESM package. It supports dual output modes — interactive Ink UI by default and `--format json` for CI/scripting — and uses custom React components (Table, ProgressBar, Sparkline, StatusBadge) built without community Ink packages to avoid peer dependency conflicts.

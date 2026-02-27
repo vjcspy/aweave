@@ -74,7 +74,7 @@ workspaces/devtools/common/
 
 resources/workspaces/devtools/common/
 ├── node-shared/                          # 🚧 TODO - New package docs (ABSTRACT/OVERVIEW)
-│   ├── ABSTRACT.md
+│   ├── abstract summary file
 │   └── OVERVIEW.md
 └── OVERVIEW.md                           # 🔄 IN PROGRESS - Add package inventory entry
 ```
@@ -126,7 +126,7 @@ resources/workspaces/devtools/common/
   - Cover max-depth traversal limits
 
 - [x] Update package documentation
-  - Add `resources/workspaces/devtools/common/node-shared/ABSTRACT.md`
+  - Add `resources/workspaces/devtools/common/node-shared/abstract summary file`
   - Add `resources/workspaces/devtools/common/node-shared/OVERVIEW.md`
   - Update `resources/workspaces/devtools/common/OVERVIEW.md` package list and dependency diagram references
   - Update `resources/workspaces/devtools/OVERVIEW.md` if package listing or architecture notes mention shared library inventory
@@ -157,7 +157,7 @@ resources/workspaces/devtools/common/
   - `workspaces/devtools/common/nestjs-dashboard/src/services/configs.service.ts`
 - ESM dashboard consumers now use `createRequire(import.meta.url)` for CJS interop and pass `moduleDir` from `fileURLToPath(new URL('.', import.meta.url))`.
 - Updated package inventories/docs:
-  - Added `resources/workspaces/devtools/common/node-shared/ABSTRACT.md`
+  - Added `resources/workspaces/devtools/common/node-shared/abstract summary file`
   - Added `resources/workspaces/devtools/common/node-shared/OVERVIEW.md`
   - Updated `resources/workspaces/devtools/common/OVERVIEW.md`
   - Updated `resources/workspaces/devtools/OVERVIEW.md`

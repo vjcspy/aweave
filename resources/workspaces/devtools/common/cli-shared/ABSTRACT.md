@@ -1,3 +1,0 @@
-# CLI Shared — Abstract
-
-CLI Shared (`@hod/aweave-cli-shared`) is a pure utility library consumed by the main CLI and all oclif plugins as a leaf dependency, preventing cyclic dependencies in the package graph. It provides the MCP response format (the contract between CLI commands and AI agents), an HTTP client built on native `fetch`, output helpers for consistent JSON/Markdown formatting, a content reading pattern (`--file`/`--content`/`--stdin`) shared across all commands accepting input, and pm2 service management utilities for health checks and process lifecycle. The package has zero external dependencies and contains no CLI framework code.
