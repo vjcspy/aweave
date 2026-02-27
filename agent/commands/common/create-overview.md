@@ -145,6 +145,7 @@ Keep `description` concise (purpose-level summary only). Topic-specific organiza
 - **Individual package/repo listings with descriptions** — child OVERVIEW summaries are already returned in `workspace_get_context` defaults (`defaults.overviews`). Listing them in the workspace overview creates duplication.
 - **Per-package documentation links** — `defaults.overviews` includes `_meta.document_path` for each OVERVIEW. No need to duplicate.
 - **Detailed dependency graphs between packages** — belongs in repo-level or architecture docs.
+- **Skills, commands, or rules references** — `workspace_get_context` defaults include `loaded_skills` (from `.aweave/loaded-skills.yaml`), which already surfaces available skills/commands/rules with name, description, and path. Listing them in the workspace overview creates the same duplication problem as listing individual repos.
 
 **Content structure:**
 
@@ -180,7 +181,10 @@ Focus on CONNECTIONS and DATA FLOW, not listing individual packages.]
 [Common commands, entry points, useful links — workspace-level only]
 ```
 
-**Anti-pattern example:** The workspace overview should NOT have sections like "Package Documentation" that list every package with links — this is exactly what the T0 defaults provide.
+**Anti-pattern examples:**
+
+- The workspace overview should NOT have sections like "Package Documentation" that list every package with links — this is exactly what the T0 defaults provide.
+- The workspace overview should NOT have sections like "Skills Reference", "Commands Reference", or "Rules Reference" that list available skills/commands/rules — `workspace_get_context` defaults already return `loaded_skills` with all necessary metadata.
 
 ---
 
@@ -348,6 +352,7 @@ Example (for `_plans/`):
 - [ ] Metadata header has correct branch, commit hash, date
 - [ ] Content follows scope-appropriate template
 - [ ] **Workspace scope:** Does NOT list individual packages/repos with descriptions
+- [ ] **Workspace scope:** Does NOT list skills, commands, or rules (these are returned by `workspace_get_context` defaults via `loaded_skills`)
 - [ ] **Topic scope:** Enumerates ALL valid values for enum fields (status, category)
 - [ ] **Topic scope:** Describes folder organization pattern (flat vs nested, naming convention)
 - [ ] **All scopes:** No tables used in main content (use headings + bullets)
