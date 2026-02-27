@@ -11,10 +11,7 @@ function parseCommaSeparated(value?: string): string[] | undefined {
   return value.split(',').map((s) => s.trim());
 }
 
-function parseBoolean(
-  value: unknown,
-  defaultValue: boolean,
-): boolean {
+function parseBoolean(value: unknown, defaultValue: boolean): boolean {
   if (value === undefined) return defaultValue;
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value !== 0;

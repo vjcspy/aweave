@@ -29,7 +29,6 @@ export async function scanFeatures(ctx: TopicContext): Promise<FeatureEntry[]> {
       path: relPath,
       _meta: {
         document_path: relPath,
-        document_id: name,
       },
     });
   }
