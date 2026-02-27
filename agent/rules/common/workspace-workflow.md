@@ -17,6 +17,8 @@ If workspace is ambiguous, ask the user.
 
 ## Task Detection
 
+**Before handling any workspace-scoped task:** Call `workspace_get_context` first. See Context & Memory Usage.
+
 | Signals | Task Type | Load Rule |
 |---|---|---|
 | "create plan", "write plan", path to `_plans/` | Plan | `agent/rules/common/tasks/create-plan.md` |
