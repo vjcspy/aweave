@@ -1,3 +1,11 @@
+---
+description: Customer-facing React web application for managing Tessa robots, featuring task scheduling, music playlists, and robot configuration.
+folder_structure: |-
+  - src/: Main application source code including React components, Redux state, and API integration.
+  - assets/: Static assets like images and global styles.
+  - localization/: Multi-language support (nl, en, de).
+---
+
 # ui.r2d2 - TinyBots Customer Dashboard
 
 ## Purpose
@@ -150,6 +158,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 ### API Calls by Screen
 
 #### Login/Auth (`prowl`, `checkpoint`)
+
 - `POST /v3/users/accounts/login` - User login
 - `POST /v4/users/accounts/eula-login` - Login with EULA acceptance
 - `PUT /v2/users/accounts` - User signup
@@ -160,14 +169,17 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `GET /v3/robots/mine` - List user's robots
 
 #### Overview (`eve`)
+
 - `GET /v6/schedules/{robotId}?from=&until=` - Fetch schedule for date range
 
 #### Task (`eve`, `micro_manager`)
+
 - `PUT /v6/schedules/{robotId}` - Create/update task
 - `DELETE /v4/schedules/{robotId}` - Delete task
 - `GET /v5/scripts/user/robots/{robotId}/scripts` - List scripts for task linking
 
 #### Music (`soundwave`)
+
 - `GET /v1/music/collection/{robotId}` - List music collection
 - `GET /v1/music/collection/{robotId}/meta` - Get storage usage
 - `POST /v1/music/collection/{robotId}` - Upload songs
@@ -177,6 +189,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `DELETE /v1/music/playlist/{robotId}/{playlistId}` - Delete playlist
 
 #### Scripts (`micro_manager`)
+
 - `GET /v5/scripts/user/robots/{robotId}/scripts` - List scripts
 - `GET /v5/scripts/user/robots/{robotId}/scripts/{id}` - Get script detail
 - `GET /v3/scripts/user/robots/{robotId}/templates` - List templates
@@ -185,6 +198,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `POST /v2/scripts/user/robot/{robotId}/scripts/convert` - Convert v1 to v2
 
 #### Speech Interactions (`custom_commands`)
+
 - `GET /v1/speech-interactions/{robotId}` - List custom commands
 - `GET /v1/speech-interactions/{robotId}/{id}` - Get single command
 - `PUT /v1/speech-interactions/{robotId}` - Create/update command
@@ -193,6 +207,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `POST /v1/speech-interactions/{robotId}/default/{id}/toggle` - Toggle default command
 
 #### Robot Settings (`commander_data`, `checkpoint`, `baymax`)
+
 - `GET /v5/settingsrobot/user/{robotId}` - Get robot settings
 - `PATCH /v5/settingsrobot/user/{robotId}` - Update settings
 - `PATCH /v3/robots/accounts/{robotId}/profile` - Update end user name
@@ -201,6 +216,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `POST /v1/config/{robotId}/deploy` - Download update
 
 #### User Profile (`prowl`, `checkpoint`)
+
 - `PATCH /v3/users/accounts/self/profile` - Update profile
 - `PATCH /v3/users/accounts/self` - Change password, MFA
 - `DELETE /v5/users/accounts/self` - Delete account
@@ -208,6 +224,7 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `GET /v3/users/robots/{robotId}/users` - List robot users
 
 #### Robot Users / Invites (`checkpoint`, `prowl`)
+
 - `GET /v3/users/robots/{robotId}/users` - List users for robot
 - `GET /v2/robots/{robotId}/invites` - List pending invites
 - `PUT /v2/robots/{robotId}/invites` - Send invite
@@ -216,30 +233,36 @@ The app communicates with multiple TinyBots backend microservices via REST APIs.
 - `PATCH /v3/robots/{robotId}/users/{userId}` - Change user role
 
 #### Pairing (`checkpoint`)
+
 - `POST /v3/robots/accounts/pair` - Pair robot with code
 - `POST /v2/robots/accounts/updatepair` - Update pairing
 
 #### Offline Notifications (`clank`)
+
 - `GET /v1/offline/notification/{robotId}/contacts` - List contacts
 - `PUT /v1/offline/notification/{robotId}/contacts` - Add/update contact
 - `DELETE /v1/offline/notification/{robotId}/contacts/{id}` - Remove contact
 - `PATCH /v1/offline/notification/{robotId}/contacts/{id}/settings` - Update settings
 
 #### Permissions (`permissions`)
+
 - `GET /v1/permissions` - List all permission types
 - `GET /v1/permissions/robots/{robotId}` - Get robot permissions
 - `PUT /v1/permissions/robots/{robotId}` - Set permissions
 - `DELETE /v1/permissions/robots/{robotId}/permissions/{id}` - Remove permission
 
 #### App Notifications (`hue`)
+
 - `GET /v1/notifications` - Get notifications
 - `POST /v1/notifications/{uuid}/seen` - Mark as seen
 
 #### Heartbeat (`heartbeat`)
+
 - `GET /v1/heartbeat/status/{robotId}` - Get online status
 - `POST /v1/heartbeat/update/{robotId}` - Trigger status update
 
 #### Information (`prowl`)
+
 - `GET /v1/eula/latest` - Get latest EULA
 - `GET /v1/eula/{eulaId}` - Get specific EULA
 - `POST /v4/users/accounts/self/eula` - Accept EULA
