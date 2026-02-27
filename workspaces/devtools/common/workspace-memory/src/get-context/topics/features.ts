@@ -6,7 +6,10 @@ import type { FeatureEntry, TopicContext } from '../types';
 export async function scanFeatures(ctx: TopicContext): Promise<FeatureEntry[]> {
   const { resourcesDir, projectRoot } = ctx;
   const pattern = `${resourcesDir}/**/_features/**/*.md`;
-  const files = await fg(pattern, { absolute: true });
+  const files = await fg(pattern, {
+    absolute: true,
+    ignore: ['**/OVERVIEW.md'],
+  });
   const entries: FeatureEntry[] = [];
 
   for (const file of files) {

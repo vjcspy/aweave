@@ -114,10 +114,17 @@ name: string                # Scope name (e.g., "DevTools", "DevTools Common", "
 description: string         # 1-2 sentence abstract — this IS the T0 summary
 tags: string[]              # For filtering (optional)
 updated: YYYY-MM-DD        # Last meaningful update (optional)
+
+# Only required if scope is topic (e.g., resources/workspaces/.../_{topicName}/OVERVIEW.md)
+folder_structure: string    # Flat vs nested, prefix conventions, etc. 
+status_values: string[]     # Example: ['new', 'in_progress', 'done']
+category_values: string[]   # Example: ['architecture', 'tooling']
+tag_values: string[]        # Example: ['frontend', 'backend']
 ---
 ```
 
 The `description` field is extracted by `workspace_get_context` as T0 data. It must be self-contained — a reader should understand the scope's purpose from this field alone.
+Keep `description` concise (purpose-level summary only). Topic-specific organization and allowed filter values belong in dedicated fields (`folder_structure`, `status_values`, `category_values`, `tag_values`).
 
 ### ALL Scopes: Metadata Header (after front-matter)
 
@@ -269,6 +276,10 @@ tags: [<relevant tags>]
 name: "<Topic Name>"
 description: "<1-2 sentences: what this topic contains and why it exists>"
 tags: [<relevant tags>]
+folder_structure: "<concise directory convention summary>"
+status_values: [<valid status enum values>]
+category_values: [<valid category enum values>]
+tag_values: [<common/expected tags>]
 ---
 
 > **Branch:** {CURRENT_BRANCH}
@@ -279,13 +290,13 @@ tags: [<relevant tags>]
 [What this topic represents. When should a new entry be created here? Who creates entries (human, AI, or both)?]
 
 ## File Organization
-[How files/folders are structured within this topic.
+[Describe how files/folders are structured within this topic. **NOTE: also put a concise string representation of this in the `folder_structure` front-matter schema.**]
 - Naming convention (e.g., `YYMMDD-name.md` for chronological topics)
 - Flat vs nested structure (e.g., `_features/` uses subdirectories by category like `core/`, `common/`, while `_plans/` is flat)
-- Any special files besides OVERVIEW.md]
+- Any special files besides OVERVIEW.md
 
 ## Front-matter Schema
-[List each front-matter field. For each field specify: meaning, type, required vs optional, and ALL valid values for enum-like fields.]
+[List each front-matter field for files in this topic. For each field specify: meaning, type, required vs optional, and ALL valid values for enum-like fields.]
 
 Example (for `_plans/`):
 - `name` (string, required): Human-readable plan name
@@ -295,17 +306,16 @@ Example (for `_plans/`):
 - `updated` (YYYY-MM-DD, optional): When status last changed
 - `tags` (string[], optional): For filtering
 
-## Status Values (if applicable)
-[Table or list of all valid status values with their meanings. This is critical for AI agents to correctly filter and create entries.]
-
-## Category Values (if applicable)
-[Valid categories for this topic. E.g., for `_decisions/`: `architecture`, `tooling`, `convention`, `dependency`.]
-
-## Common Tags (if applicable)
-[Frequently used tags in this topic, if any conventions exist.]
+## Required Topic Front-matter Updates
+**CRITICAL:** When generating a **Topic Overview**, ensure you include the new machine-readable front-matter fields so `workspace_get_context` surfaces them:
+- `folder_structure`: A concise 1-2 sentence string mapping out the directory tree requirements.
+- `status_values`: Any valid status ENUMS mapped out here.
+- `category_values`: Any valid category ENUMS mapped out here.
+- `tag_values`: Any frequently expected tags.
 ```
 
 **Key differences from other scopes:**
+
 - Focus is on **data format conventions**, not architecture or business context
 - MUST enumerate valid values for enum-like fields (status, category) — AI agents depend on this for filtering and creating entries
 - MUST describe folder organization pattern (flat vs. nested, naming conventions)
@@ -333,6 +343,7 @@ Example (for `_plans/`):
 **Validation checklist:**
 
 - [ ] Front-matter includes `name`, `description` (and optionally `tags`, `updated`)
+- [ ] **Topic scope:** Front-matter also includes `folder_structure`, `status_values`, `category_values`, `tag_values`
 - [ ] `description` field is self-contained (understandable without reading the full document)
 - [ ] Metadata header has correct branch, commit hash, date
 - [ ] Content follows scope-appropriate template

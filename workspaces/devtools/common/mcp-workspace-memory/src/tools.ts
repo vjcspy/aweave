@@ -2,7 +2,7 @@ export const WORKSPACE_TOOLS = [
   {
     name: 'workspace_get_context',
     description:
-      'Get workspace context: folder structure, overviews, plans, features, architecture, decisions, lessons, and loaded skills. Topics are auto-discovered from _{topicName}/ folders in resources/.',
+      'Get workspace context. Defaults include scope_overview_t1, folder_structure, overviews, and loaded_skills. Requested topics return { overview_t1, entries }, with overview_t1 resolved from the nearest scope topic OVERVIEW.md and fallback up the scope tree.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -18,11 +18,12 @@ export const WORKSPACE_TOOLS = [
         topics: {
           type: 'string',
           description:
-            'Comma-separated topic names (e.g. "plans,decisions,lessons"). Topics map to _{topicName}/ folders in resources/, except "features" which has special handling.',
+            'Comma-separated topic names (e.g. "plans,decisions,lessons"). Topics map to _{topicName}/ folders in resources/, except "features" and "overview" which have special handling.',
         },
         include_defaults: {
           type: 'boolean',
-          description: 'Include defaults (folder structure, overviews, skills)',
+          description:
+            'Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills)',
           default: true,
         },
         filter_status: {

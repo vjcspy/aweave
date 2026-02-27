@@ -223,7 +223,7 @@ Memory is classified along two orthogonal axes:
 | T1 | Overview | 1-2 pages | Working context. Enough to make decisions. |
 | T2 | Detail | Full document | Deep dive. Implementation reference. |
 
-**How they combine:** A warm memory tool might return T0 (front-matter only) for broad scope queries and T1/T2 for narrow scope queries.
+**How they combine:** Warm defaults return scoped T1 (`scope_overview_t1`) plus broad T0 overviews. Topic queries return per-topic T1 (`overview_t1`) plus T0 entries.
 
 ### 3.2 Data Topology
 
@@ -348,32 +348,39 @@ filters:
 
 Always returned to give AI structural orientation without needing to decide what to ask for:
 
-1. **Folder structure** of `resources/workspaces/{scope}/`
-2. **Overviews** (front-matter: name, description, tags) of all OVERVIEW.md files within scope, returned as `defaults.overviews`
-3. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
+1. **Scope Overview (T1)** full markdown body of `OVERVIEW.md` at the requested base scope
+2. **Folder structure** of `resources/workspaces/{scope}/`
+3. **Overviews (T0)** (front-matter: name, description, plus newly added topic fields like folder_structure, status_values, etc.) of all OVERVIEW.md files within scope, returned as `defaults.overviews`
+4. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
 
-> **Design note (subject to change):** Defaults currently include structure + overviews + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+> **Design note (subject to change):** Defaults currently include scope overview + structure + overviews + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
 **`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
 **Topic-specific data (when topics are specified):**
 
-| Topic | Source | Returns |
+| Topic | Source | Returns (`{ overview_t1, entries }`) |
 |-------|--------|---------|
-| `"overview"` | `resources/workspaces/{scope}/OVERVIEW.md` | T1 full content of OVERVIEW at current scope level |
-| `"plans"` | `resources/workspaces/{scope}/*/_plans/` | T0 front-matter of all plans within scope |
-| `"features"` | `resources/workspaces/{scope}/*/_features/` | T0 listing of features within scope |
-| `"architecture"` | `resources/workspaces/{scope}/*/_architecture/` | T0/T1 listing of architecture docs |
-| `"decisions"` | `resources/workspaces/{scope}/**/_decisions/` | T0 front-matter of decision files |
-| `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | T0 front-matter of lesson files |
-| `"{any_topic}"` | `resources/workspaces/{scope}/**/_{topicName}/` | Generic scan — any `_{topicName}/` folder works |
+| `"overview"` | `resources/workspaces/{scope}/OVERVIEW.md` | T1 full content of OVERVIEW at current scope level (no entries) |
+| `"plans"` | `resources/workspaces/{scope}/*/_plans/` | `overview_t1` + Array of T0 front-matter of all plans |
+| `"features"` | `resources/workspaces/{scope}/*/_features/` | `overview_t1` + Array of T0 listing of features |
+| `"architecture"` | `resources/workspaces/{scope}/*/_architecture/` | `overview_t1` + Array of T0/T1 listing of architecture docs |
+| `"decisions"` | `resources/workspaces/{scope}/**/_decisions/` | `overview_t1` + Array of T0 front-matter of decision files |
+| `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | `overview_t1` + Array of T0 front-matter of lesson files |
+| `"{any_topic}"` | `resources/workspaces/{scope}/**/_{topicName}/` | Generic scan returning shape with `overview_t1` plus array of entries |
 
-**`include_defaults: false`:** Skips folder structure and overviews. Use on follow-up calls within the same conversation to save tokens.
+`overview_t1` for a topic is resolved deterministically from the nearest scope `_{topicName}/OVERVIEW.md`, then falls back up the scope tree.
+
+**`include_defaults: false`:** Skips all default payload (`scope_overview_t1`, folder structure, overviews, loaded skills). Use on follow-up calls within the same conversation to save tokens.
 
 **Response example:**
 
 ```yaml
 defaults:
+  scope_overview_t1: |
+    # DevTools
+    Shared development tools and infrastructure...
+
   folder_structure: |
     resources/workspaces/devtools/
     ├── OVERVIEW.md
@@ -396,6 +403,10 @@ defaults:
       name: "DevTools Common"
       description: "Shared tools and utilities across all domains"
       tags: [cli, shared]
+      folder_structure: "_plans/ is flat with YYMMDD-kebab-case.md"
+      status_values: [new, in_progress, partial, done, abandoned]
+      category_values: []
+      tag_values: [memory, refactor, migration]
       _meta:
         document_path: "resources/workspaces/devtools/common/OVERVIEW.md"
 
@@ -408,21 +419,25 @@ defaults:
       skill_path: "agent/skills/common/devtools-nestjs-builder/SKILL.md"
 
 plans:
-  - name: "Workflow Engine"
-    description: "Build a workflow execution engine for sequential and parallel task graphs"
-    status: done
-    created: "2026-02-08"
-    tags: [workflow, engine, xstate]
-    _meta:
-      document_path: "resources/workspaces/devtools/common/_plans/260208-workflow-engine.md"
+  overview_t1: |
+    # Plans Topic (`_plans`)
+    This topic stores implementation plans...
+  entries:
+    - name: "Workflow Engine"
+      description: "Build a workflow execution engine for sequential and parallel task graphs"
+      status: done
+      created: "2026-02-08"
+      tags: [workflow, engine, xstate]
+      _meta:
+        document_path: "resources/workspaces/devtools/common/_plans/260208-workflow-engine.md"
 
-  - name: "SPA Self-Serve from Feature Modules"
-    description: "Eliminate per-SPA boilerplate in server package"
-    status: in_progress
-    created: "2026-02-23"
-    tags: [nestjs, spa, architecture]
-    _meta:
-      document_path: "resources/workspaces/devtools/common/_plans/260223-spa-self-serve.md"
+    - name: "SPA Self-Serve from Feature Modules"
+      description: "Eliminate per-SPA boilerplate in server package"
+      status: in_progress
+      created: "2026-02-23"
+      tags: [nestjs, spa, architecture]
+      _meta:
+        document_path: "resources/workspaces/devtools/common/_plans/260223-spa-self-serve.md"
 ```
 
 ### 4.3 Warm Memory — Write Path
@@ -432,6 +447,7 @@ plans:
 Decisions and lessons are written directly as files in `resources/`, following the same `_{topicName}/YYMMDD-name.md` pattern as plans. AI agents use native file write tools (Write, StrReplace). No MCP write tool needed.
 
 **File locations:**
+
 - Decisions: `resources/workspaces/{scope}/_decisions/YYMMDD-decision-name.md`
 - Lessons: `resources/workspaces/{scope}/_lessons/YYMMDD-lesson-name.md`
 
@@ -482,6 +498,12 @@ name: string                # Scope name (e.g., "DevTools Common")
 description: string         # 1-2 sentence abstract — this IS the T0 summary
 tags: string[]              # For filtering (optional)
 updated: YYYY-MM-DD        # Last meaningful update (optional)
+
+# For Topic Overviews (_{topicName}/OVERVIEW.md) ONLY:
+folder_structure: string    # Required for topics (description of file/folder layout)
+status_values: string[]     # Optional for topics (enum of valid statuses)
+category_values: string[]   # Optional for topics (enum of valid categories)
+tag_values: string[]        # Optional for topics (enum of common tags)
 ---
 ```
 
@@ -576,8 +598,8 @@ A hot memory rule file (`agent/rules/common/context-memory-rule.md`) that guides
 
 **Does NOT contain:**
 
-- Hardcoded lists of tags, categories, or topics — these are stored in memory metadata files (`_index.yaml`) and loaded via `workspace_get_context` defaults
-- Workspace-specific knowledge — that belongs in warm memory (`resources/` and `user/memory/`)
+- Hardcoded lists of tags, categories, or topics — these are discovered from topic overviews and entry front-matter
+- Workspace-specific knowledge — that belongs in warm memory (`resources/`)
 
 **Token budget:** < 80 lines. Part of the overall hot memory budget (~300 lines).
 

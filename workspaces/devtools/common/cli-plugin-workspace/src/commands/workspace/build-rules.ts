@@ -6,8 +6,8 @@ import {
 } from '@hod/aweave-cli-shared';
 import { resolveDevtoolsRoot } from '@hod/aweave-node-shared';
 import { Command, Flags } from '@oclif/core';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, symlinkSync, lstatSync, unlinkSync } from 'fs';
+import { resolve, basename, relative } from 'path';
 
 const SOURCE_FILES = [
   'agent/rules/common/user-profile.md',
@@ -67,6 +67,32 @@ export class WorkspaceBuildRules extends Command {
 
     const combined = sections.join('\n');
 
+    const agentsRulesDir = resolve(projectRoot, '.agents/rules');
+    if (!flags['dry-run'] && !existsSync(agentsRulesDir)) {
+      mkdirSync(agentsRulesDir, { recursive: true });
+    }
+
+    const symlinksCreated: string[] = [];
+
+    for (const relPath of SOURCE_FILES) {
+      const fileName = basename(relPath);
+      const targetSymlinkPath = resolve(agentsRulesDir, fileName);
+      const sourceFilePath = resolve(projectRoot, relPath);
+      const relativeTarget = relative(agentsRulesDir, sourceFilePath);
+
+      if (!flags['dry-run']) {
+        try {
+          if (lstatSync(targetSymlinkPath)) {
+            unlinkSync(targetSymlinkPath);
+          }
+        } catch (e: any) {
+          // Ignored
+        }
+        symlinkSync(relativeTarget, targetSymlinkPath);
+      }
+      symlinksCreated.push(targetSymlinkPath);
+    }
+
     if (flags['dry-run']) {
       output(
         new MCPResponse({
@@ -79,6 +105,7 @@ export class WorkspaceBuildRules extends Command {
                 output_file: OUTPUT_FILE,
                 line_count: combined.split('\n').length,
                 char_count: combined.length,
+                symlinks_created: symlinksCreated,
               },
             }),
           ],
@@ -102,6 +129,7 @@ export class WorkspaceBuildRules extends Command {
               output_file: OUTPUT_FILE,
               line_count: combined.split('\n').length,
               source_files: SOURCE_FILES,
+              symlinks_created: symlinksCreated,
             },
           }),
         ],
