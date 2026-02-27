@@ -1,6 +1,15 @@
 <!-- budget: 100 lines -->
 # Context & Memory Usage
 
+> **BLOCKER:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
+
+**For workspace-scoped tasks, follow this order:**
+1. [ ] Call `workspace_get_context` with appropriate scope (workspace, domain, topics)
+2. [ ] If tool unavailable (e.g. MCP server not in session): fallback to direct file access, note the fallback in response
+3. [ ] Only then: use other methods for deeper detail if needed
+
+**Do NOT:** Skip `workspace_get_context` and go straight to reading or searching files when the task involves workspace content. The warm memory layer exists to provide structured orientation first.
+
 ## Key Concepts
 
 **Memory layers (when to load):**
@@ -25,8 +34,6 @@ Call `workspace_get_context` when the task involves:
 - Workspace-specific code (paths contain `workspaces/` or `resources/workspaces/`)
 - Mentions of workspace, domain, or repository names
 - Project structure, conventions, history, plans, features, architecture, decisions, or lessons
-
-**Mandatory:** If user prompt or referenced paths include workspace path patterns, you MUST call `workspace_get_context` before answering or implementing.
 
 **Skip for:** General questions, simple edits with sufficient inline context, infra fixes unrelated to workspace logic. Also skip if user explicitly asks to.
 
