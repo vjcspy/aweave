@@ -1,0 +1,1 @@
+../../agent/rules/common/workspace-workflow.md

@@ -1,0 +1,1 @@
+../../agent/rules/common/global-conventions.md
