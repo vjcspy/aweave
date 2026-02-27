@@ -25,7 +25,7 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 **Rationale:**
 
 - External platforms provide less of what we need but more than necessary — they don't fit the specific requirements
-- Custom filtering requirements: beyond category, we need tag-based filtering. Data includes `_meta` fields (document_path, document_id) that must be returned on retrieval but NOT included in search
+- Custom filtering requirements: beyond category, we need tag-based filtering. Data includes `_meta` fields (`document_path`) returned on retrieval but NOT included in search
 - All data already exists in the workspace filesystem, organized by workspace/domain/repo. Only need to build retrieval tools on top of existing structure
 - Data is already optimized for workspace-scoped access — when an AI agent (or human) works with a workspace, they only care about data within that workspace
 - `resources/` data lives in git → scope-based query already provides sufficient context. `user/memory/` is local workspace-scoped data (gitignored, see §2.13)
@@ -319,10 +319,9 @@ Scope resolution: if only `workspace` is passed, tool aggregates across all doma
 ```yaml
 _meta:
   document_path: string    # relative path to source document
-  document_id: string      # unique identifier (filename or generated)
 ```
 
-> **Note:** `defaults.overviews[*]._meta` includes only `document_path` (no `document_id`).
+> **Note:** `workspace_get_context` responses use `_meta.document_path` only.
 
 ---
 
