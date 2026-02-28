@@ -2,7 +2,7 @@ export const WORKSPACE_TOOLS = [
   {
     name: 'workspace_get_context',
     description:
-      'Get workspace context. Defaults include scope_overview_t1, folder_structure, overviews, and loaded_skills. Requested topics return { overview_t1, entries }, with overview_t1 resolved from the nearest scope topic OVERVIEW.md and fallback up the scope tree.',
+      'MUST use this tool as the first retrieval step for workspace-scoped tasks. MUST detect workspace/domain/repository/topics from concrete evidence. NEVER guess missing scope or topic values. If scope or schema is ambiguous/invalid, STOP and ask the user to correct it. Defaults return scope_overview_t1, folder_structure, overviews, and loaded_skills. Requested topics return { overview_t1, entries }, where overview_t1 is resolved from the nearest scope topic OVERVIEW.md (fallback up the scope tree).',
     inputSchema: {
       type: 'object' as const,
       properties: {
