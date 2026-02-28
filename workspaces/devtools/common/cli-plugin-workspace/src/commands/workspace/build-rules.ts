@@ -21,8 +21,8 @@ import { basename, relative, resolve } from 'path';
 const SOURCE_FILES = [
   'agent/rules/common/user-profile.md',
   'agent/rules/common/global-conventions.md',
-  'agent/rules/common/workspace-workflow.md',
   'agent/rules/common/context-memory-rule.md',
+  'agent/rules/common/workspace-workflow.md',
 ];
 
 const OUTPUT_FILE = 'AGENTS.md';
