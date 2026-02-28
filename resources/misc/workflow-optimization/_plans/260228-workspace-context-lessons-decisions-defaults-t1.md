@@ -1,7 +1,7 @@
 ---
 name: Workspace Context Defaults + Lessons/Decisions T1 Contract Update
 description: Update workspace_get_context defaults and topic behavior so folder structure is directory-only, defaults include lessons/decisions T0 by scope level, and lessons/decisions topics return full T1 file content.
-status: new
+status: done
 created: 2026-02-28
 tags: [memory, workspace-context, defaults, lessons, decisions, contract]
 ---
@@ -88,67 +88,82 @@ defaults:
 
 ### Phase 1: Update Source-of-Truth Specification
 
-- [ ] Update `resources/misc/workflow-optimization/_features/core/long-term-memory.md`
+- [x] Update `resources/misc/workflow-optimization/_features/core/long-term-memory.md`
   - Define new defaults fields `decisions_t0` and `lessons_t0`
   - Define exact entry schema for both fields (same contract as above)
   - Define scope-ladder aggregation rules for defaults by workspace/domain/repository
   - Update folder structure contract to directory-only output
   - Define lessons/decisions topic entries as T1-full per file
-- [ ] Update `resources/misc/workflow-optimization/_plans/260227-workspace-context-t1-overview-contract.md`
+- [x] Update `resources/misc/workflow-optimization/_plans/260227-workspace-context-t1-overview-contract.md`
   - Add follow-up delta section or resolution note to avoid spec drift
   - Mark superseded parts that still say decisions/lessons topic entries are T0-only
 
 ### Phase 2: Core Library Contract + Types (`@hod/aweave-workspace-memory`)
 
-- [ ] Add scope-ladder resolver strategy (chosen approach: Option B)
+- [x] Add scope-ladder resolver strategy (chosen approach: Option B)
   - Implement helper in core to build ladder dirs from `scope` in `get-context.ts`
   - `getContext()` computes ordered `ladderDirs` and passes into `getDefaults(...)`
   - `getDefaults()` no longer infers hierarchy from one `resourcesDir`; it consumes explicit ladder input
-- [ ] Update `src/get-context/types.ts`
+- [x] Update `src/get-context/types.ts`
   - Extend `DefaultsResponse` with `decisions_t0` and `lessons_t0`
   - Add explicit types for lesson/decision entries with T1 body field
-- [ ] Update `src/parsers/folder-structure.ts`
+- [x] Update `src/parsers/folder-structure.ts`
   - Implement directory-only tree output
   - Keep `maxDepth=4` (workspace/domain/repository/topic granularity is sufficient)
   - Enforce stop conditions at repository + topic folder granularity
-- [ ] Update `src/get-context/defaults.ts`
+- [x] Update `src/get-context/defaults.ts`
   - Scan `_decisions` and `_lessons` for T0 entries across allowed levels only
   - Dedup by `_meta.document_path` as safety guard
   - Apply global ordering after merge: newest first by `created`, then name
-- [ ] Update `src/get-context/get-context.ts`
+- [x] Update `src/get-context/get-context.ts`
   - Route `decisions` and `lessons` through specialized scanners returning T1-full entries
   - Preserve topic isolation (`topics=lessons` does not include decisions)
-- [ ] Add/adjust scanners under `src/get-context/topics/`
+- [x] Add/adjust scanners under `src/get-context/topics/`
   - Keep generic scanner for non-learning topics
   - Introduce specialized scanner for lessons/decisions with full body extraction
 
 ### Phase 3: Propagate Through Access Layers
 
-- [ ] Update MCP tool description in `workspaces/devtools/common/mcp-workspace-memory/src/tools.ts`
+- [x] Update MCP tool description in `workspaces/devtools/common/mcp-workspace-memory/src/tools.ts`
   - Reflect new defaults fields and lessons/decisions full T1 semantics
-- [ ] Update REST DTO docs in `workspaces/devtools/common/nestjs-workspace-memory/src/dto/get-context.dto.ts`
+- [x] Update REST DTO docs in `workspaces/devtools/common/nestjs-workspace-memory/src/dto/get-context.dto.ts`
   - Reflect defaults additions and topic semantic changes
-- [ ] Update any CLI-facing help text if contract docs are surfaced there
+- [x] Update any CLI-facing help text if contract docs are surfaced there
 
 ### Phase 4: Update Rules and Related Documents
 
-- [ ] Update `agent/rules/common/context-memory-rule.md`
+- [x] Update `agent/rules/common/context-memory-rule.md`
   - Document new defaults behavior and lessons/decisions deep retrieval semantics
-- [ ] Update `AGENTS.md` sections that describe `workspace_get_context` defaults/topics (if present and not generated-only blocks)
-- [ ] Review related OVERVIEW/rule docs under `resources/` that restate old T0-only behavior for lessons/decisions and align wording
+- [x] Update `AGENTS.md` sections that describe `workspace_get_context` defaults/topics (if present and not generated-only blocks)
+- [x] Review related OVERVIEW/rule docs under `resources/` that restate old T0-only behavior for lessons/decisions and align wording
 
 ### Phase 5: Validation (No Test Authoring)
 
-- [ ] Build impacted packages:
+- [x] Build impacted packages:
   - `@hod/aweave-workspace-memory`
   - `@hod/aweave-mcp-workspace-memory`
   - `@hod/aweave-nestjs-workspace-memory`
-- [ ] Manual contract verification:
+- [x] Manual contract verification:
   - workspace/domain/repository scope calls return expected ladder aggregation in `defaults.decisions_t0` and `defaults.lessons_t0`
   - folder structure contains directories only
   - `topics=lessons` returns only lessons with full T1 per file
   - `topics=decisions` returns only decisions with full T1 per file
   - `include_defaults=false` still omits all defaults payloads
+
+## Implementation Results
+
+- Built successfully:
+  - `pnpm --filter @hod/aweave-workspace-memory build`
+  - `pnpm --filter @hod/aweave-mcp-workspace-memory build`
+  - `pnpm --filter @hod/aweave-nestjs-workspace-memory build`
+- Additional verification:
+  - `pnpm --filter @hod/aweave-plugin-workspace build`
+  - Local fixture smoke tests validated:
+    - scope-ladder aggregation for `defaults.decisions_t0` / `defaults.lessons_t0`
+    - directory-only `defaults.folder_structure` (no `OVERVIEW.md`)
+    - topic isolation for `topics=lessons` and `topics=decisions`
+    - full `body_t1` content for decisions/lessons entries
+    - `includeDefaults: false` omits defaults payload
 
 ## Risks and Mitigations
 

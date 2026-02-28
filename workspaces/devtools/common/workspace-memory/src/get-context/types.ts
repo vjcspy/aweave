@@ -45,11 +45,29 @@ export interface SkillEntry {
   skill_path: string;
 }
 
+export interface LearningT0Entry {
+  name: string;
+  description: string;
+  tags?: string[];
+  category?: string;
+  created?: string;
+  status?: string;
+  path: string;
+  _meta: Pick<EntryMeta, 'document_path'>;
+}
+
+export interface LearningTopicEntry extends LearningT0Entry {
+  body_t1: string;
+  [key: string]: unknown;
+}
+
 export interface DefaultsResponse {
   scope_overview_t1: string | null;
   folder_structure: string;
   overviews: OverviewEntry[];
   loaded_skills: SkillEntry[];
+  decisions_t0: LearningT0Entry[];
+  lessons_t0: LearningT0Entry[];
 }
 
 export interface TopicEntriesResponse<TEntry = unknown> {

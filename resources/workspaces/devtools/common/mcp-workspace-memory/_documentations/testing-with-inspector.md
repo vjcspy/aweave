@@ -81,7 +81,7 @@ PROJECT_ROOT=/absolute/path/to/aweave \
    ```
 
 6. Click **Run Tool**.
-7. The Output section will display the structured JSON response from the workspace memory retrieval. Verify that it correctly returns `defaults.folder_structure`, `defaults.overviews`, and other relevant context.
+7. The Output section will display the structured JSON response from the workspace memory retrieval. Verify that it correctly returns `defaults.folder_structure` (directory-only), `defaults.overviews`, `defaults.decisions_t0`, `defaults.lessons_t0`, and other relevant context.
 
 ## Common Troubleshooting
 
