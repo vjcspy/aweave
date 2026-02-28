@@ -1,7 +1,7 @@
 <!-- budget: 100 lines -->
 # Context & Memory Usage
 
-> **BLOCKER/CRITICAL/MUST DO:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
+> **BLOCKER:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
 
 **For workspace-scoped tasks, follow this order:**
 
@@ -39,7 +39,13 @@ Call `workspace_get_context` when the task involves:
 - Mentions of workspace, domain, or repository names
 - Project structure, conventions, history, plans, features, architecture, decisions, or lessons
 
-**Skip for:** General questions, simple edits with sufficient inline context, infra fixes unrelated to workspace logic. Also skip if user explicitly asks to.
+**Skip for:**
+
+- Direct file edits where the task is self-contained (fix typo, rename variable, add import)
+- Tasks where user provides all needed context inline
+- General questions unrelated to workspace structure
+- Infra/tooling fixes unrelated to workspace logic
+- User explicitly asks to skip
 
 ## How to Use `workspace_get_context`
 

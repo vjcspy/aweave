@@ -24,7 +24,7 @@ For any workspace-scoped task, the agent MUST resolve scope from the concrete pa
 **Business resources path:** `resources/workspaces/<workspace>/` → `workspace=<workspace>` (no domain/repo unless path
 provides them)
 
-**Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `project=devtools`
+**Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `workspace=devtools`
 
 **No workspace path:** general task, no `workspace_get_context` required.
 
@@ -33,7 +33,7 @@ provides them)
 Use this exact order. Do not skip steps.
 
 1. **PRIMARY (MUST try first):**  
-   map `project -> workspace`, `domain -> domain`, `repository -> repository`
+   pass `workspace`, `domain`, `repository` directly as `workspace_get_context` parameters
 2. **FINAL FALLBACK:**  
    if tool unavailable or scope cannot be loaded, use direct file access and explicitly note fallback in response
 
