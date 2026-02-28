@@ -37,7 +37,11 @@ export async function getDefaults(
     'decisions',
     projectRoot,
   );
-  const lessonsT0 = await scanLearningDefaults(ladderDirs, 'lessons', projectRoot);
+  const lessonsT0 = await scanLearningDefaults(
+    ladderDirs,
+    'lessons',
+    projectRoot,
+  );
 
   return {
     scope_overview_t1: scopeOverviewT1,
