@@ -1,15 +1,16 @@
 <!-- budget: 100 lines -->
 # Context & Memory Usage
 
-> **BLOCKER:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
+> **BLOCKER:** For any workspace-scoped task, follow the gate defined in `workspace-workflow.md`: the first tool call MUST be `workspace_get_context` with path-derived scope. This file does not define any override for that gate.
 
 **For workspace-scoped tasks, follow this order:**
 
-1. [ ] Call `workspace_get_context` with appropriate scope (workspace, domain, topics)
-2. [ ] If tool unavailable (e.g. MCP server not in session): fallback to direct file access, note the fallback in response
-3. [ ] Only then: use other methods for deeper detail if needed
+1. [ ] Call `workspace_get_context` with appropriate scope (workspace, domain, repository)
+2. [ ] If this call fails, STOP and ask user to provide/correct schema or scope details
+3. [ ] Only after successful context load: use additional methods for deeper detail if needed
 
-**Do NOT:** Skip `workspace_get_context` and go straight to reading or searching files when the task involves workspace content. The warm memory layer exists to provide structured orientation first.
+**Do NOT:** Skip `workspace_get_context` and go straight to reading or searching files for workspace-scoped tasks.
+**Do NOT:** Guess workspace/domain/repository/topic values. Detection must be explicit and explained out loud from concrete evidence.
 
 ## Key Concepts
 
@@ -33,19 +34,13 @@
 
 Context loading is **autonomous** — decide based on the task, no user confirmation needed.
 
-Call `workspace_get_context` when the task involves:
+Call `workspace_get_context` when the task is workspace-scoped, including:
 
 - Workspace-specific code (paths contain `workspaces/` or `resources/workspaces/`)
 - Mentions of workspace, domain, or repository names
 - Project structure, conventions, history, plans, features, architecture, decisions, or lessons
 
-**Skip for:**
-
-- Direct file edits where the task is self-contained (fix typo, rename variable, add import)
-- Tasks where user provides all needed context inline
-- General questions unrelated to workspace structure
-- Infra/tooling fixes unrelated to workspace logic
-- User explicitly asks to skip
+**Non-workspace-scoped tasks:** context loading may be skipped when sufficient inline context already exists.
 
 ## How to Use `workspace_get_context`
 
