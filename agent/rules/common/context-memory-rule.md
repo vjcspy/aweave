@@ -1,9 +1,10 @@
 <!-- budget: 100 lines -->
 # Context & Memory Usage
 
-> **BLOCKER:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
+> **BLOCKER/CRITICAL/MUST DO:** For any task involving workspace-scoped content (plans, features, configs, conventions, etc.), your **first tool call** MUST be `workspace_get_context`. Do NOT bypass the warm memory layer and jump straight to raw file access — call the tool first, then use other methods only if needed or if the tool is unavailable.
 
 **For workspace-scoped tasks, follow this order:**
+
 1. [ ] Call `workspace_get_context` with appropriate scope (workspace, domain, topics)
 2. [ ] If tool unavailable (e.g. MCP server not in session): fallback to direct file access, note the fallback in response
 3. [ ] Only then: use other methods for deeper detail if needed
@@ -13,11 +14,13 @@
 ## Key Concepts
 
 **Memory layers (when to load):**
+
 - **Hot** (L1): Auto-loaded rules (this file). Always in context, zero cost.
 - **Warm** (L2): On-demand via `workspace_get_context`. Returns scoped T1 overview plus T0 listings.
 - **Cold** (L3): Raw files in workspace. Read directly or search with keywords when warm data isn't enough.
 
 **Data tiers (how much to load):**
+
 - **T0 (Abstract):** ~100-200 tokens. Front-matter summaries (name, description, status, tags). Enough to orient and decide what to read next.
 - **T1 (Overview):** Overview files are files that have been synthesized and summarized to provide a general perspective
 - **T2 (Detail):** Full document content or check the source code, the actual implementation.
@@ -31,6 +34,7 @@
 Context loading is **autonomous** — decide based on the task, no user confirmation needed.
 
 Call `workspace_get_context` when the task involves:
+
 - Workspace-specific code (paths contain `workspaces/` or `resources/workspaces/`)
 - Mentions of workspace, domain, or repository names
 - Project structure, conventions, history, plans, features, architecture, decisions, or lessons
