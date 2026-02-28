@@ -12,7 +12,7 @@ tags: [memory, nestjs, mcp, workspace, context]
 
 ## TL;DR
 
-NestJS feature module that exposes workspace context via REST API (`GET /workspace/context`) and MCP over SSE transport. Uses `createWorkspaceMemoryServer()` from `@hod/aweave-mcp-workspace-memory` for MCP (tool defs and handlers live there). Registered in `@hod/aweave-server` as part of the main application.
+NestJS feature module that exposes workspace context via REST API (`GET /workspace/context`) and MCP over SSE transport. Uses `createWorkspaceMemoryServer()` from `@hod/aweave-mcp-workspace-memory` for MCP (tool defs and handlers live there). Returned defaults include `decisions_t0`/`lessons_t0`, and `decisions`/`lessons` topics include full `body_t1` per entry. Registered in `@hod/aweave-server` as part of the main application.
 
 ## Recent Changes Log
 

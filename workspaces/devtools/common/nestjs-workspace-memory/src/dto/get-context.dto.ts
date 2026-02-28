@@ -38,14 +38,14 @@ export class GetContextQueryDto {
   @ApiPropertyOptional({
     type: String,
     description:
-      'Comma-separated topic names (e.g. "plans,features"). Each topic returns { overview_t1, entries }.',
+      'Comma-separated topic names (e.g. "plans,features"). Each topic returns { overview_t1, entries }; decisions/lessons include full body_t1 per entry.',
   })
   topics?: string;
 
   @ApiPropertyOptional({
     type: Boolean,
     description:
-      'Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills)',
+      'Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills, decisions_t0, lessons_t0)',
     default: true,
   })
   include_defaults?: boolean;

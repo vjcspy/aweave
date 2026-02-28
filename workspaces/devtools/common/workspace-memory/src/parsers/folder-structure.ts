@@ -30,17 +30,15 @@ function buildTree(
 
   let entries: string[];
   try {
-    entries = readdirSync(dir).filter((e) => !e.startsWith('.'));
+    entries = readdirSync(dir).filter((entry) => {
+      if (entry.startsWith('.')) return false;
+      return isDirectory(join(dir, entry));
+    });
   } catch {
     return;
   }
 
-  entries.sort((a, b) => {
-    const aIsDir = isDirectory(join(dir, a));
-    const bIsDir = isDirectory(join(dir, b));
-    if (aIsDir !== bIsDir) return aIsDir ? 1 : -1;
-    return a.localeCompare(b);
-  });
+  entries.sort((a, b) => a.localeCompare(b));
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
@@ -48,13 +46,10 @@ function buildTree(
     const connector = isLast ? '└── ' : '├── ';
     const childPrefix = isLast ? '    ' : '│   ';
     const fullPath = join(dir, entry);
-    const isDir = isDirectory(fullPath);
+    lines.push(`${prefix}${connector}${entry}/`);
 
-    lines.push(`${prefix}${connector}${entry}${isDir ? '/' : ''}`);
-
-    if (isDir) {
-      buildTree(fullPath, prefix + childPrefix, depth + 1, maxDepth, lines);
-    }
+    if (shouldStopAtDirectory(entry, depth, maxDepth)) continue;
+    buildTree(fullPath, prefix + childPrefix, depth + 1, maxDepth, lines);
   }
 }
 
@@ -64,4 +59,13 @@ function isDirectory(path: string): boolean {
   } catch {
     return false;
   }
+}
+
+function shouldStopAtDirectory(
+  directoryName: string,
+  depth: number,
+  maxDepth: number,
+): boolean {
+  if (directoryName.startsWith('_')) return true;
+  return depth + 1 >= maxDepth;
 }
