@@ -126,7 +126,7 @@ Long-term memory for AI agents — not just one agent but for each agent that wo
 
 **Decision:** Removed. No `_index.yaml` metadata index.
 
-**Rationale:** With decisions/lessons moved to `resources/` as individual files with front-matter (same pattern as plans), the metadata index is unnecessary. The `scanResourceTopic` handler already extracts tags/categories from front-matter during scanning. The folder structure IS the index.
+**Rationale:** With decisions/lessons moved to `resources/` as individual files with front-matter (same pattern as plans), the metadata index is unnecessary. Workspace context scanners already extract front-matter (and full body for decisions/lessons topic requests) directly from files. The folder structure IS the index.
 
 ### 2.11 Plan status updates — direct edit
 
@@ -223,7 +223,7 @@ Memory is classified along two orthogonal axes:
 | T1 | Overview | 1-2 pages | Working context. Enough to make decisions. |
 | T2 | Detail | Full document | Deep dive. Implementation reference. |
 
-**How they combine:** Warm defaults return scoped T1 (`scope_overview_t1`) plus broad T0 overviews. Topic queries return per-topic T1 (`overview_t1`) plus T0 entries.
+**How they combine:** Warm defaults return scoped T1 (`scope_overview_t1`) plus T0 orientation (`overviews`, `decisions_t0`, `lessons_t0`). Topic queries return per-topic T1 (`overview_t1`); `decisions` and `lessons` entries include full `body_t1`, while other topics stay lightweight.
 
 ### 3.2 Data Topology
 
@@ -348,11 +348,15 @@ filters:
 Always returned to give AI structural orientation without needing to decide what to ask for:
 
 1. **Scope Overview (T1)** full markdown body of `OVERVIEW.md` at the requested base scope
-2. **Folder structure** of `resources/workspaces/{scope}/`
+2. **Folder structure** of `resources/workspaces/{scope}/` as directory-only tree (no files listed)
 3. **Overviews (T0)** (front-matter: name, description, plus newly added topic fields like folder_structure, status_values, etc.) of all OVERVIEW.md files within scope, returned as `defaults.overviews`
-4. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
+4. **Learning summaries (T0)** for `defaults.decisions_t0` and `defaults.lessons_t0`, aggregated by scope ladder:
+   - workspace scope query → workspace level only
+   - domain scope query → workspace + domain levels
+   - repository scope query → workspace + domain + repository levels
+5. **Loaded skills** from `.aweave/loaded-skills.yaml` — name, description, skill_path for each active skill. AI agents use this to decide which skills to load for the current task without needing a separate file read.
 
-> **Design note (subject to change):** Defaults currently include scope overview + structure + overviews + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
+> **Design note (subject to change):** Defaults currently include scope overview + directory tree + overviews + learning T0 + loaded skills. If we find that AI consistently needs additional default data (e.g., recent plans), we may add more to defaults later.
 
 **`include_defaults` dual mechanism:** Both client param AND server-side session tracking are active (see §2.16). Client controls explicitly; server logs divergence (e.g., agent sends `true` but server knows defaults were already sent this session). Data collected via pino + SQLite informs whether to simplify to server-only tracking later.
 
@@ -364,13 +368,13 @@ Always returned to give AI structural orientation without needing to decide what
 | `"plans"` | `resources/workspaces/{scope}/*/_plans/` | `overview_t1` + Array of T0 front-matter of all plans |
 | `"features"` | `resources/workspaces/{scope}/*/_features/` | `overview_t1` + Array of T0 listing of features |
 | `"architecture"` | `resources/workspaces/{scope}/*/_architecture/` | `overview_t1` + Array of T0/T1 listing of architecture docs |
-| `"decisions"` | `resources/workspaces/{scope}/**/_decisions/` | `overview_t1` + Array of T0 front-matter of decision files |
-| `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | `overview_t1` + Array of T0 front-matter of lesson files |
+| `"decisions"` | `resources/workspaces/{scope}/**/_decisions/` | `overview_t1` + Array of entries with front-matter + full `body_t1` per file |
+| `"lessons"` | `resources/workspaces/{scope}/**/_lessons/` | `overview_t1` + Array of entries with front-matter + full `body_t1` per file |
 | `"{any_topic}"` | `resources/workspaces/{scope}/**/_{topicName}/` | Generic scan returning shape with `overview_t1` plus array of entries |
 
 `overview_t1` for a topic is resolved deterministically from the nearest scope `_{topicName}/OVERVIEW.md`, then falls back up the scope tree.
 
-**`include_defaults: false`:** Skips all default payload (`scope_overview_t1`, folder structure, overviews, loaded skills). Use on follow-up calls within the same conversation to save tokens.
+**`include_defaults: false`:** Skips all default payload (`scope_overview_t1`, `folder_structure`, `overviews`, `decisions_t0`, `lessons_t0`, `loaded_skills`). Use on follow-up calls within the same conversation to save tokens.
 
 **Response example:**
 
@@ -382,12 +386,12 @@ defaults:
 
   folder_structure: |
     resources/workspaces/devtools/
-    ├── OVERVIEW.md
     ├── common/
-    │   ├── OVERVIEW.md
+    │   ├── _architecture/
+    │   ├── _features/
+    │   ├── _plans/
     │   ├── cli-plugin-debate/
-    │   ├── cli-plugin-server/
-    │   └── _plans/
+    │   └── cli-plugin-server/
     └── ...
 
   overviews:
@@ -408,6 +412,26 @@ defaults:
       tag_values: [memory, refactor, migration]
       _meta:
         document_path: "resources/workspaces/devtools/common/OVERVIEW.md"
+
+  decisions_t0:
+    - name: "Adopt Single Server Runtime"
+      description: "Run REST and MCP in the same NestJS process."
+      tags: [server, mcp, architecture]
+      category: architecture
+      created: "2026-02-14"
+      path: "resources/workspaces/devtools/_decisions/260214-single-server-runtime.md"
+      _meta:
+        document_path: "resources/workspaces/devtools/_decisions/260214-single-server-runtime.md"
+
+  lessons_t0:
+    - name: "Avoid Topic Drift In Rules"
+      description: "Keep context-memory rule wording aligned with tool contract changes."
+      tags: [rules, memory]
+      category: process
+      created: "2026-02-28"
+      path: "resources/workspaces/devtools/common/_lessons/260228-avoid-topic-drift-in-rules.md"
+      _meta:
+        document_path: "resources/workspaces/devtools/common/_lessons/260228-avoid-topic-drift-in-rules.md"
 
   loaded_skills:
     - name: "devtools-cli-builder"
@@ -437,6 +461,24 @@ plans:
       tags: [nestjs, spa, architecture]
       _meta:
         document_path: "resources/workspaces/devtools/common/_plans/260223-spa-self-serve.md"
+
+decisions:
+  overview_t1: |
+    # Decisions Topic (`_decisions`)
+    This topic stores architectural and process decisions.
+  entries:
+    - name: "Adopt Single Server Runtime"
+      description: "Run REST and MCP in the same NestJS process."
+      category: architecture
+      created: "2026-02-14"
+      path: "resources/workspaces/devtools/_decisions/260214-single-server-runtime.md"
+      body_t1: |
+        ## Context
+        ...
+        ## Decision
+        ...
+      _meta:
+        document_path: "resources/workspaces/devtools/_decisions/260214-single-server-runtime.md"
 ```
 
 ### 4.3 Warm Memory — Write Path
@@ -580,7 +622,7 @@ A hot memory rule file (`agent/rules/common/context-memory-rule.md`) that guides
    - NOT needed: general questions, simple file edits with sufficient inline context, infra fixes unrelated to workspace logic
 
 2. **How to use `workspace_get_context` effectively:**
-   - First call: use defaults (structure + overviews + skills) — get orientation
+   - First call: use defaults (scope overview + directory structure + overviews + decisions_t0/lessons_t0 + skills) — get orientation
    - Based on defaults, decide which topics to request
    - Follow-up calls: use `include_defaults: false` to save tokens
    - Topics are auto-discovered from `_{topicName}/` folders — no hardcoded list

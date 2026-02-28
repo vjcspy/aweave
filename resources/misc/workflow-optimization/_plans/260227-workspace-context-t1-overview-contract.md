@@ -1,6 +1,6 @@
 ---
 name: Workspace Context T1 Overview Contract Update
-description: Update workspace memory specification and implementation so warm context returns T1 overview at scope/topic level, while keeping topic entries at T0.
+description: Update workspace memory specification and implementation so warm context returns T1 overview at scope/topic level (partially superseded by 260228 follow-up for decisions/lessons and defaults).
 status: in_progress
 created: 2026-02-27
 tags: [memory, workspace-context, overview, contract]
@@ -53,6 +53,16 @@ Align the long-term memory design and `workspace_get_context` contract with a sc
 - **Front-matter clarity:** Keep `description` concise and add explicit fields (e.g., `folder_structure`, `status_values`, `category_values`, `tag_values`) for machine-readable filters.
 - **Spec and implementation must move together:** Update feature spec, command guidance, rule text, and tool descriptions in the same change set.
 
+## Follow-up Delta (2026-02-28)
+
+This plan is partially superseded by `resources/misc/workflow-optimization/_plans/260228-workspace-context-lessons-decisions-defaults-t1.md`.
+
+Superseded points from this document:
+
+- `decisions`/`lessons` topic entries are no longer T0-only. They now return front-matter plus full `body_t1`.
+- Defaults now include `decisions_t0` and `lessons_t0` with scope-ladder aggregation.
+- `defaults.folder_structure` is now directory-only (no file listing).
+
 ## Implementation Plan
 
 ### Phase 1: Update Source-of-Truth Spec
@@ -90,7 +100,7 @@ Align the long-term memory design and `workspace_get_context` contract with a sc
 - [x] Refactor `src/get-context/get-context.ts`
   - **Outcome**: For each requested topic, return object payload with topic T1 overview + T0 entries. Resolve exact nearest-scope `OVERVIEW.md` for `overview_t1` if nested.
 - [x] Keep entries scanners focused on T0 listing
-  - **Outcome**: `scanResourceTopic` and `scanFeatures` continue producing lightweight entry lists.
+  - **Outcome**: `scanResourceTopic` and `scanFeatures` continue producing lightweight entry lists. **Superseded (260228):** `decisions`/`lessons` now use specialized scanners with full `body_t1`.
 - [x] Handle missing overview files explicitly
   - **Outcome**: Stable behavior for absent scope/topic overview (defined null/empty policy in type and implementation).
 

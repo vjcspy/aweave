@@ -52,7 +52,7 @@ mcp-workspace-memory/
 
 ## Core Services & Logic (Internal)
 
-- **tools.ts:** Single source of truth for MCP tool definitions. Currently defines `workspace_get_context` with scope, topics, filters, and include_defaults parameters. Adding a new tool = adding an entry here + a case in handlers.
+- **tools.ts:** Single source of truth for MCP tool definitions. Currently defines `workspace_get_context` with scope, topics, filters, and include_defaults parameters; defaults include `decisions_t0`/`lessons_t0`, and `decisions`/`lessons` topic entries include full `body_t1`. Adding a new tool = adding an entry here + a case in handlers.
 - **handlers.ts:** Routes tool calls by name to handler functions. Each handler parses MCP string params (comma-separated lists) into typed args and delegates to core `getContext()`. Returns MCP-compliant `{ content, isError }` responses.
 - **server.ts:** Factory function that creates an MCP `Server` instance, wires `ListTools` and `CallTool` request handlers, and returns the server without connecting any transport. Consumer decides transport (STDIO, SSE, etc.).
 - **stdio.ts:** Standalone entry point that creates the server and connects `StdioServerTransport`. Not imported by any other module — only executed directly as a process.

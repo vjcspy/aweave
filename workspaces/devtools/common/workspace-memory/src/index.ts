@@ -6,6 +6,8 @@ export type {
   FeatureEntry,
   GetContextParams,
   GetContextResponse,
+  LearningT0Entry,
+  LearningTopicEntry,
   OverviewEntry,
   Scope,
   SkillEntry,

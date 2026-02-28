@@ -12,7 +12,7 @@ tags: [memory, core, workspace, context]
 
 ## TL;DR
 
-Core library that powers the `workspace_get_context` tool. Scans `resources/workspaces/{scope}/` to assemble structured context: folder structure, OVERVIEW.md summaries (`defaults.overviews`), loaded skills, and topic-specific data from `_{topicName}/` folders. Pure TypeScript with zero framework dependencies — consumed by NestJS, CLI, and MCP layers.
+Core library that powers the `workspace_get_context` tool. Scans `resources/workspaces/{scope}/` to assemble structured context: directory-only folder structure, OVERVIEW.md summaries (`defaults.overviews`), scope-ladder `decisions_t0`/`lessons_t0`, loaded skills, and topic-specific data from `_{topicName}/` folders. Pure TypeScript with zero framework dependencies — consumed by NestJS, CLI, and MCP layers.
 
 ## Recent Changes Log
 
@@ -33,10 +33,11 @@ workspace-memory/
     ├── index.ts               # Barrel exports
     ├── get-context/
     │   ├── get-context.ts     # Orchestrator — routes topics to handlers
-    │   ├── defaults.ts        # Folder structure + overviews + skills
+    │   ├── defaults.ts        # Folder structure + overviews + skills + decisions_t0/lessons_t0
     │   ├── types.ts           # Scope, GetContextParams, GetContextResponse, etc.
     │   └── topics/
     │       ├── features.ts    # Special handler for _features/ structure
+    │       ├── learning.ts    # Specialized handler for _decisions/_lessons full body_t1
     │       └── resource.ts    # Generic handler for any _{topicName}/ folder
     ├── parsers/
     │   ├── front-matter.ts    # YAML front-matter extraction from markdown
@@ -56,8 +57,8 @@ workspace-memory/
 
 ## Core Services & Logic (Internal)
 
-- **Defaults assembler (`defaults.ts`):** Generates folder structure tree, scans all OVERVIEW.md files for front-matter (name, description, tags) into `defaults.overviews`, loads skill entries from `.aweave/loaded-skills.yaml`
-- **Topic routing (`get-context.ts`):** 2-category system — `features` topic gets special handling via `scanFeatures()`, all other topics use generic `scanResourceTopic()` which scans `_{topicName}/` folders
+- **Defaults assembler (`defaults.ts`):** Generates directory-only folder structure tree, scans all OVERVIEW.md files for front-matter (name, description, tags) into `defaults.overviews`, aggregates `defaults.decisions_t0` and `defaults.lessons_t0` by scope ladder, loads skill entries from `.aweave/loaded-skills.yaml`
+- **Topic routing (`get-context.ts`):** 3-category system — `features` gets special handling via `scanFeatures()`, `decisions`/`lessons` use `scanLearningTopic()` (full `body_t1`), and all other topics use generic `scanResourceTopic()`
 - **Generic resource scanner (`resource.ts`):** Scans `_{topicName}/**/*.md`, extracts front-matter, applies status/tag/category filters, returns sorted entries with `_meta.document_path`
 - **Features scanner (`features.ts`):** Scans `_features/**/*.md`, derives feature names from path structure
 - **Scope resolution (`scope.ts`):** Maps `{ workspace, domain?, repository? }` to `resources/workspaces/{workspace}[/{domain}[/{repo}]]` paths
