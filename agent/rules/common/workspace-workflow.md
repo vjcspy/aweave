@@ -1,4 +1,5 @@
 <!-- budget: 100 lines -->
+
 # Workspace Workflow
 
 ## BLOCKER: Scope Resolution Before First Tool Call
@@ -12,15 +13,16 @@ For any workspace-scoped task, the agent MUST resolve scope from the concrete pa
 
 ### Path → Logical Scope Mapping (Source of Truth)
 
-**Business workspace path:** `workspaces/<project>/<domain>/<repo>/`
+**Business workspace path:** `workspaces/<workspace>/<domain>/<repo>/`
 
-| Path Segment                            | Logical Scope Field | Example   |
-|-----------------------------------------|---------------------|-----------|
-| `workspaces/<project>/`                 | `project`           | `nab` |
-| `workspaces/<project>/<domain>/`        | `domain`            | `hod` |
-| `workspaces/<project>/<domain>/<repo>/` | `repository`        | `eve`     |
+| Path Segment                              | Logical Scope Field | Example |
+|-------------------------------------------|---------------------|---------|
+| `workspaces/<workspace>/`                 | `workspace`         | `nab`   |
+| `workspaces/<workspace>/<domain>/`        | `domain`            | `hod`   |
+| `workspaces/<workspace>/<domain>/<repo>/` | `repository`        | `eve`   |
 
-**Business resources path:** `resources/workspaces/<project>/` → `project=<project>` (no domain/repo unless path provides them)
+**Business resources path:** `resources/workspaces/<workspace>/` → `workspace=<workspace>` (no domain/repo unless path
+provides them)
 
 **Devtools path:** `workspaces/devtools/` or `resources/workspaces/devtools/` → `project=devtools`
 
@@ -32,29 +34,27 @@ Use this exact order. Do not skip steps.
 
 1. **PRIMARY (MUST try first):**  
    map `project -> workspace`, `domain -> domain`, `repository -> repository`
-2. **SCHEMA FALLBACK (ONLY if primary fails due to MCP namespace mismatch):**  
-   map `workspace=devtools`, `domain=<project>`, `repository=<repository-if-applicable>`
-3. **FINAL FALLBACK:**  
+2. **FINAL FALLBACK:**  
    if tool unavailable or scope cannot be loaded, use direct file access and explicitly note fallback in response
 
 Rules:
+
 - MUST record why fallback was needed.
-- NEVER use schema fallback before primary fails.
-- NEVER ignore path-derived `project/domain/repository`.
+- NEVER ignore path-derived `workspaces/<workspace>/<domain>/<repository>`.
 
 ### Quick Examples
 
 - `workspaces/nab/hod/eve/`  
-  logical scope: `project=nab`, `domain=hod`, `repository=eve`  
+  logical scope: `workspace=nab`, `domain=hod`, `repository=eve`  
   primary call: `workspace=nab, domain=hod, repository=eve`  
-  schema fallback only if needed: `workspace=devtools, domain=nab, repository=eve`
 
 - `workspaces/devtools/common/server/`  
   call: `workspace=devtools, domain=common, repository=server`
 
 ## Task Detection
 
-**Before handling any workspace-scoped task:** call `workspace_get_context` first, after completing scope resolution above.
+**Before handling any workspace-scoped task:** call `workspace_get_context` first, after completing scope resolution
+above.
 
 | Signals                                                       | Task Type      | Load Rule                                                                                    |
 |---------------------------------------------------------------|----------------|----------------------------------------------------------------------------------------------|
