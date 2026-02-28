@@ -1,7 +1,7 @@
 <!-- budget: 100 lines -->
 # Context & Memory Usage
 
-> **BLOCKER:** For any workspace-scoped task, follow the gate defined in `workspace-workflow.md`: the first tool call MUST be `workspace_get_context` with path-derived scope. This file does not define any override for that gate.
+> **BLOCKER:** For any workspace-scoped task, the first tool call MUST be `workspace_get_context` with path-derived scope. Scope resolution and failure handling details are defined in `workspace-workflow.md`. This file does not define any override for that gate.
 
 **For workspace-scoped tasks, follow this order:**
 
