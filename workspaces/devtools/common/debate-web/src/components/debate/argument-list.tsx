@@ -1,5 +1,4 @@
 import { ArrowDown } from 'lucide-react';
-import { useEffect, useRef } from 'react';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Argument } from '@/lib/types';
@@ -11,13 +10,6 @@ type ArgumentListProps = {
 };
 
 export function ArgumentList({ arguments: args }: ArgumentListProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when new arguments are added
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [args.length]);
-
   if (args.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -39,7 +31,6 @@ export function ArgumentList({ arguments: args }: ArgumentListProps) {
             )}
           </div>
         ))}
-        <div ref={bottomRef} />
       </div>
     </ScrollArea>
   );
