@@ -1,85 +1,36 @@
-## Metadata Header
+---
+name: "K Stock"
+description: "Multi-repo Vietnamese stock analytics domain: Quarkus ingestion/API backend (jmeta), Python feature-engineering pipeline (metan), and Next.js dashboard (meta), delivering end-to-end flow from raw market ticks to VN30-level AI-ready features."
+tags: [stock, vietnam, quarkus, python, nextjs, vn30]
+updated: 2026-02-28
+---
+
 > **Branch:** workspaces/k
-> **Last Commit:** 305dc62
-> **Last Updated:** Wed Feb 18 11:37:09 2026 +0700
+> **Last Commit:** c0dcbca
+> **Last Updated:** 2026-02-28
 
-## k/stock Global Overview (TL;DR)
+## TL;DR
 
-The `k/stock` scope is a multi-repo stock platform for Vietnamese market data and analytics. It combines a Quarkus ingestion/API backend (`jmeta/stock`), a Python feature-engineering pipeline (`metan`), and a Next.js dashboard (`meta`) to deliver an end-to-end flow from raw ticks/prices to VN30-level features and UI consumption.
+The `k/stock` scope is a multi-repo stock platform for Vietnamese market data and analytics. It combines a Quarkus ingestion/API backend (`jmeta`), a Python feature-engineering pipeline (`metan`), and a Next.js dashboard (`meta`) to deliver an end-to-end flow from raw ticks/prices to VN30-level features and UI consumption.
 
-## Recent Changes Log
+## Domain Context
 
-- Initial global overview generation from:
-  - `resources/workspaces/k/stock/jmeta/stock/OVERVIEW.md`
-  - `resources/workspaces/k/stock/metan/OVERVIEW.md`
-  - `resources/workspaces/k/stock/meta/OVERVIEW.md`
-- Latest notable package-level changes (from source overviews):
-  - `metan`: VN30 feature pipeline completion (collector -> index calculation -> aggregation -> persistence).
-  - `jmeta/stock`: mature reactive ingestion and messaging flows for stocks, prices, ticks, and trading analysis.
-  - `meta`: dashboard conventions stabilized around widget containers, chart components, and local user-config persistence.
+- **Business Context:** Build and operate stock data ingestion, transformation, analysis, and visualization for Vietnamese equities (HSX/HNX). Primary goal is producing AI-ready VN30F1M derivative prediction features.
+- **Relationship to Other Domains:** Standalone domain within `k` workspace. The `misc` domain provides developer utilities (git relay) that are independent of stock logic.
 
-## Repo Purpose & Bounded Context
+## Cross-Repo Patterns
 
-- **Platform Role:** Build and operate stock data ingestion, transformation, analysis, and visualization.
-- **Domain:** Vietnam equities intraday and daily analytics, including VN30-derived feature computation.
-- **Boundaries by repo:**
-  - `jmeta/stock`: service-side ingestion, REST APIs, schedulers, reactive orchestration, and queue-based async processing.
-  - `metan`: offline/nearline data shaping and feature generation pipelines for model-ready datasets.
-  - `meta`: frontend experience for dashboarding, chart interaction, and operator workflows.
+- Shared symbol/date/timepoint semantics across all three repos
+- OHLCV-style feature structures ensure ingestion (`jmeta`), pipelines (`metan`), and dashboard (`meta`) stay aligned
+- Supabase used as the shared data layer between `jmeta` (writes ticks/prices/stocks) and `metan` (reads for feature computation)
+- All monetary values consistently stored in millions (VND)
 
-## Project Structure
+## Domain-Specific Development
 
-- `resources/workspaces/k/stock/jmeta/stock/`
-  - Quarkus multi-module service context (`shared/*`, `packages/*`, `projects/http`).
-  - Focus: runtime APIs, event/messaging pipelines, and persistence-backed synchronization.
-- `resources/workspaces/k/stock/metan/`
-  - Python package context centered around `packages/stock/metan/stock/*`.
-  - Focus: `StockDataCollector`, whale-footprint features, VN30 index and aggregation pipelines.
-- `resources/workspaces/k/stock/meta/`
-  - Web app context for `projects/stock/apps/web`.
-  - Focus: widgetized dashboard UI, chart rendering, and browser-level configuration persistence.
-
-## Controllers & Public Surface (Inbound)
-
-- **Service APIs (`jmeta/stock`):**
-  - REST resources for stock entities, price history, ticks, and trading analysis.
-  - Manual and scheduled sync triggers for ingestion flows.
-  - RabbitMQ consumers for stock info and trading-analysis command handling.
-- **Pipeline entry points (`metan`):**
-  - Script/testbed style command entry points for feature calculation and VN30 pipeline execution.
-  - Primary operational path includes end-to-end VN30 feature build flow.
-- **Web UI (`meta`):**
-  - Next.js pages including dashboard entry (`/dashboard`) with responsive grid widgets.
-  - Client-side controls for filtering, chart interaction, and persisted widget/user preferences.
-
-## Core Services & Logic (Internal)
-
-- **Data ingestion and orchestration (`jmeta/stock`):**
-  - Market data pull from provider APIs.
-  - Reactive effect/event model to sequence sync operations.
-  - Correlated message lifecycle for reliable async execution and error handling.
-- **Feature engineering and aggregation (`metan`):**
-  - `StockDataCollector` as canonical source for candles/ticks/prices/stock metadata.
-  - Whale-footprint feature calculators over tick-derived structures.
-  - VN30 index and feature aggregation with persistence for model consumption.
-- **Presentation and UX composition (`meta`):**
-  - Separation between pure chart components and data-aware dashboard containers.
-  - Grid-based dashboard composition with drag/resize and client-only persistence.
-
-## External Dependencies & Cross-Service Contracts (Outbound)
-
-- **Databases:**
-  - PostgreSQL + Flyway in `jmeta/stock`.
-  - Supabase-backed storage in `metan`.
-  - Browser `localStorage` for user config in `meta`.
-- **Message Queues:**
-  - RabbitMQ channels for stock info synchronization and trading-analysis processing in `jmeta/stock`.
-- **External APIs:**
-  - Vietstock (listing/corporate data).
-  - FireAnt (historical prices).
-  - Simplize (tick data).
-  - TCBS (selected intraday/index-related retrieval paths).
-- **Notification/ops integrations:**
-  - Slack-based operational reporting and alert flows.
-- **Cross-repo contracts (inferred from source overviews):**
-  - Shared symbol/date/timepoint semantics and OHLCV-style feature structures are required so ingestion (`jmeta/stock`), feature pipelines (`metan`), and dashboard consumers (`meta`) remain aligned.
+- **Data flow:** Vietstock/FireAnt/Simplize → `jmeta` (PostgreSQL + RabbitMQ) → Supabase → `metan` (VN30 feature pipeline) → `meta` (dashboard)
+- **Repo boundaries:**
+  - `jmeta`: service-side ingestion, REST APIs, schedulers, RabbitMQ-based async processing
+  - `metan`: offline/nearline data shaping, whale footprint feature generation, VN30 pipeline
+  - `meta`: Next.js widgetized dashboard; read-only consumer of Supabase feature data
+- **External providers:** Vietstock (listings), FireAnt (historical prices), Simplize (ticks), TCBS (intraday candles — limited use)
+- **Key databases:** PostgreSQL (jmeta), Supabase (shared read/write for metan and meta)

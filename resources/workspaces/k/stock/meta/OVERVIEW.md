@@ -1,45 +1,57 @@
-# Stock Web Overview
+---
+name: "Meta Stock Web"
+description: "Next.js dashboard for Vietnamese stock market visualization: widgetized grid layout with draggable/resizable charts, Supabase-backed data queries, and localStorage-persisted user configuration."
+tags: [nextjs, react, stock, dashboard, supabase, tailwind, vietnam]
+updated: 2026-02-28
+---
 
-Purpose: Focused guidance for the `projects/stock/apps/web` app — how we structure widgets, charts, and UI, and conventions to extend safely.
+> **Branch:** workspaces/k
+> **Last Commit:** c0dcbca
+> **Last Updated:** 2026-02-28
 
-## Project Structure (Stock Web)
+## TL;DR
 
-- App root: `projects/stock/apps/web/`
-- Pages (Next.js, pages router):
+`meta` is the frontend experience for the `k/stock` platform. It provides a widgetized dashboard (`/dashboard`) built on `react-grid-layout`, with presentational chart components and data-aware container widgets querying Supabase for feature candle data. User widget configurations are persisted to `localStorage`.
+
+## Repo Purpose & Bounded Context
+
+- **Role:** Frontend visualization layer for stock analytics; read-only consumer of Supabase feature data
+- **Domain:** `k/stock` — the presentation tier; receives data from `metan`'s feature pipeline via Supabase
+
+## Project Structure
+
+- `projects/stock/apps/web/` — app root (Next.js pages router)
   - `src/pages/_app.tsx` — global CSS imports for grid/resize
   - `src/pages/_document.tsx` — HTML shell
   - `src/pages/index.tsx` — landing page
   - `src/pages/dashboard.tsx` — dashboard grid (RGL) with Cards and charts
-- Styles: `src/styles/globals.css` — Tailwind base/theme and app styles
-- Dev server: `pnpm --filter @stock/apps-web dev` → `http://localhost:3000` (`/dashboard` main view)
+  - `src/styles/globals.css` — Tailwind base/theme and app styles
+  - `src/components/ui/` — shadcn UI primitives only (no business logic)
+  - `src/components/chart/` — presentational chart components (pure render, no fetch/persistence)
+  - `src/components/dashboard/` — container widgets that fetch, map data, and wire UI
+  - `src/lib/user-config.ts` — localStorage persistence utilities
 
-## Folders and Purpose
+## Public Surface (Inbound)
 
-- `src/components/ui/` — shadcn UI primitives only (e.g., `card.tsx`, `button.tsx`).
-  - Avoid putting components with business or data logic here.
-- `src/components/chart/` — presentational chart components (pure render, no fetch/persistence).
-  - Example: `CandleFeatureLineChart.tsx` renders line chart from provided props.
-- `src/components/dashboard/` — container widgets that fetch, map data, and wire UI.
-  - Example: `StockCandleFeatureChart.tsx` handles filters, Supabase queries, persistence, then passes props to chart components.
+- **Web UI:** `GET /` (landing), `GET /dashboard` (main grid view)
+- Dev server: `pnpm --filter @stock/apps-web dev` → `http://localhost:3000`
 
-## Dashboard Pattern
+## Core Services & Logic (Internal)
 
-- Layout: `react-grid-layout` responsive grid, imported dynamically with SSR disabled.
-- Card: shadcn `Card` with draggable header (`.rgl-drag-handle`) and interactive content in `CardContent`.
-- Charts: `react-chartjs-2` atop Chart.js; maintain responsive sizing using flex and `maintainAspectRatio: false`.
+- **Dashboard pattern:** `react-grid-layout` responsive grid, dynamically imported (SSR disabled); shadcn `Card` with draggable header (`.rgl-drag-handle`) and interactive `CardContent`
+- **Component separation:** `src/components/chart/` = pure renderers; `src/components/dashboard/` = data-aware containers (handle Supabase queries, filter state, localStorage persistence)
+- **User config persistence:** `getUserConfig`, `getUserConfigKey`, `putUserConfig(key, data)` from `src/lib/user-config.ts` — writes to `localStorage` key `user_config`; always accessed inside client effects (SSR safety)
+- **Charts:** `react-chartjs-2` atop Chart.js; `maintainAspectRatio: false` for responsive sizing; zoom/pan disabled by default on intraday charts
 
-## Conventions & Best Practices
+## External Dependencies & Contracts (Outbound)
 
-- Use `es-toolkit` for utilities like `debounce`; avoid hand-rolled timing logic.
-- Disable zoom/pan for intraday charts unless explicitly required; remove reset buttons where not needed.
-- Persistence: use `src/lib/user-config.ts` with `getUserConfig`, `getUserConfigKey`, `putUserConfig(key, data)` to store `user_config` in `localStorage`.
-- SSR safety: access `window/localStorage` only inside client effects.
-- Dragging vs interaction: apply drag handle on headers; cancel drag on interactive elements.
+- **Databases:** Supabase (market feature candle data via `stock_trading_feature_candles` table)
+- **Message Queues:** None
+- **External APIs:** None (all data comes from Supabase)
+- **Browser storage:** `localStorage` for user widget/filter preferences
 
-## Extending the Dashboard
+## Conventions
 
-- Add a widget:
-  - Define grid layout items per breakpoint in `dashboard.tsx`.
-  - Create a container in `src/components/dashboard/` with filters and data fetching.
-  - Render a presentational chart/table from `src/components/chart/` in `CardContent`.
-- Optional: persist grid layout to `localStorage` for user customization.
+- Use `es-toolkit` for utilities like `debounce`; avoid hand-rolled timing logic
+- Apply drag handle on headers; cancel drag on interactive elements
+- Adding a widget: define grid layout items per breakpoint in `dashboard.tsx`, create container in `src/components/dashboard/`, render chart from `src/components/chart/` in `CardContent`
