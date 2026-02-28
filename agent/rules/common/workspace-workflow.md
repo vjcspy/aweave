@@ -9,6 +9,8 @@ For any workspace-scoped task, the agent MUST resolve scope from the concrete pa
 - MUST parse path first, then call `workspace_get_context`.
 - MUST NOT use a default workspace as a warm-up when the path already indicates scope.
 - NEVER call `workspace_get_context(workspace=devtools)` by default for non-`devtools` paths.
+- MUST think out loud when detecting `workspace`, `domain`, `repository`, and related `topic` candidates, and state the concrete evidence (path segments, user text, or folder names).
+- MUST NOT guess missing scope fields. If any required field cannot be derived from concrete evidence, STOP and ask the user.
 - If scope cannot be resolved from user input, ask the user before proceeding.
 
 ### Path → Logical Scope Mapping (Source of Truth)
@@ -34,12 +36,14 @@ Use this exact order. Do not skip steps.
 
 1. **PRIMARY (MUST try first):**  
    pass `workspace`, `domain`, `repository` directly as `workspace_get_context` parameters
-2. **FINAL FALLBACK:**  
-   if tool unavailable or scope cannot be loaded, use direct file access and explicitly note fallback in response
+2. **FAILURE HANDLING (MUST):**  
+   if `workspace_get_context` fails (tool unavailable, scope mismatch, schema mismatch, or scope cannot be loaded), STOP and ask the user to provide/correct schema or scope details before continuing
 
 Rules:
 
-- MUST record why fallback was needed.
+- NEVER use schema fallback (for example mapping to `workspace=devtools` for non-`devtools` scopes).
+- NEVER bypass failed context loading by switching to direct file access for workspace-scoped tasks.
+- MUST clearly report the concrete failure reason before asking the user for correction.
 - NEVER ignore path-derived `workspaces/<workspace>/<domain>/<repository>`.
 
 ### Quick Examples
@@ -62,6 +66,6 @@ above.
 | "implement", "build", "fix", "update", "change" + code        | Implementation | `agent/rules/common/tasks/implementation.md`                                                 |
 | "refactor", "restructure", "rename", "move", "extract"        | Refactoring    | `agent/rules/common/tasks/implementation.md`                                                 |
 | Acting as Proposer/Opponent, references debate commands       | Debate         | `agent/commands/common/debate-proposer.md` or `debate-opponent.md` — skip all other workflow |
-| "what", "how", "why", "explain" — no action verb              | Question       | Answer directly                                                                              |
+| "what", "how", "why", "explain" — no action verb              | Question       | If workspace-scoped: load context first. If non-workspace-scoped: answer directly.          |
 
 **Ambiguity:** "implement the plan" → Implementation. "refactor and add" → Implementation. Uncertain → ask.
