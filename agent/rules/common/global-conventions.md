@@ -15,6 +15,20 @@ The `workspaces/` folder contains source code. Business workspaces are excluded 
 
 **If file discovery tools don't work for `workspaces/`:** Use shell commands (`ls`, `find`) to discover paths, then use standard tools with explicit paths.
 
+## `resources/` Document Convention
+
+**Any document created or modified under `resources/` MUST include a YAML front-matter block** at the top of the file. This applies to all topic document types:
+
+| Document type | Required front-matter fields |
+|---|---|
+| `OVERVIEW.md` | `name`, `description`, `tags` (+ `folder_structure`, `status_values`, etc. for topic OVERVIEWs) |
+| `_plans/YYMMDD-*.md` | `name`, `description`, `status`, `created`, `tags` |
+| `_decisions/YYMMDD-*.md` | `name`, `description`, `category`, `tags`, `created` |
+| `_lessons/YYMMDD-*.md` | `name`, `description`, `category`, `tags`, `created` |
+| Any other `_{topic}/` file | `name`, `description` at minimum |
+
+Front-matter is the T0 data extracted by `workspace_get_context` — omitting it means the document is invisible to warm memory tools.
+
 ## Output Constraints
 
 - **Format:** Clean Markdown
