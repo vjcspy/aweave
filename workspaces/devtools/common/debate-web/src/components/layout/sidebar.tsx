@@ -49,7 +49,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
       </div>
       <Separator />
       {!isCollapsed ? (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <DebateList activeDebateId={activeDebateId} />
         </div>
       ) : (
