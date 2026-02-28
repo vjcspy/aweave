@@ -1,3 +1,12 @@
+---
+name: "VN30 Aggregate Whale Footprint Features"
+description: "Design and implementation of VN30WhaleFootprintAggregator: aggregation rules per feature type (simple sum, ratio re-calculation, market-cap weighted urgency spread), intermediate value storage, and cross-stock statistics."
+tags: [metan, vn30, aggregation, whale-footprint, feature-engineering, python]
+category: plan
+status: done
+updated: 2025-12-31
+---
+
 # VN30 Aggregate Whale Footprint Features
 
 > **Status:** ✅ IMPLEMENTED  
@@ -13,10 +22,12 @@ Tổng hợp các whale footprint features từ 30 cổ phiếu VN30 thành các
 ### Tại sao không thể đơn giản cộng/chia trung bình các features đã build?
 
 Có 2 loại features:
+
 1. **Additive Features**: Có thể cộng trực tiếp (như value)
 2. **Ratio/Rate Features**: KHÔNG thể cộng rồi chia trung bình vì mẫu số khác nhau
 
 **Ví dụ minh họa `shark450_buy_ratio_5d_pc`:**
+
 ```
 Stock A: ratio = 100 / 1000 = 0.10 (shark_buy=100, pc_5d=1000)
 Stock B: ratio = 200 / 400  = 0.50 (shark_buy=200, pc_5d=400)
@@ -28,15 +39,18 @@ SAI: (0.10 + 0.50) / 2 = 0.30
 ### Về việc sử dụng `total_shares` và `free_float`
 
 Hiện tại đã có:
+
 - `Stock.total_shares`: Tổng số cổ phiếu phát hành
 - `VN30_FREE_FLOAT_RATIOS`: Tỷ lệ free-float cho từng mã
 
 **Market Cap Weight:**
+
 ```python
 weight_i = price_i × total_shares_i × free_float_ratio_i
 ```
 
 **✅ Quyết định sử dụng weight:**
+
 | Feature | Weight? | Method |
 |---------|---------|--------|
 | `*_value` | ❌ | Simple Sum |
@@ -58,6 +72,7 @@ weight_i = price_i × total_shares_i × free_float_ratio_i
 | **Aggregate Method** | Simple Sum |
 
 **Formula:**
+
 ```python
 vn30_shark450_buy_value = Σ(stock_i.shark450_buy_value) for i in VN30
 vn30_shark450_sell_value = Σ(stock_i.shark450_sell_value) for i in VN30
@@ -65,6 +80,7 @@ vn30_shark450_sell_value = Σ(stock_i.shark450_sell_value) for i in VN30
 ```
 
 **Implementation:**
+
 ```python
 # Query từ stock_trading_feature_candles
 features_all_stocks = fetch_features_for_all_vn30_at_time(time)
@@ -82,11 +98,13 @@ vn30_shark450_buy_value = sum(f.shark450_buy_value for f in features_all_stocks)
 | **Aggregate Method** | Tính lại từ aggregated components |
 
 **Vấn đề:**
+
 - `ratio_5d_pc = shark_buy_value / pc_value_5d`
 - `pc_value_5d` của từng stock khác nhau
 - Không thể average các ratio!
 
 **Formula ĐÚNG:**
+
 ```python
 # Tử số: có thể lấy từ built features
 vn30_shark450_buy_value = Σ(stock_i.shark450_buy_value)
@@ -105,6 +123,7 @@ vn30_shark450_buy_ratio_5d_pc = vn30_shark450_buy_value / vn30_pc_value_5d
 **Có 2 options để implement:**
 
 **Option A - Tính từ raw tick data (Recommended for accuracy):**
+
 ```python
 # Cần gather daily_value cho tất cả 30 stocks
 vn30_daily_value = Σ(stock_i.daily_value) for each day
@@ -112,6 +131,7 @@ vn30_pc_5d = rolling_5d_sum(vn30_daily_value) / (5 * candle_count)
 ```
 
 **Option B - Tận dụng features đã build (Faster, cần lưu thêm data):**
+
 - Cần lưu thêm `pc_value_5d` cho từng stock trong feature table
 - Sau đó: `vn30_pc_5d = Σ(stock_i.pc_value_5d)`
 
@@ -126,6 +146,7 @@ vn30_pc_5d = rolling_5d_sum(vn30_daily_value) / (5 * candle_count)
 | **Thay thế** | Sử dụng `urgency_spread` (đã normalize) |
 
 **Vấn đề khi aggregate:**
+
 ```
 VNM avg_buy = 70,000 VND
 BID avg_buy = 50,000 VND  
@@ -135,6 +156,7 @@ VIC avg_buy = 40,000 VND
 ```
 
 **Quyết định:**
+
 - ✅ Giữ `avg_price` cho **từng symbol riêng** (phục vụ pick top stocks to trade)
 - ❌ Không aggregate cho VN30 level
 - ✅ Dùng `urgency_spread` để đo hành vi shark trên VN30 (đã normalize bằng VWAP)
@@ -144,11 +166,12 @@ VIC avg_buy = 40,000 VND
 ### 4. Percent Ratios - Plan Chi Tiết
 
 **Features (8 × 2 thresholds = 16 features):**
+
 - `percent_sharkXXX_buy_sell` = Shark Buy / (Shark Buy + Shark Sell)
 - `percent_sheepXXX_buy_sell` = Sheep Buy / (Sheep Buy + Sheep Sell)
 - `percent_buy_sharkXXX_sheep` = Shark Buy / (Shark Buy + Sheep Buy)
 - `percent_sell_sharkXXX_sheep` = Shark Sell / (Shark Sell + Sheep Sell)
-- + `accum_percent_*` (accumulated versions từ đầu phiên)
+- - `accum_percent_*` (accumulated versions từ đầu phiên)
 
 | Item | Value |
 |------|-------|
@@ -226,6 +249,7 @@ urgency_spread = (shark_buy_avg_price - shark_sell_avg_price) * 100 / VWAP
 | **Gần 0** | Shark mua/bán cân bằng | ⚪ Neutral |
 
 **Ví dụ thực tế:**
+
 ```
 VNM: shark_buy_avg = 71,000, shark_sell_avg = 70,000, VWAP = 70,500
 → urgency_spread = (71000 - 70000) * 100 / 70500 = +1.42%
@@ -426,6 +450,7 @@ CROSS_STOCK_FEATURES = [
 ```
 
 **Ý nghĩa:**
+
 - `breadth = 25/30` → 25 cổ phiếu có shark activity, signal mạnh hơn `breadth = 5/30`
 - `concentration` cao → Shark tập trung vào vài cổ phiếu (có thể manipulation)
 - `concentration` thấp → Shark phân tán, consensus signal
@@ -656,4 +681,3 @@ X = features_df[[
 4. [ ] Feature selection / importance analysis
 5. [ ] Train prediction model (classification or regression)
 6. [ ] Backtest trading strategy
-

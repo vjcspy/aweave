@@ -1,3 +1,12 @@
+---
+name: "Update VN30 Index Base Calculation"
+description: "Switches VN30 index calculators to a fixed base point (2025-12-31 03:10 UTC, index=2012) stored in stock_common_configuration, replacing dynamic first-candle base with a shared VN30BaseMarketCapCalculator."
+tags: [metan, vn30, index-calculator, base-calculation, supabase, python]
+category: plan
+status: done
+updated: 2026-01-01
+---
+
 # 📋 260101: Update VN30 Index Base Calculation
 
 > **Status:** ✅ IMPLEMENTED  
@@ -13,6 +22,7 @@
 ## User Requirements
 
 Sửa toàn bộ các hàm liên quan đến tính VN30 index:
+
 - **Base date**: 2025-12-31
 - **Base time**: 03:10 UTC (10:10 giờ Việt Nam - thời điểm mở cửa)
 - **Base index**: 2012 điểm
@@ -22,6 +32,7 @@ Sửa toàn bộ các hàm liên quan đến tính VN30 index:
 ## 🎯 Objective
 
 Update VN30 index calculators to use a **fixed base point**:
+
 - Date: **2025-12-31**
 - Time: **03:10 UTC** (10:10 Vietnam)
 - Index value: **2012**
@@ -31,6 +42,7 @@ Base market cap được tính 1 lần và lưu vào `stock_common_configuration
 ### ⚠️ Key Considerations
 
 1. **Current Behavior**:
+
    ```python
    # First candle becomes base, index = 1000
    if base_market_cap is None:
@@ -38,6 +50,7 @@ Base market cap được tính 1 lần và lưu vào `stock_common_configuration
    ```
 
 2. **New Behavior**:
+
    ```python
    # Load base market cap from DB (calculated at 2025-12-31 03:10 UTC)
    base_market_cap = self._get_or_calculate_base_market_cap()
@@ -45,6 +58,7 @@ Base market cap được tính 1 lần và lưu vào `stock_common_configuration
    ```
 
 3. **Storage in `stock_common_configuration`**:
+
    ```python
    {
        "key": "VN30_INDEX_BASE_MARKET_CAP",
@@ -293,4 +307,3 @@ candles = calculator.calculate()  # Uses base from DB
 
 1. Add CLI command to recalculate base if VN30 composition changes
 2. Add validation to ensure base date data exists before calculation
-

@@ -1,6 +1,16 @@
+---
+name: "Candle Feature Line Chart"
+description: "Plan and implementation of CandleFeatureLineChart and StockCandleFeatureChart dashboard widget: dual Y-axes, Supabase feature candle queries, debounced refresh, and localStorage filter persistence."
+tags: [nextjs, chart, supabase, dashboard, react-chartjs-2, localStorage]
+category: plan
+status: done
+updated: 2025-11-01
+---
+
 # 📋 [251101: Candle Feature Chart]
 
 ## 🎯 Objective
+>
 > Render intraday candle features as a responsive line chart with dual Y-axes, persist user filters to localStorage, and keep the UI minimal and fast.
 
 ## 🔄 Implementation Plan

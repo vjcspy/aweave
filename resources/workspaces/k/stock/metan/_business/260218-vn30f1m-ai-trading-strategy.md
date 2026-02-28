@@ -1,3 +1,12 @@
+---
+name: "VN30F1M AI Trading Strategy"
+description: "Updated business and technical approach for VN30F1M AI: Triple Barrier labeling, LightGBM-first (HOLD/LONG/SHORT), multi-angle feature engineering, walk-forward validation with Go/No-Go gates. Supersedes 251229 model plan."
+tags: [vn30, ai, trading, lightgbm, triple-barrier, feature-engineering, backtesting]
+category: business
+status: planning
+updated: 2026-02-18
+---
+
 # VN30F1M AI Trading Strategy — Business & Technical Approach
 
 > **Status:** 📋 PLANNING
@@ -17,6 +26,7 @@ Xây dựng AI system dự đoán hành động giao dịch intraday cho hợp �
 | **HOLD** | Không vào vị thế | — |
 
 **Ràng buộc:**
+
 - Chỉ nắm giữ trong phiên (intraday only, không qua đêm)
 - Bắt buộc đóng lệnh khi: chạm target profit, chạm stop loss, hoặc hết phiên (14:30 VN time)
 
@@ -33,6 +43,7 @@ Xây dựng AI system dự đoán hành động giao dịch intraday cho hợp �
 ### 2.2 Features hiện có (VN30 level)
 
 **Price Action:**
+
 - `open`, `high`, `low`, `close` — VN30 index OHLCV
 - `volume`, `value` — Tổng volume/value của 30 stocks
 
@@ -135,6 +146,7 @@ Price
 **Quyết định:** LightGBM là model duy nhất cho Phase đầu. LSTM và Ensemble chỉ xem xét nếu LightGBM cho kết quả khả quan và cần cải thiện thêm.
 
 **Lý do không cần LSTM ngay:**
+
 - Features hiện tại đã bao gồm accumulated values (`accum_*`) — encode temporal information
 - LightGBM với lag features capture ~80-90% temporal patterns
 - 30K samples không đủ cho LSTM thực sự outperform LightGBM
@@ -263,6 +275,7 @@ Option B: Walk-Forward (ưu tiên — robust hơn)
 ```
 
 **Nguyên tắc bắt buộc:**
+
 - Split theo thời gian (không bao giờ random shuffle — gây data leakage)
 - Validation dùng để tune hyperparameters + confidence threshold
 - Test set chỉ dùng 1 lần cuối cùng
@@ -299,6 +312,7 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 **Mục tiêu:** Biết features có signal không. Fail fast nếu không.
 
 **Approach:**
+
 1. Export 500 ngày VN30 features từ DB
 2. Build triple barrier labels (TP=0.5%, SL=0.3%)
 3. Statistical analysis (dùng toàn bộ 500 ngày, không cần split):
@@ -315,6 +329,7 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 **Mục tiêu:** Bổ sung features từ Section 5.2 Tier 1
 
 **Approach:**
+
 1. Implement Tier 1 features (derive từ data hiện có)
 2. Build lag features + rolling statistics
 3. Re-run LightGBM → so sánh với Phase 1 baseline
@@ -326,6 +341,7 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 **Mục tiêu:** Best LightGBM model với optimized hyperparameters
 
 **Approach:**
+
 1. Hyperparameter optimization (Optuna, 100+ trials)
 2. Feature selection (loại bỏ features redundant/noise)
 3. Confidence threshold tuning trên validation set
@@ -336,6 +352,7 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 **Mục tiêu:** Validate model robust across different time periods
 
 **Approach:**
+
 1. Walk-forward validation (rolling windows)
 2. Realistic backtest:
    - Transaction costs: ~0.03% mỗi lệnh (round-trip)
@@ -349,6 +366,7 @@ Financial markets cực kỳ noisy ở timeframe 5 phút. Directional accuracy 5
 ### Phase 5: Scale Up (chỉ nếu Phase 4 positive)
 
 Xem xét (theo thứ tự ưu tiên):
+
 1. **LSTM exploration** — thử xem có cải thiện so với LightGBM không
 2. **Ensemble** — nếu LSTM cho uncorrelated predictions
 3. **Contextual Bandits** — simplified RL, trực tiếp optimize trading reward

@@ -1,3 +1,12 @@
+---
+name: "Optimize VN30 Pipeline - Shared Data & Parallel Processing"
+description: "Eliminates 60 redundant Supabase fetches and parallelizes 30-symbol processing with ThreadPoolExecutor: shared StockDataCollector instances, pre-fetched tick/stock data passed to index calculator and aggregator, max_workers=6."
+tags: [metan, vn30, pipeline, performance, parallel, thread-pool, python]
+category: plan
+status: done
+updated: 2026-02-18
+---
+
 # 260218: Optimize VN30 Pipeline - Shared Data Layer & Parallel Processing
 
 > **Status:** ✅ IMPLEMENTED

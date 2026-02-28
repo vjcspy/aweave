@@ -1,3 +1,12 @@
+---
+name: "Build VN30 Complete Feature Pipeline"
+description: "Implementation of VN30FeaturePipeline: batch date check, smart skip per symbol, TickVN30IndexCalculator, VN30WhaleFootprintAggregator, merge OHLCV+features and upsert as symbol='VN30' to stock_trading_feature_candles."
+tags: [metan, vn30, pipeline, feature-engineering, supabase, python]
+category: plan
+status: done
+updated: 2026-01-01
+---
+
 # 📋 260101: Build VN30 Complete Feature Pipeline
 
 > **Status:** ✅ IMPLEMENTED  
@@ -21,6 +30,7 @@
 5. Merge index OHLCV + aggregated features và persist
 
 **Tối ưu quan trọng:**
+
 - Fetch dữ liệu đã có từ DB 1 lần duy nhất với time range
 - Check các ngày đã tính → không tính lại
 - Áp dụng tương tự cho cả 30 symbols và VN30 symbol
@@ -28,6 +38,7 @@
 ## 🎯 Objective
 
 Implement `VN30FeaturePipeline` class that:
+
 1. Calculates VN30 index candles from tick data
 2. Calculates whale footprint features for all VN30 component symbols (with smart skip)
 3. Aggregates features into VN30-level metrics
@@ -38,6 +49,7 @@ Implement `VN30FeaturePipeline` class that:
 1. **VN30 as a Symbol**: Treat VN30 as `symbol="VN30"` in `stock_trading_feature_candles` table, với đầy đủ OHLCV từ index calculator và features từ aggregator.
 
 2. **Optimization Strategy - Batch Date Check**:
+
    ```python
    # 1. Query existing dates for ALL symbols at once (including VN30)
    existing_dates_by_symbol = fetch_existing_dates(symbols, start_date, end_date)
@@ -50,6 +62,7 @@ Implement `VN30FeaturePipeline` class that:
    ```
 
 3. **Data Flow**:
+
    ```
    ┌─────────────────────────────────────────────────────────────┐
    │ Step 1: Check existing data in DB (batch query)            │
@@ -80,6 +93,7 @@ Implement `VN30FeaturePipeline` class that:
    ```
 
 4. **Output Schema for VN30**:
+
    ```python
    {
        "symbol": "VN30",
@@ -106,6 +120,7 @@ Implement `VN30FeaturePipeline` class that:
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze current `IntradaySymbolFeaturePersistor` để hiểu cách persist
 - [x] Xác định query để batch fetch existing dates
 - [x] Define output schema cho VN30 symbol
@@ -389,4 +404,3 @@ python -m metan.stock.testbed.build_vn30_features --start-date 2025-01-02 --end-
 1. **Parallel Processing**: Calculate features cho 30 symbols song song
 2. **Incremental Update**: Chỉ calculate cho ngày mới nhất (daily job)
 3. **Retry Logic**: Retry failed symbols
-

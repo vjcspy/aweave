@@ -1,17 +1,30 @@
+---
+name: "Create StockCommonConfiguration CRUD Stack"
+description: "Plan to introduce StockCommonConfiguration domain with timestamped entity, MapStruct mapper, Panache repository, application-scoped service, and JAX-RS controller, aligned with Quarkus tick pattern."
+tags: [quarkus, panache, mapstruct, flyway, crud, configuration]
+category: plan
+status: done
+updated: 2025-11-15
+---
+
 # 📋 [251115: 2025-11-15] - Create Stock Common Configuration entity, mapper, DTO, repository, service, controller
 
 ## User Requirements
+>
 > 1. add created_at and updated_at column to entity
 > 2. Create mapper, dto, repository, service (use mapstruct, follow like in `packages/stock/src/main/java/com/vjcspy/stock/stockinfo/domain/tick`)
 > 3. Create controller
 
 ## 🎯 Objective
+>
 > Introduce `StockCommonConfiguration` domain with timestamped entity and full CRUD stack (DTO/Mapper/Repository/Service/Controller), aligned with existing Quarkus + Panache + MapStruct patterns.
 
 [Implement `StockCommonConfigurationEntity` with `created_at`, `updated_at`; wire MapStruct mapper and Lombok DTO; add Panache repository and application-scoped service; expose JAX-RS resource for CRUD/queries returning `ApiResponse` wrapped payloads.]
 
 ### ⚠️ Key Considerations
+>
 > This describes the extremely important points or reasons that need attention
+
 - Use Quarkus + Panache repository pattern as in tick domain (`StockInfoTickRepository.java:10`)
 - Use MapStruct with `componentModel="cdi"` (`StockInfoTickMapper.java:7`) and Lombok DTO style (`StockInfoTickDto.java:11`)
 - JAX-RS resource style with `@Path`, `@Consumes`, `@Produces` (`TickResource.java:25-28`), returning `ApiResponse`
@@ -21,15 +34,18 @@
 - Add Flyway migration under `projects/http/src/main/resources/db/migration` to create table and indexes
 
 ## 🔄 Implementation Plan
+
 [Don't require running any test]
 
 ### Phase 1: Analysis & Preparation
+
 - [ ] Analyze detailed requirements
   - **Outcome**: Timestamped entity plus full CRUD stack modeled on tick domain
 - [ ] Define scope and edge cases
   - **Outcome**: Basic CRUD; unique `key`; JSON `value`; pagination for list; 404 handling; optimistic update strategy for `updated_at`
 
 ### Phase 2: Implementation (File/Code Structure)
+>
 > Describe the proposed file/directory structure, including the purpose of each key component. Remember use status markers like ✅ (Implemented), 🚧 (To-Do), 🔄 (In Progress).
 
 ```
@@ -49,12 +65,14 @@ projects/http/src/main/resources/db/migration/
 ```
 
 Reference patterns to mirror:
+
 - Mapper CDI: `packages/stock/src/main/java/com/vjcspy/stock/stockinfo/domain/tick/StockInfoTickMapper.java:7`
 - DTO Lombok: `packages/stock/src/main/java/com/vjcspy/stock/stockinfo/domain/tick/StockInfoTickDto.java:11`
 - Panache repository: `packages/stock/src/main/java/com/vjcspy/stock/stockinfo/domain/tick/StockInfoTickRepository.java:10`
 - JAX-RS resource: `packages/stock/src/main/java/com/vjcspy/stock/stockinfo/controller/TickResource.java:25-28`
 
 ### Phase 3: Detailed Implementation Steps
+
 1. Entity updates (`StockCommonConfigurationEntity.java`)
    - Add fields:
      - `@Column(name = "created_at", nullable = false)` `Instant createdAt` with `@ColumnDefault("CURRENT_TIMESTAMP")`
@@ -131,13 +149,16 @@ Reference patterns to mirror:
 ## 📊 Summary of Results
 
 ### ✅ Completed Achievements
+
 - Planning document outlines entity timestamps, migration, full stack components, and REST endpoints aligned with existing patterns
 
 ## 🚧 Outstanding Issues & Follow-up
 
 ### ⚠️ Known Issues (Optional)
+
 - [ ] Decide whether to manage `updated_at` via DB trigger vs service; current plan uses service
 
 ### 🔮 Future Improvements (Optional)
+
 - [ ] Add audit trail (who changed configuration and when)
 - [ ] Add caching layer for reads to reduce DB hits

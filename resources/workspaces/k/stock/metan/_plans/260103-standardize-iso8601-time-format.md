@@ -1,3 +1,12 @@
+---
+name: "Standardize ISO8601 Time Format"
+description: "Fixes ISO8601 time format mismatch (Z vs +00:00) across metan codebase: fixes normalize_iso8601(), adds timestamp_to_iso8601() and build_iso_timepoint() utilities, and removes duplicated _build_iso_timepoint() methods."
+tags: [metan, iso8601, time-format, bug-fix, python]
+category: plan
+status: done
+updated: 2026-01-03
+---
+
 # 📋 260103: Standardize ISO8601 Time Format Across Codebase
 
 > **Status:** ✅ COMPLETED  
@@ -44,11 +53,13 @@ Standardize **all time formatting to use `+00:00` format** (matching DB/Supabase
 ## 📍 Affected Files
 
 ### Core Utility (Fix First)
+
 | File | Line | Current | Action |
 |------|------|---------|--------|
 | `packages/stock/metan/stock/common/utils/time_utils.py` | 6-25 | `normalize_iso8601` returns Z format (bug) | Fix to return +00:00 format |
 
 ### Files Using `to_iso8601_string()`
+
 | File | Line | Current | Action |
 |------|------|---------|--------|
 | `packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py` | 167 | `pendulum.from_timestamp(...).to_iso8601_string()` | Use `timestamp_to_iso8601()` |
@@ -58,6 +69,7 @@ Standardize **all time formatting to use `+00:00` format** (matching DB/Supabase
 | `packages/stock/metan/stock/info/domain/index/vn30_base_calculator.py` | 228-232 | `_build_iso_timepoint()` method | Use `build_iso_timepoint()` from utils |
 
 ### Files Already Using Utility (Will Be Fixed Automatically)
+
 | File | Line | Current | Note |
 |------|------|---------|------|
 | `packages/stock/.../tcbs_symbol_candle_fetcher.py` | 75 | `normalize_iso8601()` | Will work correctly after utility fix |
@@ -138,6 +150,7 @@ def build_iso_timepoint(date: str, hhmm: str) -> str:
 **File:** `packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 
 **Change 1 (Line 167):**
+
 ```python
 # Before:
 iso_time = pendulum.from_timestamp(int(t), tz="UTC").to_iso8601_string()
@@ -148,6 +161,7 @@ iso_time = timestamp_to_iso8601(int(t))
 ```
 
 **Change 2 (Line 274):**
+
 ```python
 # Before:
 iso_time = pendulum.from_timestamp(bucket_time, tz="UTC").to_iso8601_string()
@@ -161,11 +175,13 @@ iso_time = timestamp_to_iso8601(bucket_time)
 **File:** `packages/stock/metan/stock/info/domain/index/tick_vn30_index_calculator.py`
 
 1. Add import at top:
+
 ```python
 from metan.stock.common.utils.time_utils import build_iso_timepoint
 ```
 
-2. Replace method call (line 275):
+1. Replace method call (line 275):
+
 ```python
 # Before:
 iso_timepoint = self._build_iso_timepoint(date, hhmm)
@@ -174,7 +190,7 @@ iso_timepoint = self._build_iso_timepoint(date, hhmm)
 iso_timepoint = build_iso_timepoint(date, hhmm)
 ```
 
-3. Remove `_build_iso_timepoint` method (lines 310-323)
+1. Remove `_build_iso_timepoint` method (lines 310-323)
 
 **File:** `packages/stock/metan/stock/info/domain/index/tcbs_vn30_index_calculator.py`
 
@@ -187,6 +203,7 @@ Same pattern (lines 132, 228-232)
 ### Phase 4: Verification
 
 No changes needed in `vn30_feature_pipeline.py` - the comparison will work after upstream fixes because:
+
 - `candle.time` (from TickVN30IndexCalculator) → now uses `+00:00` format
 - `aggregated_df.index` (from Supabase) → already uses `+00:00` format
 
@@ -223,4 +240,3 @@ No changes needed in `vn30_feature_pipeline.py` - the comparison will work after
 - [x] Phase 3c: Update `vn30_base_calculator.py`
 - [x] Phase 4: Run linter checks
 - [ ] Phase 5: Test VN30FeaturePipeline end-to-end
-

@@ -1,3 +1,12 @@
+---
+name: "ReactiveEvent Actions/Effects"
+description: "Architecture reference for jmeta's in-memory action pipeline on Vert.x Event Bus: @Effect annotation, ReactiveEventManager dispatch, correlation ID propagation, and merge/concatenate processing modes."
+tags: [quarkus, reactive, mutiny, vertx, event-bus, architecture]
+category: architecture
+status: done
+updated: 2026-02-28
+---
+
 # ReactiveEvent Actions/Effects (Quarkus + Mutiny)
 
 Lightweight, in-memory action pipelines on Vert.x Event Bus. Optimized for clear, testable flows.
@@ -5,6 +14,7 @@ Lightweight, in-memory action pipelines on Vert.x Event Bus. Optimized for clear
 ## Overview
 
 Architecture
+
 ```
 Action (dispatch)
     → Event Bus ("reactive-event-bus")
@@ -15,21 +25,25 @@ Action (dispatch)
 ```
 
 Core pieces
+
 - Action: type + payload + correlationId
 - Manager: dispatch + routing; registers handlers
 - Effect: bean returning `ReactiveEventHandler` (Mutiny `Multi` → `Multi`)
 - Initializer: auto-registers effects
 
 Processing modes
+
 - Concurrent: `transformToUniAndMerge`
 - Serialized (one-by-one): `transformToUniAndConcatenate`
 
 When to use
+
 - Merge for throughput; Concatenate for ordered pagination, idempotent upserts, single-threaded workflows.
 
 ## API Reference
 
 ### ReactiveEventAction<T>
+
 ```java
 // Constructor
 new ReactiveEventAction<>(String type, T payload)
@@ -45,6 +59,7 @@ ReactiveEventActionFactory<Void> EMPTY
 ```
 
 ### ReactiveEventManager
+
 ```java
 // Dispatch action
 static void dispatch(ReactiveEventAction<Object> action)
@@ -54,11 +69,13 @@ static void registerEvent(String[] eventTypes, ReactiveEventHandler handler)
 ```
 
 ### @Effect Annotation
+
 ```java
 @Effect(types = {"ACTION_TYPE_1", "ACTION_TYPE_2"}) // Required: explicit action types
 ```
 
 ### ReactiveEventHandler Interface
+
 ```java
 @FunctionalInterface
 public interface ReactiveEventHandler {
@@ -67,6 +84,7 @@ public interface ReactiveEventHandler {
 ```
 
 Operator choices
+
 - Merge for concurrent fan-out
 - Concatenate for strict sequencing
 
@@ -75,6 +93,7 @@ Operator choices
 Flow: `PRICE_SYNC_START → PRICE_LOAD → PRICE_SAVE → (loop) → PRICE_FINISHED | PRICE_ERROR`
 
 Key ideas
+
 - Use Concatenate for strict ordering
 - Keep pagination in payload: `code`, `startDate`, `endDate`, `offset`, `limit`
 - `hasMore = count >= limit` → next `PRICE_LOAD` or `PRICE_FINISHED`
@@ -82,6 +101,7 @@ Key ideas
 - Throttle between pages; settle correlation on terminal steps; end with `EMPTY`
 
 Sketch
+
 ```java
 @ApplicationScoped @Unremovable
 class PriceSyncEffect {
@@ -148,6 +168,7 @@ class PriceSyncEffect {
 ## Correlation & dispatch
 
 Correlation ID is automatically:
+
 - Assigned a new UUID if action doesn't have one
 - Copied from original action to new action in effects
 - Validated to ensure no changes in pipeline
@@ -160,6 +181,7 @@ ReactiveEventManager.dispatch(action);
 ```
 
 Correlation-aware ack/nack (optional)
+
 - If bridging with a queue/HTTP gateway, track message refs by correlationId and settle on FINISHED/ERROR.
 
 ```java
@@ -211,21 +233,27 @@ public ReactiveEventHandler multiTypeEffect() {
 ## Troubleshooting
 
 **Problem**: Can't see "Registered ReactiveEvent handler" log
+
 - **Solution**: Add `@Unremovable` to effect bean
 
 **Problem**: NoClassDefFoundError on startup
+
 - **Solution**: Initializer already filters `com.vjcspy.*` packages
 
 **Problem**: Effect not running
+
 - **Solution**: Check action type matching (explicit types are required) and payload type casting
 
 **Problem**: Infinite loop
+
 - **Solution**: Effect must emit different action type than input type
 
 **Problem**: Event Bus codec error ("No message codec for type ...")
+
 - **Solution**: Register a local codec for `ReactiveEventAction` or serialize actions to a supported format when using Event Bus
 
 **Problem**: No-op end-of-chain still publishes
+
 - **Solution**: Emit an action type with no handlers (e.g., `EMPTY`).
 
 ## Router behavior (under the hood)
@@ -240,12 +268,15 @@ public ReactiveEventHandler multiTypeEffect() {
 ## Configuration
 
 - Merge concurrency (default 64):
-    - `com.vjcspy.reactive-event.merge-concurrency=64`
+  - `com.vjcspy.reactive-event.merge-concurrency=64`
+
 ## Payloads, throttling, testing
 
 Payloads
+
 - Typed payloads for domain safety; Map for orchestration state (`offset`, `limit`, `fromBeginning`).
 - Helper for safe cast:
+
 ```java
 @SuppressWarnings("unchecked")
 private Map<String, Object> asMap(Object p) {
@@ -254,8 +285,10 @@ private Map<String, Object> asMap(Object p) {
 ```
 
 Throttling & retries
+
 - Throttle: `delayIt().by(Duration.ofMillis(250))`
 - Backoff: `onFailure().retry().withBackOff(min, max).atMost(n)`
 
 Testing
+
 - Collect outputs from `handler.apply(Multi.createFrom().items(action))` and assert types/payloads.

@@ -1,3 +1,12 @@
+---
+name: "Refactor lookback_days to tick_candles_by_date"
+description: "Moves lookback_days from StockDataCollector constructor to tick_candles_by_date(lookback_days=0) parameter: ticks()/prices() return exact range, price_candles_by_date uses start_date directly, WhaleFootprintFeatureCalculator explicitly passes FEATURE_ROLLING_WINDOW_DAYS."
+tags: [metan, stock-data-collector, refactor, lookback, tick-candles, python]
+category: plan
+status: done
+updated: 2026-02-21
+---
+
 # 260221-Refactor-Lookback-To-Tick-Candles-By-Date
 
 ## References

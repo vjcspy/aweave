@@ -1,3 +1,12 @@
+---
+name: "VN30 Feature Pipeline Early Exit Optimization"
+description: "Refactors VN30FeaturePipeline.run() to check existing VN30 dates first (before expensive prefetch), adds early-exit if all dates present, and segments missing dates into continuous ranges for minimal re-computation."
+tags: [metan, vn30, pipeline, optimization, early-exit, python]
+category: plan
+status: done
+updated: 2026-02-28
+---
+
 # VN30 Feature Pipeline Optimization Plan
 
 ## Objective

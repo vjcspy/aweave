@@ -1,3 +1,12 @@
+---
+name: "Implement Tick-based VN30 Index Calculator"
+description: "Implementation of TickVN30IndexCalculator using Supabase tick candles for data consistency with whale footprint features: market-cap weighted, strict validation, replaces TCBS-based calculator."
+tags: [metan, vn30, index-calculator, tick-candles, supabase, python]
+category: plan
+status: done
+updated: 2026-01-01
+---
+
 # 📋 260101: Implement Tick-based VN30 Index Calculator
 
 > **Status:** ✅ IMPLEMENTED  
@@ -29,6 +38,7 @@ Implement `TickVN30IndexCalculator` that calculates VN30 Index from tick candle 
 2. **Existing Infrastructure**: Reuse `StockDataCollector.tick_candles_by_date()` which returns `TickCandle` objects with OHLCV data.
 
 3. **Market Cap Weighting Formula**:
+
    ```
    MarketCap_i = Price_i × TotalShares_i × FreeFloatRatio_i
    TotalMarketCap = Σ MarketCap_i (for all 30 symbols)
@@ -54,6 +64,7 @@ Implement `TickVN30IndexCalculator` that calculates VN30 Index from tick candle 
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze `TickCandle` structure and compare with `PriceCandle`
   - **Outcome**: TickCandle has same OHLCV fields as PriceCandle, plus `tick_actions` and `value`
 - [x] Review existing `TcbsVN30IndexCalculator` implementation

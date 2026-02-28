@@ -1,3 +1,12 @@
+---
+name: "Whale Footprint Feature Spec"
+description: "Business specification for whale footprint features: shark/sheep classification by trade value threshold (450M/900M VND), buy/sell value, avg price, 5-day ratio, percent ratios, urgency spread, and accumulative variants."
+tags: [vn30, whale-footprint, features, stock, feature-engineering]
+category: business
+status: active
+updated: 2025-11-15
+---
+
 # General Requirement
 
 Phân loại theo thuộc tính đối tượng và cách tính(point-in-time, **accu**mulative, moving-window)
@@ -60,7 +69,7 @@ Tạm thời sẽ dùng 2 threshold 450 và 900 để so sánh value xem có ph�
 
 #### Implemented
 
-- `sharkXXX_buy_value`,  `sharkXXX_sell_value` mua bán của sharkXXX trong **`*candle`*** 
+- `sharkXXX_buy_value`,  `sharkXXX_sell_value` mua bán của sharkXXX trong **`*candle`***
   
     Để theo value như này có vẻ không ổn, có thể nomalize với giá trị giao dịch trung bình 5 ngày.
     `sharkXXX_buy_ratio_5d_pc`: so sánh tỷ lệ với trung bình 5 ngày
@@ -85,7 +94,7 @@ Tạm thời sẽ dùng 2 threshold 450 và 900 để so sánh value xem có ph�
   - `percent_buy_sharkXXX_sheep` = `Shark Buy / (Shark Buy + Sheep Buy)`: Tỷ trọng Shark đóng góp trong tổng lực Mua.
   - `percent_sell_sharkXXX_sheep` = `Shark Sell / (Shark Sell + Sheep Sell)`: Tỷ trọng Shark đóng góp trong tổng lực Bán.
   
-- **`shark_urgency_spread = (avg_price_shark_buys - avg_price_shark_sells) / vwap`** 
+- **`shark_urgency_spread = (avg_price_shark_buys - avg_price_shark_sells) / vwap`**
 
   - Chuẩn hóa bằng VWAP giúp so sánh được giữa các cổ phiếu. Spread dương lớn cho thấy phe mua lớn đang rất "hung hăng", sẵn sàng mua đuổi giá cao.
 

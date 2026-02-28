@@ -1,3 +1,12 @@
+---
+name: "VN30F1M Intraday Trading AI Model"
+description: "Business requirement and implementation plan for a VN30F1M intraday AI trading system: LightGBM + LSTM ensemble for LONG/SHORT/HOLD classification with Triple Barrier labeling, backtesting, and production pipeline."
+tags: [vn30, ai, trading, lightgbm, lstm, ensemble, backtesting]
+category: business
+status: planning
+updated: 2026-01-03
+---
+
 # VN30F1M Intraday Trading AI Model
 
 > **Status:** 📋 PLANNING  
@@ -9,7 +18,7 @@ Xây dựng một application có các chức năng chính:
 
 1. ✅ **DONE** - Dựa vào dữ liệu đã thu thập để build ra các features → `VN30FeaturePipeline`
 2. Dùng AI sử dụng features này để dự đoán giá trong phiên của VN30 (hợp đồng phái sinh VN30F1M). Lưu ý là chỉ nắm giữ trong phiên, bắt buộc sẽ bán khi đặt target profit, chạm stop loss hoặc cuối phiên.
-   
+
 Cụ thể AI model cần sẽ đánh giá, tức là sẽ mở lệnh và đóng lệnh tại các thời điểm phù hợp trong ngày, đưa ra hành động với 3 trường hợp:
 
 - Vào vị thế và dự đoán Giá tăng X%
@@ -63,6 +72,7 @@ Hãy tưởng tượng bạn hỏi 100 chuyên gia khác nhau: "Giá sẽ tăng 
 - Kết quả cuối cùng = trung bình của tất cả các cây
 
 **Gradient Boosting** cải tiến thêm:
+
 - Cây sau học từ sai lầm của cây trước
 - Tập trung vào những trường hợp khó dự đoán
 
@@ -107,6 +117,7 @@ Hãy tưởng tượng bạn hỏi 100 chuyên gia khác nhau: "Giá sẽ tăng 
 #### 🧠 Cách hoạt động (Giải thích đơn giản)
 
 Neural network mô phỏng cách não người xử lý thông tin:
+
 - **Input layer**: Nhận features (giá, volume, shark values...)
 - **Hidden layers**: Xử lý và tìm patterns phức tạp
 - **Output layer**: Đưa ra dự đoán
@@ -122,16 +133,19 @@ Candle 1 → Candle 2 → Candle 3 → Candle 4 → Candle 5 → Prediction
 ```
 
 **Cách hoạt động:**
+
 - LSTM có "bộ nhớ" để nhớ thông tin từ quá khứ
 - 3 cổng (gates) quyết định: nhớ gì, quên gì, output gì
 - Tốt cho việc tìm patterns trong chuỗi dài
 
 **Ưu điểm:**
+
 - Capture được temporal dependencies (pattern theo thời gian)
 - Tự động học features từ raw data
 - Tốt khi có nhiều data (>10,000 samples)
 
 **Nhược điểm:**
+
 - Chậm hơn tree-based models 10-100x
 - Cần nhiều data và computing power
 - Black box - khó giải thích
@@ -152,16 +166,19 @@ Candle 1 → Candle 2 → Candle 3 → Candle 4 → Candle 5 → Prediction
 ```
 
 **Cách hoạt động:**
+
 - Không xử lý tuần tự như LSTM
 - Mỗi time step "attend" (chú ý) đến tất cả time steps khác
 - Tìm ra relationships bất kỳ đâu trong sequence
 
 **Ưu điểm:**
+
 - Capture long-range dependencies tốt hơn LSTM
 - Song song hóa được (train nhanh hơn LSTM)
 - State-of-the-art cho nhiều bài toán NLP/time series
 
 **Nhược điểm:**
+
 - Cần RẤT NHIỀU data (100,000+ samples lý tưởng)
 - Complex architecture, khó tune
 - Overfitting dễ xảy ra với data ít
@@ -169,11 +186,13 @@ Candle 1 → Candle 2 → Candle 3 → Candle 4 → Candle 5 → Prediction
 ##### c) TCN (Temporal Convolutional Network)
 
 **Cách hoạt động:**
+
 - Dùng convolution thay vì recurrence
 - Dilated convolutions để capture long-range patterns
 - Song song hóa tốt hơn LSTM
 
 **Ưu điểm:**
+
 - Nhanh hơn LSTM
 - Không bị vanishing gradient
 - Tốt cho fixed-length sequences
@@ -326,7 +345,7 @@ Với 180+ ngày data, tôi recommend **Ensemble approach**:
 | Robustness | ⭐⭐ Tốt | ⭐ Dễ overfit | ⭐⭐⭐ Rất tốt |
 | Implementation | ⭐⭐⭐ Dễ | ⭐⭐ Trung bình | ⭐⭐ Trung bình |
 
-### Tuy nhiên, để tối ưu thời gian, đề xuất pilot strategy:
+### Tuy nhiên, để tối ưu thời gian, đề xuất pilot strategy
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -370,6 +389,7 @@ else:
 ```
 
 **Ưu điểm của Ensemble approach:**
+
 - Thresholds có thể tune sau khi train
 - Có thể scale position size dựa vào confidence
 - LightGBM capture whale footprint patterns tốt
@@ -397,6 +417,7 @@ Hoặc sử dụng Walk-Forward:
 ```
 
 **Lưu ý quan trọng:**
+
 - Phải split theo thời gian (không random shuffle) để tránh data leakage
 - Validation set dùng để tune hyperparameters & thresholds
 - Test set chỉ dùng 1 lần cuối cùng để đánh giá final model
@@ -408,6 +429,7 @@ Hoặc sử dụng Walk-Forward:
 **Data Source:** `stock_trading_feature_candles` table (symbol="VN30")
 
 ### 3.1 Price Features (OHLCV)
+
 | Feature | Description | Unit |
 |---------|-------------|------|
 | `open`, `high`, `low`, `close` | VN30 Index OHLCV | Index points |
@@ -415,6 +437,7 @@ Hoặc sử dụng Walk-Forward:
 | `value` | Total traded value | Million VND |
 
 ### 3.2 Whale Footprint Features
+
 | Feature | Description |
 |---------|-------------|
 | `vn30_shark450_buy_value` | Giá trị mua của cá mập (≥450M) |
@@ -434,6 +457,7 @@ Hoặc sử dụng Walk-Forward:
 **Mục tiêu:** Chuẩn bị dataset cho cả LightGBM và LSTM
 
 1. **Export VN30 features từ DB**
+
    ```python
    # Query từ stock_trading_feature_candles
    # Filter: symbol="VN30", interval=300
@@ -441,6 +465,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 2. **Tạo Target Variable (Y)**
+
    ```python
    # Primary: Next candle return (for regression)
    y_regression = (next_close - current_close) / current_close * 100
@@ -450,6 +475,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 3. **Feature Engineering cho LightGBM**
+
    ```python
    # Lag features (point-in-time values from previous candles)
    for col in ['close', 'volume', 'vn30_shark450_buy_value', ...]:
@@ -472,6 +498,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 4. **Feature Engineering cho LSTM**
+
    ```python
    # LSTM cần sequences, không cần lag features
    # Normalize features to [0, 1] or standardize
@@ -484,6 +511,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 5. **Data Split**
+
    ```
    Total: 270 ngày (~16,200 candles)
    ├── Train: Day 1-180 (~10,800 samples)
@@ -498,6 +526,7 @@ Hoặc sử dụng Walk-Forward:
 **Mục tiêu:** Train LightGBM và establish baseline performance
 
 1. **Train LightGBM**
+
    ```python
    import lightgbm as lgb
    
@@ -527,6 +556,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 2. **Hyperparameter Tuning với Optuna**
+
    ```python
    import optuna
    
@@ -545,6 +575,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 3. **Feature Importance Analysis**
+
    ```python
    importance = model_lgb.feature_importance(importance_type='gain')
    # Visualize top 20 features
@@ -563,6 +594,7 @@ Hoặc sử dụng Walk-Forward:
 **Mục tiêu:** Train LSTM để capture temporal patterns
 
 1. **LSTM Architecture**
+
    ```python
    import torch
    import torch.nn as nn
@@ -591,6 +623,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 2. **Training Loop**
+
    ```python
    model = LSTMPredictor(input_size=len(features), hidden_size=128)
    optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)
@@ -623,6 +656,7 @@ Hoặc sử dụng Walk-Forward:
 **Mục tiêu:** Combine LightGBM + LSTM để maximize accuracy
 
 1. **Stacking Architecture**
+
    ```python
    # Level 1: Base models
    pred_lgb = model_lgb.predict(X_val_lgb)      # LightGBM predictions
@@ -643,6 +677,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 2. **Alternative: Weighted Average**
+
    ```python
    # Learn optimal weights on validation set
    def find_optimal_weights(pred_lgb, pred_lstm, y_true):
@@ -662,6 +697,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 3. **Threshold Optimization**
+
    ```python
    def optimize_thresholds(predictions, y_true, metric='sharpe'):
        best_thresholds = (0.3, -0.3)
@@ -691,6 +727,7 @@ Hoặc sử dụng Walk-Forward:
 **Mục tiêu:** Validate strategy với realistic trading simulation
 
 1. **Trading Simulator**
+
    ```python
    class TradingSimulator:
        def __init__(self, initial_capital=100_000_000):  # 100M VND
@@ -722,6 +759,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 2. **Walk-Forward Validation**
+
    ```python
    # Rolling window training
    window_size = 120  # 120 days training
@@ -743,6 +781,7 @@ Hoặc sử dụng Walk-Forward:
    ```
 
 3. **Metrics Dashboard**
+
    | Metric | Target | Description |
    |--------|--------|-------------|
    | Win Rate | > 52% | % trades profitable |

@@ -1,3 +1,12 @@
+---
+name: "Explicit lookback_days in StockDataCollector"
+description: "Refactors StockDataCollector to accept explicit lookback_days constructor parameter (default=5) instead of implicit magic number, and defines FEATURE_ROLLING_WINDOW_DAYS constant in base.py."
+tags: [metan, stock-data-collector, refactor, lookback, python]
+category: plan
+status: done
+updated: 2026-01-02
+---
+
 # 📋 [STOCK-260102: 2026-01-02] - Explicit Lookback Days in StockDataCollector
 
 ## References
@@ -10,6 +19,7 @@
 ## User Requirements
 
 Currently, `StockDataCollector` implicitly fetches 5 extra days before `start_date` in `_effective_start_date()`. This is hidden behavior needed for feature calculations (5-day rolling window). However:
+
 - It's confusing and implicit
 - Other use cases that don't need lookback still get redundant data
 - The "5" is a magic number with no documentation
@@ -34,7 +44,7 @@ Refactor `StockDataCollector` to accept an explicit `lookback_days` parameter, m
 - [x] Analyze current implementation
   - **Outcome**: `_effective_start_date()` adds 5 extra days implicitly via `desired_limit = count_val + 5`
 - [x] Identify all usage sites
-  - **Outcome**: 
+  - **Outcome**:
     - `IntradaySymbolFeaturePersistor` - needs lookback for feature calculation
     - `WhaleFootprintFeatureCalculator` - receives collector, uses lookback data
     - `VN30BaseCalculator` - needs lookback
@@ -68,7 +78,7 @@ Add a named constant to document the rolling window requirement:
 FEATURE_ROLLING_WINDOW_DAYS = 5  # Required for pc_value_5d 5-day rolling calculation
 ```
 
-#### Step 2: Update `StockDataCollector.__init__()` 
+#### Step 2: Update `StockDataCollector.__init__()`
 
 Modify constructor to accept explicit `lookback_days` parameter:
 
@@ -152,6 +162,7 @@ def _ctx(self) -> str:
 ### Phase 4: Verification
 
 After implementation:
+
 1. Existing code should work unchanged (default `lookback_days=5`)
 2. New callers can explicitly pass `lookback_days=0` when no lookback is needed
 3. Feature calculations continue to work correctly
@@ -159,6 +170,7 @@ After implementation:
 ## 📊 Summary of Results
 
 ### ✅ Completed Achievements
+
 - [x] Added `FEATURE_ROLLING_WINDOW_DAYS = 5` constant in `base.py`
 - [x] Added `lookback_days: int = 5` parameter to `StockDataCollector.__init__()`
 - [x] Updated `_effective_start_date()` to use `self.lookback_days` instead of hardcoded `5`
@@ -168,6 +180,6 @@ After implementation:
 ## 🚧 Outstanding Issues & Follow-up
 
 ### Future Considerations
+
 - [ ] Consider adding a `FeatureDataProvider` wrapper class if more feature-specific data requirements emerge
 - [ ] Consider allowing each feature calculator to specify its own required lookback period
-

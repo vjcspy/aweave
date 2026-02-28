@@ -1,3 +1,12 @@
+---
+name: "Refactor tick_candles_by_date Gap Filling"
+description: "Plan to refactor tick_candles_by_date in StockDataCollector to handle missing trading buckets gracefully: flat-candle gap filling using previous close, minimum 20-bucket threshold validation."
+tags: [metan, stock-data-collector, refactor, tick-candles, python]
+category: plan
+status: done
+updated: 2025-12-21
+---
+
 # 📋 [TICKET-ID: 251221-Refactor-StockDataCollector-TickCandles] - Refactor Tick Candles By Date Logic
 
 ## References
@@ -29,52 +38,53 @@ Refactor `tick_candles_by_date` method in `StockDataCollector` to handle missing
 ### Phase 1: Analysis & Preparation
 
 - [ ] **Analyze Data Availability**:
-    -   The `StockDataCollector` already has a `prices()` method that returns daily prices. We need to index these by date to easily access the daily Open price.
+  - The `StockDataCollector` already has a `prices()` method that returns daily prices. We need to index these by date to easily access the daily Open price.
 - [ ] **Define Logic for Filling Gaps**:
-    -   **Validation**: `count(active_buckets) > 20`. If not, raise `ValueError`.
-    -   **Iteration**: Loop through `schedule_bucket_times`.
-    -   **Case 1 (Active Bucket)**: Calculate OHLCV from ticks as currently implemented. Update `last_close_price`.
-    -   **Case 2 (Empty Bucket)**:
-        -   **If First Bucket**: Use `daily_price.open` as OHLC. Update `last_close_price`.
-        -   **If Subsequent Bucket**: Use `last_close_price` as OHLC. Volume/Value = 0.
+  - **Validation**: `count(active_buckets) > 20`. If not, raise `ValueError`.
+  - **Iteration**: Loop through `schedule_bucket_times`.
+  - **Case 1 (Active Bucket)**: Calculate OHLCV from ticks as currently implemented. Update `last_close_price`.
+  - **Case 2 (Empty Bucket)**:
+    - **If First Bucket**: Use `daily_price.open` as OHLC. Update `last_close_price`.
+    - **If Subsequent Bucket**: Use `last_close_price` as OHLC. Volume/Value = 0.
 
 ### Phase 2: Implementation (File/Code Structure)
 
 **File**: `packages/stock/metan/stock/info/domain/stock_data_collector/stock_data_collector.py`
 
 - [ ] **Refactor `tick_candles_by_date`**:
-    -   Fetch `prices` list and convert to a dict `prices_by_date` for O(1) access.
-    -   Remove the strict check inside the loop that raises `ValueError` if `pairs` is empty.
-    -   Add pre-check: `if len(interval_tick_buckets) <= 20: raise ValueError(...)`.
-    -   Implement the logic to maintain `previous_close` state.
-    -   Handle the first bucket empty case using `prices_by_date[date].open`.
+  - Fetch `prices` list and convert to a dict `prices_by_date` for O(1) access.
+  - Remove the strict check inside the loop that raises `ValueError` if `pairs` is empty.
+  - Add pre-check: `if len(interval_tick_buckets) <= 20: raise ValueError(...)`.
+  - Implement the logic to maintain `previous_close` state.
+  - Handle the first bucket empty case using `prices_by_date[date].open`.
 
 ### Phase 3: Detailed Implementation Steps
 
-1.  **Prepare Daily Prices**:
-    -   Call `self.prices()` at the beginning of `tick_candles_by_date`.
-    -   Create `prices_map = {p.date: p for p in self.prices()}`.
+1. **Prepare Daily Prices**:
+    - Call `self.prices()` at the beginning of `tick_candles_by_date`.
+    - Create `prices_map = {p.date: p for p in self.prices()}`.
 
-2.  **Loop Modification**:
-    -   Inside the date loop (`for date in sorted(ticks_by_date.keys()):`):
-        -   ... (existing bucket calculation) ...
-        -   **Add Check**: `if len(interval_tick_buckets) <= 20: raise ValueError(...)`.
-        -   Get `daily_price = prices_map.get(date)`. Ensure it exists (it should, based on `prices()` logic, but good to handle safety).
-        -   Initialize `previous_close = daily_price.open`.
-        -   Iterate `schedule_bucket_times`:
-            -   Check if `bucket_time` in `interval_tick_buckets`.
-            -   **If yes**:
-                -   Compute Candle (existing logic).
-                -   `previous_close = candle.close`.
-            -   **If no**:
-                -   Create filler Candle:
-                    -   `open = close = high = low = previous_close`.
-                    -   `volume = 0`, `value = 0`.
-                    -   `tick_actions = []`.
+2. **Loop Modification**:
+    - Inside the date loop (`for date in sorted(ticks_by_date.keys()):`):
+        - ... (existing bucket calculation) ...
+        - **Add Check**: `if len(interval_tick_buckets) <= 20: raise ValueError(...)`.
+        - Get `daily_price = prices_map.get(date)`. Ensure it exists (it should, based on `prices()` logic, but good to handle safety).
+        - Initialize `previous_close = daily_price.open`.
+        - Iterate `schedule_bucket_times`:
+            - Check if `bucket_time` in `interval_tick_buckets`.
+            - **If yes**:
+                - Compute Candle (existing logic).
+                - `previous_close = candle.close`.
+            - **If no**:
+                - Create filler Candle:
+                    - `open = close = high = low = previous_close`.
+                    - `volume = 0`, `value = 0`.
+                    - `tick_actions = []`.
 
 ## 📊 Summary of Results
 
 ### ✅ Completed Achievements
+
 - [ ] Refactored `tick_candles_by_date` to support sparse trading days.
 - [ ] Implemented gap filling strategy using previous close or daily open.
 - [ ] Enforced minimum activity threshold (> 20 active buckets).
@@ -82,4 +92,5 @@ Refactor `tick_candles_by_date` method in `StockDataCollector` to handle missing
 ## 🚧 Outstanding Issues & Follow-up
 
 ### ⚠️ Issues/Clarifications (Optional)
+
 - [ ] Confirm if 20 buckets is the hard fixed number or should be configurable (will stick to 20 hardcoded for now as per prompt).

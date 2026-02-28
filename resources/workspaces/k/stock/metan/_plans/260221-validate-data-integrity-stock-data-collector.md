@@ -1,3 +1,12 @@
+---
+name: "Validate Data Integrity in StockDataCollector"
+description: "Moves data integrity validation (prices vs ticks date-set comparison) into StockDataCollector.validate_data_integrity() with class-level range superset cache; removes validate_dayset_equality from feature calculator layer."
+tags: [metan, stock-data-collector, validation, data-integrity, python]
+category: plan
+status: done
+updated: 2026-02-21
+---
+
 # 260221 - Validate Data Integrity in StockDataCollector
 
 ## References

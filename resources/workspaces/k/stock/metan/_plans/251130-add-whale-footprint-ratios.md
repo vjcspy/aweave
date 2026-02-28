@@ -1,3 +1,12 @@
+---
+name: "Add Whale Footprint Ratio Features"
+description: "Plan to add percent/accumulative ratio features for whale footprint: shark/sheep buy-sell ratio and shark-vs-sheep market share ratios using accumulated session values, with division-by-zero protection."
+tags: [metan, whale-footprint, feature-engineering, ratios, python]
+category: plan
+status: done
+updated: 2025-11-30
+---
+
 # 📋 [251130] - Add Whale Footprint Ratios
 
 ## References
@@ -7,9 +16,9 @@
 ## User Requirements
 
 - Add ratio features for whale footprint:
-    - `ratio_sharkXXX_buy_sell`: Ratio between Shark Buy and Shark Sell.
-    - `ratio_buy_sharkXXX_sheep`: Ratio between Shark Buy and Sheep Buy.
-    - `ratio_sell_sharkXXX_sheep`: Ratio between Shark Sell and Sheep Sell.
+  - `ratio_sharkXXX_buy_sell`: Ratio between Shark Buy and Shark Sell.
+  - `ratio_buy_sharkXXX_sheep`: Ratio between Shark Buy and Sheep Buy.
+  - `ratio_sell_sharkXXX_sheep`: Ratio between Shark Sell and Sheep Sell.
 - Calculate using accumulated values from the start of the session.
 - Use correct naming (fix "shell" typo to "sell").
 
@@ -27,6 +36,7 @@ Implement new accumulated ratio features in the Whale Footprint Feature Calculat
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze existing calculator structure (`whale_footprint_feature_calculator.py`, `avg_prices.py`).
   - **Outcome**: Confirmed `cumulative_trackers` in `ctx` contains the necessary accumulated weighted values.
 - [x] Define ratios and logic.
@@ -50,16 +60,17 @@ packages/stock/metan/stock/trading/domain/feature/calculator/whale_footprint/
 
 ### Phase 3: Detailed Implementation Steps
 
-1.  **Create `accum_ratios.py`**:
-    -   Implement `compute(row, ctx)` function.
-    -   Iterate through `threshold_meta`.
-    -   Retrieve accumulated weighted values from `cumulative_trackers`.
-    -   Compute ratios with zero-division protection.
-    -   Update `row` with new features.
+1. **Create `accum_ratios.py`**:
+    - Implement `compute(row, ctx)` function.
+    - Iterate through `threshold_meta`.
+    - Retrieve accumulated weighted values from `cumulative_trackers`.
+    - Compute ratios with zero-division protection.
+    - Update `row` with new features.
 
-2.  **Update `whale_footprint_feature_calculator.py`**:
-    -   Import `accum_ratios`.
-    -   Add `accum_ratios.compute` to `FEATURES` list (after `avg_prices.compute` to ensure accumulators are up-to-date).
+2. **Update `whale_footprint_feature_calculator.py`**:
+    - Import `accum_ratios`.
+    - Add `accum_ratios.compute` to `FEATURES` list (after `avg_prices.compute` to ensure accumulators are up-to-date).
 
 ## 📊 Summary of Results
+>
 > Do not summarize the results until the implementation is done and I request it

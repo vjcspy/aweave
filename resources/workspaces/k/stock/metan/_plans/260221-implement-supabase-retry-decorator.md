@@ -1,3 +1,12 @@
+---
+name: "Implement Supabase Retry Decorator"
+description: "Adds with_supabase_retry() decorator using tenacity for transient Supabase/httpx errors (Errno 35, timeouts, 502-504): chunk-level retry in intraday persistor and select-level retry in StockDataCollector."
+tags: [metan, supabase, retry, tenacity, resilience, python]
+category: plan
+status: done
+updated: 2026-02-21
+---
+
 # 260221-implement-supabase-retry-decorator
 
 ## Context

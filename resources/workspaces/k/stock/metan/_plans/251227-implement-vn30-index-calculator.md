@@ -1,3 +1,12 @@
+---
+name: "Implement VN30 Index Calculator (TCBS)"
+description: "Implementation of market-cap-weighted VN30IndexCalculator using TCBS REST price candles: base index 1000, free-float ratios, strict timepoint validation, ISO8601 normalization."
+tags: [metan, vn30, index-calculator, tcbs, python]
+category: plan
+status: done
+updated: 2025-12-27
+---
+
 # 📋 251227: Implement VN30 Index Calculator
 
 ## References
@@ -22,6 +31,7 @@
 8. Trading dates: Chỉ lấy các ngày trong range `[start_date, end_date]`
 
 **VN30 Symbols:**
+
 ```
 ACB, BCM, BID, CTG, DGC, FPT, GAS, GVR, HDB, HPG,
 LPB, MBB, MSN, MWG, PLX, SAB, SHB, SSB, SSI, STB,
@@ -41,12 +51,14 @@ Implement a VN30 Index calculator that computes the VN30 index value at 5-minute
 3. **ISO8601 Time Format**: Normalize tất cả ISO8601 time strings về format thống nhất `2025-12-26T02:55:00+00:00` (không có milliseconds, dùng `+00:00` suffix).
 
 4. **Market Cap Weighting Formula**:
+
    ```
    MarketCap_i = Close_i × TotalShares_i
    TotalMarketCap = Σ MarketCap_i (for all 30 symbols)
    
    IndexValue = (TotalMarketCap / BaseTotalMarketCap) × BaseIndex
    ```
+
    Trong đó:
    - `BaseTotalMarketCap` = Total Market Cap của candle đầu tiên
    - `BaseIndex` = 1000
@@ -64,6 +76,7 @@ Implement a VN30 Index calculator that computes the VN30 index value at 5-minute
 ## 🔄 Implementation Plan
 
 ### Phase 1: Analysis & Preparation
+
 - [x] Analyze data flow từ TCBS → PriceCandle → VN30IndexCandle
   - **Outcome**: Hiểu rõ cách lấy candles cho 30 symbols và merge chúng theo timepoint
 - [x] Define edge cases
@@ -95,6 +108,7 @@ packages/stock/metan/stock/
 ### Phase 3: Detailed Implementation Steps
 
 #### Step 1: Create `time_utils.py` ✅
+
 **File**: `packages/stock/metan/stock/common/utils/time_utils.py`
 
 ```python
@@ -120,9 +134,11 @@ def normalize_iso8601(iso_string: str) -> str:
 ---
 
 #### Step 2: Update `tcbs_symbol_candle_fetcher.py` ✅
+
 **File**: `packages/stock/metan/stock/info/domain/stock_data_collector/external/tcbs/tcbs_symbol_candle_fetcher.py`
 
 **Changes:**
+
 - Import `normalize_iso8601` from `metan.stock.common.utils.time_utils`
 - Normalize `tradingDate` when creating `PriceCandle`:
 
@@ -140,6 +156,7 @@ PriceCandle(
 ---
 
 #### Step 3: Create `constants.py` ✅
+
 **File**: `packages/stock/metan/stock/info/domain/index/constants.py`
 
 ```python
@@ -156,6 +173,7 @@ DEFAULT_FREE_FLOAT_RATIO: float = 1.0
 ---
 
 #### Step 4: Create `models.py` ✅
+
 **File**: `packages/stock/metan/stock/info/domain/index/models.py`
 
 ```python
@@ -195,6 +213,7 @@ class VN30IndexCandle(BaseModel):
 ---
 
 #### Step 5: Create `vn30_index_calculator.py` ✅
+
 **File**: `packages/stock/metan/stock/info/domain/index/vn30_index_calculator.py`
 
 **Key Methods:**
@@ -273,6 +292,7 @@ def _build_iso_timepoint(self, date: str, hhmm: str) -> str:
 ---
 
 #### Step 6: Create `__init__.py` ✅
+
 **File**: `packages/stock/metan/stock/info/domain/index/__init__.py`
 
 ```python
@@ -329,7 +349,7 @@ for candle in index_candles[:5]:
 
 ### 🔧 Bug Fixes Applied
 
-1. **ISO8601 Format Mismatch**: 
+1. **ISO8601 Format Mismatch**:
    - TCBS trả về: `2025-12-26T02:55:00.000Z`
    - Expected: `2025-12-26T02:55:00+00:00`
    - **Fix**: Created `normalize_iso8601()` utility
@@ -342,7 +362,7 @@ for candle in index_candles[:5]:
 
 ### ⚠️ Potential Future Improvements
 
-1. **Performance Optimization**: 
+1. **Performance Optimization**:
    - Consider parallel fetching với `asyncio` hoặc `concurrent.futures` cho 30 symbols
 
 2. **Future Extensions**:
