@@ -1,8 +1,8 @@
 ---
 name: "tiny-internal-services — Repository"
-description: "Overview for tiny-internal-services — Repository"
+description: "MUST READ before any tiny-internal-services update: repository overview and cross-repo dependency sync workflow."
 tags: ["backend", "microservice"]
-updated: 2026-02-27
+updated: 2026-02-28
 ---
 
 > **Branch:** workspaces/tinybots
@@ -19,10 +19,22 @@ updated: 2026-02-27
 - [Controllers / Public Surface](#controllers--public-surface)
 - [Key Services & Logic](#key-services--logic)
 - [Runtime / Request Flow](#runtime--request-flow)
+- [Dependency Sync Workflow (MUST)](#dependency-sync-workflow-must)
 - [External Dependencies & Cross-Service Contracts](#external-dependencies--cross-service-contracts)
 - [Tests & Quality](#tests--quality)
 - [Gaps & Risks](#gaps--risks)
 - [Notes](#notes)
+
+## Dependency Sync Workflow (MUST)
+MUST read and follow this workflow whenever `tiny-internal-services` is updated and consumed by downstream repositories.
+
+1. In `workspaces/tinybots/backend/tiny-internal-services`, create a feature branch from `master` for the current ticket.
+2. Bump the package minor version, run `yarn build`, and commit all generated outputs, including `dist/` (and `docs/` when regenerated), because dependencies are consumed via git, not npm publish.
+3. Push the feature branch to remote.
+4. In each dependent repository (for example `sensara-adaptor`), update `package.json` dependency to the git branch reference:
+   - `"tiny-internal-services": "git+ssh://git@bitbucket.org/tinybots/tiny-internal-services.git#<feature-branch>"`
+5. Run `yarn install` in the dependent repository to pull the new branch version and sync new typings/methods.
+6. Run repository build/tests in the dependent repository to verify runtime behavior and typing compatibility.
 
 ## Repo Purpose & Interactions
 `tiny-internal-services` is *not* a standalone HTTP app. It is a “platform contracts” package that exposes:
