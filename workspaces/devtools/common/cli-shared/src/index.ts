@@ -47,9 +47,7 @@ export {
 // Server process manager (replaces PM2)
 export {
   ensureServerRunning,
-  getLogFilePath,
   getServerStatus,
-  readLogTail,
   resolveServerEntry,
   restartServer,
   type ServerState,

@@ -5,6 +5,15 @@ import pino from 'pino';
 
 const DEFAULT_LOG_DIR = join(homedir(), '.aweave', 'logs');
 
+/** Returns today's local date as 'yyyy-MM-dd' (matches pino-roll's local-time rotation). */
+function getLocalDateStamp(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export interface CreateLoggerOptions {
   /**
    * App/service name — used as log file prefix.
@@ -82,20 +91,26 @@ export function createLogger(options: CreateLoggerOptions = {}): pino.Logger {
   if (process.env.LOG_CONSOLE === 'false') consoleEnabled = false;
   if (process.env.LOG_CONSOLE === 'true') consoleEnabled = true;
 
+  // Normalize extension: ensure dot-prefix for pino-roll (e.g. '.jsonl')
+  // and bare form for sync filenames (e.g. 'jsonl')
+  const dotExt = ext.startsWith('.') ? ext : `.${ext}`;
+  const bareExt = dotExt.slice(1);
+
   // Ensure log directory exists before registering transports
   mkdirSync(logDir, { recursive: true });
 
-  const allLogsFile = join(logDir, `${name}${ext}`);
-  const errorLogsFile = join(logDir, `${name}.error${ext}`);
-
   if (useSyncFiles) {
-    // Sync mode: use pino.multistream() with pino.destination() for guaranteed writes
-    // on short-lived CLI processes (no worker thread teardown race).
+    // Sync mode: embed today's local date into the filename at creation time.
+    // Short-lived CLI processes won't span midnight — acceptable trade-off.
+    const dateStamp = getLocalDateStamp();
+    const syncAllFile = join(logDir, `${name}.${dateStamp}.${bareExt}`);
+    const syncErrorFile = join(logDir, `${name}.error.${dateStamp}.${bareExt}`);
+
     const streams: pino.StreamEntry[] = [
       {
         level: 'trace' as pino.Level,
         stream: pino.destination({
-          dest: allLogsFile,
+          dest: syncAllFile,
           sync: true,
           mkdir: true,
         }),
@@ -103,7 +118,7 @@ export function createLogger(options: CreateLoggerOptions = {}): pino.Logger {
       {
         level: 'error' as pino.Level,
         stream: pino.destination({
-          dest: errorLogsFile,
+          dest: syncErrorFile,
           sync: true,
           mkdir: true,
         }),
@@ -127,27 +142,36 @@ export function createLogger(options: CreateLoggerOptions = {}): pino.Logger {
     );
   }
 
-  // Async mode: use pino.transport() with pino-roll for date-based rotation.
+  // Async mode: use pino.transport() with pino-roll Extension Last Format.
+  // Pass file WITHOUT extension + extension option → produces {name}.{date}.{count}.{ext}
   // Suitable for long-running processes (NestJS server) where worker threads live
   // long enough to flush all log entries.
   const targets: pino.TransportTargetOptions[] = [
-    // Target 1: All levels → rotating JSONL file (current file keeps canonical name)
+    // Target 1: All levels → rotating JSONL file with date-based naming
+    // pino-roll Extension Last Format: {file}.{date}.{count}.{extension}
     {
       target: 'pino-roll',
       level: 'trace',
       options: {
-        file: allLogsFile,
+        file: join(logDir, name),
         frequency: 'daily',
+        dateFormat: 'yyyy-MM-dd',
+        extension: dotExt,
         mkdir: true,
       },
     },
-    // Target 2: Error-only → separate rotating JSONL file
+    // Target 2: Error-only → separate rotating JSONL file with date-based naming
+    // Use `error{dotExt}` as combined extension (e.g. '.error.jsonl') because
+    // pino-roll skips `extension` if `file` already has one — and `server.error`
+    // would be detected as having `.error` extension.
     {
       target: 'pino-roll',
       level: 'error',
       options: {
-        file: errorLogsFile,
+        file: join(logDir, name),
         frequency: 'daily',
+        dateFormat: 'yyyy-MM-dd',
+        extension: `.error${dotExt}`,
         mkdir: true,
       },
     },

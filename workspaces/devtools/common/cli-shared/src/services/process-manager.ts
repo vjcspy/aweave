@@ -4,15 +4,13 @@
  *
  * Target platforms: macOS + Linux only.
  * State file: ~/.aweave/server.json
- * Log file: ~/.aweave/logs/server.log
+ * Log file: NestJS server writes its own pino logs to ~/.aweave/logs/
  */
 
 import { spawn } from 'child_process';
 import {
-  createReadStream,
   existsSync,
   mkdirSync,
-  openSync,
   readFileSync,
   unlinkSync,
   writeFileSync,
@@ -20,14 +18,12 @@ import {
 import { createConnection } from 'net';
 import { homedir } from 'os';
 import { join } from 'path';
-import { createInterface } from 'readline';
 
 // ── Constants ──
 
 const AWEAVE_DIR = join(homedir(), '.aweave');
 const LOGS_DIR = join(AWEAVE_DIR, 'logs');
 const STATE_FILE = join(AWEAVE_DIR, 'server.json');
-const LOG_FILE = join(LOGS_DIR, 'server.log');
 
 /**
  * Load server port/host from config system.
@@ -258,13 +254,11 @@ export async function startServer(options?: {
     };
   }
 
-  // Open log file for writing
-  const logFd = openSync(LOG_FILE, 'a');
-
-  // Spawn detached process
+  // Spawn detached process. stdout/stderr set to 'ignore' because
+  // the NestJS server writes its own pino logs to ~/.aweave/logs/.
   const child = spawn('node', [serverEntry], {
     detached: true,
-    stdio: ['ignore', logFd, logFd],
+    stdio: 'ignore',
     env: {
       ...process.env,
       SERVER_PORT: String(port),
@@ -298,7 +292,7 @@ export async function startServer(options?: {
       clearState();
       return {
         success: false,
-        message: `Server process exited unexpectedly. Check logs: ${LOG_FILE}`,
+        message: `Server process exited unexpectedly. Check logs in ${LOGS_DIR}`,
       };
     }
 
@@ -467,41 +461,4 @@ export async function ensureServerRunning(
   }
 
   log(`  ✓ ${result.message}`);
-}
-
-/**
- * Get the log file path.
- */
-export function getLogFilePath(): string {
-  return LOG_FILE;
-}
-
-/**
- * Read the last N lines from the log file.
- */
-export async function readLogTail(lines: number = 50): Promise<string> {
-  if (!existsSync(LOG_FILE)) {
-    return '(no log file found)';
-  }
-
-  return new Promise((resolve) => {
-    const allLines: string[] = [];
-    const rl = createInterface({
-      input: createReadStream(LOG_FILE, { encoding: 'utf-8' }),
-      crlfDelay: Infinity,
-    });
-
-    rl.on('line', (line) => {
-      allLines.push(line);
-      if (allLines.length > lines) allLines.shift();
-    });
-
-    rl.on('close', () => {
-      resolve(allLines.join('\n'));
-    });
-
-    rl.on('error', () => {
-      resolve('(error reading log file)');
-    });
-  });
 }
