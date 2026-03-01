@@ -7,7 +7,7 @@ category: documentation
 
 # Configure `workspace-memory` MCP (Cursor, Codex, Antigravity)
 
-This document shows two supported ways to configure local `workspace-memory` MCP for:
+This document shows supported ways to configure local `workspace-memory` MCP for:
 
 - Cursor
 - Codex
@@ -21,7 +21,19 @@ This document shows two supported ways to configure local `workspace-memory` MCP
 2. Ensure `aw` is available (`pnpm link --global` in `workspaces/devtools/common/cli`, or use `bin/dev.js` for local testing).
 3. Ensure Node.js is available on PATH.
 
-## Approach 1 (Recommended): `aw workspace mcp`
+## Approach 1 (Recommended for Cursor): NestJS Server (SSE)
+
+Use the NestJS server over SSE. This is the **recommended approach for Cursor**, as Cursor currently has policies that restrict executing arbitrary commands and enforce `localhost` connections.
+
+1. Start the NestJS server:
+
+   ```bash
+   aw server start
+   ```
+
+2. The SSE endpoint will be available at `http://127.0.0.1:3456/mcp/sse`.
+
+## Approach 2: `aw workspace mcp` (stdio)
 
 Use the unified CLI command:
 
@@ -42,7 +54,7 @@ For deterministic behavior across directories, set one of:
 - `--project-root` in args, or
 - `AWEAVE_DEVTOOLS_ROOT` in env
 
-## Approach 2 (Alternative): `aw-mcp-memory`
+## Approach 3 (Alternative): `aw-mcp-memory` (stdio)
 
 Use the standalone binary exported by `@hod/aweave-mcp-workspace-memory`:
 
@@ -54,7 +66,26 @@ This approach is useful when you want to run MCP without going through `aw` comm
 
 ## Cursor (`.cursor/mcp.json`)
 
-### Recommended (`aw workspace mcp`)
+**Note:** Cursor currently operates with a policy that only allows running on localhost and restricts stdio command execution. Therefore, the NestJS SSE approach is recommended.
+
+### Recommended (NestJS SSE)
+
+First, start the NestJS server (`aw server start`). Then configure the SSE endpoint:
+
+```json
+{
+  "mcpServers": {
+    "workspace-memory": {
+      "type": "sse",
+      "url": "http://127.0.0.1:3456/mcp/sse"
+    }
+  }
+}
+```
+
+### Alternative 1 (`aw workspace mcp` - stdio)
+
+*If your Cursor policy allows command execution:*
 
 ```json
 {
@@ -70,7 +101,7 @@ This approach is useful when you want to run MCP without going through `aw` comm
 }
 ```
 
-### Alternative (`aw-mcp-memory`)
+### Alternative 2 (`aw-mcp-memory`)
 
 ```json
 {
