@@ -1,8 +1,9 @@
 ---
 name: Shared Logger — Move createLogger to node-shared with File Rotation
 description: Extract pino logger factory from nestjs-core to node-shared, add date-based file rotation via pino-roll, error-level splitting, MCP-safe console output (stderr), and mandate logger usage in CLI/NestJS builder skills.
-status: new
+status: done
 created: 2026-03-01
+completed: 2026-03-01
 tags: [logging, refactor, cli, nestjs, node-shared]
 ---
 
@@ -87,6 +88,7 @@ workspaces/devtools/common/node-shared/
 ```
 
 - [ ] **1.1** Add runtime dependencies to `node-shared/package.json`:
+
   ```json
   "dependencies": {
     "pino": "^9.6.0",
@@ -183,10 +185,12 @@ workspaces/devtools/common/node-shared/
 - [ ] **2.2** Move `"pino"` from `dependencies` to `devDependencies` in `nestjs-core/package.json` (needed for type-only imports like `import type pino from 'pino'` in `nest-logger.service.ts`; runtime `pino` comes transitively via `node-shared`). Remove `"pino-pretty"` entirely (no longer used in `nestjs-core`).
 
 - [ ] **2.3** Update `nestjs-core/src/logging/logger.factory.ts` — replace implementation with re-export:
+
   ```typescript
   export { createLogger } from '@hod/aweave-node-shared';
   export type { CreateLoggerOptions } from '@hod/aweave-node-shared';
   ```
+
   This preserves backward compat for any code importing from `@hod/aweave-nestjs-core`.
 
 - [ ] **2.4** Update `nestjs-core/src/logging/nest-logger.service.ts`:
@@ -198,11 +202,13 @@ workspaces/devtools/common/node-shared/
 - [ ] **2.6** Run `pnpm install && pnpm -r build` — verify no compilation errors across all packages
 
 - [ ] **2.7** Restart NestJS server and verify:
+
   ```bash
   aw server restart
   aw server status    # confirm running + healthy
   aw server logs      # check for errors
   ```
+
   Verify:
   - `~/.aweave/logs/server.jsonl` exists and receives all-level logs (current file, same name as before)
   - `~/.aweave/logs/server.error.jsonl` exists with error-only logs
@@ -220,6 +226,7 @@ workspaces/devtools/common/node-shared/
 - [ ] **3.2** Add `@hod/aweave-node-shared` to `cli-shared/package.json` dependencies. No `pino` devDependency needed — use `ReturnType<typeof createLogger>` for type inference (see step 3.3).
 
 - [ ] **3.3** Create CLI logger helper in `cli-shared`. Avoid direct `import type pino from 'pino'` — use inferred types from `@hod/aweave-node-shared` to avoid needing `pino` as a devDep:
+
   ```typescript
   import { createLogger } from '@hod/aweave-node-shared';
 
@@ -233,6 +240,7 @@ workspaces/devtools/common/node-shared/
     return _logger;
   }
   ```
+
   File-only by default. `LOG_CONSOLE=true` env var overrides for debugging.
 
 - [ ] **3.4** Verify MCP stdio command (`aw workspace mcp`) is safe:
@@ -285,6 +293,7 @@ workspaces/devtools/common/node-shared/
 - [ ] **5.3** CLI: run any `aw` command (e.g., `aw config list`), confirm `~/.aweave/logs/cli.jsonl` and `cli.error.jsonl` are created
 
 - [ ] **5.4** MCP stdio: verify stdout/stderr separation deterministically:
+
   ```bash
   # Capture stdout and stderr separately, with 5s timeout to avoid hang
   timeout 5 aw workspace mcp > /tmp/mcp-stdout.log 2> /tmp/mcp-stderr.log || true
@@ -300,7 +309,18 @@ workspaces/devtools/common/node-shared/
 
 ### Completed Achievements
 
-- [To be filled after implementation]
+- **Phase 1 ✅** — `createLogger()` implemented in `node-shared/src/logging/logger.factory.ts` with:
+  - Two modes: `sync: false` (async pino-roll, for NestJS long-running) and `sync: true` (pino.multistream + pino.destination, for short-lived CLI processes)
+  - Three targets: all-levels JSONL file, error-only JSONL file, console on stderr (fd 2)
+  - `LOG_LEVEL`, `LOG_DIR`, `LOG_CONSOLE` env var overrides
+- **Phase 2 ✅** — `nestjs-core/src/logging/logger.factory.ts` replaced with thin re-export. `nest-logger.service.ts` passes `{ name: 'server', service: 'aweave-server' }`. `pino` moved to devDeps, `pino-pretty` removed.
+- **Phase 3 ✅** — `getCliLogger()` singleton in `cli-shared/src/logger/index.ts` with `sync: true`. CLI plugins instrumented: `cli-plugin-server` (start/stop/restart), `cli-plugin-workspace` (mcp), `cli-plugin-debate` (create), `cli-plugin-docs` (create), `cli-plugin-config` (sync).
+- **Phase 4 ✅** — `devtools-cli-builder/SKILL.md` and `devtools-nestjs-builder/SKILL.md` updated with mandatory Logging sections.
+- **Phase 5 ✅** — E2E verified:
+  - `pnpm -r build` → exit code 0, all 28 packages
+  - `~/.aweave/logs/server.jsonl` receiving logs, `service: 'aweave-server'` confirmed via `curl /logs/tail`
+  - `~/.aweave/logs/cli.jsonl` created after `aw server restart`, structured JSON with `service: 'cli'`
+  - MCP stdout: 0 bytes (clean), stderr has pino lines (safe)
 
 ## Outstanding Issues & Follow-up
 

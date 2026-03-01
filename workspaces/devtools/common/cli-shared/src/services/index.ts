@@ -20,3 +20,16 @@ export {
   startServer,
   stopServer,
 } from './process-manager';
+
+// TCP Forwarder manager
+export {
+  FORWARDER_DEFAULTS,
+  type ForwarderState,
+  type ForwarderStatusCode,
+  type ForwarderStatusResult,
+  getForwarderStatus,
+  killForwarder,
+  listForwarders,
+  startForwarder,
+  stopForwarder,
+} from './forwarder-manager';

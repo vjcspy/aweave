@@ -13,9 +13,9 @@ Build CLI tools and backend modules in the `workspaces/devtools/` TypeScript mon
 
 1. **MCP-Like by Design** — CLI is NOT an MCP server, but mirrors MCP conventions in response format, error handling, input schemas, and tool descriptions. Standards live in `@hod/aweave-cli-shared`; all plugins inherit.
 2. **oclif Plugin System** — Each domain ships commands as an oclif plugin (`@hod/aweave-plugin-<name>`), auto-discovered at startup.
-3. **Shared Foundation** — `@hod/aweave-cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and pm2 management.
+3. **Shared Foundation** — `@hod/aweave-cli-shared` is a pure utility library (zero framework deps) providing MCP models, HTTP client, output helpers, and service/runtime management helpers.
 4. **No Cyclic Dependencies** — cli-shared is a leaf dependency. Plugins never import each other or the main CLI package.
-5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`, even in pm2. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
+5. **Always Development Mode for Servers** — All server processes (NestJS, Next.js) **must** run with `NODE_ENV=development`. We are the only users — full error details (stack traces, verbose messages) help us debug immediately instead of getting generic "Internal Server Error".
 
 ---
 
@@ -66,6 +66,7 @@ All packages are published under `@hod` scope to the company Artifactory registr
 | Workspace root | `@hod/aweave-workspace` | `@hod/aweave-workspace` |
 
 **Key rules:**
+
 1. **Scope is always `@hod`** — required by corporate Artifactory (`HOD-NPM-BUILD`)
 2. **Prefix is always `aweave`** — e.g. `@hod/aweave-plugin-debate` not `@hod/plugin-debate`
 3. **Domain qualifier for NAB** — NAB packages include `nab` after the category prefix: `@hod/aweave-plugin-nab-<name>`, `@hod/aweave-nab-<name>`
@@ -139,7 +140,7 @@ src/commands/<topic>/services/start.ts → aw <topic> services start
 | `errorResponse()` | Shorthand to create error MCPResponse |
 | `handleServerError()` | Output error + `process.exit()` with appropriate code |
 | `readContent()` | Read from `--file`, `--content`, or `--stdin` |
-| `startPm2()`, `stopPm2()`, `checkPm2Process()`, `waitForHealthy()` | pm2 service management |
+| Service runtime helpers | Managed service start/stop/health workflows |
 
 ### Error Codes & Exit Codes
 
@@ -179,6 +180,7 @@ NAB-domain plugins go in `workspaces/devtools/nab/cli-plugin-<name>/`.
 ### Step 2: package.json
 
 **Package name depends on domain:**
+
 - Common domain: `@hod/aweave-plugin-<name>`
 - NAB domain: `@hod/aweave-plugin-nab-<name>`
 
@@ -316,7 +318,7 @@ packages:
   - '<domain>/cli-plugin-<name>'
 ```
 
-2. Add to `workspaces/devtools/common/cli/package.json`:
+1. Add to `workspaces/devtools/common/cli/package.json`:
 
 ```json
 {
@@ -329,7 +331,7 @@ packages:
 }
 ```
 
-3. Build and verify:
+1. Build and verify:
 
 ```bash
 cd workspaces/devtools && pnpm install && pnpm -r build
@@ -363,7 +365,7 @@ workspaces/devtools/common/nestjs-<feature>/
 3. Import in `workspaces/devtools/common/server/src/app.module.ts`
 4. CLI plugin calls server endpoints via `HTTPClient` from `@hod/aweave-cli-shared`
 
-### pm2 Configuration (ecosystem.config.cjs)
+### Service Runtime Configuration (ecosystem.config.cjs)
 
 When adding a new server process to `workspaces/devtools/ecosystem.config.cjs`, **always use `NODE_ENV: 'development'`** so full error details are shown:
 
@@ -442,7 +444,7 @@ All non-sensitive config values (URLs, ports, timeouts, feature flags, service d
 | URLs, ports, hosts | Domain config YAML (`defaults/*.yaml`) | `server.port: 3456` |
 | Timeouts, intervals, limits | Domain config YAML | `debate.waitDeadline: 120` |
 | Feature flags | Domain config YAML | `features.enableNewUI: false` |
-| Service definitions (pm2 names, health URLs) | Domain config YAML | `services.server.healthUrl` |
+| Service definitions (service names, health URLs) | Domain config YAML | `services.server.healthUrl` |
 | Tokens, API keys, secrets | Environment variables ONLY | `process.env.AUTH_TOKEN` |
 | Database paths | Domain config YAML | `database.debate.dir: "~/.aweave/db"` |
 
@@ -499,7 +501,7 @@ If creating tools for a new domain (e.g. `workspaces/devtools/newdomain/`):
 | MCP response models | `cli-shared/src/mcp/` | `MCPResponse`, `MCPContent` |
 | HTTP client | `cli-shared/src/http/` | `HTTPClient`, `HTTPClientError` |
 | Output/content helpers | `cli-shared/src/helpers/` | `output()`, `readContent()` |
-| pm2 utilities | `cli-shared/src/services/` | `startPm2()`, `checkHealth()` |
+| Service runtime utilities | `cli-shared/src/services/` | health checks and managed lifecycle helpers |
 | Cross-plugin domain logic | New `@hod/aweave-<name>` package | `@hod/aweave-debate-machine` |
 | Non-sensitive config (URLs, ports, timeouts) | Domain config package `defaults/*.yaml` | `@hod/aweave-config-common` — see [Centralized Configuration](#centralized-configuration) |
 | Plugin helpers | Plugin `src/lib/helpers.ts` | `getClient()`, `filterResponse()` |
@@ -514,7 +516,45 @@ If creating tools for a new domain (e.g. `workspaces/devtools/newdomain/`):
 
 ---
 
-## Interactive Terminal UI (Ink v6)
+## Logging
+
+### Rules (MANDATORY)
+
+1. **ALWAYS use `getCliLogger()` from `@hod/aweave-cli-shared`** — NEVER use `console.log`, `console.error`, or `console.warn` in CLI commands. stdout is reserved for structured MCP-like JSON output; console calls corrupt it.
+2. **File-only by default** — `getCliLogger()` is pre-configured with `console: false`. Logs go to `~/.aweave/logs/cli.jsonl` (all levels) and `~/.aweave/logs/cli.error.jsonl` (error-only), with daily rotation (rotated files: `cli.jsonl.{date}`).
+3. **Override for debugging** — set `LOG_CONSOLE=true` to enable stderr output (colorized pino-pretty in dev) without breaking stdout.
+
+### What to log
+
+- **Entry point** — `log.info({ ...keyFlags }, '<command>: initiating')` at the start of `run()`
+- **Key operations** — `log.debug()` for HTTP calls, DB operations, config loads
+- **Success** — `log.info({ resultId }', '<command>: success')` after successful writes
+- **Errors** — `log.error({ err: e }, '<command>: error')` in every catch block
+
+### Example
+
+```typescript
+import { getCliLogger, output, MCPResponse } from '@hod/aweave-cli-shared';
+
+async run() {
+  const { flags } = await this.parse(MyCommand);
+  const log = getCliLogger();
+
+  log.info({ resourceId: flags.id }, 'my-command: initiating');
+
+  try {
+    const result = await client.post('/resources', { id: flags.id });
+    log.info({ id: result.id }, 'my-command: success');
+    output(/* ... */, flags.format);
+  } catch (e) {
+    log.error({ err: e }, 'my-command: error');
+    if (e instanceof HTTPClientError) handleServerError(e, flags.format);
+    throw e;
+  }
+}
+```
+
+---
 
 For commands with interactive terminal UI (dashboards, real-time monitoring), use Ink v6 + React 19. The plugin **must be ESM** (`"type": "module"`) and follows different patterns from standard CJS plugins.
 
@@ -554,7 +594,7 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 - [ ] Added as dependency of `@hod/aweave-server`
 - [ ] Imported in `app.module.ts`
 - [ ] CLI plugin calls endpoints via `HTTPClient`
-- [ ] pm2 config uses `NODE_ENV: 'development'` (full error visibility)
+- [ ] Service runtime config uses `NODE_ENV: 'development'` (full error visibility)
 
 ### Verification
 
@@ -567,27 +607,25 @@ Key differences: ESM package config, dynamic `import()` for Ink/React, no dev mo
 
 > **Mandatory** when implementation involves NestJS server or Next.js app. Do NOT report completion to the user until this passes.
 
-After build succeeds, restart the affected pm2 process and verify it runs without errors:
+After build succeeds, restart the affected service process and verify it runs without errors:
 
 ```bash
 # 1. Build
 cd workspaces/devtools && pnpm -r build
 
 # 2. Restart affected service(s)
-pm2 restart aweave-server    # NestJS
-pm2 restart <app-name>       # Next.js (e.g. debate-web, tracing-log-web)
+aw server restart            # NestJS
 
 # 3. Wait a moment, then check logs for errors
-pm2 logs aweave-server --lines 30 --nostream
-pm2 logs <app-name> --lines 30 --nostream
+aw server logs --lines 30
 ```
 
-- [ ] pm2 process status is `online` (not `errored` or `stopping`)
-- [ ] No crash loops — check `pm2 ls` for restart count not climbing
-- [ ] No errors in pm2 logs (stack traces, unhandled rejections, module not found, etc.)
+- [ ] Service status is healthy/running
+- [ ] No crash loops — status remains stable after restart
+- [ ] No errors in service logs (stack traces, unhandled rejections, module not found, etc.)
 - [ ] Health check passes (NestJS): `curl http://127.0.0.1:3456/health`
 
-**If errors found:** Fix the code, rebuild, restart pm2, and re-check. Repeat until clean. Only then notify the user that implementation is complete.
+**If errors found:** Fix the code, rebuild, restart the service, and re-check. Repeat until clean. Only then notify the user that implementation is complete.
 
 ---
 

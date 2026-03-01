@@ -115,6 +115,26 @@ export const CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
         description:
           'Playwright system browser channel for aw test cursor commands',
       },
+      'services.forwarder.enabled': {
+        type: 'boolean',
+        description: 'Enable forwarder defaults for convenience',
+      },
+      'services.forwarder.listenHost': {
+        type: 'string',
+        description: 'Forwarder bind host',
+      },
+      'services.forwarder.listenPort': {
+        type: 'number',
+        description: 'Forwarder listen port',
+      },
+      'services.forwarder.targetHost': {
+        type: 'string',
+        description: 'Upstream target host',
+      },
+      'services.forwarder.targetPort': {
+        type: 'number',
+        description: 'Upstream target port',
+      },
     },
   },
 };
@@ -147,4 +167,9 @@ export const CLI_ENV_OVERRIDES: Record<string, string> = {
   'services.server.port': 'DEBATE_SERVER_PORT',
   'services.debateWeb.port': 'DEBATE_WEB_PORT',
   'test.cursor.browserChannel': 'AWEAVE_CURSOR_BROWSER_CHANNEL',
+  'services.forwarder.enabled': 'AWEAVE_FORWARDER_ENABLED',
+  'services.forwarder.listenHost': 'AWEAVE_FORWARDER_LISTEN_HOST',
+  'services.forwarder.listenPort': 'AWEAVE_FORWARDER_LISTEN_PORT',
+  'services.forwarder.targetHost': 'AWEAVE_FORWARDER_TARGET_HOST',
+  'services.forwarder.targetPort': 'AWEAVE_FORWARDER_TARGET_PORT',
 };

@@ -1,6 +1,7 @@
 import {
   ContentType,
   errorResponse,
+  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
@@ -32,6 +33,9 @@ export class DocsCreate extends Command {
 
   async run() {
     const { flags } = await this.parse(DocsCreate);
+    const log = getCliLogger();
+
+    log.info({ summary: flags.summary }, 'docs create: initiating');
 
     const fmtErr = validateFormatNoPlain(flags.format, 'create');
     if (fmtErr) {
@@ -45,25 +49,29 @@ export class DocsCreate extends Command {
       stdin: flags.stdin,
     });
     if (result.error) {
+      log.error({ err: result.error }, 'docs create: content read failed');
       output(result.error, flags.format);
       this.exit(4);
     }
 
     const [meta, metaErr] = parseMetadata(flags.metadata);
     if (metaErr) {
+      log.error({ metadata: flags.metadata }, 'docs create: invalid metadata');
       output(metaErr, flags.format);
       this.exit(4);
     }
 
     try {
       const doc = db.createDocument(flags.summary, result.content!, meta!);
+      const docData = doc as unknown as Record<string, unknown>;
+      log.info({ docId: docData.id }, 'docs create: success');
       output(
         new MCPResponse({
           success: true,
           content: [
             new MCPContent({
               type: ContentType.JSON,
-              data: doc as unknown as Record<string, unknown>,
+              data: docData,
             }),
           ],
           metadata: { message: 'Document created successfully' },
@@ -71,6 +79,7 @@ export class DocsCreate extends Command {
         flags.format,
       );
     } catch (e) {
+      log.error({ err: e }, 'docs create: db error');
       output(errorResponse('DB_ERROR', (e as Error).message), flags.format);
       this.exit(3);
     }

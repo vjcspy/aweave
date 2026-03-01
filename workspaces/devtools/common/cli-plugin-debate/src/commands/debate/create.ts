@@ -1,5 +1,6 @@
 import {
   ContentType,
+  getCliLogger,
   handleServerError,
   HTTPClientError,
   MCPContent,
@@ -37,10 +38,17 @@ export class DebateCreate extends Command {
 
   async run() {
     const { flags } = await this.parse(DebateCreate);
+    const log = getCliLogger();
+
+    log.info(
+      { debateId: flags['debate-id'], title: flags.title, type: flags.type },
+      'debate create: initiating',
+    );
 
     if (AUTO_START_SERVICES) {
       const serviceResp = await ensureServices();
       if (!serviceResp.success) {
+        log.error('debate create: services unavailable');
         output(serviceResp, flags.format);
         this.exit(3);
       }
@@ -52,6 +60,7 @@ export class DebateCreate extends Command {
       stdin: flags.stdin,
     });
     if (result.error) {
+      log.error({ err: result.error }, 'debate create: content read failed');
       output(result.error, flags.format);
       this.exit(4);
     }
@@ -60,6 +69,7 @@ export class DebateCreate extends Command {
 
     try {
       const client = getClient();
+      log.debug({ reqId }, 'debate create: posting to server');
       const resp = await client.post('/debates', {
         debate_id: flags['debate-id'],
         title: flags.title,
@@ -72,6 +82,8 @@ export class DebateCreate extends Command {
       const filtered = filterWriteResponse(data);
       filtered.client_request_id = reqId;
 
+      log.info({ debateId: flags['debate-id'] }, 'debate create: success');
+
       output(
         new MCPResponse({
           success: true,
@@ -81,6 +93,7 @@ export class DebateCreate extends Command {
         flags.format,
       );
     } catch (e) {
+      log.error({ err: e }, 'debate create: error');
       if (e instanceof HTTPClientError) handleServerError(e, flags.format);
       throw e;
     }
