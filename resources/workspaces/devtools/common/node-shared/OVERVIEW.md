@@ -25,8 +25,8 @@ Two responsibilities:
 - `createLogger(options?)` → `pino.Logger`
   - Framework-agnostic pino logger factory used by all devtools packages.
   - Writes to `~/.aweave/logs/` with date-based naming:
-    - **Async:** `{name}.{date}.{count}.jsonl` (e.g. `server.2026-03-01.1.jsonl`)
-    - **Sync:** `{name}.{date}.jsonl` (e.g. `cli.2026-03-01.jsonl`)
+    - **Async:** `{name}.{date}.{count}.log` (e.g. `server.2026-03-01.1.log`)
+    - **Sync:** `{name}.{date}.log` (e.g. `cli.2026-03-01.log`)
   - Error-only files follow same pattern with `.error` infix.
   - Console output always goes to **stderr (fd 2)** — never stdout — preserving MCP stdio transport and CLI JSON output.
 
@@ -36,7 +36,7 @@ Two responsibilities:
   |--------|------|---------|-------------|
   | `name` | `string` | `'app'` | Log file prefix (e.g. `'server'`, `'cli'`) |
   | `service` | `string` | same as `name` | `service` field in JSON entries (e.g. `'aweave-server'` for dashboard compat) |
-  | `fileExtension` | `string` | `'.jsonl'` | Log file extension |
+  | `fileExtension` | `string` | `'.log'` | Log file extension |
   | `logDir` | `string` | `~/.aweave/logs` | Log directory (overridden by `LOG_DIR` env var) |
   | `level` | `pino.Level` | `'debug'` dev / `'info'` prod | Min log level (overridden by `LOG_LEVEL` env var) |
   | `console` | `boolean` | `true` | Enable stderr console output (overridden by `LOG_CONSOLE` env var) |
@@ -44,8 +44,8 @@ Two responsibilities:
 
 **Two transport modes:**
 
-- **`sync: false`** (default) — async `pino.transport()` with `pino-roll` v4.0.0 Extension Last Format for daily file rotation. Use in long-running services (NestJS server). Output: `{name}.{date}.{count}.{ext}` (e.g. `server.2026-03-01.1.jsonl`).
-- **`sync: true`** — synchronous `pino.multistream()` + `pino.destination({ sync: true })`. Use in CLI commands where the process exits after a short run (async workers won't flush before exit). Date is embedded at creation time: `{name}.{date}.{ext}` (e.g. `cli.2026-03-01.jsonl`).
+- **`sync: false`** (default) — async `pino.transport()` with `pino-roll` v4.0.0 Extension Last Format for daily file rotation. Use in long-running services (NestJS server). Output: `{name}.{date}.{count}.{ext}` (e.g. `server.2026-03-01.1.log`).
+- **`sync: true`** — synchronous `pino.multistream()` + `pino.destination({ sync: true })`. Use in CLI commands where the process exits after a short run (async workers won't flush before exit). Date is embedded at creation time: `{name}.{date}.{ext}` (e.g. `cli.2026-03-01.log`).
 
 ### Paths (DevTools Root Discovery)
 

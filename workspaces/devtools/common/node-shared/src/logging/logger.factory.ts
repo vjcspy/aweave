@@ -30,7 +30,7 @@ export interface CreateLoggerOptions {
    */
   service?: string;
 
-  /** Log file extension. Default: '.jsonl' */
+  /** Log file extension. Default: '.log' */
   fileExtension?: string;
 
   /** Log directory. Default: ~/.aweave/logs */
@@ -77,7 +77,7 @@ export function createLogger(options: CreateLoggerOptions = {}): pino.Logger {
   const isDev = process.env.NODE_ENV !== 'production';
   const name = options.name ?? 'app';
   const serviceName = options.service ?? name;
-  const ext = options.fileExtension ?? '.jsonl';
+  const ext = options.fileExtension ?? '.log';
   const logDir = options.logDir ?? process.env.LOG_DIR ?? DEFAULT_LOG_DIR;
   const defaultLevel: pino.Level = isDev ? 'debug' : 'info';
   const level =
