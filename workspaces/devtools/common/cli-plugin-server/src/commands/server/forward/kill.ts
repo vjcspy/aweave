@@ -6,8 +6,9 @@ import {
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../../lib/logger';
 import { Command, Flags } from '@oclif/core';
+
+import { log } from '../../../lib/logger';
 
 export class ServerForwardKill extends Command {
   static description = 'Immediately kill a TCP forwarder with SIGKILL';

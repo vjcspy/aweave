@@ -6,11 +6,11 @@ import {
   output,
   readContent,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 import * as db from '../../lib/db';
 import { parseMetadata, validateFormatNoPlain } from '../../lib/helpers';
+import { log } from '../../lib/logger';
 
 export class DocsCreate extends Command {
   static description = 'Create a new document (version 1)';

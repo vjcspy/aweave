@@ -5,8 +5,9 @@ import {
   output,
   stopServer,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
+
+import { log } from '../../lib/logger';
 
 export class ServerStop extends Command {
   static description = 'Stop the aweave server daemon';
