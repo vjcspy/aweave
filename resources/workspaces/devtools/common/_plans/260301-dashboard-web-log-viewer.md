@@ -1,7 +1,7 @@
 ---
 name: Dashboard Web Log Viewer
 description: Rewrite the web dashboard (dashboard-web + nestjs-dashboard) log viewer to work with the new date-based file logger from node-shared, adding name/date/level filters, server-side pagination, file merging for "all", and live SSE tail.
-status: new
+status: done
 created: 2026-03-01
 tags:
   - dashboard
@@ -43,6 +43,7 @@ The web dashboard log viewer (`dashboard-web` + `nestjs-dashboard`) is broken af
 Directory: `~/.aweave/logs/` (overridable via `LOG_DIR` env var).
 
 Each line is JSONL (pino format):
+
 ```json
 {"level":30,"time":1709294102582,"service":"nestjs-server","msg":"Server started","context":"NestApplication"}
 ```
@@ -67,6 +68,7 @@ Rewrite the web dashboard log viewer with:
 ### File Scanning Strategy
 
 Parse filenames in `~/.aweave/logs/` using regex to extract `(name, date, count?)`:
+
 - Async pattern: `/^(.+?)\.(\d{4}-\d{2}-\d{2})\.(\d+)\.log$/`
 - Sync pattern: `/^(.+?)\.(\d{4}-\d{2}-\d{2})\.log$/`
 - Skip `.error.` files — level filter on main files is sufficient (requirement #5)
@@ -151,6 +153,7 @@ GET /logs/query?name=nestjs-server&date=2026-03-01&cursor=eyJ0aW1lIjoxNzA5Mjk0MT
 ```
 
 The `nextCursor` is a base64-encoded `{time, skip}` object. `time` is the timestamp of the oldest entry in the current page, and `skip` is the count of entries at that exact `time` that were included. The backend decodes this to resume pagination without losing or duplicating entries when multiple entries share the same millisecond timestamp.
+
 ```
 
 `LogEntryDto` extends current shape — no breaking changes, just add `source` field:
@@ -190,6 +193,7 @@ The `source` field is included in each emitted entry so the frontend can identif
 ### Phase 1: Backend — Log Discovery & Query
 
 **Files to modify:**
+
 - `nestjs-dashboard/src/services/logs.service.ts` — rewrite
 - `nestjs-dashboard/src/controllers/logs.controller.ts` — add new endpoints
 - `nestjs-dashboard/src/dtos/logs.dto.ts` — new DTOs
@@ -256,6 +260,7 @@ The `source` field is included in each emitted entry so the frontend can identif
 ### Phase 3: Frontend — LogsView Rewrite
 
 **Files to modify:**
+
 - `dashboard-web/src/components/LogsView.tsx` — full rewrite
 - `dashboard-web/rsbuild.config.ts` — add `/logs` proxy
 

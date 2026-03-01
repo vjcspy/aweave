@@ -22,17 +22,60 @@ export class LogEntryDto {
   @ApiPropertyOptional({ description: 'Service name' })
   service?: string;
 
+  @ApiPropertyOptional({
+    description: 'Log file source name (useful when name=all)',
+  })
+  source?: string;
+
   @ApiPropertyOptional({ description: 'Additional metadata' })
   meta?: Record<string, unknown>;
 }
 
-export class TailLogsResponseDto {
+export class LogSourceDto {
+  @ApiProperty({ description: 'Log source name (e.g. nestjs-server, cli)' })
+  name!: string;
+
+  @ApiProperty({
+    description: 'Available dates in YYYY-MM-DD format, sorted descending',
+    type: [String],
+  })
+  dates!: string[];
+
+  @ApiProperty({ description: 'Most recent date with log entries' })
+  latestDate!: string;
+}
+
+export class PaginationDto {
+  @ApiProperty({ description: 'Max entries requested' })
+  limit!: number;
+
+  @ApiProperty({ description: 'Number of entries actually returned' })
+  returned!: number;
+
+  @ApiProperty({ description: 'Whether older entries exist before this page' })
+  hasMore!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Opaque cursor for fetching the next (older) page',
+  })
+  nextCursor!: string | null;
+}
+
+export class ListLogSourcesResponseDto {
+  @ApiProperty()
+  success!: boolean;
+
+  @ApiProperty({ type: [LogSourceDto] })
+  data!: LogSourceDto[];
+}
+
+export class QueryLogsResponseDto {
   @ApiProperty()
   success!: boolean;
 
   @ApiProperty({ type: [LogEntryDto] })
   data!: LogEntryDto[];
 
-  @ApiProperty({ description: 'Total lines in the log file' })
-  totalLines!: number;
+  @ApiProperty({ type: PaginationDto })
+  pagination!: PaginationDto;
 }
