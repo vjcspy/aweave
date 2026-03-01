@@ -1,55 +1,97 @@
 ---
 name: Node Shared
-description: Node-only shared utility package for runtime helpers including DevTools root discovery. MUST load full overview content when implementing any new feature related to nodejs runtime.
+description: Node-only shared utility package providing DevTools root discovery and shared pino logger factory. MUST load full overview when implementing any feature related to NodeJS runtime, CLI logging, or shared file-based logging.
 tags: []
 ---
 
-# Node Shared (@hod/aweave-node-shared)
+# Node Shared (`@hod/aweave-node-shared`)
 
-Node-only shared utility package for runtime helpers that are not specific to oclif, NestJS, or React.
+> **Source:** `workspaces/devtools/common/node-shared/`
+> **Last Updated:** 2026-03-01
+
+Node-only shared utility package for runtime helpers that are not specific to oclif, NestJS, or React. Used by all layers of the devtools stack: CLI plugins, NestJS server, and MCP servers.
 
 ## Current Scope
 
-This package currently provides a single responsibility: **DevTools root discovery** for workspace-aware packages that need to locate `workspaces/devtools/` reliably from different execution contexts (source, compiled `dist/`, PM2/Nest runtime, or CLI invocation from arbitrary directories).
+Two responsibilities:
+
+1. **DevTools root discovery** — workspace-aware path resolution from any execution context
+2. **Shared pino logger factory** — structured logging with file rotation and MCP-safe stderr output
 
 ## Public API
 
+### Logging
+
+- `createLogger(options?)` → `pino.Logger`
+  - Framework-agnostic pino logger factory used by all devtools packages.
+  - Writes to `~/.aweave/logs/{name}.jsonl` (all levels) and `~/.aweave/logs/{name}.error.jsonl` (error-only).
+  - Console output always goes to **stderr (fd 2)** — never stdout — preserving MCP stdio transport and CLI JSON output.
+
+- `CreateLoggerOptions` interface:
+
+  | Option | Type | Default | Description |
+  |--------|------|---------|-------------|
+  | `name` | `string` | `'app'` | Log file prefix (e.g. `'server'`, `'cli'`) |
+  | `service` | `string` | same as `name` | `service` field in JSON entries (e.g. `'aweave-server'` for dashboard compat) |
+  | `fileExtension` | `string` | `'.jsonl'` | Log file extension |
+  | `logDir` | `string` | `~/.aweave/logs` | Log directory (overridden by `LOG_DIR` env var) |
+  | `level` | `pino.Level` | `'debug'` dev / `'info'` prod | Min log level (overridden by `LOG_LEVEL` env var) |
+  | `console` | `boolean` | `true` | Enable stderr console output (overridden by `LOG_CONSOLE` env var) |
+  | `sync` | `boolean` | `false` | Synchronous file writes — **required for short-lived CLI processes** |
+
+**Two transport modes:**
+
+- **`sync: false`** (default) — async `pino.transport()` with `pino-roll` for daily file rotation. Use in long-running services (NestJS server). Rotated files: `{name}.jsonl.{date}`.
+- **`sync: true`** — synchronous `pino.multistream()` + `pino.destination({ sync: true })`. Use in CLI commands where the process exits after a short run (async workers won't flush before exit).
+
+### Paths (DevTools Root Discovery)
+
 - `findAncestorWithMarker(startDir, markerName, options?)` → `string | null`
-  - Walks up ancestor directories and returns the first directory containing the marker file.
-  - Returns `null` on failure (never throws for "not found").
 - `resolveDevtoolsRoot(options?)` → `string | null`
-  - Uses a standardized precedence to resolve the DevTools workspace root (`pnpm-workspace.yaml` marker by default).
-  - Returns `null` when no candidate resolves.
 - `resolveProjectRootFromDevtools(options?)` → `string | null`
-  - Resolves DevTools root with the same precedence as `resolveDevtoolsRoot()`.
-  - Converts DevTools root to monorepo project root via `../..`.
-  - Returns `null` when no candidate resolves.
 
-## Resolution Precedence (Standardized)
+**Resolution precedence:**
 
-1. Environment override (`AWEAVE_DEVTOOLS_ROOT` by default, validated by marker walk-up)
-2. `cwd` (only if caller passes one)
-3. `moduleDir` fallback (only if caller passes one, e.g. `__dirname` or `fileURLToPath(new URL('.', import.meta.url))`)
+1. `AWEAVE_DEVTOOLS_ROOT` env var (validated)
+2. `cwd` (if passed by caller)
+3. `moduleDir` fallback (e.g. `__dirname`)
 
-This keeps `__dirname`/module-directory discovery as a **fallback**, not the only strategy, while letting each caller opt in/out of sources explicitly.
+## Project Structure
 
-## Failure Contract
+```
+node-shared/
+├── package.json            # @hod/aweave-node-shared
+│                           # deps: pino, pino-pretty, pino-roll
+├── tsconfig.json
+└── src/
+    ├── index.ts            # Barrel: export * from './logging'; export * from './paths'
+    ├── logging/
+    │   ├── logger.factory.ts  # createLogger() implementation
+    │   └── index.ts           # Barrel re-export
+    └── paths/
+        ├── devtools-root.ts   # resolveDevtoolsRoot, resolveProjectRootFromDevtools
+        └── index.ts
+```
 
-- Shared functions return `null` on resolution failure.
-- Callers keep business-specific behavior:
-  - CLI helpers may return empty results
-  - Dashboard commands/hooks may throw user-facing errors
-  - NestJS services may warn or throw depending on endpoint behavior
+## Consumers
 
-## Consumers (Current)
-
-- `workspaces/devtools/common/cli-plugin-config/`
-- `workspaces/devtools/common/cli-plugin-dashboard/`
-- `workspaces/devtools/common/nestjs-dashboard/`
-- `workspaces/devtools/common/cli-plugin-workspace/`
+| Package | What it uses | Mode |
+|---------|-------------|------|
+| `@hod/aweave-nestjs-core` | `createLogger()` via re-export | async (sync: false) |
+| `@hod/aweave-cli-shared` | `createLogger()` via `getCliLogger()` | sync (sync: true) |
+| `@hod/aweave-plugin-workspace` | `resolveProjectRootFromDevtools()` | — |
+| `@hod/aweave-plugin-config` | `resolveDevtoolsRoot()` | — |
+| `@hod/aweave-plugin-dashboard` | `resolveDevtoolsRoot()` | — |
+| `@hod/aweave-nestjs-dashboard` | `resolveDevtoolsRoot()` | — |
 
 ## Design Notes
 
-- Uses Node built-ins only (`fs`, `path`)
-- CJS package output for broad compatibility
-- Safe for ESM consumers through `createRequire()` interop when needed
+- CJS output (`"module": "commonjs"`) for broad compatibility
+- Only Node built-ins (`fs`, `path`, `os`) + pino family as runtime deps
+- `pino` types in `nestjs-core` are resolved via `devDependencies` — runtime pino comes transitively from `node-shared`
+
+## Related
+
+- **Plan:** `resources/workspaces/devtools/common/_plans/260301-shared-logger-node-shared.md`
+- **CLI logger singleton:** `workspaces/devtools/common/cli-shared/src/logger/index.ts`
+- **NestJS logger service:** `workspaces/devtools/common/nestjs-core/src/logging/nest-logger.service.ts`

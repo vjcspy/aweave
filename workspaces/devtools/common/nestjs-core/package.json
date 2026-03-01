@@ -10,9 +10,8 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@nestjs/common": "catalog:",
-    "pino": "^9.6.0",
-    "pino-pretty": "^13.0.0"
+    "@hod/aweave-node-shared": "workspace:*",
+    "@nestjs/common": "catalog:"
   },
   "devDependencies": {
     "@eslint/eslintrc": "catalog:",
@@ -22,6 +21,7 @@
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-prettier": "catalog:",
+    "pino": "^9.6.0",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"

@@ -1,8 +1,9 @@
 ---
 name: Node TCP Forwarder Management Commands
 description: Add dedicated aw server forward commands to run and manage a Node TCP forwarder (for example 3845 -> 3456) with start, status, stop, and kill, without changing the existing server process manager.
-status: new
+status: implemented
 created: 2026-03-01
+updated: 2026-03-01
 tags: [cli, server, networking, config]
 ---
 
@@ -88,6 +89,23 @@ Behavior:
 - Shows running/stopped/stale status
 - Includes `pid`, `started_at`, uptime, mapping, and file paths
 
+Sample output shape:
+
+```json
+{
+  "status": "running",
+  "listen_host": "127.0.0.1",
+  "listen_port": 3845,
+  "target_host": "127.0.0.1",
+  "target_port": 3456,
+  "pid": 12345,
+  "started_at": "2026-03-01T10:00:00.000Z",
+  "uptime": "0h 5m 12s",
+  "log_file": "~/.aweave/logs/forwarder-3845.log",
+  "state_file": "~/.aweave/forwarders/forwarder-3845.json"
+}
+```
+
 ### `aw server forward stop`
 
 Example:
@@ -166,6 +184,16 @@ Schema updates in `workspaces/devtools/common/config/src/index.ts` (`CONFIG_SCHE
 - `services.forwarder.targetHost` (string)
 - `services.forwarder.targetPort` (number)
 
+Detailed schema table to avoid ambiguity:
+
+| Field path | Type | Required | Description |
+|---|---|---|---|
+| `services.forwarder.enabled` | boolean | false | Enable forwarder defaults for convenience |
+| `services.forwarder.listenHost` | string | false | Forwarder bind host |
+| `services.forwarder.listenPort` | number | false | Forwarder listen port |
+| `services.forwarder.targetHost` | string | false | Upstream target host |
+| `services.forwarder.targetPort` | number | false | Upstream target port |
+
 Env override updates in `CLI_ENV_OVERRIDES`:
 
 - `services.forwarder.enabled` -> `AWEAVE_FORWARDER_ENABLED`
@@ -182,12 +210,32 @@ Default resolution order for `aw server forward start`:
 4. Repository defaults `workspaces/devtools/common/config/defaults/cli.yaml`
 5. Hardcoded fallback (only if config package is unavailable)
 
+Explicit load call in `forwarder-manager.ts`:
+
+```ts
+loadConfig({
+  domain: DOMAIN,
+  name: 'cli',
+  defaultsDir: DEFAULT_CONFIG_DIR,
+  envOverrides: CLI_ENV_OVERRIDES,
+});
+```
+
+Semantics for `services.forwarder.enabled`:
+
+- `aw server forward start` always runs when user explicitly invokes the command.
+- `enabled` does not block manual start.
+- `enabled` is reserved for future auto-start hooks and is ignored by manual command flow for now.
+
 ## Forwarder Process Model
 
 - Worker process is a small Node TCP proxy using `net.createServer()`
 - Parent command spawns worker in detached mode
 - Stdout/stderr of worker are redirected to forwarder log file
 - Worker handles shutdown signals (`SIGTERM`, `SIGINT`) for graceful close
+- Worker entry path resolution follows server manager pattern:
+  - Try `require.resolve()` for built package entry
+  - Fallback to local workspace `dist` path in development
 
 Data flow:
 
@@ -259,7 +307,13 @@ Update:
 3. Add env mappings in `CLI_ENV_OVERRIDES`
 4. Build `@hod/aweave-config-common` and verify no schema/type regressions
 
-### Phase 1 — Forwarder manager in cli-shared
+### Phase 1 — Node worker
+
+1. Implement TCP proxy worker with backpressure-safe piping
+2. Add signal handlers for clean shutdown
+3. Ensure non-zero exit on bind/connect failures
+
+### Phase 2 — Forwarder manager in cli-shared
 
 1. Add state/log constants and helper functions (`ensureDirs`, `readState`, `writeState`, `clearState`)
 2. Implement process checks (`isProcessAlive`, `isPortInUse`)
@@ -270,12 +324,6 @@ Update:
    - `stopForwarder()`
    - `killForwarder()`
 4. Export APIs from package barrels
-
-### Phase 2 — Node worker
-
-1. Implement TCP proxy worker with backpressure-safe piping
-2. Add signal handlers for clean shutdown
-3. Ensure non-zero exit on bind/connect failures
 
 ### Phase 3 — CLI commands
 

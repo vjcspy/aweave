@@ -1,71 +1,81 @@
 ---
 name: CLI Shared Utilities
-description: Pure utility library providing MCP response format, HTTP client, and output helpers for the CLI ecosystem
+description: Pure utility library providing MCP response format, HTTP client, process management, and TCP forwarder manager for the CLI ecosystem
 tags: []
 ---
 
 # CLI Shared Utilities (`@hod/aweave-cli-shared`)
 
 > **Source:** `workspaces/devtools/common/cli-shared/`
-> **Last Updated:** 2026-02-07
 
-Pure utility library cho toàn bộ `aw` CLI ecosystem. Package này **không chứa CLI framework nào** (không oclif, không commander) — chỉ chứa các utility functions và models mà cả main CLI (`@hod/aweave`) và tất cả plugins (`@hod/aweave-plugin-*`) đều sử dụng.
+Pure utility library for the entire `aw` CLI ecosystem. This package has **no CLI framework dependency** (no oclif, no commander) — only utility functions and models shared by the main CLI (`@hod/aweave`) and all plugins (`@hod/aweave-plugin-*`).
 
 ## Purpose
 
-- **MCP Response Format** — Chuẩn hóa JSON output cho tất cả CLI commands. AI agents parse format này để xử lý kết quả.
-- **HTTP Client** — Base HTTP client với error handling, dùng native `fetch` (Node 18+).
-- **Output Helpers** — Consistent formatting (JSON/Markdown), readable content mode cho AI agents.
-- **Content Reading** — Pattern `--file` / `--content` / `--stdin` dùng chung cho mọi command nhận input.
-- **pm2 Service Management** — Utilities cho health check, process management qua pm2.
+- **MCP Response Format** — Standardized JSON output for all CLI commands. AI agents parse this format to process results.
+- **HTTP Client** — Base HTTP client with error handling, using native `fetch` (Node 18+).
+- **Output Helpers** — Consistent formatting (JSON/Markdown), readable content mode for AI agents.
+- **Content Reading** — Shared `--file` / `--content` / `--stdin` pattern for commands accepting input.
+- **Server Process Manager** — Detached daemon lifecycle for the NestJS server.
+- **TCP Forwarder Manager** — Manages lightweight Node.js TCP proxy workers for port forwarding.
 
-**Tại sao tách thành package riêng?** Để tránh cyclic dependencies. Nếu utilities nằm trong main CLI (`@hod/aweave`), thì plugins phải depend on main CLI, mà main CLI cũng depend on plugins → cycle. Với `@hod/aweave-cli-shared` là leaf dependency, không có cycle:
+**Why a separate package?** To avoid cyclic dependencies. With `@hod/aweave-cli-shared` as a leaf dependency, there's no cycle:
 
 ```
-@hod/aweave-cli-shared (leaf — no CLI framework dependency)
-     ↑                    ↑
-     |                    |
-@hod/aweave          @hod/aweave-plugin-*
-(depends on shared)  (depends on shared only)
+@hod/aweave-cli-shared  (leaf — no CLI framework dependency)
+       ↑                         ↑
+       |                         |
+@hod/aweave               @hod/aweave-plugin-*
+(depends on shared)        (depends on shared only)
 ```
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    @hod/aweave-cli-shared                          │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  mcp/                          http/                         │
-│  ├── response.ts               └── client.ts                 │
-│  │   MCPResponse                   HTTPClient                │
-│  │   MCPContent                    HTTPClientError            │
-│  │   MCPError                                                │
-│  │   ContentType enum                                        │
-│  └── pagination.ts                                           │
-│      createPaginatedResponse()                               │
-│                                                              │
-│  helpers/                      services/                     │
-│  ├── output.ts                 └── pm2.ts                    │
-│  │   output()                      checkPm2Process()         │
-│  │   errorResponse()               checkHealth()             │
-│  │   handleServerError()           runCommand()              │
-│  └── content.ts                    startPm2()                │
-│      readContent()                 stopPm2()                 │
-│                                    waitForHealthy()          │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    @hod/aweave-cli-shared                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  mcp/                          http/                             │
+│  ├── response.ts               └── client.ts                     │
+│  │   MCPResponse                   HTTPClient                    │
+│  │   MCPContent                    HTTPClientError               │
+│  │   MCPError                                                    │
+│  │   ContentType enum                                            │
+│  └── pagination.ts                                               │
+│      createPaginatedResponse()                                   │
+│                                                                  │
+│  helpers/                      services/                         │
+│  ├── output.ts                 ├── process-manager.ts            │
+│  │   output()                  │   startServer()                 │
+│  │   errorResponse()           │   stopServer()                  │
+│  │   handleServerError()       │   restartServer()               │
+│  └── content.ts                │   getServerStatus()             │
+│      readContent()             │   ensureServerRunning()         │
+│                                │   readLogTail()                 │
+│                                ├── forwarder-manager.ts          │
+│                                │   startForwarder()              │
+│                                │   stopForwarder()               │
+│                                │   killForwarder()               │
+│                                │   getForwarderStatus()          │
+│                                │   listForwarders()              │
+│                                ├── tcp-forwarder-worker.ts       │
+│                                │   (standalone child process)    │
+│                                └── pm2.ts  (legacy)              │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Dependencies
 
 | Package | Role |
 |---------|------|
-| (none) | Không có runtime dependencies — chỉ dùng Node.js built-ins |
+| `@hod/aweave-config-common` | Forwarder/server default config resolution |
+| `@hod/aweave-config-core` | `loadConfig()` used by process managers |
 
 **devDependencies:** `@types/node`, `typescript`
 
-**Key design:** Zero external dependencies. HTTP client dùng native `fetch`. UUID dùng `crypto.randomUUID()`. Filesystem dùng `fs`. Điều này giữ package nhẹ và tránh dependency conflicts.
+**Key design:** Minimal external dependencies. HTTP client uses native `fetch`. UUID uses `crypto.randomUUID()`. All process management uses Node.js built-ins (`child_process`, `net`, `fs`).
 
 ## Exposed Exports
 
@@ -84,15 +94,27 @@ export { output, errorResponse, handleServerError } from './helpers';
 export { readContent } from './helpers';
 export type { ContentInput, ContentResult } from './helpers';
 
-// pm2 Service Management
-export { checkPm2Process, checkHealth, runCommand, startPm2, stopPm2, waitForHealthy } from './services';
+// Server process manager (replaces PM2)
+export {
+  startServer, stopServer, restartServer, getServerStatus,
+  ensureServerRunning, readLogTail, resolveServerEntry, getLogFilePath,
+} from './services';
+export type { ServerState, ServerStatus } from './services';
+
+// TCP Forwarder manager
+export {
+  startForwarder, stopForwarder, killForwarder,
+  getForwarderStatus, listForwarders, FORWARDER_DEFAULTS,
+} from './services';
+export type { ForwarderState, ForwarderStatusCode, ForwarderStatusResult } from './services';
 ```
 
 ### MCP Response Format (Contract)
 
-Tất cả CLI commands output JSON theo format này. **Đây là contract với AI agent ecosystem** — thay đổi phải backward-compatible.
+All CLI commands output JSON in this format. **This is the contract with the AI agent ecosystem** — changes must be backward-compatible.
 
 **Success:**
+
 ```json
 {
   "success": true,
@@ -106,6 +128,7 @@ Tất cả CLI commands output JSON theo format này. **Đây là contract với
 ```
 
 **Error:**
+
 ```json
 {
   "success": false,
@@ -117,30 +140,34 @@ Tất cả CLI commands output JSON theo format này. **Đây là contract với
 }
 ```
 
-Content types: `json` (structured data) hoặc `text` (plain text message).
+### Server Process Manager
 
-### Output Helpers
+Manages the NestJS server daemon (`@hod/aweave-server`).
+
+- State file: `~/.aweave/server.json`
+- Log file: `~/.aweave/logs/server.log`
+- Config loaded from `@hod/aweave-config-common` → `cli.yaml` (env: `SERVER_PORT`, `SERVER_HOST`)
+
+### TCP Forwarder Manager
+
+Manages lightweight Node.js TCP proxy workers. Each forwarder proxies connections from a local listen port to a target host:port.
+
+- State dir: `~/.aweave/forwarders/forwarder-<port>.json`
+- Log dir: `~/.aweave/logs/forwarder-<port>.log`
+- Config loaded from `@hod/aweave-config-common` → `cli.yaml` (`services.forwarder.*`)
+- Env overrides: `AWEAVE_FORWARDER_LISTEN_PORT`, `AWEAVE_FORWARDER_TARGET_PORT`, etc.
+- Worker (`tcp-forwarder-worker.ts`) is a standalone script spawned in detached mode
+
+**API:**
 
 | Function | Description |
 |----------|-------------|
-| `output(response, format, readableContent?)` | Print MCPResponse as JSON or Markdown. `readableContent=true` unescapes `\n` → real newlines cho AI agent readability |
-| `errorResponse(code, message, suggestion?)` | Create error MCPResponse |
-| `handleServerError(error, format)` | Output error and `process.exit()` with appropriate code |
-
-**Exit codes:** `2` = not found, `3` = server/db error, `4` = invalid input, `5` = action not allowed, `6` = auth failed.
-
-### Content Reading
-
-`readContent({ file?, content?, stdin? })` — Shared pattern cho `--file` / `--content` / `--stdin` input. Returns `{ content }` or `{ error: MCPResponse }`. Validates exactly one source provided.
-
-### HTTP Client
-
-`HTTPClient` — Wrapper around native `fetch` with:
-- Base URL composition
-- Basic auth and Bearer token headers
-- Timeout via `AbortController`
-- Error mapping: HTTP status → `HTTPClientError` with code, message, suggestion
-- Methods: `get()`, `post()`, `put()`, `delete()`, `getUrl()` (for absolute URLs like pagination links)
+| `startForwarder(opts?)` | Spawn worker, write state, idempotent |
+| `getForwarderStatus(port)` | Returns `running` / `stopped` / `stale` |
+| `listForwarders()` | List all state files in `~/.aweave/forwarders/` |
+| `stopForwarder(port, opts?)` | SIGTERM → optional SIGKILL (`opts.force`) |
+| `killForwarder(port)` | Immediate SIGKILL |
+| `FORWARDER_DEFAULTS` | Config-resolved defaults (listenPort, targetPort, etc.) |
 
 ## Project Structure
 
@@ -162,7 +189,10 @@ devtools/common/cli-shared/
     │   ├── content.ts             # readContent()
     │   └── index.ts
     └── services/
-        ├── pm2.ts                 # pm2 utilities
+        ├── process-manager.ts     # Server daemon lifecycle
+        ├── forwarder-manager.ts   # TCP forwarder lifecycle
+        ├── tcp-forwarder-worker.ts # TCP proxy child process
+        ├── pm2.ts                 # pm2 utilities (legacy)
         └── index.ts
 ```
 
@@ -178,14 +208,11 @@ pnpm build
 pnpm dev   # tsc --watch
 ```
 
-**Build order:** `cli-shared` → plugins (`cli-plugin-*`) → `cli` (main)
+**Build order:** `config` → `cli-shared` → plugins (`cli-plugin-*`) → `cli` (main)
 
 ## Related
 
-- **Main CLI:** `workspaces/devtools/common/cli/` — oclif entrypoint, consumes this package
-- **Main CLI Overview:** `resources/workspaces/devtools/common/cli/OVERVIEW.md`
-- **Debate Plugin:** `workspaces/devtools/common/cli-plugin-debate/`
-- **Docs Plugin:** `workspaces/devtools/common/cli-plugin-docs/`
-- **Confluence Plugin:** `devtools/nab/plugin-nab-confluence/`
-- **Architecture Plan:** `resources/workspaces/devtools/common/_plans/260207-cli-oclif-refactor.md`
+- **Main CLI:** `workspaces/devtools/common/cli/`
+- **Config Package:** `workspaces/devtools/common/config/` (`@hod/aweave-config-common`)
+- **Server Plugin:** `workspaces/devtools/common/cli-plugin-server/`
 - **Global DevTools Overview:** `resources/workspaces/devtools/OVERVIEW.md`

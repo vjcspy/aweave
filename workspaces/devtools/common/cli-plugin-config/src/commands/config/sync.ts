@@ -1,6 +1,7 @@
 import {
   ContentType,
   errorResponse,
+  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
@@ -42,6 +43,12 @@ export class ConfigSync extends Command {
 
   async run() {
     const { flags } = await this.parse(ConfigSync);
+    const log = getCliLogger();
+
+    log.info(
+      { domain: flags.domain, force: flags.force },
+      'config sync: initiating',
+    );
 
     try {
       const domains = discoverDomainDefaults(flags.domain);
@@ -50,6 +57,7 @@ export class ConfigSync extends Command {
         const msg = flags.domain
           ? `No config defaults found for domain "${flags.domain}"`
           : 'No config defaults found in any domain';
+        log.warn({ domain: flags.domain }, msg);
         output(
           new MCPResponse({
             success: true,
@@ -72,6 +80,7 @@ export class ConfigSync extends Command {
       const allResults: Array<SyncResult & { domain: string }> = [];
 
       for (const { domain, defaultsDir } of domains) {
+        log.debug({ domain, defaultsDir }, 'config sync: syncing domain');
         const results = syncDefaultConfigs({
           domain,
           defaultsDir,
@@ -81,6 +90,11 @@ export class ConfigSync extends Command {
           allResults.push({ ...r, domain });
         }
       }
+
+      log.info(
+        { count: allResults.length, force: flags.force },
+        'config sync: complete',
+      );
 
       output(
         new MCPResponse({
@@ -100,6 +114,7 @@ export class ConfigSync extends Command {
         flags.format,
       );
     } catch (error) {
+      log.error({ err: error }, 'config sync: error');
       if (error instanceof ConfigDefaultsMissingError) {
         output(
           errorResponse(

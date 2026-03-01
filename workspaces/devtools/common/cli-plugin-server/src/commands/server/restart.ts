@@ -1,5 +1,6 @@
 import {
   ContentType,
+  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
@@ -28,11 +29,26 @@ export class ServerRestart extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerRestart);
+    const log = getCliLogger();
+
+    log.info(
+      { port: flags.port, host: flags.host },
+      'server restart: initiating',
+    );
 
     const result = await restartServer({
       port: flags.port,
       host: flags.host,
     });
+
+    if (result.success) {
+      log.info(
+        { pid: result.state?.pid, port: result.state?.port },
+        'server restart: success',
+      );
+    } else {
+      log.error({ message: result.message }, 'server restart: failed');
+    }
 
     output(
       new MCPResponse({

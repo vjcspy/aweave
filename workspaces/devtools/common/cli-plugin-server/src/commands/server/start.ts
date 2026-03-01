@@ -1,5 +1,6 @@
 import {
   ContentType,
+  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
@@ -33,11 +34,26 @@ export class ServerStart extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerStart);
+    const log = getCliLogger();
+
+    log.info(
+      { port: flags.port, host: flags.host },
+      'server start: initiating',
+    );
 
     const result = await startServer({
       port: flags.port,
       host: flags.host,
     });
+
+    if (result.success) {
+      log.info(
+        { pid: result.state?.pid, port: result.state?.port },
+        'server start: success',
+      );
+    } else {
+      log.error({ message: result.message }, 'server start: failed');
+    }
 
     if (result.success && flags.open && result.state) {
       const url = `http://${flags.host}:${result.state.port}/debate`;

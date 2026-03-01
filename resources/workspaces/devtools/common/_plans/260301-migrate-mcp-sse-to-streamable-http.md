@@ -1,7 +1,7 @@
 ---
 name: Migrate MCP Transport from SSE to Streamable HTTP
 description: Replace deprecated SSEServerTransport with StreamableHTTPServerTransport in NestJS workspace memory package, update MCP config, and align all documentation.
-status: new
+status: done
 created: 2026-03-01
 tags: [mcp, nestjs, migration, memory]
 ---

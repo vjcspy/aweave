@@ -157,6 +157,7 @@ cd workspaces/devtools/common/server && pnpm generate:openapi
 The script uses `SwaggerModule.createDocument(app, config)` with NO `extraModels` option — schemas are discovered automatically from `@ApiExtraModels()` on controllers.
 
 After API changes:
+
 ```bash
 cd workspaces/devtools/common/server && pnpm generate:openapi
 cd workspaces/devtools/common/<name>-web && pnpm generate:types
@@ -255,6 +256,47 @@ The utility `applySpaMiddleware()` accepts a pre-resolved `rootPath` — it neve
 | Feature controllers/services | `nestjs-<feature>/src/` | `@hod/aweave-nestjs-<feature>` |
 | Feature DTOs | `nestjs-<feature>/src/dto/` | `@hod/aweave-nestjs-<feature>` |
 | Auth guard, exception filter | `server/src/shared/` | `@hod/aweave-server` |
+
+### Logging
+
+**MANDATORY rules:**
+
+1. **NEVER use `console.log` / `console.error`** in any NestJS code — always use injected logger.
+2. **Inject `NestLoggerService`** or NestJS built-in `Logger` (both back onto pino via the global provider).
+   - `NestLoggerService` is globally available — `NestjsCoreModule` is `@Global()`. Just inject it.
+3. **Underlying logger**: `createLogger({ name: 'server', service: 'aweave-server' })` from `@hod/aweave-node-shared`, created inside `NestLoggerService`.
+4. **Log files**: `~/.aweave/logs/server.jsonl` (all levels) and `server.error.jsonl` (error-only), daily rotation.
+5. **Console output**: goes to **stderr** (fd 2) — safe for MCP and CLI stdout. Never stdout.
+
+**What to log:**
+
+- Service method entry/exit for complex or async flows
+- External API calls and their results
+- Lifecycle events (module init, config load)
+- Caught errors with full context
+
+**Example:**
+
+```typescript
+import { Injectable, Logger } from '@nestjs/common';
+
+@Injectable()
+export class DebateService {
+  private readonly logger = new Logger(DebateService.name);
+
+  async createDebate(dto: CreateDebateDto) {
+    this.logger.debug(`Creating debate: ${dto.debate_id}`);
+    try {
+      const result = await this.db.create(dto);
+      this.logger.log(`Debate created: ${result.id}`);
+      return result;
+    } catch (e) {
+      this.logger.error('Failed to create debate', (e as Error).stack);
+      throw e;
+    }
+  }
+}
+```
 
 **Rules:**
 

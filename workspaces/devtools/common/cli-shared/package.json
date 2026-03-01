@@ -10,9 +10,10 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "kill-port": "^2.0.1",
     "@hod/aweave-config-common": "workspace:*",
-    "@hod/aweave-config-core": "workspace:*"
+    "@hod/aweave-config-core": "workspace:*",
+    "@hod/aweave-node-shared": "workspace:*",
+    "kill-port": "^2.0.1"
   },
   "devDependencies": {
     "@types/node": "catalog:",

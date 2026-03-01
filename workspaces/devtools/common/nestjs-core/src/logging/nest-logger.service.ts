@@ -9,7 +9,7 @@ import { createLogger } from './logger.factory';
  *
  * - Intercepts all Nest logger calls (including existing `new Logger(Context)` usage)
  * - Automatically merges AsyncLocalStorage context (correlationId, etc.) into every log
- * - Writes JSON to file + pretty-prints to console in dev
+ * - Writes JSON to file + pretty-prints to stderr in dev
  *
  * NestJS calls logger methods with these signatures:
  *   log(message, context?)          — context is the Nest Logger context (class name)
@@ -21,7 +21,11 @@ export class NestLoggerService implements LoggerService {
   private readonly pinoLogger: pino.Logger;
 
   constructor(private readonly logContext: LogContextService) {
-    this.pinoLogger = createLogger();
+    // service: 'aweave-server' maintains backward compat with dashboard log filters
+    this.pinoLogger = createLogger({
+      name: 'server',
+      service: 'aweave-server',
+    });
   }
 
   log(message: unknown, ...optionalParams: unknown[]) {
