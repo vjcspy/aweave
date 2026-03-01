@@ -1,10 +1,10 @@
 {
   "mcpServers": {
+    "workspace-memory": {
+      "url": "http://localhost:3456/mcp"
+    },
     "playwright": {
       "url": "http://localhost:8931/mcp"
-    },
-    "workspace-memory": {
-      "url": "http://127.0.0.1:3456/mcp"
     }
   }
 }

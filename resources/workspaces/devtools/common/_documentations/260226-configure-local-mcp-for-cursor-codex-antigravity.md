@@ -1,7 +1,7 @@
 ---
 name: Configure Local MCP for Cursor, Codex, and Antigravity
-description: How to register local workspace-memory MCP using aw workspace mcp (recommended) or aw-mcp-memory (alternative) for Cursor, Codex, and Antigravity.
-tags: [mcp, workspace-memory, cursor, codex, antigravity, stdio]
+description: How to register local workspace-memory MCP for Cursor (recommended: Streamable HTTP URL) and for Codex/Antigravity (recommended: aw workspace mcp stdio).
+tags: [mcp, workspace-memory, cursor, codex, antigravity, streamable-http, stdio]
 category: documentation
 ---
 
@@ -82,6 +82,12 @@ First, start the NestJS server (`aw server start`). Then configure the MCP endpo
 }
 ```
 
+Use URL mode only for this setup:
+
+- Keep only the `url` field for `workspace-memory`.
+- Do not set `command`/`args` when using `url`.
+- Do not use `/sse` path. Streamable HTTP endpoint is `/mcp`.
+
 ### Alternative 1 (`aw workspace mcp` - stdio)
 
 *If your Cursor policy allows command execution:*
@@ -118,7 +124,7 @@ First, start the NestJS server (`aw server start`). Then configure the MCP endpo
 
 ## Codex (`~/.codex/config.toml`)
 
-### Recommended (`aw workspace mcp`)
+### Recommended for Antigravity (`aw workspace mcp`)
 
 ```toml
 [mcp_servers.workspace-memory]
@@ -137,7 +143,7 @@ command = "aw"
 args = ["workspace", "mcp", "--project-root", "/absolute/path/to/aweave"]
 ```
 
-### Alternative (`aw-mcp-memory`)
+### Alternative for Antigravity (`aw-mcp-memory`)
 
 ```toml
 [mcp_servers.workspace-memory]
@@ -193,6 +199,26 @@ After configuring the client:
 3. Call `workspace_get_context` with a small request to verify tool discovery and execution.
 
 ## Common Issues
+
+### `spawn http://127.0.0.1:3456/mcp ENOENT`
+
+- Cause: URL was entered in a STDIO `command` field, so the client tried to execute the URL as a binary.
+- Fix in Cursor config: keep `workspace-memory` as URL-only:
+
+  ```json
+  {
+    "mcpServers": {
+      "workspace-memory": {
+        "url": "http://127.0.0.1:3456/mcp"
+      }
+    }
+  }
+  ```
+
+### SSE deprecation / `/sse` connection errors
+
+- Cause: stale SSE configuration (`type: "sse"` or `/mcp/sse`) is still being used.
+- Fix: remove `type: "sse"` and point to `http://127.0.0.1:3456/mcp`.
 
 ### `aw workspace mcp` cannot resolve project root
 
