@@ -1,7 +1,7 @@
 ---
 name: Configure Local MCP for Cursor, Codex, and Antigravity
-description: How to register local workspace-memory MCP for Cursor (recommended: Streamable HTTP URL) and for Codex/Antigravity (recommended: aw workspace mcp stdio).
-tags: [mcp, workspace-memory, cursor, codex, antigravity, streamable-http, stdio]
+description: How to register local workspace-memory MCP for Cursor (recommended: Streamable HTTP on port 3845 via TCP forwarder) and for Codex/Antigravity (recommended: aw workspace mcp stdio).
+tags: [mcp, workspace-memory, cursor, codex, antigravity, streamable-http, stdio, tcp-forwarder]
 category: documentation
 ---
 
@@ -21,9 +21,11 @@ This document shows supported ways to configure local `workspace-memory` MCP for
 2. Ensure `aw` is available (`pnpm link --global` in `workspaces/devtools/common/cli`, or use `bin/dev.js` for local testing).
 3. Ensure Node.js is available on PATH.
 
-## Approach 1 (Recommended for Cursor): NestJS Server (Streamable HTTP)
+## Approach 1 (Recommended for Cursor): NestJS Server via TCP Forwarder (Streamable HTTP)
 
-Use the NestJS server over Streamable HTTP. This is the **recommended approach for Cursor**, as Cursor currently has policies that restrict executing arbitrary commands and enforce `localhost` connections.
+Use the NestJS server over Streamable HTTP. This is the **recommended approach for Cursor**.
+
+> **Company Policy:** Cursor is only permitted to connect to MCP on port **3845**. The NestJS server runs on `3456`; the TCP forwarder bridges `3845 → 3456`.
 
 1. Start the NestJS server:
 
@@ -31,7 +33,15 @@ Use the NestJS server over Streamable HTTP. This is the **recommended approach f
    aw server start
    ```
 
-2. The MCP endpoint will be available at `http://127.0.0.1:3456/mcp`.
+2. Start the TCP forwarder (port `3845 → 3456`):
+
+   ```bash
+   aw server forward start
+   ```
+
+   This uses the default config (`listenPort: 3845`, `targetPort: 3456`). To use different ports, pass `--listen-port` and `--target-port`.
+
+3. The MCP endpoint for Cursor will be available at `http://127.0.0.1:3845/mcp`.
 
 ## Approach 2: `aw workspace mcp` (stdio)
 
@@ -66,17 +76,19 @@ This approach is useful when you want to run MCP without going through `aw` comm
 
 ## Cursor (`.cursor/mcp.json`)
 
-**Note:** Cursor currently operates with a policy that only allows running on localhost and restricts stdio command execution. Therefore, the NestJS Streamable HTTP approach is recommended.
+**Note:** Company policy restricts Cursor to only connect to MCP on **port 3845**. The NestJS server runs on `3456`; you must start the TCP forwarder first (`aw server forward start`) so that `3845` proxies to `3456`.
 
-### Recommended (NestJS Streamable HTTP)
+### Recommended (NestJS Streamable HTTP via TCP Forwarder on port 3845)
 
-First, start the NestJS server (`aw server start`). Then configure the MCP endpoint:
+1. Start the NestJS server: `aw server start`
+2. Start the forwarder: `aw server forward start` (default: `3845 → 3456`)
+3. Configure the MCP endpoint:
 
 ```json
 {
   "mcpServers": {
     "workspace-memory": {
-      "url": "http://127.0.0.1:3456/mcp"
+      "url": "http://127.0.0.1:3845/mcp"
     }
   }
 }
@@ -87,6 +99,7 @@ Use URL mode only for this setup:
 - Keep only the `url` field for `workspace-memory`.
 - Do not set `command`/`args` when using `url`.
 - Do not use `/sse` path. Streamable HTTP endpoint is `/mcp`.
+- Always use port `3845` (not `3456`) in the Cursor config.
 
 ### Alternative 1 (`aw workspace mcp` - stdio)
 
@@ -200,7 +213,7 @@ After configuring the client:
 
 ## Common Issues
 
-### `spawn http://127.0.0.1:3456/mcp ENOENT`
+### `spawn http://127.0.0.1:3845/mcp ENOENT`
 
 - Cause: URL was entered in a STDIO `command` field, so the client tried to execute the URL as a binary.
 - Fix in Cursor config: keep `workspace-memory` as URL-only:
@@ -209,11 +222,22 @@ After configuring the client:
   {
     "mcpServers": {
       "workspace-memory": {
-        "url": "http://127.0.0.1:3456/mcp"
+        "url": "http://127.0.0.1:3845/mcp"
       }
     }
   }
   ```
+
+### `ECONNREFUSED http://127.0.0.1:3845/mcp`
+
+- Cause: TCP forwarder is not running.
+- Fix: start the forwarder before opening Cursor:
+
+  ```bash
+  aw server forward start
+  ```
+
+  Then verify with: `aw server forward status --listen-port 3845`
 
 ### SSE deprecation / `/sse` connection errors
 
