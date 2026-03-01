@@ -13,11 +13,7 @@ export const DEFAULT_CONFIG_DIR = path.resolve(__dirname, '..', 'defaults');
 export const DOMAIN = 'common';
 
 /** List of default config files shipped with this package */
-export const DEFAULT_CONFIG_FILES = [
-  'server.yaml',
-  'debate-web.yaml',
-  'cli.yaml',
-] as const;
+export const DEFAULT_CONFIG_FILES = ['server.yaml', 'cli.yaml'] as const;
 
 // ---------------------------------------------------------------------------
 // Schema definitions for validation
@@ -51,21 +47,7 @@ export const CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
       },
     },
   },
-  'debate-web': {
-    configVersion: 1,
-    fields: {
-      'server.port': {
-        type: 'number',
-        required: true,
-        description: 'Next.js dev server port',
-      },
-      'clientPublic.apiBaseUrl': {
-        type: 'string',
-        required: true,
-        description: 'API base URL exposed to browser',
-      },
-    },
-  },
+
   cli: {
     configVersion: 1,
     fields: {
@@ -98,18 +80,7 @@ export const CONFIG_SCHEMAS: Record<string, ConfigSchema> = {
         type: 'string',
         description: 'Server health check URL',
       },
-      'services.debateWeb.name': {
-        type: 'string',
-        description: 'pm2 process name for debate-web',
-      },
-      'services.debateWeb.port': {
-        type: 'number',
-        description: 'Debate web UI port',
-      },
-      'services.debateWeb.healthUrl': {
-        type: 'string',
-        description: 'Debate web health check URL',
-      },
+
       'test.cursor.browserChannel': {
         type: 'string',
         description:
@@ -152,12 +123,6 @@ export const SERVER_ENV_OVERRIDES: Record<string, string> = {
   'database.docstore.path': 'AWEAVE_DB_PATH',
 };
 
-/** Maps config dot-paths to environment variable names for debate-web.yaml */
-export const DEBATE_WEB_ENV_OVERRIDES: Record<string, string> = {
-  'server.port': 'DEBATE_WEB_PORT',
-  'clientPublic.apiBaseUrl': 'NEXT_PUBLIC_DEBATE_SERVER_URL',
-};
-
 /** Maps config dot-paths to environment variable names for cli.yaml */
 export const CLI_ENV_OVERRIDES: Record<string, string> = {
   'debate.serverUrl': 'DEBATE_SERVER_URL',
@@ -165,7 +130,7 @@ export const CLI_ENV_OVERRIDES: Record<string, string> = {
   'debate.pollInterval': 'DEBATE_POLL_INTERVAL',
   'debate.autoStartServices': 'DEBATE_AUTO_START',
   'services.server.port': 'DEBATE_SERVER_PORT',
-  'services.debateWeb.port': 'DEBATE_WEB_PORT',
+
   'test.cursor.browserChannel': 'AWEAVE_CURSOR_BROWSER_CHANNEL',
   'services.forwarder.enabled': 'AWEAVE_FORWARDER_ENABLED',
   'services.forwarder.listenHost': 'AWEAVE_FORWARDER_LISTEN_HOST',
