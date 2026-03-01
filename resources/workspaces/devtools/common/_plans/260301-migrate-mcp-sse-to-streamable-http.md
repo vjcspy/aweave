@@ -155,7 +155,7 @@ Remove `"type": "sse"` — URL stays the same (`/mcp`). Cursor auto-detects Stre
 - Start NestJS server (`aw server start`)
 - Confirm `workspace_get_context` tool works via Cursor MCP integration
 - Smoke check: call tool 2-3 times consecutively to confirm `server.connect()` lifecycle is stable across multiple requests
-- Test with MCP Inspector: `npx @modelcontextprotocol/inspector http://127.0.0.1:3456/mcp`
+- Test with MCP Inspector: `npx @modelcontextprotocol/inspector --transport http --server-url http://127.0.0.1:3456/mcp`
 - Verify CLI STDIO path still works: `aw workspace mcp` (should be unaffected)
 
 ### Step 5: Update documentation

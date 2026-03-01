@@ -39,8 +39,12 @@ Anthropic provides an official web-based Inspector to test MCP tools. For the Ne
 2. Then, run the inspector targeting the MCP endpoint:
 
    ```bash
-   npx @modelcontextprotocol/inspector http://127.0.0.1:3456/mcp
+   npx @modelcontextprotocol/inspector \
+     --transport http \
+     --server-url http://127.0.0.1:3456/mcp
    ```
+
+   Do not pass the URL as a positional argument. In current Inspector versions, positional arguments are treated as STDIO command/args.
 
 ## Running the Inspector (stdio: `aw workspace mcp`)
 
@@ -104,6 +108,25 @@ PROJECT_ROOT=/absolute/path/to/aweave \
 
 - Set `AWEAVE_DEVTOOLS_ROOT`, or
 - Pass `--project-root /absolute/path/to/aweave`.
+
+### `spawn http://127.0.0.1:3456/mcp ENOENT`
+
+- Cause: Inspector is running in STDIO mode and trying to execute the URL as a binary.
+- Fix: use HTTP mode explicitly:
+
+  ```bash
+  npx @modelcontextprotocol/inspector \
+    --transport http \
+    --server-url http://127.0.0.1:3456/mcp
+  ```
+
+### `SSE error` or `ECONNREFUSED` for `http://localhost:3001/sse`
+
+- Cause: stale SSE URL/transport selection in Inspector UI.
+- Fix:
+  - Set transport to **Streamable HTTP / HTTP** (not SSE).
+  - Set URL to `http://127.0.0.1:3456/mcp`.
+  - Ensure server is running: `aw server status`.
 
 ### `aw-mcp-memory` returns wrong context
 
