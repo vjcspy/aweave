@@ -13,6 +13,7 @@ import { Command, Flags } from '@oclif/core';
 
 import { DEFAULT_CHUNK_SIZE, splitIntoChunks } from '../../../lib/chunker';
 import { loadConfig, validateRequiredConfig } from '../../../lib/config';
+import { log } from '../../../lib/logger';
 import {
   pollStatus,
   signalComplete,
@@ -58,6 +59,10 @@ export class RelayFilePush extends Command {
   async run() {
     const { flags } = await this.parse(RelayFilePush);
     const config = loadConfig();
+    log.info(
+      { file: flags.file, name: flags.name, wait: flags.wait },
+      'relay file push: starting',
+    );
 
     // 1. Validate config
     const missingConfig = validateRequiredConfig(config);
@@ -126,9 +131,17 @@ export class RelayFilePush extends Command {
     const fileData = fs.readFileSync(filePath);
     const sha256 = createHash('sha256').update(fileData).digest('hex');
     const fileName = flags.name || path.basename(filePath);
+    log.info(
+      { fileName, size: fileData.length, sha256 },
+      'relay file push: file validated',
+    );
 
     // 5. Split into chunks
     const chunks = splitIntoChunks(fileData, chunkSize);
+    log.info(
+      { chunks: chunks.length, chunkSize },
+      'relay file push: uploading chunks',
+    );
 
     // 6. Upload chunks
     const sessionId = randomUUID();

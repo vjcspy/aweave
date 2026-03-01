@@ -12,6 +12,7 @@ import {
   createFileTailStream,
   getDefaultServerJsonlPath,
 } from '../../lib/file-tail.js';
+import { log } from '../../lib/logger.js';
 
 export class DashboardLogs extends Command {
   static description =
@@ -33,6 +34,10 @@ export class DashboardLogs extends Command {
 
   async run() {
     const { flags } = await this.parse(DashboardLogs);
+    log.debug(
+      { lines: flags.lines, service: flags.service, format: flags.format },
+      'dashboard logs: starting',
+    );
 
     if (flags.format === 'json') {
       await this.outputJson(flags.service, flags.lines);

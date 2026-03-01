@@ -6,6 +6,7 @@ import {
   getConfiguredBrowserMissingMessage,
   isConfiguredBrowserMissingError,
 } from '../../../lib/browser-config';
+import { log } from '../../../lib/logger';
 import { JsonSessionProvider } from '../../../lib/session-provider';
 
 const CURSOR_DASHBOARD_URL = 'https://cursor.com/dashboard';
@@ -34,6 +35,7 @@ export default class TestCursorSave extends Command {
 
   async run(): Promise<void> {
     const provider = new JsonSessionProvider();
+    log.info({ sessionPath: provider.getPath() }, 'test cursor save: starting');
 
     this.log(`Opening ${CURSOR_BROWSER.displayName} for Cursor login...`);
     this.log(`Session file: ${provider.getPath()}`);

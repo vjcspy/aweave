@@ -291,6 +291,9 @@ importers:
 
   common/cli-plugin-demo-workflow:
     dependencies:
+      '@hod/aweave-cli-shared':
+        specifier: workspace:*
+        version: link:../cli-shared
       '@hod/aweave-workflow-dashboard':
         specifier: workspace:*
         version: link:../workflow-dashboard
@@ -391,6 +394,9 @@ importers:
 
   common/cli-plugin-test:
     dependencies:
+      '@hod/aweave-cli-shared':
+        specifier: workspace:*
+        version: link:../cli-shared
       '@hod/aweave-config-common':
         specifier: workspace:*
         version: link:../config

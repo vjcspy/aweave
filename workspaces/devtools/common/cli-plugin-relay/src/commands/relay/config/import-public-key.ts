@@ -15,6 +15,7 @@ import {
   normalizeFingerprint,
   normalizePublicKeyPem,
 } from '../../../lib/crypto';
+import { log } from '../../../lib/logger';
 
 export class RelayConfigImportPublicKey extends Command {
   static description =
@@ -45,6 +46,10 @@ export class RelayConfigImportPublicKey extends Command {
 
   async run() {
     const { flags } = await this.parse(RelayConfigImportPublicKey);
+    log.info(
+      { keyId: flags['key-id'], hasFile: !!flags.file, hasPem: !!flags.pem },
+      'relay config import-public-key: starting',
+    );
 
     if (!flags.file && !flags.pem) {
       output(

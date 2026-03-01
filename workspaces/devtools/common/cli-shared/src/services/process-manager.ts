@@ -19,6 +19,8 @@ import { createConnection } from 'net';
 import { homedir } from 'os';
 import { join } from 'path';
 
+import { getCliLogger } from '../logger';
+
 // ── Constants ──
 
 const AWEAVE_DIR = join(homedir(), '.aweave');
@@ -198,10 +200,12 @@ export async function startServer(options?: {
   host?: string;
   version?: string;
 }): Promise<{ success: boolean; message: string; state?: ServerState }> {
+  const log = getCliLogger();
   const port = options?.port ?? DEFAULT_PORT;
   const host = options?.host ?? DEFAULT_HOST;
   const version = options?.version ?? '0.1.0';
 
+  log.info({ port, host, version }, 'server start: initiating');
   ensureDirs();
 
   // Check existing state
@@ -210,6 +214,10 @@ export async function startServer(options?: {
     if (isProcessAlive(existingState.pid)) {
       const healthy = await checkHealthEndpoint(existingState.port, host);
       if (healthy) {
+        log.debug(
+          { pid: existingState.pid, port: existingState.port },
+          'server start: already running and healthy',
+        );
         return {
           success: true,
           message: `Server already running (PID ${existingState.pid}, port ${existingState.port})`,
@@ -217,6 +225,10 @@ export async function startServer(options?: {
         };
       }
       // Process alive but not healthy — kill stale process
+      log.warn(
+        { pid: existingState.pid },
+        'server start: process alive but unhealthy, sending SIGTERM',
+      );
       try {
         process.kill(existingState.pid, 'SIGTERM');
       } catch {
@@ -224,17 +236,21 @@ export async function startServer(options?: {
       }
     }
     // Stale PID file — clean up
+    log.debug('server start: clearing stale state file');
     clearState();
   }
 
   // Check if port is in use by another process — auto-kill and proceed
   if (await isPortInUse(port, host)) {
+    log.warn({ port, host }, 'server start: port in use, attempting to free');
     try {
       const killPort = require('kill-port');
       await killPort(port);
       // Wait for port to be fully released
       await new Promise((resolve) => setTimeout(resolve, 1000));
+      log.info({ port }, 'server start: port freed successfully');
     } catch {
+      log.error({ port }, 'server start: failed to free port');
       return {
         success: false,
         message: `Port ${port} is already in use and could not be freed automatically.`,
@@ -246,7 +262,9 @@ export async function startServer(options?: {
   let serverEntry: string;
   try {
     serverEntry = resolveServerEntry();
+    log.debug({ serverEntry }, 'server start: resolved entry point');
   } catch (err) {
+    log.error({ err }, 'server start: cannot resolve server entry');
     return {
       success: false,
       message:
@@ -271,6 +289,7 @@ export async function startServer(options?: {
 
   const pid = child.pid;
   if (!pid) {
+    log.error('server start: spawn returned no PID');
     return { success: false, message: 'Failed to spawn server process' };
   }
 
@@ -282,6 +301,7 @@ export async function startServer(options?: {
     version,
   };
   writeState(state);
+  log.info({ pid, port }, 'server start: process spawned, polling health');
 
   // Poll health endpoint
   const startTime = Date.now();
@@ -289,6 +309,10 @@ export async function startServer(options?: {
     await new Promise((resolve) => setTimeout(resolve, HEALTH_POLL_MS));
 
     if (!isProcessAlive(pid)) {
+      log.error(
+        { pid },
+        'server start: process exited unexpectedly during health poll',
+      );
       clearState();
       return {
         success: false,
@@ -297,6 +321,7 @@ export async function startServer(options?: {
     }
 
     if (await checkHealthEndpoint(port, host)) {
+      log.info({ pid, port }, 'server start: healthy');
       return {
         success: true,
         message: `Server started (PID ${pid}, port ${port})`,
@@ -306,6 +331,7 @@ export async function startServer(options?: {
   }
 
   // Timeout — still try to report
+  log.warn({ pid, port }, 'server start: health check timed out');
   return {
     success: true,
     message: `Server started (PID ${pid}, port ${port}) — health check timed out, server may still be starting`,
@@ -324,13 +350,19 @@ export async function stopServer(): Promise<{
   success: boolean;
   message: string;
 }> {
+  const log = getCliLogger();
   const state = readState();
 
   if (!state) {
+    log.debug('server stop: no state file found');
     return { success: true, message: 'Server is not running (no state file)' };
   }
 
   if (!isProcessAlive(state.pid)) {
+    log.debug(
+      { pid: state.pid },
+      'server stop: process not alive, clearing stale state',
+    );
     clearState();
     return {
       success: true,
@@ -339,9 +371,14 @@ export async function stopServer(): Promise<{
   }
 
   // Send SIGTERM
+  log.info({ pid: state.pid }, 'server stop: sending SIGTERM');
   try {
     process.kill(state.pid, 'SIGTERM');
   } catch {
+    log.debug(
+      { pid: state.pid },
+      'server stop: process not found during SIGTERM',
+    );
     clearState();
     return {
       success: true,
@@ -363,6 +400,10 @@ export async function stopServer(): Promise<{
   }
 
   // Force kill
+  log.warn(
+    { pid: state.pid },
+    'server stop: SIGTERM timed out, sending SIGKILL',
+  );
   try {
     process.kill(state.pid, 'SIGKILL');
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -373,12 +414,14 @@ export async function stopServer(): Promise<{
   clearState();
 
   if (isProcessAlive(state.pid)) {
+    log.error({ pid: state.pid }, 'server stop: failed to kill process');
     return {
       success: false,
       message: `Failed to stop server (PID ${state.pid})`,
     };
   }
 
+  log.info({ pid: state.pid }, 'server stop: force-stopped');
   return {
     success: true,
     message: `Server force-stopped (was PID ${state.pid})`,
@@ -413,8 +456,14 @@ export async function restartServer(options?: {
   host?: string;
   version?: string;
 }): Promise<{ success: boolean; message: string; state?: ServerState }> {
+  const log = getCliLogger();
+  log.info('server restart: initiating');
   const stopResult = await stopServer();
   if (!stopResult.success) {
+    log.error(
+      { message: stopResult.message },
+      'server restart: stop phase failed',
+    );
     return { success: false, message: `Stop failed: ${stopResult.message}` };
   }
 

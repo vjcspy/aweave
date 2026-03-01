@@ -16,6 +16,7 @@ import { render } from 'ink';
 import React from 'react';
 import { createActor } from 'xstate';
 
+import { log } from '../lib/logger.js';
 import { demoWorkflow } from '../workflow.js';
 
 export default class Demo extends Command {
@@ -37,6 +38,7 @@ export default class Demo extends Command {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(Demo);
+    log.info({ format: flags.format }, 'demo workflow: starting');
 
     const actor = createActor(workflowMachine, {
       input: {

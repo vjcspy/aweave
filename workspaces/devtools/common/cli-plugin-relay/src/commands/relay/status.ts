@@ -8,6 +8,7 @@ import {
 import { Args, Command, Flags } from '@oclif/core';
 
 import { loadConfig, validateRequiredConfig } from '../../lib/config';
+import { log } from '../../lib/logger';
 import { pollStatus } from '../../lib/relay-client';
 
 export class RelayStatus extends Command {
@@ -31,6 +32,7 @@ export class RelayStatus extends Command {
   async run() {
     const { args, flags } = await this.parse(RelayStatus);
     const config = loadConfig();
+    log.debug({ sessionId: args.sessionId }, 'relay status: checking');
 
     const missingConfig = validateRequiredConfig(config, {
       requireTransport: false,

@@ -15,6 +15,7 @@ import { Command, Flags } from '@oclif/core';
 
 import { DEFAULT_CHUNK_SIZE, splitIntoChunks } from '../../lib/chunker';
 import { loadConfig, validateRequiredConfig } from '../../lib/config';
+import { log } from '../../lib/logger';
 import {
   getRemoteInfo,
   pollStatus,
@@ -57,6 +58,10 @@ export class RelayPush extends Command {
   async run() {
     const { flags } = await this.parse(RelayPush);
     const config = loadConfig();
+    log.info(
+      { repo: flags.repo, branch: flags.branch, base: flags.base },
+      'relay push: starting',
+    );
 
     // 1. Validate config
     const missingConfig = validateRequiredConfig(config);
@@ -114,6 +119,7 @@ export class RelayPush extends Command {
     // 4. Pre-flight Check (Get Remote SHA)
     let remoteSha: string;
     try {
+      log.debug({ repo, branch }, 'relay push: fetching remote info');
       remoteSha = await getRemoteInfo(
         config.relayUrl!,
         config.apiKey!,
@@ -183,6 +189,7 @@ export class RelayPush extends Command {
     let patch: Buffer;
     const bundleFile = path.join(os.tmpdir(), `relay-${Date.now()}.bundle`);
     try {
+      log.debug({ range }, 'relay push: generating bundle');
       execSync(`git bundle create ${bundleFile} ${range}`, { stdio: 'pipe' });
       patch = fs.readFileSync(bundleFile);
       fs.rmSync(bundleFile, { force: true });
@@ -205,6 +212,10 @@ export class RelayPush extends Command {
 
     // 5. Chunk raw patch data
     const chunks = splitIntoChunks(patch, chunkSize);
+    log.info(
+      { bundleSize: patch.length, chunks: chunks.length, chunkSize },
+      'relay push: uploading chunks',
+    );
 
     // 7. Upload chunks
     const sessionId = randomUUID();
@@ -226,11 +237,13 @@ export class RelayPush extends Command {
       }
 
       // 8. Signal complete
+      log.debug('relay push: signaling complete');
       await signalComplete(config.relayUrl!, config.apiKey!, config, {
         sessionId,
       });
 
       // 9. Trigger GR processing
+      log.debug({ repo, branch, baseBranch }, 'relay push: triggering GR');
       await triggerGR(config.relayUrl!, config.apiKey!, config, {
         sessionId,
         repo,
@@ -239,6 +252,7 @@ export class RelayPush extends Command {
       });
 
       // 10. Poll status
+      log.debug('relay push: polling status');
       const result = await pollStatus(
         config.relayUrl!,
         config.apiKey!,
@@ -247,6 +261,7 @@ export class RelayPush extends Command {
 
       // 11. Output result
       const success = result.status === 'pushed';
+      log.info({ success, status: result.status }, 'relay push: complete');
       output(
         new MCPResponse({
           success,

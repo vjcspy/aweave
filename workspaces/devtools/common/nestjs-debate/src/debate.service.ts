@@ -1,5 +1,5 @@
 import type { DebateState } from '@hod/aweave-debate-machine';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import type { Argument } from './database.service';
@@ -48,6 +48,8 @@ function buildWaitAction(
 
 @Injectable()
 export class DebateService {
+  private readonly logger = new Logger(DebateService.name);
+
   constructor(
     private readonly db: DatabaseService,
     private readonly locks: LockService,
@@ -61,6 +63,10 @@ export class DebateService {
     motion_content: string;
     client_request_id: string;
   }) {
+    this.logger.log(
+      { debateId: input.debate_id, type: input.debate_type },
+      'Creating debate',
+    );
     validateContentSize(input.motion_content);
 
     const result = await this.locks.withLock(input.debate_id, async () => {
@@ -170,6 +176,7 @@ export class DebateService {
   }
 
   async deleteDebate(debateId: string) {
+    this.logger.log({ debateId }, 'Deleting debate');
     await this.locks.withLock(debateId, async () => {
       const debate = this.db.findDebateById(debateId);
       if (!debate) throw new DebateNotFoundError(debateId);

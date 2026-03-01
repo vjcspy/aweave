@@ -9,6 +9,7 @@
 import { Command, Flags } from '@oclif/core';
 
 import { checkAllEndpoints, DEFAULT_ENDPOINTS } from '../../lib/health.js';
+import { log } from '../../lib/logger.js';
 import {
   formatUptimeMs,
   getDashboardServices,
@@ -34,6 +35,10 @@ export class DashboardServices extends Command {
 
   async run() {
     const { flags } = await this.parse(DashboardServices);
+    log.debug(
+      { watch: flags.watch, format: flags.format },
+      'dashboard services: starting',
+    );
 
     if (flags.format === 'json') {
       await this.outputJson(flags.watch, flags['refresh-interval']);

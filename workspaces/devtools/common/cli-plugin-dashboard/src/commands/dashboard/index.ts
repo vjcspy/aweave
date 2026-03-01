@@ -7,6 +7,8 @@
 
 import { Command, Flags } from '@oclif/core';
 
+import { log } from '../../lib/logger.js';
+
 export class DashboardIndex extends Command {
   static description = 'Interactive terminal dashboard for AWeave devtools';
 
@@ -24,6 +26,10 @@ export class DashboardIndex extends Command {
 
   async run() {
     const { flags } = await this.parse(DashboardIndex);
+    log.debug(
+      { tab: flags.tab, refreshInterval: flags['refresh-interval'] },
+      'dashboard: launching interactive mode',
+    );
 
     const { render } = await import('ink');
     const React = await import('react');

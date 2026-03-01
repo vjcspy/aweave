@@ -2,10 +2,11 @@ import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
 import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 @Injectable()
 export class McpToolsService implements OnModuleInit {
+  private readonly logger = new Logger(McpToolsService.name);
   private server!: McpServer;
 
   onModuleInit() {
@@ -21,6 +22,7 @@ export class McpToolsService implements OnModuleInit {
     }
 
     this.server = createWorkspaceMemoryServer(projectRoot);
+    this.logger.log({ projectRoot }, 'MCP workspace-memory server initialized');
   }
 
   async handleRequest(req: any, res: any): Promise<void> {
