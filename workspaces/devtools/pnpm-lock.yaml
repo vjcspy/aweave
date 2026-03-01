@@ -681,12 +681,18 @@ importers:
 
   common/mcp-workspace-memory:
     dependencies:
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@hod/aweave-workspace-memory':
         specifier: workspace:*
         version: link:../workspace-memory
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.27.1(zod@3.25.76)
+      zod:
+        specifier: ^3.25
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -865,6 +871,9 @@ importers:
       '@hod/aweave-nestjs-core':
         specifier: workspace:*
         version: link:../nestjs-core
+      '@hod/aweave-node-shared':
+        specifier: workspace:*
+        version: link:../node-shared
       '@hod/aweave-workspace-memory':
         specifier: workspace:*
         version: link:../workspace-memory

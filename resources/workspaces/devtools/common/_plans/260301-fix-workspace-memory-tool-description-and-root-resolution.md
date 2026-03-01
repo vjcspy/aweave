@@ -52,15 +52,37 @@ Rewrite the `description` field to clearly separate required vs optional:
 
 **2a.** Add `@hod/aweave-node-shared` dependency to `nestjs-workspace-memory/package.json`
 
-**2b.** Replace hardcoded relative path in both files:
+**2b.** Replace hardcoded relative path in both files, following the pattern from
+`cli-plugin-workspace/src/commands/workspace/mcp.ts`:
 
-- `workspace-memory.service.ts`: use `resolveProjectRootFromDevtools({ cwd: process.cwd() })`
-- `mcp-tools.service.ts`: use `resolveProjectRootFromDevtools({ cwd: process.cwd() })`
+- `workspace-memory.service.ts`:
+- `mcp-tools.service.ts`:
 
-Follow the same pattern as `cli-plugin-workspace/src/commands/workspace/mcp.ts`.
+Both files MUST use the same implementation pattern:
+
+```typescript
+const projectRoot = resolveProjectRootFromDevtools({
+  cwd: process.cwd(),
+  moduleDir: __dirname,
+});
+
+if (!projectRoot) {
+  throw new Error(
+    'Could not resolve project root. Set AWEAVE_DEVTOOLS_ROOT or run from within the aweave workspace.',
+  );
+}
+```
 
 ### Step 3: Build and verify
 
-- Build `nestjs-workspace-memory` package
-- Restart server
-- Call `workspace_get_context` with `workspace: devtools, domain: common, topics: ["plans"]` and verify non-empty response
+Build order (respecting dependency chain):
+
+1. Build `mcp-workspace-memory` (tool description change from Step 1)
+2. Build `nestjs-workspace-memory` (projectRoot fix from Step 2)
+3. Restart server
+
+Verification checklist:
+
+- [ ] Call `workspace_get_context` with `workspace: devtools, domain: common, topics: ["plans"]` → verify non-empty
+  `plans.entries` (Issue 2)
+- [ ] Verify updated MCP tool descriptor shows new description clearly separating required vs optional fields (Issue 1)

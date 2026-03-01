@@ -68,9 +68,15 @@ export function findAncestorWithMarker(
   return null;
 }
 
+let _cachedDevtoolsRoot: string | null | undefined;
+
 export function resolveDevtoolsRoot(
   options: ResolveDevtoolsRootOptions = {},
 ): string | null {
+  if (_cachedDevtoolsRoot !== undefined) {
+    return _cachedDevtoolsRoot;
+  }
+
   const markerName = options.markerName ?? DEVTOOLS_ROOT_MARKER;
   const maxDepth = normalizeMaxDepth(options.maxDepth);
   const envVarName = options.envVarName ?? DEVTOOLS_ROOT_ENV_VAR;
@@ -82,6 +88,7 @@ export function resolveDevtoolsRoot(
       maxDepth,
     });
     if (rootFromEnv) {
+      _cachedDevtoolsRoot = rootFromEnv;
       return rootFromEnv;
     }
   }
@@ -91,6 +98,7 @@ export function resolveDevtoolsRoot(
       maxDepth,
     });
     if (rootFromCwd) {
+      _cachedDevtoolsRoot = rootFromCwd;
       return rootFromCwd;
     }
   }
@@ -102,22 +110,32 @@ export function resolveDevtoolsRoot(
       { maxDepth },
     );
     if (rootFromModuleDir) {
+      _cachedDevtoolsRoot = rootFromModuleDir;
       return rootFromModuleDir;
     }
   }
 
+  _cachedDevtoolsRoot = null;
   return null;
 }
+
+let _cachedProjectRoot: string | null | undefined;
 
 export function resolveProjectRootFromDevtools(
   options: ResolveDevtoolsRootOptions = {},
 ): string | null {
+  if (_cachedProjectRoot !== undefined) {
+    return _cachedProjectRoot;
+  }
+
   const devtoolsRoot = resolveDevtoolsRoot(options);
   if (!devtoolsRoot) {
+    _cachedProjectRoot = null;
     return null;
   }
 
-  return path.resolve(devtoolsRoot, '..', '..');
+  _cachedProjectRoot = path.resolve(devtoolsRoot, '..', '..');
+  return _cachedProjectRoot;
 }
 
 function normalizeMaxDepth(maxDepth?: number): number {
