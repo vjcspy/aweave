@@ -1,11 +1,11 @@
 import {
   ContentType,
   errorResponse,
-  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import {
   ConfigDefaultsMissingError,
   getConfigRoot,
@@ -43,7 +43,6 @@ export class ConfigSync extends Command {
 
   async run() {
     const { flags } = await this.parse(ConfigSync);
-    const log = getCliLogger();
 
     log.info(
       { domain: flags.domain, force: flags.force },

@@ -1,12 +1,12 @@
 import {
   ContentType,
   FORWARDER_DEFAULTS,
-  getCliLogger,
   killForwarder,
   MCPContent,
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerForwardKill extends Command {
@@ -29,7 +29,6 @@ export class ServerForwardKill extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerForwardKill);
-    const log = getCliLogger();
 
     if (!flags['listen-port'] && !flags.all) {
       this.error(

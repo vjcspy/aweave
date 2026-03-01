@@ -1,4 +1,4 @@
-import { getCliLogger } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
 import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -39,7 +39,6 @@ export class WorkspaceMcp extends Command {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(WorkspaceMcp);
-    const log = getCliLogger();
 
     const projectRoot = resolveProjectRoot(flags['project-root']);
     log.info({ projectRoot }, 'workspace mcp: starting STDIO server');

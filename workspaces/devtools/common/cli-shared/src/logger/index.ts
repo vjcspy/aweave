@@ -19,7 +19,7 @@ export function getCliLogger(): Logger {
   if (!_logger) {
     // sync: true is required for short-lived CLI processes — pino's async worker
     // threads may not flush before process exit without it.
-    _logger = createLogger({ name: 'cli', console: false, sync: true });
+    _logger = createLogger({ name: 'cli-shared', console: false, sync: true });
   }
   return _logger;
 }
