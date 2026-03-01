@@ -40,6 +40,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:3456',
         changeOrigin: true,
       },
+      '/logs': {
+        target: 'http://127.0.0.1:3456',
+        changeOrigin: true,
+      },
     },
   },
 });

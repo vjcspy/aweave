@@ -244,15 +244,32 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/logs/tail': {
+  '/logs/sources': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get last N log entries from server.jsonl */
-    get: operations['LogsController_tailLogs'];
+    /** List discovered log sources with date ranges */
+    get: operations['LogsController_listSources'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/logs/query': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Query log entries with filters and cursor pagination */
+    get: operations['LogsController_queryLogs'];
     put?: never;
     post?: never;
     delete?: never;
@@ -268,8 +285,25 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Stream new log entries via Server-Sent Events (SSE) */
+    /** Stream new log entries via SSE (always watches today) */
     get: operations['LogsController_streamLogs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/workspace/context': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get workspace context */
+    get: operations['WorkspaceMemoryController_getContext'];
     put?: never;
     post?: never;
     delete?: never;
@@ -507,14 +541,42 @@ export interface components {
       correlationId?: string;
       /** @description Service name */
       service?: string;
+      /** @description Log file source name (useful when name=all) */
+      source?: string;
       /** @description Additional metadata */
       meta?: Record<string, never>;
     };
-    TailLogsResponseDto: {
+    LogSourceDto: {
+      /** @description Log source name (e.g. nestjs-server, cli) */
+      name: string;
+      /** @description Available dates in YYYY-MM-DD format, sorted descending */
+      dates: string[];
+      /** @description Most recent date with log entries */
+      latestDate: string;
+    };
+    PaginationDto: {
+      /** @description Max entries requested */
+      limit: number;
+      /** @description Number of entries actually returned */
+      returned: number;
+      /** @description Whether older entries exist before this page */
+      hasMore: boolean;
+      /** @description Opaque cursor for fetching the next (older) page */
+      nextCursor?: Record<string, never>;
+    };
+    ListLogSourcesResponseDto: {
+      success: boolean;
+      data: components['schemas']['LogSourceDto'][];
+    };
+    QueryLogsResponseDto: {
       success: boolean;
       data: components['schemas']['LogEntryDto'][];
-      /** @description Total lines in the log file */
-      totalLines: number;
+      pagination: components['schemas']['PaginationDto'];
+    };
+    GetContextResponseDto: {
+      /** @example true */
+      success: boolean;
+      data: Record<string, never>;
     };
   };
   responses: never;
@@ -565,6 +627,8 @@ export interface operations {
       query?: {
         /** @description Filter by debate state */
         state?: string;
+        /** @description When true, return only AWAITING_OPPONENT debates with no opponent CLAIM yet (only MOTION). Overrides state filter. */
+        pending_first_opponent?: boolean;
         /** @description Max results to return */
         limit?: number;
         /** @description Pagination offset */
@@ -1122,11 +1186,40 @@ export interface operations {
       };
     };
   };
-  LogsController_tailLogs: {
+  LogsController_listSources: {
     parameters: {
-      query?: {
-        /** @description Number of lines to tail (default: 200, max: 2000) */
-        lines?: number;
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ListLogSourcesResponseDto'];
+        };
+      };
+    };
+  };
+  LogsController_queryLogs: {
+    parameters: {
+      query: {
+        /** @description Log source name or "all" */
+        name: string;
+        /** @description Date in YYYY-MM-DD format */
+        date: string;
+        /** @description Minimum level: trace/debug/info/warn/error/fatal */
+        level?: string;
+        /** @description Case-insensitive substring match on msg */
+        search?: string;
+        /** @description Opaque cursor from previous response for pagination */
+        cursor?: string;
+        /** @description Max entries to return (default: 500, max: 2000) */
+        limit?: number;
       };
       header?: never;
       path?: never;
@@ -1139,14 +1232,17 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['TailLogsResponseDto'];
+          'application/json': components['schemas']['QueryLogsResponseDto'];
         };
       };
     };
   };
   LogsController_streamLogs: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Log source name or "all" (default: "all") */
+        name?: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -1154,6 +1250,49 @@ export interface operations {
     requestBody?: never;
     responses: {
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WorkspaceMemoryController_getContext: {
+    parameters: {
+      query: {
+        /** @description Workspace name */
+        workspace: string;
+        /** @description Domain within workspace */
+        domain?: string;
+        /** @description Repository within domain */
+        repository?: string;
+        /** @description Comma-separated topic names (e.g. "plans,features"). Each topic returns { overview_t1, entries }; decisions/lessons include full body_t1 per entry. */
+        topics?: string;
+        /** @description Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills, decisions_t0, lessons_t0) */
+        include_defaults?: boolean;
+        /** @description Comma-separated status filter for plans */
+        filter_status?: string;
+        /** @description Comma-separated tag filter */
+        filter_tags?: string;
+        /** @description Category filter */
+        filter_category?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetContextResponseDto'];
+        };
+      };
+      /** @description Invalid scope or parameters */
+      400: {
         headers: {
           [name: string]: unknown;
         };

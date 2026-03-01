@@ -44,6 +44,15 @@
             }
           },
           {
+            "name": "pending_first_opponent",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only AWAITING_OPPONENT debates with no opponent CLAIM yet (only MOTION). Overrides state filter.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -845,15 +854,82 @@
         ]
       }
     },
-    "/logs/tail": {
+    "/logs/sources": {
       "get": {
-        "operationId": "LogsController_tailLogs",
+        "operationId": "LogsController_listSources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListLogSourcesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List discovered log sources with date ranges",
+        "tags": [
+          "logs"
+        ]
+      }
+    },
+    "/logs/query": {
+      "get": {
+        "operationId": "LogsController_queryLogs",
         "parameters": [
           {
-            "name": "lines",
+            "name": "name",
+            "required": true,
+            "in": "query",
+            "description": "Log source name or \"all\"",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "description": "Date in YYYY-MM-DD format",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "level",
             "required": false,
             "in": "query",
-            "description": "Number of lines to tail (default: 200, max: 2000)",
+            "description": "Minimum level: trace/debug/info/warn/error/fatal",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive substring match on msg",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Opaque cursor from previous response for pagination",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Max entries to return (default: 500, max: 2000)",
             "schema": {
               "type": "number"
             }
@@ -865,13 +941,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TailLogsResponseDto"
+                  "$ref": "#/components/schemas/QueryLogsResponseDto"
                 }
               }
             }
           }
         },
-        "summary": "Get last N log entries from server.jsonl",
+        "summary": "Query log entries with filters and cursor pagination",
         "tags": [
           "logs"
         ]
@@ -880,15 +956,124 @@
     "/logs/stream": {
       "get": {
         "operationId": "LogsController_streamLogs",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Log source name or \"all\" (default: \"all\")",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
-        "summary": "Stream new log entries via Server-Sent Events (SSE)",
+        "summary": "Stream new log entries via SSE (always watches today)",
         "tags": [
           "logs"
+        ]
+      }
+    },
+    "/workspace/context": {
+      "get": {
+        "operationId": "WorkspaceMemoryController_getContext",
+        "parameters": [
+          {
+            "name": "workspace",
+            "required": true,
+            "in": "query",
+            "description": "Workspace name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "domain",
+            "required": false,
+            "in": "query",
+            "description": "Domain within workspace",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repository",
+            "required": false,
+            "in": "query",
+            "description": "Repository within domain",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topics",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated topic names (e.g. \"plans,features\"). Each topic returns { overview_t1, entries }; decisions/lessons include full body_t1 per entry.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_defaults",
+            "required": false,
+            "in": "query",
+            "description": "Include defaults (scope_overview_t1, folder_structure, overviews, loaded_skills, decisions_t0, lessons_t0)",
+            "schema": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "filter_status",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated status filter for plans",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter_tags",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated tag filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter_category",
+            "required": false,
+            "in": "query",
+            "description": "Category filter",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetContextResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid scope or parameters"
+          }
+        },
+        "summary": "Get workspace context",
+        "tags": [
+          "WorkspaceMemory"
         ]
       }
     }
@@ -1623,6 +1808,10 @@
             "type": "string",
             "description": "Service name"
           },
+          "source": {
+            "type": "string",
+            "description": "Log file source name (useful when name=all)"
+          },
           "meta": {
             "type": "object",
             "description": "Additional metadata"
@@ -1634,7 +1823,76 @@
           "msg"
         ]
       },
-      "TailLogsResponseDto": {
+      "LogSourceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Log source name (e.g. nestjs-server, cli)"
+          },
+          "dates": {
+            "description": "Available dates in YYYY-MM-DD format, sorted descending",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "latestDate": {
+            "type": "string",
+            "description": "Most recent date with log entries"
+          }
+        },
+        "required": [
+          "name",
+          "dates",
+          "latestDate"
+        ]
+      },
+      "PaginationDto": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "number",
+            "description": "Max entries requested"
+          },
+          "returned": {
+            "type": "number",
+            "description": "Number of entries actually returned"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether older entries exist before this page"
+          },
+          "nextCursor": {
+            "type": "object",
+            "description": "Opaque cursor for fetching the next (older) page"
+          }
+        },
+        "required": [
+          "limit",
+          "returned",
+          "hasMore"
+        ]
+      },
+      "ListLogSourcesResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogSourceDto"
+            }
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "QueryLogsResponseDto": {
         "type": "object",
         "properties": {
           "success": {
@@ -1646,15 +1904,30 @@
               "$ref": "#/components/schemas/LogEntryDto"
             }
           },
-          "totalLines": {
-            "type": "number",
-            "description": "Total lines in the log file"
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
           "success",
           "data",
-          "totalLines"
+          "pagination"
+        ]
+      },
+      "GetContextResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "success",
+          "data"
         ]
       }
     }
