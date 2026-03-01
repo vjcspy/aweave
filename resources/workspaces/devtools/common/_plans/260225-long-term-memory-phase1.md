@@ -8,6 +8,8 @@ tags: [memory, workspace, mcp, nestjs, cli, hot-memory, warm-memory]
 
 # 260225 — Long-term Memory — Phase 1 Implementation
 
+> **Note (2026-03-01):** MCP transport in `nestjs-workspace-memory` migrated from SSE to Streamable HTTP per `260301-migrate-mcp-sse-to-streamable-http.md`. This document remains a historical implementation record.
+
 ## References
 
 - `resources/misc/workflow-optimization/_features/core/long-term-memory.md` — Feature spec (source of truth)

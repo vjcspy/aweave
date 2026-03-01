@@ -4,7 +4,6 @@
       "url": "http://localhost:8931/mcp"
     },
     "workspace-memory": {
-      "type": "sse",
       "url": "http://127.0.0.1:3456/mcp"
     }
   }
