@@ -62,10 +62,7 @@ export default function App() {
             className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 relative shrink-0">
-              <Zap
-                className="w-[18px] h-[18px] text-white"
-                strokeWidth={2.5}
-              />
+              <Zap className="w-[18px] h-[18px] text-white" strokeWidth={2.5} />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
             </div>
             {!sidebarCollapsed && (

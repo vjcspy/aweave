@@ -15,10 +15,7 @@ services:
     name: "aweave-server"
     port: 3456
     healthUrl: "http://127.0.0.1:3456/health"
-  debateWeb:
-    name: "debate-web"
-    port: 3457
-    healthUrl: "http://127.0.0.1:3457"
+
   forwarder:
     enabled: false
     listenHost: "127.0.0.1"
