@@ -1,11 +1,11 @@
 import {
   ContentType,
-  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
   stopServer,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerStop extends Command {
@@ -21,7 +21,6 @@ export class ServerStop extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerStop);
-    const log = getCliLogger();
 
     log.info('server stop: initiating');
 

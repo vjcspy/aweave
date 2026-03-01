@@ -1,12 +1,12 @@
 import {
   ContentType,
   FORWARDER_DEFAULTS,
-  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
   startForwarder,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerForwardStart extends Command {
@@ -39,7 +39,6 @@ export class ServerForwardStart extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerForwardStart);
-    const log = getCliLogger();
 
     log.info(
       {

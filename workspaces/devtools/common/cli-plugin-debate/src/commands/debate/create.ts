@@ -1,6 +1,5 @@
 import {
   ContentType,
-  getCliLogger,
   handleServerError,
   HTTPClientError,
   MCPContent,
@@ -8,6 +7,7 @@ import {
   output,
   readContent,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 import { randomUUID } from 'crypto';
 
@@ -38,7 +38,6 @@ export class DebateCreate extends Command {
 
   async run() {
     const { flags } = await this.parse(DebateCreate);
-    const log = getCliLogger();
 
     log.info(
       { debateId: flags['debate-id'], title: flags.title, type: flags.type },

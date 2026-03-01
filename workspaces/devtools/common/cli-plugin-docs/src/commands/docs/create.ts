@@ -1,12 +1,12 @@
 import {
   ContentType,
   errorResponse,
-  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
   readContent,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 import * as db from '../../lib/db';
@@ -33,7 +33,6 @@ export class DocsCreate extends Command {
 
   async run() {
     const { flags } = await this.parse(DocsCreate);
-    const log = getCliLogger();
 
     log.info({ summary: flags.summary }, 'docs create: initiating');
 

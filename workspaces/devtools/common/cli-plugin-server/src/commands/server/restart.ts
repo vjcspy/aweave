@@ -1,11 +1,11 @@
 import {
   ContentType,
-  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
   restartServer,
 } from '@hod/aweave-cli-shared';
+import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 
 export class ServerRestart extends Command {
@@ -29,7 +29,6 @@ export class ServerRestart extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerRestart);
-    const log = getCliLogger();
 
     log.info(
       { port: flags.port, host: flags.host },
