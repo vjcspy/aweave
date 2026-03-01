@@ -1,3 +1,4 @@
+import { getCliLogger } from '@hod/aweave-cli-shared';
 import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
 import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -38,11 +39,16 @@ export class WorkspaceMcp extends Command {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(WorkspaceMcp);
+    const log = getCliLogger();
+
     const projectRoot = resolveProjectRoot(flags['project-root']);
+    log.info({ projectRoot }, 'workspace mcp: starting STDIO server');
 
     const server = createWorkspaceMemoryServer(projectRoot);
     const transport = new StdioServerTransport();
 
+    log.debug('workspace mcp: connecting transport');
     await server.connect(transport);
+    log.info('workspace mcp: transport connected, serving');
   }
 }

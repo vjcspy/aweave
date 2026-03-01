@@ -19,6 +19,12 @@ services:
     name: "debate-web"
     port: 3457
     healthUrl: "http://127.0.0.1:3457"
+  forwarder:
+    enabled: false
+    listenHost: "127.0.0.1"
+    listenPort: 3845
+    targetHost: "127.0.0.1"
+    targetPort: 3456
 
 test:
   cursor:

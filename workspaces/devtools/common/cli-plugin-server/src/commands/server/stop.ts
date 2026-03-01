@@ -1,5 +1,6 @@
 import {
   ContentType,
+  getCliLogger,
   MCPContent,
   MCPResponse,
   output,
@@ -20,8 +21,17 @@ export class ServerStop extends Command {
 
   async run() {
     const { flags } = await this.parse(ServerStop);
+    const log = getCliLogger();
+
+    log.info('server stop: initiating');
 
     const result = await stopServer();
+
+    if (result.success) {
+      log.info('server stop: success');
+    } else {
+      log.error({ message: result.message }, 'server stop: failed');
+    }
 
     output(
       new MCPResponse({
