@@ -2,62 +2,346 @@
 @import "tw-animate-css";
 
 @theme inline {
-    --font-sans: "Inter", sans-serif;
-    --font-mono: "Geist Mono", monospace;
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-mono: "Geist Mono", "JetBrains Mono", "Fira Code", monospace;
 }
 
-@utility glass {
-    background-color: rgba(24, 24, 27, 0.4);
-    /* bg-zinc-900/40 */
-    backdrop-filter: blur(12px);
-    /* backdrop-blur-md */
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+/* ======================================================================
+   Animated Background
+   ====================================================================== */
+
+body {
+    background-color: #050508;
+    color: #f1f5f9;
+    font-family: "Inter", system-ui, sans-serif;
+    overflow: hidden;
 }
 
-@utility glass-panel {
-    background-color: rgba(9, 9, 11, 0.6);
-    /* bg-zinc-950/60 */
-    backdrop-filter: blur(24px);
-    /* backdrop-blur-xl */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+/* Floating gradient orbs */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(120px);
+    opacity: 0.4;
 }
 
-@utility glass-button {
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
+body::before {
+    width: 600px;
+    height: 600px;
+    top: -10%;
+    left: -5%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.3), transparent 70%);
+    animation: float-orb-1 20s ease-in-out infinite;
+}
 
-    &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+body::after {
+    width: 500px;
+    height: 500px;
+    bottom: -15%;
+    right: -5%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.25), transparent 70%);
+    animation: float-orb-2 25s ease-in-out infinite;
+}
+
+@keyframes float-orb-1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate(80px, 60px) scale(1.1);
+    }
+
+    50% {
+        transform: translate(40px, 120px) scale(0.95);
+    }
+
+    75% {
+        transform: translate(-30px, 50px) scale(1.05);
     }
 }
 
+@keyframes float-orb-2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(-60px, -80px) scale(1.15);
+    }
+
+    66% {
+        transform: translate(50px, -40px) scale(0.9);
+    }
+}
+
+/* Dot grid overlay */
+#root::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+/* ======================================================================
+   Glass Utilities
+   ====================================================================== */
+
+@utility glass {
+    background: rgba(12, 12, 16, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@utility glass-panel {
+    background: rgba(8, 8, 12, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 20px 40px -12px rgba(0, 0, 0, 0.5);
+}
+
+@utility glass-card {
+    background: rgba(15, 15, 20, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 8px 24px -8px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 16px 48px -12px rgba(0, 0, 0, 0.5),
+        0 0 20px -4px rgba(139, 92, 246, 0.08);
+    transform: translateY(-2px);
+}
+
+@utility glass-button {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ======================================================================
+   Glow Effects
+   ====================================================================== */
+
+@utility glow-blue {
+    box-shadow:
+        0 0 20px rgba(59, 130, 246, 0.15),
+        0 0 60px rgba(59, 130, 246, 0.05),
+        inset 0 0 20px rgba(59, 130, 246, 0.03);
+}
+
+@utility glow-purple {
+    box-shadow:
+        0 0 20px rgba(139, 92, 246, 0.15),
+        0 0 60px rgba(139, 92, 246, 0.05),
+        inset 0 0 20px rgba(139, 92, 246, 0.03);
+}
+
+@utility glow-emerald {
+    box-shadow:
+        0 0 20px rgba(16, 185, 129, 0.15),
+        0 0 60px rgba(16, 185, 129, 0.05),
+        inset 0 0 20px rgba(16, 185, 129, 0.03);
+}
+
 @utility text-glow {
-    text-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
+    text-shadow: 0 0 20px rgba(96, 165, 250, 0.4), 0 0 40px rgba(96, 165, 250, 0.1);
 }
 
-@utility glow-border {
-    box-shadow: 0 0 15px rgba(96, 165, 250, 0.15), inset 0 0 20px rgba(96, 165, 250, 0.05);
+/* ======================================================================
+   Animated Gradient Border (for active skill cards)
+   ====================================================================== */
+
+@keyframes rotate-gradient {
+    0% {
+        --gradient-angle: 0deg;
+    }
+
+    100% {
+        --gradient-angle: 360deg;
+    }
 }
 
-body {
-    background-color: #050505;
-    background-image:
-        radial-gradient(circle at 15% 50%, rgba(30, 58, 138, 0.15), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(124, 58, 237, 0.1), transparent 25%);
-    background-attachment: fixed;
-    color: #f8fafc;
+@property --gradient-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
 }
 
-/* Custom scrollbar */
+.animated-border {
+    position: relative;
+    border: none !important;
+}
+
+.animated-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--gradient-angle),
+            rgba(139, 92, 246, 0.5),
+            rgba(59, 130, 246, 0.3),
+            rgba(16, 185, 129, 0.2),
+            rgba(139, 92, 246, 0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotate-gradient 4s linear infinite;
+    pointer-events: none;
+}
+
+/* ======================================================================
+   Sidebar Styles
+   ====================================================================== */
+
+.sidebar-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(161, 161, 170, 0.8);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.sidebar-item:hover {
+    color: rgba(228, 228, 231, 1);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-item.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    border-radius: 0 4px 4px 0;
+    transition: all 0.3s ease;
+}
+
+.sidebar-item.active[data-color="blue"]::before {
+    background: linear-gradient(180deg, #3b82f6, #6366f1);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+}
+
+.sidebar-item.active[data-color="purple"]::before {
+    background: linear-gradient(180deg, #8b5cf6, #a855f7);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+}
+
+.sidebar-item.active[data-color="emerald"]::before {
+    background: linear-gradient(180deg, #10b981, #34d399);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.sidebar-item.active[data-color="blue"] {
+    background: rgba(59, 130, 246, 0.06);
+    border-color: rgba(59, 130, 246, 0.12);
+}
+
+.sidebar-item.active[data-color="purple"] {
+    background: rgba(139, 92, 246, 0.06);
+    border-color: rgba(139, 92, 246, 0.12);
+}
+
+.sidebar-item.active[data-color="emerald"] {
+    background: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.12);
+}
+
+/* ======================================================================
+   Premium Toggle Switch
+   ====================================================================== */
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.toggle-switch.off {
+    background: rgba(39, 39, 42, 0.8);
+}
+
+.toggle-switch.on {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.3);
+}
+
+.toggle-switch .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toggle-switch.off .toggle-thumb {
+    left: 3px;
+}
+
+.toggle-switch.on .toggle-thumb {
+    left: 23px;
+}
+
+/* ======================================================================
+   Custom Scrollbar
+   ====================================================================== */
+
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -65,10 +349,92 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 4px;
+    background: rgba(63, 63, 70, 0.5);
+    border-radius: 3px;
+    transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+    background: rgba(113, 113, 122, 0.6);
+}
+
+/* ======================================================================
+   Smooth Page Transitions
+   ====================================================================== */
+
+.page-enter {
+    animation: page-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes page-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ======================================================================
+   Gradient Button
+   ====================================================================== */
+
+.btn-gradient {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4);
+}
+
+.btn-gradient:active {
+    transform: translateY(0);
+}
+
+.btn-gradient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.btn-gradient:hover::after {
+    opacity: 1;
+}
+
+/* ======================================================================
+   Log Level Row Backgrounds
+   ====================================================================== */
+
+.log-row {
+    transition: background-color 0.15s ease;
+}
+
+.log-row:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.log-row-error {
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.log-row-warn {
+    background: rgba(245, 158, 11, 0.03);
 }

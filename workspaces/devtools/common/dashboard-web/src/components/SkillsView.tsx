@@ -24,7 +24,6 @@ export function SkillsView() {
     setLoading(true);
     const res = await api.GET('/skills');
     if (res.data?.success) {
-      // Sort so active skills are at the top, then alphabetically
       const sorted = res.data.data.sort((a, b) => {
         if (a.active && !b.active) return -1;
         if (!a.active && b.active) return 1;
@@ -41,7 +40,7 @@ export function SkillsView() {
 
   const handleToggle = async (id: string, currentActive: boolean) => {
     setToggling(id);
-    const safeId = encodeURIComponent(id); // Ensure id paths are safe if they contain slashes
+    const safeId = encodeURIComponent(id);
     await api.POST('/skills/{skillId}/toggle', {
       params: { path: { skillId: safeId } },
       body: { active: !currentActive },
@@ -51,89 +50,102 @@ export function SkillsView() {
   };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8 shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
-            <Cpu className="text-purple-400 w-7 h-7" />
+            <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center border border-purple-500/20">
+              <Cpu className="text-purple-400 w-5 h-5" />
+            </div>
             Agent Skills
           </h2>
-          <p className="text-zinc-400 mt-1">
+          <p className="text-zinc-500 mt-2 text-sm leading-relaxed max-w-lg">
             Enable or disable specialized AI sub-agents to enhance your
             workspace contextual understanding.
           </p>
         </div>
 
         {loading && skills.length > 0 && (
-          <div className="flex items-center gap-2 text-zinc-400 bg-white/5 px-3 py-1.5 rounded-full text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" /> Updating...
+          <div className="flex items-center gap-2 text-zinc-400 glass-button px-4 py-2 rounded-full text-xs font-medium">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...
           </div>
         )}
       </div>
 
+      {/* Content */}
       {loading && skills.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
-          <p>Discovering capabilities...</p>
+          <div className="relative">
+            <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
+            <div className="absolute inset-0 rounded-full blur-xl bg-purple-500/20" />
+          </div>
+          <p className="text-sm">Discovering capabilities...</p>
         </div>
       ) : skills.length === 0 ? (
-        <div className="glass-panel rounded-xl p-12 text-center flex flex-col items-center">
-          <ShieldAlert className="w-16 h-16 text-zinc-600 mb-4" />
+        <div className="glass-panel rounded-2xl p-16 text-center flex flex-col items-center">
+          <div className="w-20 h-20 rounded-2xl bg-zinc-800/30 flex items-center justify-center border border-zinc-700/20 mb-6">
+            <ShieldAlert
+              className="w-10 h-10 text-zinc-700"
+              strokeWidth={1.2}
+            />
+          </div>
           <h3 className="text-xl font-semibold text-zinc-300 mb-2">
             No Skills Found
           </h3>
-          <p className="text-zinc-500 max-w-md">
+          <p className="text-zinc-500 max-w-md text-sm leading-relaxed">
             The workspace didn't return any skills. Make sure you have valid
-            `SKILL.md` files in `agent/skills/` or `~/.aweave/skills/`.
+            <code className="text-zinc-400 bg-zinc-800/50 px-1.5 py-0.5 rounded mx-1 text-xs">
+              SKILL.md
+            </code>
+            files.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-12 custom-scrollbar pr-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 overflow-y-auto pb-12 pr-2">
           {skills.map((skill) => (
             <div
               key={skill.id}
-              className={`relative glass-panel rounded-2xl p-6 flex flex-col transition-all duration-300 overflow-hidden group hover:-translate-y-1 ${
-                skill.active
-                  ? 'border-purple-500/30 shadow-[0_8px_30px_rgba(168,85,247,0.15)] bg-gradient-to-b from-purple-500/5 to-transparent'
-                  : 'hover:border-white/10'
+              className={`relative glass-card rounded-2xl p-6 flex flex-col overflow-hidden group ${
+                skill.active ? 'animated-border' : ''
               }`}
             >
-              {/* Background Glow Effect for Active Card */}
+              {/* Background Glow for Active */}
               {skill.active && (
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+                <>
+                  <div className="absolute -top-16 -right-16 w-32 h-32 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+                </>
               )}
 
-              <div className="flex justify-between items-start mb-4 relative z-10">
+              {/* Top Row: Icon + Toggle */}
+              <div className="flex justify-between items-start mb-5 relative z-10">
                 <div
-                  className={`p-3 rounded-xl inline-flex ${skill.active ? 'bg-purple-500/20 text-purple-300' : 'bg-white/5 text-zinc-400'}`}
+                  className={`p-3 rounded-xl inline-flex ${
+                    skill.active
+                      ? 'bg-gradient-to-br from-purple-500/20 to-indigo-500/10 text-purple-300 border border-purple-500/20'
+                      : 'bg-white/[0.04] text-zinc-500 border border-white/[0.06]'
+                  }`}
                 >
                   {skill.active ? (
-                    <Sparkles className="w-6 h-6" />
+                    <Sparkles className="w-5 h-5" />
                   ) : (
-                    <Waypoints className="w-6 h-6" />
+                    <Waypoints className="w-5 h-5" />
                   )}
                 </div>
 
-                {/* Advanced Premium Toggle */}
+                {/* Toggle */}
                 <button
                   onClick={() => handleToggle(skill.id, skill.active)}
                   disabled={toggling === skill.id}
-                  className={`relative flex items-center h-7 w-14 rounded-full transition-all duration-300 focus:outline-none overflow-hidden ${
-                    skill.active
-                      ? 'bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.6)]'
-                      : 'bg-zinc-700/80 border border-white/5 hover:bg-zinc-600'
-                  } ${toggling === skill.id ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+                  className={`toggle-switch ${skill.active ? 'on' : 'off'} ${toggling === skill.id ? 'opacity-40 cursor-wait' : ''}`}
                 >
-                  <span
-                    className={`absolute flex items-center justify-center h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ease-in-out ${
-                      skill.active ? 'translate-x-8' : 'translate-x-1'
-                    }`}
-                  >
+                  <span className="toggle-thumb flex items-center justify-center">
                     {toggling === skill.id ? (
                       <Loader2 className="w-3 h-3 text-zinc-400 animate-spin" />
                     ) : skill.active ? (
                       <Power
-                        className="w-3 h-3 text-purple-600"
+                        className="w-2.5 h-2.5 text-purple-600"
                         strokeWidth={3}
                       />
                     ) : null}
@@ -141,26 +153,28 @@ export function SkillsView() {
                 </button>
               </div>
 
+              {/* Content */}
               <div className="relative z-10 flex-1">
                 <h3
-                  className={`text-lg font-bold tracking-tight mb-2 ${skill.active ? 'text-white' : 'text-zinc-200'}`}
+                  className={`text-[15px] font-bold tracking-tight mb-2 ${skill.active ? 'text-white' : 'text-zinc-300'}`}
                 >
                   {skill.name}
                 </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3 mb-4">
+                <p className="text-[13px] text-zinc-500 leading-relaxed line-clamp-3 mb-4">
                   {skill.description}
                 </p>
               </div>
 
-              <div className="relative z-10 pt-4 mt-auto border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 truncate max-w-[80%] bg-black/30 px-2 py-1 rounded">
+              {/* Footer */}
+              <div className="relative z-10 pt-4 mt-auto border-t border-white/[0.04] flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-600 truncate max-w-[75%] bg-black/20 px-2 py-1 rounded-md">
                   <Code2 className="w-3 h-3 shrink-0" />
                   <span className="truncate">{skill.id}</span>
                 </div>
                 {skill.active && (
                   <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400/60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
                   </span>
                 )}
               </div>
