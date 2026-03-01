@@ -7,6 +7,7 @@ import {
 import { Command, Flags } from '@oclif/core';
 
 import { getConfigPath, loadConfig } from '../../../lib/config';
+import { log } from '../../../lib/logger';
 
 export class RelayConfigShow extends Command {
   static description =
@@ -23,6 +24,7 @@ export class RelayConfigShow extends Command {
   async run() {
     const { flags } = await this.parse(RelayConfigShow);
     const config = loadConfig();
+    log.debug('relay config show: displaying configuration');
 
     // Mask sensitive values
     const masked = {

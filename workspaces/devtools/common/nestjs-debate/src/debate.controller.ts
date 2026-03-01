@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Post,
   Query,
@@ -65,6 +66,8 @@ function serializeWriteResult(result: { debate: any; argument: any }) {
 )
 @Controller()
 export class DebateController {
+  private readonly logger = new Logger(DebateController.name);
+
   constructor(
     private readonly debateService: DebateService,
     private readonly argumentService: ArgumentService,
@@ -163,6 +166,7 @@ export class DebateController {
       motion_content: body.motion_content,
       client_request_id: body.client_request_id,
     });
+    this.logger.log({ debateId: body.debate_id }, 'Debate created');
     return ok(serializeWriteResult(result));
   }
 
@@ -211,6 +215,7 @@ export class DebateController {
   @Delete('debates/:id')
   async deleteDebate(@Param('id') debateId: string) {
     await this.debateService.deleteDebate(debateId);
+    this.logger.log({ debateId }, 'Debate deleted');
     return ok({ deleted: true });
   }
 

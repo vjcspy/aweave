@@ -15,6 +15,12 @@
 // Shared CLI logger
 export { getCliLogger } from './logger';
 
+// Logger factory — for plugins that need package-specific log file names
+export {
+  createLogger,
+  type CreateLoggerOptions,
+} from '@hod/aweave-node-shared';
+
 // MCP response format
 export {
   ContentType,

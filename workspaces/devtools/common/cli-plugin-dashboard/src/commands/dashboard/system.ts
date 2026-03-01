@@ -8,6 +8,7 @@
 
 import { Command, Flags } from '@oclif/core';
 
+import { log } from '../../lib/logger.js';
 import {
   getCpuUsage,
   getDiskUsage,
@@ -35,6 +36,10 @@ export class DashboardSystem extends Command {
 
   async run() {
     const { flags } = await this.parse(DashboardSystem);
+    log.debug(
+      { watch: flags.watch, format: flags.format },
+      'dashboard system: starting',
+    );
 
     if (flags.format === 'json') {
       await this.outputJson(flags.watch, flags['refresh-interval']);

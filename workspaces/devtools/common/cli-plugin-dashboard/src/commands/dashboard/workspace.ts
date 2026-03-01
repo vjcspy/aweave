@@ -13,6 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 import { Command, Flags } from '@oclif/core';
 
+import { log } from '../../lib/logger.js';
+
 const require = createRequire(import.meta.url);
 const nodeShared =
   require('@hod/aweave-node-shared') as typeof import('@hod/aweave-node-shared');
@@ -30,6 +32,7 @@ export class DashboardWorkspace extends Command {
 
   async run() {
     const { flags } = await this.parse(DashboardWorkspace);
+    log.debug({ format: flags.format }, 'dashboard workspace: starting');
 
     if (flags.format === 'json') {
       await this.outputJson();

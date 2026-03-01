@@ -4,10 +4,11 @@ import {
   GetContextParams,
   GetContextResponse,
 } from '@hod/aweave-workspace-memory';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class WorkspaceMemoryService {
+  private readonly logger = new Logger(WorkspaceMemoryService.name);
   private readonly projectRoot: string;
 
   constructor() {
@@ -23,9 +24,14 @@ export class WorkspaceMemoryService {
     }
 
     this.projectRoot = projectRoot;
+    this.logger.log({ projectRoot }, 'Resolved project root');
   }
 
   async getContext(params: GetContextParams): Promise<GetContextResponse> {
+    this.logger.debug(
+      { workspace: params.scope.workspace, domain: params.scope.domain },
+      'getContext',
+    );
     return getContext(this.projectRoot, params);
   }
 

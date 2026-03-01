@@ -2,6 +2,7 @@ import {
   Controller,
   DefaultValuePipe,
   Get,
+  Logger,
   ParseBoolPipe,
   Query,
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import { WorkspaceMemoryService } from './workspace-memory.service';
 @ApiExtraModels(GetContextResponseDto)
 @Controller('workspace')
 export class WorkspaceMemoryController {
+  private readonly logger = new Logger(WorkspaceMemoryController.name);
+
   constructor(private readonly service: WorkspaceMemoryService) {}
 
   @ApiOperation({ summary: 'Get workspace context' })
@@ -30,11 +33,17 @@ export class WorkspaceMemoryController {
     includeDefaults: boolean,
   ) {
     if (!query.workspace) {
+      this.logger.warn('getContext called without workspace param');
       return {
         success: false,
         error: { code: 'INVALID_INPUT', message: 'workspace is required' },
       };
     }
+
+    this.logger.debug(
+      { workspace: query.workspace, domain: query.domain },
+      'getContext request',
+    );
 
     const topics = this.service.parseTopics(query.topics);
 

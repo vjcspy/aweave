@@ -13,6 +13,7 @@
     "topicSeparator": " "
   },
   "dependencies": {
+    "@hod/aweave-cli-shared": "workspace:*",
     "@hod/aweave-config-common": "workspace:*",
     "@hod/aweave-config-core": "workspace:*",
     "@hod/aweave-playwright": "workspace:*",

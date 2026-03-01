@@ -7,6 +7,7 @@ import {
 import { Command, Flags } from '@oclif/core';
 
 import { getConfigPath, saveConfig } from '../../../lib/config';
+import { log } from '../../../lib/logger';
 
 export class RelayConfigSet extends Command {
   static description = 'Set relay configuration values';
@@ -57,6 +58,7 @@ export class RelayConfigSet extends Command {
     }
 
     saveConfig(updates);
+    log.info({ keys: Object.keys(updates) }, 'relay config set: updated');
 
     output(
       new MCPResponse({

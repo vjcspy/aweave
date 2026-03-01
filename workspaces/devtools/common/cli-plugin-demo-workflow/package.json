@@ -14,6 +14,7 @@
     "topicSeparator": " "
   },
   "dependencies": {
+    "@hod/aweave-cli-shared": "workspace:*",
     "@hod/aweave-workflow-dashboard": "workspace:*",
     "@hod/aweave-workflow-engine": "workspace:*",
     "@oclif/core": "catalog:",
