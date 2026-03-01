@@ -24,7 +24,10 @@ Two responsibilities:
 
 - `createLogger(options?)` → `pino.Logger`
   - Framework-agnostic pino logger factory used by all devtools packages.
-  - Writes to `~/.aweave/logs/{name}.jsonl` (all levels) and `~/.aweave/logs/{name}.error.jsonl` (error-only).
+  - Writes to `~/.aweave/logs/` with date-based naming:
+    - **Async:** `{name}.{date}.{count}.jsonl` (e.g. `server.2026-03-01.1.jsonl`)
+    - **Sync:** `{name}.{date}.jsonl` (e.g. `cli.2026-03-01.jsonl`)
+  - Error-only files follow same pattern with `.error` infix.
   - Console output always goes to **stderr (fd 2)** — never stdout — preserving MCP stdio transport and CLI JSON output.
 
 - `CreateLoggerOptions` interface:
@@ -41,8 +44,8 @@ Two responsibilities:
 
 **Two transport modes:**
 
-- **`sync: false`** (default) — async `pino.transport()` with `pino-roll` for daily file rotation. Use in long-running services (NestJS server). Rotated files: `{name}.jsonl.{date}`.
-- **`sync: true`** — synchronous `pino.multistream()` + `pino.destination({ sync: true })`. Use in CLI commands where the process exits after a short run (async workers won't flush before exit).
+- **`sync: false`** (default) — async `pino.transport()` with `pino-roll` v4.0.0 Extension Last Format for daily file rotation. Use in long-running services (NestJS server). Output: `{name}.{date}.{count}.{ext}` (e.g. `server.2026-03-01.1.jsonl`).
+- **`sync: true`** — synchronous `pino.multistream()` + `pino.destination({ sync: true })`. Use in CLI commands where the process exits after a short run (async workers won't flush before exit). Date is embedded at creation time: `{name}.{date}.{ext}` (e.g. `cli.2026-03-01.jsonl`).
 
 ### Paths (DevTools Root Discovery)
 
@@ -61,7 +64,7 @@ Two responsibilities:
 ```
 node-shared/
 ├── package.json            # @hod/aweave-node-shared
-│                           # deps: pino, pino-pretty, pino-roll
+│                           # deps: pino, pino-pretty, pino-roll (4.0.0)
 ├── tsconfig.json
 └── src/
     ├── index.ts            # Barrel: export * from './logging'; export * from './paths'
@@ -93,5 +96,6 @@ node-shared/
 ## Related
 
 - **Plan:** `resources/workspaces/devtools/common/_plans/260301-shared-logger-node-shared.md`
+- **Plan:** `resources/workspaces/devtools/common/_plans/260301-log-file-date-based-naming.md`
 - **CLI logger singleton:** `workspaces/devtools/common/cli-shared/src/logger/index.ts`
 - **NestJS logger service:** `workspaces/devtools/common/nestjs-core/src/logging/nest-logger.service.ts`
