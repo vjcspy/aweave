@@ -1,15 +1,25 @@
 import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
-import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { resolve } from 'path';
 
 @Injectable()
 export class McpToolsService implements OnModuleInit {
-  private server!: Server;
+  private server!: McpServer;
 
   onModuleInit() {
-    const projectRoot = resolve(process.cwd(), '..', '..', '..');
+    const projectRoot = resolveProjectRootFromDevtools({
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+    });
+
+    if (!projectRoot) {
+      throw new Error(
+        'Could not resolve project root. Set AWEAVE_DEVTOOLS_ROOT or run from within the aweave workspace.',
+      );
+    }
+
     this.server = createWorkspaceMemoryServer(projectRoot);
   }
 

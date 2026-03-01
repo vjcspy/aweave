@@ -1,17 +1,28 @@
+import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import {
   getContext,
   GetContextParams,
   GetContextResponse,
 } from '@hod/aweave-workspace-memory';
 import { Injectable } from '@nestjs/common';
-import { resolve } from 'path';
 
 @Injectable()
 export class WorkspaceMemoryService {
   private readonly projectRoot: string;
 
   constructor() {
-    this.projectRoot = resolve(process.cwd(), '..', '..', '..');
+    const projectRoot = resolveProjectRootFromDevtools({
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+    });
+
+    if (!projectRoot) {
+      throw new Error(
+        'Could not resolve project root. Set AWEAVE_DEVTOOLS_ROOT or run from within the aweave workspace.',
+      );
+    }
+
+    this.projectRoot = projectRoot;
   }
 
   async getContext(params: GetContextParams): Promise<GetContextResponse> {
