@@ -5,16 +5,36 @@ import { LogContextService } from './log-context.service';
 import { createLogger } from './logger.factory';
 
 /**
+ * Strict plain-object check to avoid false positives on Error, Date,
+ * class instances, and arrays.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
  * Custom NestJS LoggerService backed by pino.
  *
  * - Intercepts all Nest logger calls (including existing `new Logger(Context)` usage)
  * - Automatically merges AsyncLocalStorage context (correlationId, etc.) into every log
  * - Writes JSON to file + pretty-prints to stderr in dev
  *
- * NestJS calls logger methods with these signatures:
- *   log(message, context?)          — context is the Nest Logger context (class name)
- *   log(message, ...args, context?) — sometimes extra args before context
- *   error(message, stack?, context?)
+ * Supports **two** call conventions:
+ *
+ * 1. **NestJS-style** (message first):
+ *    log(message, context?)
+ *    error(message, stack?, context?)
+ *
+ * 2. **Pino-style** (merging object first, message string second):
+ *    warn({ debateId, correlationId }, 'Failed to get initial state')
+ *
+ * Pino-style is detected when `message` is a plain object AND `params`
+ * contains at least 2 entries (pinoMsg + NestJS context). Detection runs
+ * BEFORE `parseParams` to avoid error-level mis-parsing.
  */
 @Injectable()
 export class NestLoggerService implements LoggerService {
@@ -55,20 +75,39 @@ export class NestLoggerService implements LoggerService {
   /**
    * Internal: route a Nest log call to pino with context merging.
    *
-   * NestJS Logger calls have varied shapes:
-   * - (message)
-   * - (message, context)
-   * - (message, meta, context)   — where meta is an object
-   * - error(message, stack, context)
-   *
-   * The last string param is always the Nest "context" (class/module name).
+   * Pino-style early detection runs FIRST so that `parseParams` never
+   * mis-interprets the Pino message string as a NestJS stack trace or context.
    */
   private writeLog(
     level: pino.Level,
     message: unknown,
     params: unknown[],
   ): void {
-    // Extract Nest context (last string param) and any metadata
+    // ── Pino-style early detection ─────────────────────────────────
+    // Pattern: logger.warn({ key: val }, 'message string')
+    // After NestJS Logger processing, params arrive as:
+    //   ['message string', 'ContextName'] or ['message string']
+    //
+    // Only activates when params.length >= 2. When params.length === 1,
+    // it's ambiguous — the single string could be either a Pino message
+    // or a NestJS context appended by Logger. We fall back to NestJS-style
+    // to preserve backward compatibility.
+    if (isPlainObject(message) && params.length > 0) {
+      const pinoMsg = this.extractPinoMessage(params);
+      if (pinoMsg !== undefined) {
+        const nestContext = this.extractLastStringParam(params, pinoMsg);
+        const asyncContext = this.logContext.getAll();
+        const logObj: Record<string, unknown> = {
+          ...asyncContext,
+          ...(message as Record<string, unknown>),
+        };
+        if (nestContext) logObj.context = nestContext;
+        this.pinoLogger[level](logObj, pinoMsg);
+        return;
+      }
+    }
+
+    // ── Standard NestJS-style path (unchanged) ─────────────────────
     const { context, meta, stack } = this.parseParams(params, level);
 
     // Merge AsyncLocalStorage context (correlationId, etc.)
@@ -93,6 +132,35 @@ export class NestLoggerService implements LoggerService {
 
     // Write to pino at the appropriate level
     this.pinoLogger[level](logObj, msg);
+  }
+
+  /**
+   * For Pino-style calls, extract the message string from params.
+   * Params arrive as [pinoMsg, nestContext] after NestJS Logger processing.
+   * Returns the message string, or undefined if pattern doesn't match.
+   *
+   * IMPORTANT: Only activates when params.length >= 2. When params.length === 1,
+   * it's ambiguous — the single string could be either a Pino message or a NestJS
+   * context appended by Logger. We fall back to NestJS-style to preserve backward
+   * compatibility (e.g., `logger.warn({ foo: 'bar' })` where NestJS appends context).
+   */
+  private extractPinoMessage(params: unknown[]): string | undefined {
+    if (params.length >= 2 && typeof params[0] === 'string') {
+      return params[0];
+    }
+    return undefined;
+  }
+
+  /**
+   * Extract NestJS context (last string param) excluding the pinoMsg.
+   */
+  private extractLastStringParam(
+    params: unknown[],
+    excludeMsg: string,
+  ): string | undefined {
+    if (params.length < 2) return undefined;
+    const last = params[params.length - 1];
+    return typeof last === 'string' && last !== excludeMsg ? last : undefined;
   }
 
   private parseParams(

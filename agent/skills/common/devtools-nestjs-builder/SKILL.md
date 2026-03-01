@@ -275,7 +275,7 @@ The utility `applySpaMiddleware()` accepts a pre-resolved `rootPath` — it neve
 - Lifecycle events (module init, config load)
 - Caught errors with full context
 
-**Example:**
+**Example — Pino-style (preferred):**
 
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
@@ -285,18 +285,28 @@ export class DebateService {
   private readonly logger = new Logger(DebateService.name);
 
   async createDebate(dto: CreateDebateDto) {
-    this.logger.debug(`Creating debate: ${dto.debate_id}`);
+    // Preferred: Pino-style with structured data as first arg, message string second
+    this.logger.debug({ debateId: dto.debate_id }, 'Creating debate');
     try {
       const result = await this.db.create(dto);
-      this.logger.log(`Debate created: ${result.id}`);
+      this.logger.log({ debateId: result.id }, 'Debate created');
       return result;
     } catch (e) {
-      this.logger.error('Failed to create debate', (e as Error).stack);
+      this.logger.error({ debateId: dto.debate_id, err: e }, 'Failed to create debate');
       throw e;
     }
   }
 }
 ```
+
+**Also supported — NestJS-style (simple messages):**
+
+```typescript
+this.logger.log('Server started');
+this.logger.error('Failed to create debate', (e as Error).stack);
+```
+
+> **Note:** `NestLoggerService` auto-detects the call convention. Pino-style `(object, string)` merges the object as top-level log fields. NestJS-style `(string)` passes the string as the `msg` field. Both work — prefer Pino-style when you have structured data to include.
 
 **Rules:**
 
