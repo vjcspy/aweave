@@ -23,8 +23,8 @@ export class NestLoggerService implements LoggerService {
   constructor(private readonly logContext: LogContextService) {
     // service: 'aweave-server' maintains backward compat with dashboard log filters
     this.pinoLogger = createLogger({
-      name: 'server',
-      service: 'aweave-server',
+      name: 'nestjs-server',
+      service: 'nestjs-server',
     });
   }
 
