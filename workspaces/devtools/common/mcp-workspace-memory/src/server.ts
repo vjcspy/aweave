@@ -9,7 +9,10 @@ import {
   workspaceGetContextInputSchema,
 } from './tools';
 
-const logger = createLogger({ name: 'mcp-memory', service: 'mcp-memory' });
+const logger = createLogger({
+  name: 'mcp-workspace-memory',
+  service: 'mcp-workspace-memory',
+});
 
 export function createWorkspaceMemoryServer(projectRoot: string): McpServer {
   logger.info({ projectRoot }, 'Creating workspace memory MCP server');
