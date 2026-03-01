@@ -6,8 +6,9 @@ import {
   output,
   startForwarder,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../../lib/logger';
 import { Command, Flags } from '@oclif/core';
+
+import { log } from '../../../lib/logger';
 
 export class ServerForwardStart extends Command {
   static description =

@@ -5,8 +5,9 @@ import {
   output,
   restartServer,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
+
+import { log } from '../../lib/logger';
 
 export class ServerRestart extends Command {
   static description = 'Restart the aweave server daemon';

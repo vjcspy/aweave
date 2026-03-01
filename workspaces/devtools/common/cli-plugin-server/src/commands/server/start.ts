@@ -5,9 +5,10 @@ import {
   output,
   startServer,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 import { execSync } from 'child_process';
+
+import { log } from '../../lib/logger';
 
 export class ServerStart extends Command {
   static description = 'Start the aweave server as a background daemon';

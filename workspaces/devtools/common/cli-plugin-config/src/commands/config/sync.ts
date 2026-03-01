@@ -5,7 +5,6 @@ import {
   MCPResponse,
   output,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import {
   ConfigDefaultsMissingError,
   getConfigRoot,
@@ -15,6 +14,7 @@ import {
 import { Command, Flags } from '@oclif/core';
 
 import { discoverDomainDefaults } from '../../lib/discovery';
+import { log } from '../../lib/logger';
 
 export class ConfigSync extends Command {
   static description =

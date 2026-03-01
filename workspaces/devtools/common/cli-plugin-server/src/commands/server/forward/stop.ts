@@ -6,8 +6,9 @@ import {
   output,
   stopForwarder,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../../lib/logger';
 import { Command, Flags } from '@oclif/core';
+
+import { log } from '../../../lib/logger';
 
 export class ServerForwardStop extends Command {
   static description =

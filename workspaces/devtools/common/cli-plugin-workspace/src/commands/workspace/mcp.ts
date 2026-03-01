@@ -1,9 +1,10 @@
-import { log } from '../../lib/logger';
 import { createWorkspaceMemoryServer } from '@hod/aweave-mcp-workspace-memory';
 import { resolveProjectRootFromDevtools } from '@hod/aweave-node-shared';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { Command, Flags } from '@oclif/core';
 import { isAbsolute, resolve } from 'path';
+
+import { log } from '../../lib/logger';
 
 function resolveProjectRoot(projectRootFlag?: string): string {
   if (projectRootFlag) {

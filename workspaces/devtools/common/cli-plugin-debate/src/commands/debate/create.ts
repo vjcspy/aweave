@@ -7,12 +7,12 @@ import {
   output,
   readContent,
 } from '@hod/aweave-cli-shared';
-import { log } from '../../lib/logger';
 import { Command, Flags } from '@oclif/core';
 import { randomUUID } from 'crypto';
 
 import { AUTO_START_SERVICES } from '../../lib/config';
 import { filterWriteResponse, getClient } from '../../lib/helpers';
+import { log } from '../../lib/logger';
 import { ensureServices } from '../../lib/services';
 
 export class DebateCreate extends Command {
