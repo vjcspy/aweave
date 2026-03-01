@@ -27,13 +27,20 @@ Use the NestJS server over Streamable HTTP. This is the **recommended approach f
 
 > **Company Policy:** Cursor is only permitted to connect to MCP on port **3845**. The NestJS server runs on `3456`; the TCP forwarder bridges `3845 → 3456`.
 
-1. Start the NestJS server:
+1. Determine your workspace root path (navigate to your project folder and run `pwd`):
 
    ```bash
-   aw server start
+   cd /absolute/path/to/aweave
+   pwd
    ```
 
-2. Start the TCP forwarder (port `3845 → 3456`):
+2. Start the NestJS server, providing the workspace root path as an environment variable:
+
+   ```bash
+   AWEAVE_DEVTOOLS_ROOT=$(pwd) aw server start
+   ```
+
+3. Start the TCP forwarder (port `3845 → 3456`):
 
    ```bash
    aw server forward start
@@ -41,7 +48,7 @@ Use the NestJS server over Streamable HTTP. This is the **recommended approach f
 
    This uses the default config (`listenPort: 3845`, `targetPort: 3456`). To use different ports, pass `--listen-port` and `--target-port`.
 
-3. The MCP endpoint for Cursor will be available at `http://127.0.0.1:3845/mcp`.
+4. The MCP endpoint for Cursor will be available at `http://127.0.0.1:3845/mcp`.
 
 ## Approach 2: `aw workspace mcp` (stdio)
 
@@ -80,7 +87,7 @@ This approach is useful when you want to run MCP without going through `aw` comm
 
 ### Recommended (NestJS Streamable HTTP via TCP Forwarder on port 3845)
 
-1. Start the NestJS server: `aw server start`
+1. Determine your workspace root path and start the NestJS server with it: `AWEAVE_DEVTOOLS_ROOT=$(pwd) aw server start`
 2. Start the forwarder: `aw server forward start` (default: `3845 → 3456`)
 3. Configure the MCP endpoint:
 

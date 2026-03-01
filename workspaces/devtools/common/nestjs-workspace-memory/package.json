@@ -11,6 +11,7 @@
   "dependencies": {
     "@hod/aweave-workspace-memory": "workspace:*",
     "@hod/aweave-mcp-workspace-memory": "workspace:*",
+    "@hod/aweave-node-shared": "workspace:*",
     "@hod/aweave-nestjs-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/swagger": "catalog:",

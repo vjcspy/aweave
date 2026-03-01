@@ -1,3 +1,7 @@
-export { handleToolCall } from './handlers';
 export { createWorkspaceMemoryServer } from './server';
-export { WORKSPACE_TOOLS } from './tools';
+export {
+  TOOL_DESCRIPTION,
+  TOOL_NAME,
+  type WorkspaceGetContextInput,
+  workspaceGetContextInputSchema,
+} from './tools';
