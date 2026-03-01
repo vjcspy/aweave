@@ -12,6 +12,9 @@ catalogs:
     '@eslint/js':
       specifier: ^9.18.0
       version: 9.39.2
+    '@modelcontextprotocol/sdk':
+      specifier: ^1.27.1
+      version: 1.27.1
     '@nestjs/cli':
       specifier: ^11.0.0
       version: 11.0.16
@@ -426,7 +429,7 @@ importers:
         specifier: workspace:*
         version: link:../workspace-memory
       '@modelcontextprotocol/sdk':
-        specifier: ^1.12.1
+        specifier: 'catalog:'
         version: 1.27.1(zod@3.25.76)
       '@oclif/core':
         specifier: 'catalog:'
@@ -679,7 +682,7 @@ importers:
         specifier: workspace:*
         version: link:../workspace-memory
       '@modelcontextprotocol/sdk':
-        specifier: ^1.12.1
+        specifier: 'catalog:'
         version: 1.27.1(zod@3.25.76)
     devDependencies:
       '@types/node':
@@ -863,7 +866,7 @@ importers:
         specifier: workspace:*
         version: link:../workspace-memory
       '@modelcontextprotocol/sdk':
-        specifier: ^1.12.1
+        specifier: 'catalog:'
         version: 1.27.1(zod@3.25.76)
       '@nestjs/common':
         specifier: 'catalog:'

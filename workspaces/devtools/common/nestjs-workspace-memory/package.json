@@ -14,7 +14,7 @@
     "@hod/aweave-nestjs-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/swagger": "catalog:",
-    "@modelcontextprotocol/sdk": "^1.12.1"
+    "@modelcontextprotocol/sdk": "catalog:"
   },
   "peerDependencies": {
     "@nestjs/core": "catalog:"

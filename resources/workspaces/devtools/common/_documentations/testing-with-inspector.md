@@ -8,7 +8,7 @@ tags: [mcp, testing, inspector, stdio]
 
 This guide explains how to test the `workspace_get_context` MCP tool locally using the official Anthropic MCP Inspector, with three supported server entrypoints:
 
-1. NestJS server (SSE - recommended for full functionality testing)
+1. NestJS server (Streamable HTTP - recommended for full functionality testing)
 2. `aw workspace mcp` (stdio - recommended for CLI testing)
 3. `aw-mcp-memory` (stdio - alternative binary)
 
@@ -26,9 +26,9 @@ Ensure command availability:
 - For `aw workspace mcp`: `aw` should be available (or use `bin/dev.js` under `workspaces/devtools/common/cli`).
 - For `aw-mcp-memory`: binary should be available (for example via `pnpm link --global` in `workspaces/devtools/common/mcp-workspace-memory`).
 
-## Running the Inspector (Recommended: NestJS SSE)
+## Running the Inspector (Recommended: NestJS Streamable HTTP)
 
-Anthropic provides an official web-based Inspector to test MCP tools. For the SSE server, you simply pass the SSE URL to the inspector.
+Anthropic provides an official web-based Inspector to test MCP tools. For the NestJS MCP server, pass the MCP endpoint URL to the inspector.
 
 1. First, start the NestJS server:
 
@@ -36,10 +36,10 @@ Anthropic provides an official web-based Inspector to test MCP tools. For the SS
    aw server start
    ```
 
-2. Then, run the inspector targeting the SSE endpoint:
+2. Then, run the inspector targeting the MCP endpoint:
 
    ```bash
-   npx @modelcontextprotocol/inspector http://127.0.0.1:3456/mcp/sse
+   npx @modelcontextprotocol/inspector http://127.0.0.1:3456/mcp
    ```
 
 ## Running the Inspector (stdio: `aw workspace mcp`)
