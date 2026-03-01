@@ -4,8 +4,8 @@
       "url": "http://localhost:8931/mcp"
     },
     "workspace-memory": {
-      "command": "aw",
-      "args": ["workspace", "mcp"]
+      "type": "sse",
+      "url": "http://127.0.0.1:3456/mcp"
     }
   }
 }
