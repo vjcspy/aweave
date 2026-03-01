@@ -51,5 +51,5 @@ export function applySpaMiddleware(
 
   consumer
     .apply(express.static(rootPath), spaFallback)
-    .forRoutes(routePrefix, `${routePrefix}/(.*)`);
+    .forRoutes(routePrefix, `${routePrefix}/*path`);
 }

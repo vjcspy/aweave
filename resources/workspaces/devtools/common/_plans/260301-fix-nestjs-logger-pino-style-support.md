@@ -1,7 +1,7 @@
 ---
 name: Fix NestJS Logger — Support Pino-Style Call Signatures
 description: Fix NestLoggerService.writeLog to detect and correctly handle Pino-style (mergingObject, messageString) call signatures alongside standard NestJS convention, resolving silent message loss and object-as-msg serialization bugs across 20+ call sites.
-status: new
+status: done
 created: 2026-03-01
 tags: [logging, nestjs, bugfix, nestjs-core]
 ---
@@ -104,7 +104,7 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
 
 **Target file:** `workspaces/devtools/common/nestjs-core/src/logging/nest-logger.service.ts`
 
-- [ ] **1.1** Add `isPlainObject` helper to the service (private method or module-level function):
+- [x] **1.1** Add `isPlainObject` helper to the service (private method or module-level function):
 
   ```typescript
   function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -118,7 +118,7 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
 
   This prevents false positives on `Error`, `Date`, class instances, and arrays.
 
-- [ ] **1.2** Restructure `writeLog` to detect Pino-style **before** calling `parseParams`.
+- [x] **1.2** Restructure `writeLog` to detect Pino-style **before** calling `parseParams`.
 
   The core problem: `parseParams` runs first and misinterprets Pino-style params (especially at error level, where the message string gets assigned to `stack`). By detecting the Pino-style pattern on raw `message` + `params` before `parseParams`, the error-level parsing path is never reached for these calls.
 
@@ -166,7 +166,7 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
   }
   ```
 
-- [ ] **1.3** Implement `extractPinoMessage` and `extractLastStringParam` helpers:
+- [x] **1.3** Implement `extractPinoMessage` and `extractLastStringParam` helpers:
 
   ```typescript
   /**
@@ -212,11 +212,11 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
 
 ### Phase 2: Verify
 
-- [ ] **2.1** Build `nestjs-core`: `cd workspaces/devtools/common/nestjs-core && pnpm build` — zero errors
+- [x] **2.1** Build `nestjs-core`: `cd workspaces/devtools/common/nestjs-core && pnpm build` — zero errors
 
-- [ ] **2.2** Full build: `cd workspaces/devtools && pnpm -r build` — zero errors
+- [x] **2.2** Full build: `cd workspaces/devtools && pnpm -r build` — zero errors
 
-- [ ] **2.3** Repo-wide scan to identify ALL affected call sites:
+- [x] **2.3** Repo-wide scan to identify ALL affected call sites:
 
   ```bash
   rg 'this\.logger\.(warn|error|log|debug|verbose)\(\s*\{' --glob '*.ts' -A 2 workspaces/devtools/
@@ -224,7 +224,7 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
 
   Verify at least one call from each affected NestJS module produces correct output after fix.
 
-- [ ] **2.4** Restart NestJS server and trigger log calls:
+- [x] **2.4** Restart NestJS server and trigger log calls:
 
   ```bash
   pnpm aw server restart
@@ -236,13 +236,13 @@ Fix `NestLoggerService.writeLog` to support **both** NestJS and Pino call conven
   - Actual message in `"msg"` field (e.g., `"msg": "Failed to get initial state"`)
   - Context still present (e.g., `"context": "DebateGateway"`)
 
-- [ ] **2.5** Verify standard NestJS-style calls still work (no regression):
+- [x] **2.5** Verify standard NestJS-style calls still work (no regression):
   - `logger.log('simple message')` → `{"msg": "simple message", "context": "ClassName"}`
   - `logger.error('error msg', stackTrace, 'Context')` → `{"msg": "error msg", "stack": "...", "context": "Context"}`
 
 ### Phase 3: Update Skill File
 
-- [ ] **3.1** Update `agent/skills/common/devtools-nestjs-builder/SKILL.md` logging section to document the preferred Pino-style convention:
+- [x] **3.1** Update `agent/skills/common/devtools-nestjs-builder/SKILL.md` logging section to document the preferred Pino-style convention:
 
   ```
   // Preferred: Pino-style with structured data
