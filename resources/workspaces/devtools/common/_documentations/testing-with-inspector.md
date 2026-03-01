@@ -1,7 +1,7 @@
 ---
 name: Testing MCP Workspace Memory with Inspector
-description: Guide on how to test workspace_get_context locally with MCP Inspector using aw workspace mcp (recommended) or aw-mcp-memory (alternative)
-tags: [mcp, testing, inspector, stdio]
+description: Guide on how to test workspace_get_context locally with MCP Inspector using NestJS Streamable HTTP (port 3845 via TCP forwarder), aw workspace mcp (stdio), or aw-mcp-memory (alternative)
+tags: [mcp, testing, inspector, stdio, tcp-forwarder]
 ---
 
 # Testing MCP Workspace Memory with MCP Inspector
@@ -30,21 +30,31 @@ Ensure command availability:
 
 Anthropic provides an official web-based Inspector to test MCP tools. For the NestJS MCP server, pass the MCP endpoint URL to the inspector.
 
+> **Company Policy:** MCP via Cursor (and Inspector testing of the HTTP path) must use port **3845**. The NestJS server runs on `3456`; the TCP forwarder bridges `3845 → 3456`.
+
 1. First, start the NestJS server:
 
    ```bash
    aw server start
    ```
 
-2. Then, run the inspector targeting the MCP endpoint:
+2. Start the TCP forwarder:
+
+   ```bash
+   aw server forward start
+   ```
+
+3. Then, run the inspector targeting the MCP endpoint on port **3845**:
 
    ```bash
    npx @modelcontextprotocol/inspector \
      --transport http \
-     --server-url http://127.0.0.1:3456/mcp
+     --server-url http://127.0.0.1:3845/mcp
    ```
 
    Do not pass the URL as a positional argument. In current Inspector versions, positional arguments are treated as STDIO command/args.
+
+   > **Note:** If you want to test against the NestJS server directly (bypassing the forwarder), you can also use port `3456`. But for consistency with the Cursor config, prefer `3845`.
 
 ## Running the Inspector (stdio: `aw workspace mcp`)
 
@@ -125,8 +135,14 @@ PROJECT_ROOT=/absolute/path/to/aweave \
 - Cause: stale SSE URL/transport selection in Inspector UI.
 - Fix:
   - Set transport to **Streamable HTTP / HTTP** (not SSE).
-  - Set URL to `http://127.0.0.1:3456/mcp`.
+  - Set URL to `http://127.0.0.1:3845/mcp` (or `3456` for direct).
+  - Ensure forwarder is running (`aw server forward status --listen-port 3845`).
   - Ensure server is running: `aw server status`.
+
+### `ECONNREFUSED http://127.0.0.1:3845`
+
+- Cause: TCP forwarder is not running.
+- Fix: `aw server forward start`
 
 ### `aw-mcp-memory` returns wrong context
 
