@@ -3,15 +3,21 @@
 > **Role:** Opponent - The party responsible for challenging and validating proposal quality
 
 > **⚠️ LANGUAGE REQUIREMENT:**
+>
 > - Read `user/preferences.yaml` > `debate_language` to determine the language for all debate communication (CLAIM responses, feedback). If not set, default to English.
 > - **Technical terms MUST ALWAYS remain in English** regardless of chosen language: variable/function/class names, file paths, CLI commands, code snippets, architectural concepts (e.g., dependency injection, event-driven), design patterns, severity labels (Critical/Major/Minor), and industry-standard terminology.
+
+> **🚨 MANDATORY — pnpm EXECUTION POLICY:**
+> **ALL `aw` commands MUST be executed through `pnpm`.** Running bare `aw` directly is **STRICTLY FORBIDDEN** and will be blocked by company policy. You MUST ALWAYS prefix every command with `pnpm`, e.g. `pnpm aw debate list` instead of `aw debate list`. **NEVER** run `aw` without the `pnpm` prefix. This applies to EVERY command in this document without exception. Working directory MUST be `workspaces/devtools`.
 
 ## CLI Reference
 
 > **IMPORTANT - Commands with special syntax (positional argument, DO NOT use `--id`):**
-> - `aw docs get <document_id>` → Example: `aw docs get 0c5a44a3-42f6-4787-aa53-c5963099fa65`
+>
+> - `pnpm aw docs get <document_id>` → Example: `pnpm aw docs get 0c5a44a3-42f6-4787-aa53-c5963099fa65`
 >
 > **Full command details:**
+>
 > - Debate CLI: `resources/workspaces/devtools/common/cli-plugin-debate/OVERVIEW.md`
 > - Docs CLI: `resources/workspaces/devtools/common/cli-plugin-docs/OVERVIEW.md`
 
@@ -43,13 +49,13 @@
 │     ▼                                   ▼                               │
 │ ┌──────────────────┐           ┌──────────────────┐                     │
 │ │ 3. Analyze &     │           │ 3. Wait          │                     │
-│ │    Submit CLAIM  │           │   aw debate wait │                     │
+│ │    Submit CLAIM  │           │   pnpm aw debate wait │                     │
 │ └────────┬─────────┘           └────────┬─────────┘                     │
 │          │                              │                               │
 │          ▼                              │                               │
 │ ┌──────────────────┐                    │                               │
 │ │ 4. Wait          │◄───────────────────┘                               │
-│ │   aw debate wait │                                                    │
+│ │   pnpm aw debate wait │                                                    │
 │ └────────┬─────────┘                                                    │
 │          │                                                              │
 │     ┌────┴────────────────────────────────────┐                         │
@@ -86,7 +92,7 @@ When requested to act as **Opponent** in a debate:
 **IF `debate_id` is NOT provided:** Auto-detect by running:
 
 ```bash
-aw debate list --pending-first-opponent --limit 10
+pnpm aw debate list --pending-first-opponent --limit 10
 ```
 
 This returns debates in `AWAITING_OPPONENT` state that only have MOTION (no CLAIM yet) — i.e., debates waiting for an Opponent to join for the first time.
@@ -102,6 +108,7 @@ This returns debates in `AWAITING_OPPONENT` state that only have MOTION (no CLAI
 ### 1.2 Determine `debateType`
 
 After obtaining `debate_id`, determine `debateType` from context (via `get-context` response in Step 2):
+
 - `coding_plan_debate` → Load rule: `agent/rules/common/debate/opponent/coding-plan.md`
 - `general_debate` → Load rule: `agent/rules/common/debate/opponent/general.md`
 
@@ -109,30 +116,32 @@ After obtaining `debate_id`, determine `debateType` from context (via `get-conte
 
 | Tool | Purpose |
 |------|---------|
-| `aw debate list` | List debates (used for auto-detecting debate_id) |
-| `aw debate generate-id` | Generate UUID for client_request_id |
-| `aw debate get-context` | Get debate context |
-| `aw debate submit` | Submit challenge CLAIM |
-| `aw debate wait` | Wait for response from Proposer/Arbitrator |
-| `aw docs get` | Get document content from doc_id |
+| `pnpm aw debate list` | List debates (used for auto-detecting debate_id) |
+| `pnpm aw debate generate-id` | Generate UUID for client_request_id |
+| `pnpm aw debate get-context` | Get debate context |
+| `pnpm aw debate submit` | Submit challenge CLAIM |
+| `pnpm aw debate wait` | Wait for response from Proposer/Arbitrator |
+| `pnpm aw docs get` | Get document content from doc_id |
 
 **NOT permitted (Proposer only):**
-- `aw debate create`
-- `aw debate appeal`
-- `aw debate request-completion`
-- `aw docs create` / `aw docs submit` (Opponent does not create/update documents)
+
+- `pnpm aw debate create`
+- `pnpm aw debate appeal`
+- `pnpm aw debate request-completion`
+- `pnpm aw docs create` / `pnpm aw docs submit` (Opponent does not create/update documents)
 
 ## 2. Join Debate
 
 ### 2.1 Get Context
 
 ```bash
-aw debate get-context --debate-id <DEBATE_ID> --limit 20
+pnpm aw debate get-context --debate-id <DEBATE_ID> --limit 20
 ```
 
 ### 2.2 Read Response
 
 Response contains:
+
 - `debate.debate_type`: Debate type → used to load rule file
 - `debate.state`: Current state → determines whose turn
 - `motion.id`: ID of the original MOTION
@@ -150,13 +159,13 @@ ELIF state == "AWAITING_OPPONENT":
     → My turn, analyze and submit CLAIM
     
 ELIF state == "AWAITING_PROPOSER":
-    → Waiting for Proposer, call `aw debate wait`
+    → Waiting for Proposer, call `pnpm aw debate wait`
     
 ELIF state == "AWAITING_ARBITRATOR":
-    → Waiting for Arbitrator, call `aw debate wait`
+    → Waiting for Arbitrator, call `pnpm aw debate wait`
     
 ELIF state == "INTERVENTION_PENDING":
-    → Arbitrator intervening, call `aw debate wait`
+    → Arbitrator intervening, call `pnpm aw debate wait`
 ```
 
 ## 3. First Join Processing (MOTION)
@@ -169,12 +178,14 @@ The last argument is MOTION from Proposer.
 
 1. **Read MOTION content** - usually just a short summary
 2. **READ THE ENTIRE REFERENCED DOCUMENT (IMPORTANT):**
+
    ```bash
    # MOTION will contain doc_id reference, e.g.: doc_id=0c5a44a3-42f6-4787-aa53-c5963099fa65
-   aw docs get 0c5a44a3-42f6-4787-aa53-c5963099fa65
+   pnpm aw docs get 0c5a44a3-42f6-4787-aa53-c5963099fa65
    ```
+
    > **NOTE:** Document (plan) contains full context, requirements, implementation details. MUST read full document, not just MOTION summary.
-   
+
 3. **Load rule file** based on `debate_type`
 4. **Perform additional context gathering** if needed:
    - Scan related folders
@@ -185,14 +196,17 @@ The last argument is MOTION from Proposer.
 ### 3.2 Submit First CLAIM
 
 First generate UUID for client-request-id:
+
 ```bash
-aw debate generate-id
+pnpm aw debate generate-id
 ```
+
 → Save `id` from response.
 
 Then submit CLAIM:
+
 ```bash
-aw debate submit \
+pnpm aw debate submit \
   --debate-id <DEBATE_ID> \
   --role opponent \
   --target-id <MOTION_ID> \
@@ -201,6 +215,7 @@ aw debate submit \
 ```
 
 **Sample CLAIM content:**
+
 ```markdown
 ## Review Summary
 
@@ -231,7 +246,7 @@ Response contains `argument_id` → save as `CLAIM_ID`.
 ### 3.3 Wait for Response
 
 ```bash
-aw debate wait \
+pnpm aw debate wait \
   --debate-id <DEBATE_ID> \
   --argument-id <CLAIM_ID> \
   --role opponent
@@ -242,6 +257,7 @@ aw debate wait \
 ### 4.1 Analyze Context
 
 After `get-context`, determine:
+
 - **Last argument** belongs to which role?
 - **Type** of that argument?
 
@@ -262,7 +278,7 @@ After `get-context`, determine:
 From `get-context` response, get `arguments[-1].id` (last argument) as `LAST_ARG_ID`.
 
 ```bash
-aw debate wait \
+pnpm aw debate wait \
   --debate-id <DEBATE_ID> \
   --argument-id <LAST_ARG_ID> \
   --role opponent
@@ -270,9 +286,10 @@ aw debate wait \
 
 ## 5. Response Processing
 
-### 5.1 Read Response from `aw debate wait`
+### 5.1 Read Response from `pnpm aw debate wait`
 
 Response contains:
+
 - `action`: Next action to take
 - `argument`: New argument from Proposer/Arbitrator (if any)
   - `argument.id`: ID to reference in next response
@@ -284,8 +301,8 @@ Response contains:
 | `action` | Meaning | Action |
 |----------|---------|--------|
 | `respond` | Challenge turn | Analyze CLAIM and submit response |
-| `wait_for_ruling` | Waiting for Arbitrator | Call `aw debate wait` again |
-| `wait_for_proposer` | Arbitrator RULING, wait for Proposer alignment | Call `aw debate wait` |
+| `wait_for_ruling` | Waiting for Arbitrator | Call `pnpm aw debate wait` again |
+| `wait_for_proposer` | Arbitrator RULING, wait for Proposer alignment | Call `pnpm aw debate wait` |
 | `debate_closed` | Debate ended | Stop |
 
 ### 5.3 Responding to CLAIM from Proposer
@@ -294,12 +311,14 @@ Response contains:
 
 1. **Read Proposer's CLAIM** - usually a short summary
 2. **IF document updated (IMPORTANT):**
+
    ```bash
    # Proposer will say "doc_id=xxx updated to v2"
-   aw docs get <doc_id>
+   pnpm aw docs get <doc_id>
    ```
+
    > **MUST re-read ENTIRE document** to verify changes, not just rely on CLAIM summary
-   
+
 3. **Load rule file** to evaluate per business logic
 4. **Analyze:**
    - Proposer revised correctly? → Acknowledge issue resolved
@@ -310,13 +329,15 @@ Response contains:
 5. **Submit response:**
 
 Generate UUID for client-request-id:
+
 ```bash
-aw debate generate-id
+pnpm aw debate generate-id
 ```
 
 Submit CLAIM:
+
 ```bash
-aw debate submit \
+pnpm aw debate submit \
   --debate-id <DEBATE_ID> \
   --role opponent \
   --target-id <PROPOSER_ARG_ID> \
@@ -325,6 +346,7 @@ aw debate submit \
 ```
 
 **Sample response content:**
+
 ```markdown
 ## Review of Updated Document (v2)
 
@@ -346,10 +368,10 @@ Response contains `argument_id` → save as `NEW_ARG_ID`.
 
 > **Token Optimization:** Response only contains IDs and metadata, not content.
 
-6. **Continue waiting:**
+1. **Continue waiting:**
 
 ```bash
-aw debate wait \
+pnpm aw debate wait \
   --debate-id <DEBATE_ID> \
   --argument-id <NEW_ARG_ID> \
   --role opponent
@@ -364,12 +386,14 @@ When `action = "wait_for_proposer"` (after RULING):
 1. **Read RULING content** to understand direction
 2. **NO ACTION NEEDED** - Proposer will align first
 3. **Wait** for Proposer to submit aligned response (use `argument.id` from RULING as `RULING_ARG_ID`):
+
    ```bash
-   aw debate wait \
+   pnpm aw debate wait \
      --debate-id <DEBATE_ID> \
      --argument-id <RULING_ARG_ID> \
      --role opponent
    ```
+
 4. **After receiving Proposer response:** Verify if Proposer aligned correctly with ruling
 
 **→ AFTER WAIT RETURNS:** Return to Step 5.1 to process Proposer's response and continue loop.
@@ -380,13 +404,15 @@ When receiving argument with `type = "APPEAL"`:
 
 1. **Read APPEAL content** to understand context
 2. **Notify:** "Proposer has requested Arbitrator judgment"
-3. **Call `aw debate wait`** with APPEAL `argument.id` to wait for RULING from Arbitrator:
+3. **Call `pnpm aw debate wait`** with APPEAL `argument.id` to wait for RULING from Arbitrator:
+
    ```bash
-   aw debate wait \
+   pnpm aw debate wait \
      --debate-id <DEBATE_ID> \
      --argument-id <APPEAL_ID> \
      --role opponent
    ```
+
 4. **When RULING received:** Process per Section 5.4
 
 **→ AFTER WAIT RETURNS:** Return to Step 5.1 to process RULING and continue loop.
@@ -462,7 +488,7 @@ When receiving INTERVENTION:
 
 1. **DO NOT CANCEL** argument being drafted (if any)
 2. **If already submitted:** Will receive response requesting wait
-3. **Call `aw debate wait`** on INTERVENTION argument_id
+3. **Call `pnpm aw debate wait`** on INTERVENTION argument_id
 4. **Wait for RULING** from Arbitrator
 
 ### 7.3 Prolonged Disagreement
@@ -481,6 +507,7 @@ If argument continues > 3 rounds on the same point:
 ### 8.1 Why Timeout Happens
 
 Proposer needs significant time to:
+
 - Read and analyze Opponent's CLAIM thoroughly
 - **Edit source code** based on feedback (the most time-consuming step)
 - Revise documents and submit new versions
@@ -500,11 +527,11 @@ The CLI returns timeout in this structure:
       "type": "json",
       "data": {
         "status": "timeout",
-        "message": "No response after 120s. you MUST retry by using: aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>",
+        "message": "No response after 120s. you MUST retry by using: pnpm aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>",
         "debate_id": "<DEBATE_ID>",
         "last_argument_id": "<LAST_ARG_ID>",
         "last_seen_seq": 2,
-        "retry_command": "aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>"
+        "retry_command": "pnpm aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>"
       }
     }
   ]
@@ -512,6 +539,7 @@ The CLI returns timeout in this structure:
 ```
 
 Key fields:
+
 - `data.status`: `"timeout"` indicates no response yet
 - `data.retry_command`: **exact command to run** for retry (copy-paste ready)
 
@@ -521,10 +549,11 @@ When receiving timeout, run the `retry_command` from response **immediately**:
 
 ```bash
 # Just copy-paste data.retry_command
-aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>
+pnpm aw debate wait --debate-id <DEBATE_ID> --role opponent --argument-id <LAST_ARG_ID>
 ```
 
 **Retry loop (MUST follow):**
+
 ```
 WHILE data.status == "timeout":
     # Run data.retry_command from response
@@ -548,7 +577,7 @@ process_response(response)
 
 ### 9.1 ACTION_NOT_ALLOWED
 
-**Action:** Not my turn → Call `aw debate wait`
+**Action:** Not my turn → Call `pnpm aw debate wait`
 
 ### 9.2 DEBATE_NOT_FOUND
 
@@ -568,7 +597,7 @@ process_response(response)
 
 ```
 WHILE TRUE:
-    response = aw debate wait(...)
+    response = pnpm aw debate wait(...)
     
     IF response.action == "debate_closed":
         BREAK  ← ONLY EXIT WHEN ARBITRATOR CLOSES DEBATE
@@ -581,6 +610,7 @@ WHILE TRUE:
 ```
 
 **Common mistakes to avoid:**
+
 - ❌ Exiting after submitting CLAIM without waiting
 - ❌ Exiting when receiving RULING without continuing to monitor
 - ❌ Exiting when Proposer has aligned to RULING without verifying
@@ -613,9 +643,11 @@ WHILE TRUE:
 ## 11. Checklist Before Ending Session
 
 **IMPORTANT:** Opponent ONLY ends when:
-- [ ] Received `action="debate_closed"` from `aw debate wait`
+
+- [ ] Received `action="debate_closed"` from `pnpm aw debate wait`
 
 **If not yet closed, before pausing session:**
+
 - [ ] Submitted CLAIM or currently waiting?
 - [ ] User has debate_id to resume?
 - [ ] Outstanding issues documented?
@@ -627,16 +659,16 @@ WHILE TRUE:
 
 | Command | Description | Response contains |
 |---------|-------------|-------------------|
-| `aw debate list --pending-first-opponent --limit 10` | Find debates awaiting first opponent | `debates[]` (id, title, created_at) |
-| `aw debate generate-id` | Generate new UUID | `id` |
-| `aw debate get-context --debate-id <id> --limit 20` | Get debate context | `debate.state`, `motion`, `arguments[]` |
-| `aw debate submit --debate-id <id> --role opponent --target-id <arg_id> --content "..." --client-request-id <id>` | Submit CLAIM | `argument_id` |
-| `aw debate wait --debate-id <id> --argument-id <arg_id> --role opponent` | Wait for response | `action`, `argument` |
+| `pnpm aw debate list --pending-first-opponent --limit 10` | Find debates awaiting first opponent | `debates[]` (id, title, created_at) |
+| `pnpm aw debate generate-id` | Generate new UUID | `id` |
+| `pnpm aw debate get-context --debate-id <id> --limit 20` | Get debate context | `debate.state`, `motion`, `arguments[]` |
+| `pnpm aw debate submit --debate-id <id> --role opponent --target-id <arg_id> --content "..." --client-request-id <id>` | Submit CLAIM | `argument_id` |
+| `pnpm aw debate wait --debate-id <id> --argument-id <arg_id> --role opponent` | Wait for response | `action`, `argument` |
 
 ### Docs Commands
 
 | Command | Description | Response contains |
 |---------|-------------|-------------------|
-| `aw docs get <document_id>` | Get document content | `content`, `version` |
+| `pnpm aw docs get <document_id>` | Get document content | `content`, `version` |
 
-> **NOTE:** `aw docs get` uses **positional argument** for document_id, NO `--id` flag.
+> **NOTE:** `pnpm aw docs get` uses **positional argument** for document_id, NO `--id` flag.

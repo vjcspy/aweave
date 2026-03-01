@@ -55,6 +55,15 @@ Rules:
 - `workspaces/devtools/common/server/`  
   call: `workspace=devtools, domain=common, repository=server`
 
+## MANDATORY — CLI Execution Policy
+
+**ALL `aw` CLI commands MUST be run through `pnpm`.** Running bare `aw` is **STRICTLY FORBIDDEN** and will be blocked by company policy.
+
+- ✅ `pnpm aw debate list --limit 10`
+- ❌ `aw debate list --limit 10`
+
+**NEVER** invoke `aw` without the `pnpm` prefix. Working directory MUST be `workspaces/devtools`.
+
 ## Task Detection
 
 **Before handling any workspace-scoped task:** call `workspace_get_context` first, after completing scope resolution
