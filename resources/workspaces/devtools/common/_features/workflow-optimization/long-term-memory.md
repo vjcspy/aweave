@@ -186,7 +186,7 @@ which is already git-tracked per workspace branch. No special `.gitignore` excep
 ### 2.14 APM integrated into NestJS server
 
 **Decision:** APM (Agent Provider MCP) is integrated into `@hod/aweave-server` (NestJS), not a standalone process.
-Single server handles HTTP REST + SSE/MCP on one port.
+Single server handles HTTP REST + Streamable HTTP/MCP on one port.
 
 **Rationale:**
 
@@ -194,7 +194,7 @@ Single server handles HTTP REST + SSE/MCP on one port.
 - Session tracking for `include_defaults` optimization lives naturally in NestJS middleware — no cross-process
   communication needed
 - Existing infrastructure (pino logging, SQLite config store, bearer token auth) reused directly
-- Follows existing pattern: server already serves REST + WebSocket + static SPA. Adding MCP/SSE is another transport on
+- Follows existing pattern: server already serves REST + WebSocket + static SPA. Adding MCP/Streamable HTTP is another transport on
   the same process
 - NestJS ecosystem has MCP integration options (e.g., `@rekog/mcp-nest`) if useful, but can also implement directly with
   MCP SDK
@@ -212,7 +212,7 @@ transport concerns.
 - CLI needs direct filesystem access without server dependency (workspace memory is local data — no shared state
   requiring a server intermediary)
 - NestJS provides REST API for web UIs, session tracking for `include_defaults`, pino logging, SQLite stats
-- MCP tools (inside NestJS/APM) provide AI agent access via SSE transport
+- MCP tools (inside NestJS/APM) provide AI agent access via Streamable HTTP transport
 - Consistent with DevTools pattern: `debate-machine` (core) → `nestjs-debate` (NestJS) → `cli-plugin-debate` (CLI)
 
 **Package structure:**
@@ -225,7 +225,7 @@ transport concerns.
 | **CLI**    | `@hod/aweave-plugin-workspace`        | `common/cli-plugin-workspace/`    | core + MCP + `@hod/aweave-cli-shared` + `@oclif/core` |
 
 **Key differences from original plan:** MCP tool definitions are a standalone shared package (not embedded in NestJS).
-Both NestJS and CLI consume the MCP package for tool schema and handlers, then add their own transport (SSE and STDIO
+Both NestJS and CLI consume the MCP package for tool schema and handlers, then add their own transport (Streamable HTTP and STDIO
 respectively). CLI calls core directly (not via HTTP → NestJS) — workspace memory is local filesystem, no shared state
 requires a server intermediary.
 
@@ -829,7 +829,7 @@ All packages live under `workspaces/devtools/common/`. Each is at version `0.1.0
 |---|---------|---------------------------------------|-----------------------------------|-------------------------------------------------------------------------------------------------|
 | 1 | Core    | `@hod/aweave-workspace-memory`        | `common/workspace-memory/`        | Business logic — filesystem scanning, front-matter parsing, scope resolution, topic dispatching |
 | 2 | MCP     | `@hod/aweave-mcp-workspace-memory`    | `common/mcp-workspace-memory/`    | Shared MCP tool definitions — `workspace_get_context` schema, handlers, server factory          |
-| 3 | NestJS  | `@hod/aweave-nestjs-workspace-memory` | `common/nestjs-workspace-memory/` | REST API + MCP SSE transport — `WorkspaceMemoryModule` integrated in `@hod/aweave-server`       |
+| 3 | NestJS  | `@hod/aweave-nestjs-workspace-memory` | `common/nestjs-workspace-memory/` | REST API + MCP Streamable HTTP transport — `WorkspaceMemoryModule` integrated in `@hod/aweave-server`       |
 | 4 | CLI     | `@hod/aweave-plugin-workspace`        | `common/cli-plugin-workspace/`    | Terminal commands — `aw workspace get-context`, `aw workspace build-rules`, `aw workspace mcp`  |
 
 ### 8.2 Core Package (`@hod/aweave-workspace-memory`)
@@ -848,7 +848,7 @@ Framework-free business logic. All other layers delegate here.
 
 ### 8.3 MCP Package (`@hod/aweave-mcp-workspace-memory`)
 
-Standalone MCP tool definitions and server factory. Shared by both NestJS (SSE transport) and CLI (STDIO transport).
+Standalone MCP tool definitions and server factory. Shared by both NestJS (Streamable HTTP transport) and CLI (STDIO transport).
 
 **Key files:**
 
@@ -861,7 +861,7 @@ Standalone MCP tool definitions and server factory. Shared by both NestJS (SSE t
 
 ### 8.4 NestJS Package (`@hod/aweave-nestjs-workspace-memory`)
 
-NestJS module providing REST and MCP SSE transports. Imported in `server/src/app.module.ts` as `WorkspaceMemoryModule`.
+NestJS module providing REST and MCP Streamable HTTP transport. Imported in `server/src/app.module.ts` as `WorkspaceMemoryModule`.
 
 **Key files:**
 
@@ -870,8 +870,8 @@ NestJS module providing REST and MCP SSE transports. Imported in `server/src/app
 | `workspace-memory.module.ts`     | NestJS module definition                                               |
 | `workspace-memory.service.ts`    | Wraps core `getContext()`, resolves project root                       |
 | `workspace-memory.controller.ts` | `GET /workspace/context` REST endpoint                                 |
-| `mcp-tools.service.ts`           | MCP SSE transport via `createWorkspaceMemoryServer()` from MCP package |
-| `mcp.controller.ts`              | SSE endpoints for MCP clients                                          |
+| `mcp-tools.service.ts`           | MCP Streamable HTTP transport via `createWorkspaceMemoryServer()` from MCP package |
+| `mcp.controller.ts`              | Single MCP HTTP endpoint (`POST /mcp`) for MCP clients                |
 | `dto/`                           | Request/response DTOs with Swagger decorators                          |
 
 ### 8.5 CLI Package (`@hod/aweave-plugin-workspace`)

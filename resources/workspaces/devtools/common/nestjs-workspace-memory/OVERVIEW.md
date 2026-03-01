@@ -1,6 +1,6 @@
 ---
 name: NestJS Workspace Memory
-description: NestJS feature module wrapping the workspace-memory core library — provides REST endpoints and MCP SSE transport for workspace context retrieval
+description: NestJS feature module wrapping the workspace-memory core library — provides REST endpoints and MCP Streamable HTTP transport for workspace context retrieval
 tags: [memory, nestjs, mcp, workspace, context]
 ---
 
@@ -12,7 +12,7 @@ tags: [memory, nestjs, mcp, workspace, context]
 
 ## TL;DR
 
-NestJS feature module that exposes workspace context via REST API (`GET /workspace/context`) and MCP over SSE transport. Uses `createWorkspaceMemoryServer()` from `@hod/aweave-mcp-workspace-memory` for MCP (tool defs and handlers live there). Returned defaults include `decisions_t0`/`lessons_t0`, and `decisions`/`lessons` topics include full `body_t1` per entry. Registered in `@hod/aweave-server` as part of the main application.
+NestJS feature module that exposes workspace context via REST API (`GET /workspace/context`) and MCP over Streamable HTTP transport. Uses `createWorkspaceMemoryServer()` from `@hod/aweave-mcp-workspace-memory` for MCP (tool defs and handlers live there). Returned defaults include `decisions_t0`/`lessons_t0`, and `decisions`/`lessons` topics include full `body_t1` per entry. Registered in `@hod/aweave-server` as part of the main application.
 
 ## Recent Changes Log
 
@@ -35,7 +35,7 @@ nestjs-workspace-memory/
     ├── workspace-memory.service.ts    # Wraps core getContext(), resolves project root
     ├── workspace-memory.controller.ts # REST: GET /workspace/context
     ├── mcp-tools.service.ts           # MCP Server with workspace_get_context tool
-    ├── mcp.controller.ts              # SSE transport: GET /mcp/sse, POST /mcp/messages
+    ├── mcp.controller.ts              # Streamable HTTP transport: POST /mcp
     └── dto/
         ├── index.ts                   # DTO barrel
         └── get-context.dto.ts         # Query + response DTOs with Swagger decorators
@@ -45,24 +45,23 @@ nestjs-workspace-memory/
 
 - **REST API**
   - `GET /workspace/context` — Query params: workspace (required), domain, repository, topics, include_defaults, filter_status, filter_tags, filter_category
-- **MCP Tool (SSE)**
-  - `workspace_get_context` — Same parameters as REST, exposed via MCP protocol over SSE transport
-  - SSE endpoint: `GET /mcp/sse` — Establishes MCP session
-  - Message handler: `POST /mcp/messages?sessionId=` — Handles MCP requests
+- **MCP Tool (Streamable HTTP)**
+  - `workspace_get_context` — Same parameters as REST, exposed via MCP protocol over Streamable HTTP transport
+  - MCP endpoint: `POST /mcp` — Handles MCP requests in stateless mode
 
 ## Core Services & Logic (Internal)
 
 - **WorkspaceMemoryService:** Injectable service wrapping core `getContext()`. Resolves project root from `process.cwd()` (3 levels up from devtools workspace). Provides `parseTopics()` helper for comma-separated topic strings.
-- **McpToolsService:** Manages MCP `Server` instance (created via `createWorkspaceMemoryServer()` from mcp-workspace-memory) with SSE transports. Handles per-session transport lifecycle (create on SSE connect, cleanup on disconnect). Tool definitions and handlers live in `@hod/aweave-mcp-workspace-memory`.
+- **McpToolsService:** Manages MCP `Server` instance (created via `createWorkspaceMemoryServer()` from mcp-workspace-memory) with a per-request Streamable HTTP transport. Tool definitions and handlers live in `@hod/aweave-mcp-workspace-memory`.
 - **WorkspaceMemoryController:** REST controller with Swagger-documented endpoint. Delegates to service, wraps response in `{ success, data }` envelope.
-- **McpController:** Thin controller routing SSE and message HTTP endpoints to `McpToolsService`.
+- **McpController:** Thin controller routing `POST /mcp` requests to `McpToolsService`.
 
 ## External Dependencies & Contracts (Outbound)
 
 - **`@hod/aweave-workspace-memory`** — Core context retrieval logic
 - **`@hod/aweave-mcp-workspace-memory`** — Shared MCP tool definitions, handlers, and server factory
 - **`@hod/aweave-nestjs-core`** — Shared NestJS infrastructure
-- **`@modelcontextprotocol/sdk`** — SSE transport
+- **`@modelcontextprotocol/sdk`** — Streamable HTTP transport
 - **`@nestjs/swagger`** — API documentation decorators
 
 ## Related

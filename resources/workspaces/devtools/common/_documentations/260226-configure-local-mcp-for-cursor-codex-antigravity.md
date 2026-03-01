@@ -21,9 +21,9 @@ This document shows supported ways to configure local `workspace-memory` MCP for
 2. Ensure `aw` is available (`pnpm link --global` in `workspaces/devtools/common/cli`, or use `bin/dev.js` for local testing).
 3. Ensure Node.js is available on PATH.
 
-## Approach 1 (Recommended for Cursor): NestJS Server (SSE)
+## Approach 1 (Recommended for Cursor): NestJS Server (Streamable HTTP)
 
-Use the NestJS server over SSE. This is the **recommended approach for Cursor**, as Cursor currently has policies that restrict executing arbitrary commands and enforce `localhost` connections.
+Use the NestJS server over Streamable HTTP. This is the **recommended approach for Cursor**, as Cursor currently has policies that restrict executing arbitrary commands and enforce `localhost` connections.
 
 1. Start the NestJS server:
 
@@ -31,7 +31,7 @@ Use the NestJS server over SSE. This is the **recommended approach for Cursor**,
    aw server start
    ```
 
-2. The SSE endpoint will be available at `http://127.0.0.1:3456/mcp/sse`.
+2. The MCP endpoint will be available at `http://127.0.0.1:3456/mcp`.
 
 ## Approach 2: `aw workspace mcp` (stdio)
 
@@ -66,18 +66,17 @@ This approach is useful when you want to run MCP without going through `aw` comm
 
 ## Cursor (`.cursor/mcp.json`)
 
-**Note:** Cursor currently operates with a policy that only allows running on localhost and restricts stdio command execution. Therefore, the NestJS SSE approach is recommended.
+**Note:** Cursor currently operates with a policy that only allows running on localhost and restricts stdio command execution. Therefore, the NestJS Streamable HTTP approach is recommended.
 
-### Recommended (NestJS SSE)
+### Recommended (NestJS Streamable HTTP)
 
-First, start the NestJS server (`aw server start`). Then configure the SSE endpoint:
+First, start the NestJS server (`aw server start`). Then configure the MCP endpoint:
 
 ```json
 {
   "mcpServers": {
     "workspace-memory": {
-      "type": "sse",
-      "url": "http://127.0.0.1:3456/mcp/sse"
+      "url": "http://127.0.0.1:3456/mcp"
     }
   }
 }
