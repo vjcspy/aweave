@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "workspace-memory": {
+    "Monolith": {
       "url": "http://localhost:3845/mcp"
     },
     "playwright": {
